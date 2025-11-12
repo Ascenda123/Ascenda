@@ -1,0 +1,35 @@
+interface TimelineItem {
+  id: string;
+  name: string;
+  date: string;
+  context: string;
+}
+
+interface DeadlineTimelineProps {
+  items: TimelineItem[];
+}
+
+export const DeadlineTimeline = ({ items }: DeadlineTimelineProps) => {
+  if (items.length === 0) {
+    return (
+      <div className="rounded-lg border border-dashed border-slate-300 bg-white p-6 text-center text-sm text-slate-500">
+        No upcoming deadlines yet. Track programs you plan to apply to.
+      </div>
+    );
+  }
+
+  return (
+    <ol className="space-y-4">
+      {items.map((item) => (
+        <li key={item.id} className="flex gap-3">
+          <div className="mt-1 h-2 w-2 rounded-full bg-slate-900" aria-hidden />
+          <div>
+            <p className="text-sm font-semibold text-slate-900">{item.name}</p>
+            <p className="text-xs text-slate-500">{item.date}</p>
+            <p className="text-sm text-slate-600">{item.context}</p>
+          </div>
+        </li>
+      ))}
+    </ol>
+  );
+};
