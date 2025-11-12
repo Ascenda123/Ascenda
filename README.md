@@ -26,6 +26,14 @@ Ascenda is a Next.js 14 EdTech platform that supports international high-school 
 npm install
 ```
 
+If your environment does not already have the required toolchain, run the provided setup script (idempotent). It installs Node.js version 20 with `nvm`, ensures build dependencies, and installs npm packages automatically:
+
+```bash
+./scripts/setup.sh
+```
+
+> The script uses `sudo apt-get` when curl or build tools are missing; omit or adapt those lines for locked-down environments.
+
 ### Environment variables
 
 Copy `.env.example` to `.env.local` and supply your Supabase credentials:
