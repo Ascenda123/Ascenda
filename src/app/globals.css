@@ -3,24 +3,21 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: dark;
-  --gradient-surface: radial-gradient(circle at 20% 20%, rgba(92, 110, 255, 0.18), transparent 40%),
-    radial-gradient(circle at 80% 0%, rgba(255, 103, 215, 0.14), transparent 45%),
-    radial-gradient(circle at 80% 80%, rgba(78, 224, 210, 0.12), transparent 35%);
+  color-scheme: light;
 }
 
 @layer base {
   * {
-    @apply border-white/10;
+    border-color: rgb(226 232 240);
   }
 
   body {
-    @apply bg-night text-white antialiased;
-    background-image: var(--gradient-surface), linear-gradient(120deg, #040711 0%, #060a1c 100%);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    @apply bg-white text-slate-900 antialiased;
     min-height: 100vh;
   }
 
   ::selection {
-    @apply bg-iris/80 text-white;
+    @apply bg-slate-900 text-white;
   }
 }
