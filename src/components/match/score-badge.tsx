@@ -11,12 +11,22 @@ interface ScoreBadgeProps {
 }
 
 export const ScoreBadge = ({ score, breakdown }: ScoreBadgeProps) => {
-  const tone = score >= 80 ? 'bg-emerald-100 text-emerald-900' : score >= 60 ? 'bg-amber-100 text-amber-900' : 'bg-rose-100 text-rose-900';
-  const title = `Eligibility ${breakdown.eligibility.toFixed(0)} • Academics ${breakdown.academicFit.toFixed(0)} • Preferences ${breakdown.preferenceFit.toFixed(0)} • Outcomes ${breakdown.outcomes.toFixed(0)}`;
+  const tone =
+    score >= 80
+      ? 'from-cyan to-emerald-400'
+      : score >= 60
+        ? 'from-amber-300 to-sunrise'
+        : 'from-rose-400 to-sunrise';
+  const title = `Eligibility ${breakdown.eligibility.toFixed(0)} • Academics ${breakdown.academicFit.toFixed(
+    0
+  )} • Preferences ${breakdown.preferenceFit.toFixed(0)} • Outcomes ${breakdown.outcomes.toFixed(0)}`;
 
   return (
     <span
-      className={cn('inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold', tone)}
+      className={cn(
+        'inline-flex min-w-[3.5rem] items-center justify-center rounded-full bg-gradient-to-r px-4 py-1 text-sm font-semibold text-night shadow-glow-sm',
+        tone
+      )}
       role="status"
       title={title}
     >

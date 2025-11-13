@@ -93,7 +93,7 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
         ) : null}
       </div>
       {error ? (
-        <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700" role="alert">
+        <div className="rounded-2xl border border-red-400/40 bg-red-500/10 p-3 text-sm text-red-200" role="alert">
           {error}
         </div>
       ) : null}
@@ -102,10 +102,10 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
       </Button>
       <div className="relative">
         <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t border-slate-200" aria-hidden />
+          <span className="w-full border-t border-white/10" aria-hidden />
         </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-white px-2 text-slate-500">or continue with</span>
+        <div className="relative flex justify-center text-xs uppercase tracking-[0.3em]">
+          <span className="bg-night px-2 text-white/60">or continue with</span>
         </div>
       </div>
       <Button type="button" variant="outline" className="w-full" onClick={handleGoogle} disabled={isPending}>

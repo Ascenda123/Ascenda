@@ -32,10 +32,10 @@ export const ImportPanel = () => {
   };
 
   return (
-    <div className="space-y-4 rounded-lg border border-slate-200 bg-white p-6">
+    <div className="space-y-4 rounded-3xl border border-white/10 bg-white/5 p-6 shadow-glow-sm backdrop-blur">
       <div className="space-y-2">
-        <h2 className="text-lg font-semibold text-slate-900">Import catalog data</h2>
-        <p className="text-sm text-slate-600">
+        <h2 className="font-display text-2xl text-white">Import catalog data</h2>
+        <p className="text-sm text-white/70">
           Upload CSV exports to refresh the universities, programs, requirements, or deadlines catalog.
         </p>
       </div>
@@ -43,7 +43,7 @@ export const ImportPanel = () => {
         <Label htmlFor="template">Dataset</Label>
         <select
           id="template"
-          className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+          className="w-full rounded-2xl border border-white/10 bg-night/40 px-4 py-3 text-sm text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan/50"
           value={template}
           onChange={(event) => setTemplate(event.target.value as Template)}
         >
@@ -56,14 +56,20 @@ export const ImportPanel = () => {
       </div>
       <div className="space-y-2">
         <Label htmlFor="csv-upload">Upload CSV</Label>
-        <input id="csv-upload" type="file" accept=".csv" onChange={handleFile} className="text-sm" />
+        <input
+          id="csv-upload"
+          type="file"
+          accept=".csv"
+          onChange={handleFile}
+          className="text-sm text-white file:mr-4 file:rounded-2xl file:border-0 file:bg-white/10 file:px-4 file:py-2 file:text-white/80"
+        />
       </div>
-      <p className="text-sm text-slate-500">Status: {status}</p>
+      <p className="text-sm text-white/60">Status: {status}</p>
       <Button type="button" variant="outline" disabled>
         Run edge function sync (TODO)
       </Button>
       {rowCount > 0 ? (
-        <p className="text-xs text-slate-400">Preview limited to parsing only in this prototype.</p>
+        <p className="text-xs text-white/50">Preview limited to parsing only in this prototype.</p>
       ) : null}
     </div>
   );

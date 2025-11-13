@@ -38,8 +38,8 @@ export default async function ApplicationsPage() {
   return (
     <DashboardShell>
       <section className="space-y-2">
-        <h1 className="text-3xl font-semibold tracking-tight">Application planner</h1>
-        <p className="text-sm text-slate-600">Track statuses, deadlines, tasks, and documents in one workspace.</p>
+        <h1 className="font-display text-3xl">Application planner</h1>
+        <p className="text-sm text-white/70">Track statuses, deadlines, tasks, and documents in one workspace.</p>
       </section>
 
       <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
@@ -53,14 +53,14 @@ export default async function ApplicationsPage() {
               dueDate: task.due_date ?? undefined
             }))}
           />
-          <div className="space-y-4 rounded-lg border border-slate-200 bg-white p-4">
-            <h2 className="text-lg font-semibold text-slate-900">Upload documents</h2>
+          <div className="space-y-4 rounded-3xl border border-white/10 bg-white/5 p-6 shadow-glow-sm">
+            <h2 className="font-display text-2xl text-white">Upload documents</h2>
             <DocumentUploader />
           </div>
         </div>
         <aside className="space-y-6">
-          <div className="space-y-4 rounded-lg border border-slate-200 bg-white p-4">
-            <h2 className="text-lg font-semibold text-slate-900">Upcoming deadlines</h2>
+          <div className="space-y-4 rounded-3xl border border-white/10 bg-white/5 p-6 shadow-glow-sm">
+            <h2 className="font-display text-2xl text-white">Upcoming deadlines</h2>
             <DeadlineTimeline
               items={(deadlines ?? []).map((deadline) => ({
                 id: deadline.id,
@@ -70,12 +70,12 @@ export default async function ApplicationsPage() {
               }))}
             />
           </div>
-          <div className="rounded-lg border border-slate-200 bg-white p-4 text-sm text-slate-600">
+          <div className="rounded-3xl border border-white/10 bg-white/5 p-6 text-sm text-white/70 shadow-glow-sm">
             {applications && applications.length > 0 ? (
               <ul className="space-y-2">
                 {applications.map((app) => (
                   <li key={app.id}>
-                    <p className="font-semibold text-slate-900">Application status</p>
+                    <p className="font-semibold text-white">Application status</p>
                     <p>
                       {app.status} • {app.notes ?? 'No notes yet'}
                     </p>

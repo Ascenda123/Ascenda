@@ -24,13 +24,18 @@ export const DocumentUploader = ({ onUpload }: DocumentUploaderProps) => {
   };
 
   return (
-    <div className="space-y-2 rounded-lg border border-slate-200 bg-white p-4">
+    <div className="space-y-3 rounded-3xl border border-white/10 bg-white/5 p-5 shadow-glow-sm backdrop-blur">
       <div>
         <Label htmlFor="document-upload">Upload document</Label>
-        <p className="text-xs text-slate-500">PDF, DOCX up to 20 MB.</p>
+        <p className="text-xs text-white/60">PDF, DOCX up to 20 MB.</p>
       </div>
-      <input id="document-upload" type="file" className="text-sm" onChange={handleFileChange} />
-      {status ? <p className="text-xs text-slate-500">{status}</p> : null}
+      <input
+        id="document-upload"
+        type="file"
+        className="text-sm text-white file:mr-4 file:rounded-2xl file:border-0 file:bg-white/10 file:px-4 file:py-2 file:text-white/80"
+        onChange={handleFileChange}
+      />
+      {status ? <p className="text-xs text-white/60">{status}</p> : null}
       <Button type="button" variant="outline" disabled>
         Upload to Supabase (TODO)
       </Button>

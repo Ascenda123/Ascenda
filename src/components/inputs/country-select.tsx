@@ -26,7 +26,7 @@ export const CountrySelect = ({ value, onChange, id, name }: CountrySelectProps)
       onChange={handleChange}
       aria-describedby={`${id}-hint`}
       className={cn(
-        'w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400'
+        'w-full rounded-2xl border border-white/10 bg-night/40 px-4 py-3 text-sm text-white shadow-inner focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan/50'
       )}
     >
       {DESTINATION_COUNTRIES.map((country) => (

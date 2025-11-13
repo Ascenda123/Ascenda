@@ -28,7 +28,7 @@ export default async function MatchesPage() {
   if (!academics || !preferences || !aspirations) {
     return (
       <DashboardShell>
-        <div className="rounded-lg border border-dashed border-slate-300 bg-white p-8 text-center text-slate-600">
+        <div className="rounded-3xl border border-dashed border-white/20 bg-white/5 p-8 text-center text-white/70">
           Complete your profile to receive personalized matches.
         </div>
       </DashboardShell>
@@ -44,7 +44,7 @@ export default async function MatchesPage() {
   if (!programs || !universities) {
     return (
       <DashboardShell>
-        <div className="rounded-lg border border-dashed border-slate-300 bg-white p-8 text-center text-slate-600">
+        <div className="rounded-3xl border border-dashed border-white/20 bg-white/5 p-8 text-center text-white/70">
           We could not load the program catalog yet. Please check back later.
         </div>
       </DashboardShell>
@@ -85,8 +85,8 @@ export default async function MatchesPage() {
   return (
     <DashboardShell>
       <section className="space-y-2">
-        <h1 className="text-3xl font-semibold tracking-tight">Match suggestions</h1>
-        <p className="text-sm text-slate-600">
+        <h1 className="font-display text-3xl">Match suggestions</h1>
+        <p className="text-sm text-white/70">
           Ranked by eligibility, academic alignment, preferences, and outcome indicators.
         </p>
       </section>

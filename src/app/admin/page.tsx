@@ -29,19 +29,19 @@ export default async function AdminPage() {
   return (
     <DashboardShell>
       <section className="space-y-2">
-        <h1 className="text-3xl font-semibold tracking-tight">Admin console</h1>
-        <p className="text-sm text-slate-600">Manage catalog data, data freshness, and system health.</p>
+        <h1 className="font-display text-3xl">Admin console</h1>
+        <p className="text-sm text-white/70">Manage catalog data, data freshness, and system health.</p>
       </section>
       <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
         <ImportPanel />
-        <aside className="space-y-4 rounded-lg border border-slate-200 bg-white p-4">
-          <h2 className="text-lg font-semibold text-slate-900">Data sources</h2>
-          <ul className="space-y-3 text-sm text-slate-600">
+        <aside className="space-y-4 rounded-3xl border border-white/10 bg-white/5 p-6 shadow-glow-sm">
+          <h2 className="font-display text-2xl text-white">Data sources</h2>
+          <ul className="space-y-3 text-sm text-white/70">
             {(sources ?? []).map((source) => (
               <li key={source.id}>
-                <p className="font-semibold text-slate-900">{source.name}</p>
+                <p className="font-semibold text-white">{source.name}</p>
                 <p>{source.url ?? 'No URL provided'}</p>
-                <p className="text-xs text-slate-500">Last scraped: {source.last_scraped_at ?? 'Never'}</p>
+                <p className="text-xs text-white/60">Last scraped: {source.last_scraped_at ?? 'Never'}</p>
               </li>
             ))}
             {(sources ?? []).length === 0 ? <li>No sources yet.</li> : null}
