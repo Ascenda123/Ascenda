@@ -10,7 +10,6 @@ import { Button } from '@/components/ui/button';
 const navLinks = [
   { label: 'Matches', href: '/matches' },
   { label: 'Scholarships', href: '/scholarships' },
-  { label: 'Counselors', href: '/counselors' },
   { label: 'Stories', href: '/stories' }
 ];
 
@@ -48,7 +47,7 @@ const steps = [
   },
   {
     title: 'Build & share your plan',
-    copy: 'Auto-timeline essays, tests, references, and direct-apply quirks. Share with counselors instantly.'
+    copy: 'Auto-timeline essays, tests, references, and direct-apply quirks. Share with collaborators instantly.'
   }
 ];
 
@@ -109,12 +108,12 @@ const faqs = [
   },
   {
     question: 'Who uses Ascenda?',
-    answer: 'Students, counselors, and universities craving one modern, polished planning space.'
+    answer: 'Students, families, and universities craving one modern, polished planning space.'
   },
   {
     question: 'Is there a free plan?',
     answer:
-      'Students start free with vibe profiles, five program boards, and scholarship tracking. Counselors can invite teams on flexible plans.'
+      'Students start free with vibe profiles, five program boards, and scholarship tracking. Teams can invite collaborators on flexible plans.'
   },
   {
     question: 'Is my data private?',
@@ -129,7 +128,7 @@ const faqs = [
   {
     question: 'Can I talk to someone?',
     answer:
-      'Absolutely. Email hello@ascenda.com for a live walkthrough, counselor intro, or onboarding help.'
+      'Absolutely. Email hello@ascenda.com for a live walkthrough, expert intro, or onboarding help.'
   }
 ];
 
@@ -194,10 +193,10 @@ export default function HomePage() {
             <div className="space-y-6">
               <p className="text-xs uppercase tracking-[0.5em] text-slate-400">Admissions OS · Minimal decisions</p>
               <h1 className="text-5xl font-semibold leading-tight tracking-tight sm:text-[3.6rem]">
-                Replace chaos with one calm admissions studio.
+                Ascenda: Match. Apply. Ascend.
               </h1>
               <p className="text-lg text-slate-600 sm:text-xl">
-                Ascenda gives students, counselors, and families a single, beautifully organized workflow—fit scores, deadlines,
+                Ascenda gives students, families, and admissions teams a single, beautifully organized workflow—fit scores, deadlines,
                 scholarships, and notes stay perfectly aligned without extra dashboards.
               </p>
               <div className="flex flex-wrap gap-3">
@@ -215,7 +214,7 @@ export default function HomePage() {
                 </li>
                 <li className="flex items-center gap-2">
                   <span className="h-1.5 w-1.5 rounded-full bg-slate-900" />
-                  Counselor + student notes stay in sync.
+                  Notes stay perfectly in sync.
                 </li>
                 <li className="flex items-center gap-2">
                   <span className="h-1.5 w-1.5 rounded-full bg-slate-900" />
@@ -261,7 +260,7 @@ export default function HomePage() {
                     </ul>
                   </div>
                   <div className="rounded-[24px] border border-slate-100 px-5 py-4">
-                    <p className="text-xs uppercase tracking-[0.35em] text-slate-500">Counselor sync</p>
+                    <p className="text-xs uppercase tracking-[0.35em] text-slate-500">Notes sync</p>
                     <div className="mt-3 flex flex-col gap-2 text-sm text-slate-600">
                       <span>“Greenlit for ESADE interview—send prep doc.”</span>
                       <span className="text-xs text-slate-400">Claire · 2 hours ago</span>
@@ -371,7 +370,7 @@ export default function HomePage() {
               </li>
               <li className="flex items-center gap-2">
                 <span className="h-1.5 w-1.5 rounded-full bg-slate-900" />
-                Counselor notes synced automatically
+                Notes stay synced automatically
               </li>
             </ul>
             <div className="flex flex-wrap gap-3 pt-2">
@@ -497,7 +496,7 @@ export default function HomePage() {
         <section className="mt-16 rounded-[32px] border border-slate-100 bg-white p-6">
           <div className="flex flex-col gap-2 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-xs uppercase tracking-[0.4em] text-slate-400">Proof points</p>
-            <p>Students and counselors feel the delta immediately—data shows why.</p>
+            <p>Students and families feel the delta immediately—data shows why.</p>
           </div>
           <div className="mt-6 grid gap-4 sm:grid-cols-3">
             {metrics.map((metric) => (
@@ -522,7 +521,7 @@ export default function HomePage() {
               </p>
               <div className="flex flex-wrap gap-3 text-sm text-slate-600">
                 <Button asChild size="sm" className="bg-slate-900 text-white hover:bg-slate-800">
-                  <Link href="mailto:hello@ascenda.com">Talk to a counselor</Link>
+                  <Link href="mailto:hello@ascenda.com">Talk to our team</Link>
                 </Button>
                 <Button asChild size="sm" variant="ghost" className="border border-slate-200 text-slate-900 hover:bg-slate-50">
                   <Link href="/stories">Read stories</Link>
@@ -563,7 +562,7 @@ export default function HomePage() {
           <p className="text-xs uppercase tracking-[0.5em] text-slate-400">Minimalism meets impact</p>
           <h2 className="text-3xl font-semibold">Launch your admissions era with Ascenda.</h2>
           <p className="text-sm text-slate-600">
-            Keep every essay, scholarship, and counselor update in one clean studio. Students stay creative, counselors stay informed.
+            Keep every essay, scholarship, and plan update in one clean studio. Students stay creative, teams stay informed.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
             <Button asChild size="lg" className="bg-slate-900 text-white hover:bg-slate-800">
