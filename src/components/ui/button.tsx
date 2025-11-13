@@ -4,21 +4,24 @@ import { cn } from '@/lib/utils';
 import type { ButtonHTMLAttributes } from 'react';
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
+  'inline-flex items-center justify-center rounded-2xl text-sm font-semibold tracking-tight transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan/60 focus-visible:ring-offset-0 disabled:pointer-events-none disabled:opacity-60',
   {
     variants: {
       variant: {
-        default: 'bg-slate-900 text-white hover:bg-slate-800',
-        outline: 'border border-slate-300 bg-white text-slate-900 hover:bg-slate-100',
-        ghost: 'hover:bg-slate-100 hover:text-slate-900',
-        destructive: 'bg-red-600 text-white hover:bg-red-700',
-        secondary: 'bg-slate-100 text-slate-900 hover:bg-slate-200'
+        default:
+          'bg-gradient-to-r from-iris via-sunrise/80 to-cyan text-white shadow-glow-sm hover:-translate-y-0.5 hover:shadow-glow-lg',
+        outline:
+          'border border-white/20 bg-white/5 text-white/90 backdrop-blur hover:border-white/40 hover:-translate-y-0.5',
+        ghost: 'text-white/80 hover:text-white hover:bg-white/5',
+        destructive: 'bg-red-600 text-white hover:bg-red-500/90',
+        secondary: 'bg-white text-night hover:bg-sand hover:text-night',
+        soft: 'bg-iris/15 text-iris hover:bg-iris/25'
       },
       size: {
-        default: 'h-10 px-4 py-2',
-        sm: 'h-9 rounded-md px-3',
-        lg: 'h-11 rounded-md px-8',
-        icon: 'h-10 w-10'
+        default: 'h-11 px-6',
+        sm: 'h-9 rounded-xl px-3',
+        lg: 'h-12 rounded-3xl px-8 text-base',
+        icon: 'h-10 w-10 rounded-2xl'
       }
     },
     defaultVariants: {

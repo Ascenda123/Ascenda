@@ -1,4 +1,4 @@
-import { createBrowserClient } from '@supabase/auth-helpers-nextjs';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import type { SupabaseClient } from '@supabase/auth-helpers-nextjs';
 import type { Database } from '../types/database';
 
@@ -13,7 +13,9 @@ export const getBrowserSupabaseClient = (): SupabaseClient<Database> => {
       throw new Error('Missing Supabase browser credentials');
     }
 
-    client = createBrowserClient<Database>(url, anonKey, {
+    client = createClientComponentClient<Database>({
+      supabaseUrl: url,
+      supabaseKey: anonKey,
       options: {
         realtime: {
           params: {

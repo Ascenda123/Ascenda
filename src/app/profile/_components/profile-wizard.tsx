@@ -11,6 +11,13 @@ import {
   profileAcademicsSchema,
   profilePreferencesSchema,
   profileAspirationsSchema,
+  CURRICULUM_OPTIONS,
+  DESTINATION_COUNTRIES,
+  CAMPUS_TYPE_OPTIONS,
+  SETTING_TYPE_OPTIONS,
+  SIZE_OPTIONS,
+  DELIVERY_OPTIONS,
+  PROGRAM_LEVEL_OPTIONS,
   type ProfilePersonalValues,
   type ProfileAcademicsValues,
   type ProfilePreferencesValues,
@@ -23,7 +30,41 @@ import {
   saveAspirationsStep
 } from '../actions';
 import { CountrySelect } from '@/components/inputs/country-select';
+import { HomeCountrySelect } from '@/components/inputs/home-country-select';
 import { SubjectGradeTable } from '@/components/inputs/subject-grade-table';
+
+const DESTINATION_COUNTRY_SET = new Set<string>(DESTINATION_COUNTRIES);
+const PROGRAM_LEVEL_SET = new Set<string>(PROGRAM_LEVEL_OPTIONS);
+
+const humanizeLabel = (value: string) =>
+  value
+    .split('_')
+    .map((segment) => `${segment.charAt(0).toUpperCase()}${segment.slice(1)}`)
+    .join(' ');
+
+const TARGET_FIELD_OPTIONS = [
+  'Business',
+  'Engineering',
+  'Data Science',
+  'Finance',
+  'Health Sciences',
+  'Law',
+  'Creative Arts',
+  'Technology',
+  'Education'
+] as const;
+
+const JOB_TITLE_OPTIONS = [
+  'Data Scientist',
+  'Product Manager',
+  'Software Engineer',
+  'Consultant',
+  'Researcher',
+  'Analyst',
+  'Entrepreneur',
+  'Designer',
+  'Investment Banker'
+] as const;
 
 interface ProfileWizardProps {
   profile: Record<string, any> | null;
@@ -38,6 +79,27 @@ export const ProfileWizard = ({ profile, academics, preferences, aspirations }: 
   const [currentStep, setCurrentStep] = useState<StepKey>('personal');
   const [isPending, startTransition] = useTransition();
   const [status, setStatus] = useState<string | null>(null);
+  const [targetFieldOther, setTargetFieldOther] = useState('');
+  const [jobTitleOther, setJobTitleOther] = useState('');
+
+  const deviceTimeZone = useMemo(() => {
+    if (typeof Intl !== 'undefined' && typeof Intl.DateTimeFormat === 'function') {
+      return Intl.DateTimeFormat().resolvedOptions().timeZone ?? 'UTC';
+    }
+    return 'UTC';
+  }, []);
+
+  const normalizedCountries = (preferences?.countries ?? []).filter((country: string) =>
+    DESTINATION_COUNTRY_SET.has(country)
+  );
+  const initialCountries = normalizedCountries.length ? normalizedCountries : [DESTINATION_COUNTRIES[0]];
+
+  const normalizedProgramLevels = (preferences?.program_levels ?? []).filter((level: string) =>
+    PROGRAM_LEVEL_SET.has(level)
+  );
+  const initialProgramLevels = normalizedProgramLevels.length
+    ? normalizedProgramLevels
+    : [PROGRAM_LEVEL_OPTIONS[0]];
 
   const personalForm = useForm<ProfilePersonalValues>({
     resolver: zodResolver(profilePersonalSchema),
@@ -45,7 +107,7 @@ export const ProfileWizard = ({ profile, academics, preferences, aspirations }: 
       fullName: profile?.full_name ?? '',
       country: profile?.country ?? '',
       locale: profile?.locale ?? 'en',
-      timeZone: profile?.time_zone ?? 'UTC'
+      timeZone: profile?.time_zone ?? deviceTimeZone
     }
   });
 
@@ -69,12 +131,11 @@ export const ProfileWizard = ({ profile, academics, preferences, aspirations }: 
       budgetMin: preferences?.budget_min ?? 0,
       budgetMax: preferences?.budget_max ?? 0,
       aidNeeded: preferences?.aid_needed ?? false,
-      countries: preferences?.countries ?? [],
-      languages: preferences?.languages ?? ['English'],
+      countries: initialCountries,
       campusType: preferences?.campus_type ?? undefined,
       setting: preferences?.setting ?? undefined,
       size: preferences?.size ?? undefined,
-      programLevels: preferences?.program_levels ?? ['Undergraduate'],
+      programLevels: initialProgramLevels,
       delivery: preferences?.delivery ?? undefined
     }
   });
@@ -87,6 +148,19 @@ export const ProfileWizard = ({ profile, academics, preferences, aspirations }: 
       notes: aspirations?.notes ?? ''
     }
   });
+
+  const {
+    ref: targetFieldsRef,
+    onChange: targetFieldsOnChange,
+    onBlur: targetFieldsOnBlur,
+    name: targetFieldsName
+  } = aspirationsForm.register('targetFields');
+  const {
+    ref: jobTitlesRef,
+    onChange: jobTitlesOnChange,
+    onBlur: jobTitlesOnBlur,
+    name: jobTitlesName
+  } = aspirationsForm.register('jobTitles');
 
   const steps: { key: StepKey; title: string; description: string }[] = useMemo(
     () => [
@@ -152,6 +226,28 @@ export const ProfileWizard = ({ profile, academics, preferences, aspirations }: 
     });
   };
 
+  const handleAddTargetField = () => {
+    const trimmed = targetFieldOther.trim();
+    if (!trimmed) {
+      return;
+    }
+    const current = aspirationsForm.getValues('targetFields');
+    const nextValues = current.includes(trimmed) ? current : [...current, trimmed];
+    aspirationsForm.setValue('targetFields', nextValues, { shouldValidate: true });
+    setTargetFieldOther('');
+  };
+
+  const handleAddJobTitle = () => {
+    const trimmed = jobTitleOther.trim();
+    if (!trimmed) {
+      return;
+    }
+    const current = aspirationsForm.getValues('jobTitles');
+    const nextValues = current.includes(trimmed) ? current : [...current, trimmed];
+    aspirationsForm.setValue('jobTitles', nextValues, { shouldValidate: true });
+    setJobTitleOther('');
+  };
+
   return (
     <div className="grid gap-6 lg:grid-cols-[320px,1fr]">
       <aside className="space-y-4">
@@ -183,6 +279,7 @@ export const ProfileWizard = ({ profile, academics, preferences, aspirations }: 
       <div className="space-y-6">
         {currentStep === 'personal' ? (
           <form className="space-y-4" onSubmit={personalForm.handleSubmit(handlePersonalSubmit)}>
+            <input type="hidden" {...personalForm.register('locale')} />
             <div>
               <Label htmlFor="fullName">Full name</Label>
               <Input id="fullName" {...personalForm.register('fullName')} />
@@ -194,7 +291,11 @@ export const ProfileWizard = ({ profile, academics, preferences, aspirations }: 
             </div>
             <div>
               <Label htmlFor="country">Home country</Label>
-              <Input id="country" {...personalForm.register('country')} />
+              <HomeCountrySelect
+                id="country"
+                value={personalForm.watch('country')}
+                onChange={(value) => personalForm.setValue('country', value)}
+              />
               {personalForm.formState.errors.country ? (
                 <p className="text-xs text-red-600" role="alert">
                   {personalForm.formState.errors.country.message}
@@ -202,12 +303,8 @@ export const ProfileWizard = ({ profile, academics, preferences, aspirations }: 
               ) : null}
             </div>
             <div>
-              <Label htmlFor="locale">Preferred language</Label>
-              <Input id="locale" {...personalForm.register('locale')} />
-            </div>
-            <div>
               <Label htmlFor="timeZone">Time zone</Label>
-              <Input id="timeZone" {...personalForm.register('timeZone')} />
+              <Input id="timeZone" readOnly {...personalForm.register('timeZone')} />
               {personalForm.formState.errors.timeZone ? (
                 <p className="text-xs text-red-600" role="alert">
                   {personalForm.formState.errors.timeZone.message}
@@ -224,7 +321,18 @@ export const ProfileWizard = ({ profile, academics, preferences, aspirations }: 
           <form className="space-y-4" onSubmit={academicsForm.handleSubmit(handleAcademicsSubmit)}>
             <div>
               <Label htmlFor="curriculum">Curriculum</Label>
-              <Input id="curriculum" {...academicsForm.register('curriculum')} />
+              <select
+                id="curriculum"
+                {...academicsForm.register('curriculum')}
+                className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
+              >
+                <option value="">Select curriculum</option>
+                {CURRICULUM_OPTIONS.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
               {academicsForm.formState.errors.curriculum ? (
                 <p className="text-xs text-red-600" role="alert">
                   {academicsForm.formState.errors.curriculum.message}
@@ -234,29 +342,67 @@ export const ProfileWizard = ({ profile, academics, preferences, aspirations }: 
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <Label htmlFor="gpa">GPA</Label>
-                <Input id="gpa" type="number" step="0.01" {...academicsForm.register('gpa', { valueAsNumber: true })} />
+                <Input
+                  id="gpa"
+                  type="number"
+                  step="0.01"
+                  min={0}
+                  max={4}
+                  {...academicsForm.register('gpa', { valueAsNumber: true })}
+                />
               </div>
               <div>
                 <Label htmlFor="ibTotal">IB Total</Label>
-                <Input id="ibTotal" type="number" {...academicsForm.register('ibTotal', { valueAsNumber: true })} />
+                <Input
+                  id="ibTotal"
+                  type="number"
+                  min={0}
+                  max={45}
+                  {...academicsForm.register('ibTotal', { valueAsNumber: true })}
+                />
               </div>
               <div>
                 <Label htmlFor="sat">SAT</Label>
-                <Input id="sat" type="number" {...academicsForm.register('sat', { valueAsNumber: true })} />
+                <Input
+                  id="sat"
+                  type="number"
+                  min={400}
+                  max={1600}
+                  {...academicsForm.register('sat', { valueAsNumber: true })}
+                />
               </div>
               <div>
                 <Label htmlFor="act">ACT</Label>
-                <Input id="act" type="number" {...academicsForm.register('act', { valueAsNumber: true })} />
+                <Input
+                  id="act"
+                  type="number"
+                  min={1}
+                  max={36}
+                  {...academicsForm.register('act', { valueAsNumber: true })}
+                />
               </div>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <Label htmlFor="toefl">TOEFL</Label>
-                <Input id="toefl" type="number" {...academicsForm.register('toefl', { valueAsNumber: true })} />
+                <Input
+                  id="toefl"
+                  type="number"
+                  min={0}
+                  max={120}
+                  {...academicsForm.register('toefl', { valueAsNumber: true })}
+                />
               </div>
               <div>
                 <Label htmlFor="ielts">IELTS</Label>
-                <Input id="ielts" type="number" step="0.5" {...academicsForm.register('ielts', { valueAsNumber: true })} />
+                <Input
+                  id="ielts"
+                  type="number"
+                  min={0}
+                  max={9}
+                  step="0.5"
+                  {...academicsForm.register('ielts', { valueAsNumber: true })}
+                />
               </div>
             </div>
             <div>
@@ -298,31 +444,86 @@ export const ProfileWizard = ({ profile, academics, preferences, aspirations }: 
                 </p>
               ) : null}
             </div>
-            <div>
-              <Label htmlFor="languages">Preferred languages</Label>
-              <Input id="languages" {...preferencesForm.register('languages.0')} />
-            </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <Label htmlFor="campusType">Campus type</Label>
-                <Input id="campusType" {...preferencesForm.register('campusType')} />
+                <select
+                  id="campusType"
+                  {...preferencesForm.register('campusType')}
+                  className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
+                >
+                  <option value="">Select campus type</option>
+                  {CAMPUS_TYPE_OPTIONS.map((option) => (
+                    <option key={option} value={option}>
+                      {humanizeLabel(option)}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div>
                 <Label htmlFor="setting">Setting</Label>
-                <Input id="setting" {...preferencesForm.register('setting')} />
+                <select
+                  id="setting"
+                  {...preferencesForm.register('setting')}
+                  className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
+                >
+                  <option value="">Select setting</option>
+                  {SETTING_TYPE_OPTIONS.map((option) => (
+                    <option key={option} value={option}>
+                      {humanizeLabel(option)}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div>
                 <Label htmlFor="size">Size</Label>
-                <Input id="size" {...preferencesForm.register('size')} />
+                <select
+                  id="size"
+                  {...preferencesForm.register('size')}
+                  className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
+                >
+                  <option value="">Select size</option>
+                  {SIZE_OPTIONS.map((option) => (
+                    <option key={option} value={option}>
+                      {humanizeLabel(option)}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div>
                 <Label htmlFor="delivery">Delivery</Label>
-                <Input id="delivery" {...preferencesForm.register('delivery')} />
+                <select
+                  id="delivery"
+                  {...preferencesForm.register('delivery')}
+                  className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
+                >
+                  <option value="">Select delivery</option>
+                  {DELIVERY_OPTIONS.map((option) => (
+                    <option key={option} value={option}>
+                      {humanizeLabel(option)}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
             <div>
               <Label htmlFor="programLevels">Program level</Label>
-              <Input id="programLevels" {...preferencesForm.register('programLevels.0')} />
+              <select
+                id="programLevels"
+                multiple
+                value={preferencesForm.watch('programLevels')}
+                onChange={(event) => {
+                  const selected = Array.from(event.target.selectedOptions).map((option) => option.value);
+                  preferencesForm.setValue('programLevels', selected);
+                }}
+                className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
+              >
+                {PROGRAM_LEVEL_OPTIONS.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
               {preferencesForm.formState.errors.programLevels ? (
                 <p className="text-xs text-red-600" role="alert">
                   {preferencesForm.formState.errors.programLevels.message}
@@ -348,16 +549,88 @@ export const ProfileWizard = ({ profile, academics, preferences, aspirations }: 
           <form className="space-y-4" onSubmit={aspirationsForm.handleSubmit(handleAspirationsSubmit)}>
             <div>
               <Label htmlFor="targetFields">Target fields</Label>
-              <Input id="targetFields" {...aspirationsForm.register('targetFields.0')} />
+              <select
+                id="targetFields"
+                name={targetFieldsName}
+                ref={targetFieldsRef}
+                multiple
+                value={aspirationsForm.watch('targetFields')}
+                onBlur={targetFieldsOnBlur}
+                onChange={(event) => {
+                  const selected = Array.from(event.target.selectedOptions).map((option) => option.value);
+                  aspirationsForm.setValue('targetFields', selected, { shouldValidate: true });
+                  targetFieldsOnChange(event);
+                }}
+                className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
+              >
+                {TARGET_FIELD_OPTIONS.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
               {aspirationsForm.formState.errors.targetFields ? (
                 <p className="text-xs text-red-600" role="alert">
                   {aspirationsForm.formState.errors.targetFields.message}
                 </p>
               ) : null}
+              <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center">
+                <Input
+                  placeholder="Add another field"
+                  value={targetFieldOther}
+                  onChange={(event) => setTargetFieldOther(event.target.value)}
+                />
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  className="self-start"
+                  disabled={!targetFieldOther.trim()}
+                  onClick={handleAddTargetField}
+                >
+                  Add
+                </Button>
+              </div>
             </div>
             <div>
               <Label htmlFor="jobTitles">Dream jobs</Label>
-              <Input id="jobTitles" {...aspirationsForm.register('jobTitles.0')} />
+              <select
+                id="jobTitles"
+                name={jobTitlesName}
+                ref={jobTitlesRef}
+                multiple
+                value={aspirationsForm.watch('jobTitles')}
+                onBlur={jobTitlesOnBlur}
+                onChange={(event) => {
+                  const selected = Array.from(event.target.selectedOptions).map((option) => option.value);
+                  aspirationsForm.setValue('jobTitles', selected, { shouldValidate: true });
+                  jobTitlesOnChange(event);
+                }}
+                className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
+              >
+                {JOB_TITLE_OPTIONS.map((title) => (
+                  <option key={title} value={title}>
+                    {title}
+                  </option>
+                ))}
+              </select>
+              <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center">
+                <Input
+                  placeholder="Add another job title"
+                  value={jobTitleOther}
+                  onChange={(event) => setJobTitleOther(event.target.value)}
+                />
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  className="self-start"
+                  disabled={!jobTitleOther.trim()}
+                  onClick={handleAddJobTitle}
+                >
+                  Add
+                </Button>
+              </div>
             </div>
             <div>
               <Label htmlFor="notes">Notes</Label>

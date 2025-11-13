@@ -2,14 +2,14 @@
 create extension if not exists "pgcrypto";
 
 -- Custom enums
-create type if not exists campus_type as enum ('urban', 'suburban', 'rural', 'online');
-create type if not exists setting_type as enum ('public', 'private', 'international', 'other');
-create type if not exists size_type as enum ('small', 'medium', 'large', 'mega');
-create type if not exists delivery_type as enum ('in_person', 'online', 'hybrid');
-create type if not exists application_task_category as enum ('test', 'essay', 'reference', 'visa', 'finance', 'portal');
-create type if not exists application_status as enum ('planning', 'in_progress', 'submitted', 'decision', 'enrolled');
-create type if not exists checklist_status as enum ('todo', 'doing', 'done');
-create type if not exists source_health as enum ('ok', 'stale', 'error');
+create type campus_type as enum ('urban', 'suburban', 'rural', 'online');
+create type setting_type as enum ('public', 'private', 'international', 'other');
+create type size_type as enum ('small', 'medium', 'large', 'mega');
+create type delivery_type as enum ('in_person', 'online', 'hybrid');
+create type application_task_category as enum ('test', 'essay', 'reference', 'visa', 'finance', 'portal');
+create type application_status as enum ('planning', 'in_progress', 'submitted', 'decision', 'enrolled');
+create type checklist_status as enum ('todo', 'doing', 'done');
+create type source_health as enum ('ok', 'stale', 'error');
 
 -- Profiles
 create table if not exists profiles (

@@ -2,17 +2,7 @@
 
 import type { ChangeEvent } from 'react';
 import { cn } from '@/lib/utils';
-
-const COUNTRY_OPTIONS = [
-  'Canada',
-  'United States',
-  'United Kingdom',
-  'Singapore',
-  'Australia',
-  'Germany',
-  'Netherlands',
-  'Japan'
-];
+import { DESTINATION_COUNTRIES } from '@/lib/validation/profile';
 
 interface CountrySelectProps {
   value: string[];
@@ -39,7 +29,7 @@ export const CountrySelect = ({ value, onChange, id, name }: CountrySelectProps)
         'w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400'
       )}
     >
-      {COUNTRY_OPTIONS.map((country) => (
+      {DESTINATION_COUNTRIES.map((country) => (
         <option key={country} value={country}>
           {country}
         </option>

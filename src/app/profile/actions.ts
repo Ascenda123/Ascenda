@@ -70,7 +70,6 @@ export const savePreferencesStep = async (values: ProfilePreferencesValues) => {
     budget_max: parsed.budgetMax,
     aid_needed: parsed.aidNeeded,
     countries: parsed.countries,
-    languages: parsed.languages,
     campus_type: parsed.campusType,
     setting: parsed.setting,
     size: parsed.size,
