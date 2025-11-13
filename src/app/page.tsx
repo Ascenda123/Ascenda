@@ -184,88 +184,133 @@ export default function HomePage() {
           </div>
         </motion.header>
 
-        <section className="space-y-10 border-b border-slate-100 pb-16">
+        <section className="space-y-12 border-b border-slate-100 pb-16">
           <motion.div
-            className="max-w-4xl space-y-6"
+            className="grid items-center gap-10 lg:grid-cols-[0.9fr,1.1fr]"
             initial="hidden"
             animate="visible"
             variants={fadeIn}
           >
-            <p className="text-xs uppercase tracking-[0.5em] text-slate-400">Admissions OS · Minimal decisions</p>
-            <h1 className="text-5xl font-semibold leading-[1.05] tracking-tight sm:text-[3.75rem]">
-              Less guessing. More acceptances.
-            </h1>
-            <p className="text-lg text-slate-600 sm:text-xl">
-              Ascenda replaces messy spreadsheets with one guided workspace—surface perfect-fit universities, preview real campus life,
-              and follow a living application plan that keeps every stakeholder aligned.
-            </p>
-            <div className="flex flex-wrap gap-3">
-              <Button asChild size="lg" className="bg-slate-900 text-white hover:bg-slate-800">
-                <Link href="/signup">Get for Mac</Link>
-              </Button>
-              <Button
-                asChild
-                size="lg"
-                variant="outline"
-                className="border-slate-900 text-slate-900 hover:bg-slate-900 hover:text-white"
-              >
-                <Link href="/download">Get for Windows</Link>
-              </Button>
+            <div className="space-y-6">
+              <p className="text-xs uppercase tracking-[0.5em] text-slate-400">Admissions OS · Minimal decisions</p>
+              <h1 className="text-5xl font-semibold leading-tight tracking-tight sm:text-[3.6rem]">
+                Replace chaos with one calm admissions studio.
+              </h1>
+              <p className="text-lg text-slate-600 sm:text-xl">
+                Ascenda gives students, counselors, and families a single, beautifully organized workflow—fit scores, deadlines,
+                scholarships, and notes stay perfectly aligned without extra dashboards.
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <Button asChild size="lg" className="bg-slate-900 text-white hover:bg-slate-800">
+                  <Link href="/signup">Launch Ascenda</Link>
+                </Button>
+                <Button asChild size="lg" variant="outline" className="border-slate-200 text-slate-900 hover:bg-slate-50">
+                  <Link href="/download">See product tour</Link>
+                </Button>
+              </div>
+              <ul className="flex flex-wrap gap-4 text-sm text-slate-500">
+                <li className="flex items-center gap-2">
+                  <span className="h-1.5 w-1.5 rounded-full bg-slate-900" />
+                  Fit scores auto recalibrate with every edit.
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="h-1.5 w-1.5 rounded-full bg-slate-900" />
+                  Counselor + student notes stay in sync.
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="h-1.5 w-1.5 rounded-full bg-slate-900" />
+                  Timeline nudges prevent deadline drift.
+                </li>
+              </ul>
             </div>
-            <div className="grid gap-4 pt-6 text-sm text-slate-500 sm:grid-cols-3">
-              {heroStats.map((stat) => (
-                <div
-                  key={stat.label}
-                  className="rounded-2xl border border-slate-100 bg-white/70 p-4 shadow-[0_8px_30px_rgba(15,23,42,0.05)] backdrop-blur"
-                >
-                  <p className="text-2xl font-semibold text-slate-900">{stat.value}</p>
-                  <p className="uppercase tracking-[0.2em]">{stat.label}</p>
+            <div className="rounded-[36px] border border-slate-100 bg-white p-6 shadow-[0_35px_80px_rgba(15,23,42,0.08)]">
+              <div className="flex items-center justify-between gap-4 text-[0.7rem] uppercase tracking-[0.4em] text-slate-400">
+                <span>Ascenda board</span>
+                <div className="flex gap-2">
+                  <span className="rounded-full border border-slate-200 px-3 py-0.5 text-[0.55rem]">Plan</span>
+                  <span className="rounded-full border border-slate-200 px-3 py-0.5 text-[0.55rem] text-slate-500">Signals</span>
+                  <span className="rounded-full border border-slate-200 px-3 py-0.5 text-[0.55rem] text-slate-500">Notes</span>
                 </div>
-              ))}
+              </div>
+              <div className="mt-6 space-y-4">
+                <div className="rounded-[24px] border border-slate-100 bg-slate-50 px-5 py-4">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs uppercase tracking-[0.35em] text-slate-500">Fit score</p>
+                    <span className="text-xs uppercase tracking-[0.3em] text-emerald-500">On target</span>
+                  </div>
+                  <div className="mt-2 flex items-end justify-between">
+                    <p className="text-4xl font-semibold text-slate-900">92%</p>
+                    <p className="text-sm text-slate-600">Parsons Paris · Strategic Design</p>
+                  </div>
+                  <div className="mt-3 h-2 rounded-full bg-white">
+                    <div className="h-full rounded-full bg-gradient-to-r from-slate-900 via-cyan to-emerald-400" style={{ width: '92%' }} />
+                  </div>
+                </div>
+                <div className="grid gap-3 md:grid-cols-2">
+                  <div className="rounded-[24px] border border-slate-100 px-5 py-4">
+                    <p className="text-xs uppercase tracking-[0.35em] text-slate-500">Next actions</p>
+                    <ul className="mt-3 space-y-2 text-sm text-slate-700">
+                      <li className="flex items-center justify-between">
+                        <span>Scholarship essay · Draft 2</span>
+                        <span className="text-xs text-slate-400">Due Fri</span>
+                      </li>
+                      <li className="flex items-center justify-between">
+                        <span>Portfolio upload · Motion study</span>
+                        <span className="text-xs text-slate-400">Needs review</span>
+                      </li>
+                    </ul>
+                  </div>
+                  <div className="rounded-[24px] border border-slate-100 px-5 py-4">
+                    <p className="text-xs uppercase tracking-[0.35em] text-slate-500">Counselor sync</p>
+                    <div className="mt-3 flex flex-col gap-2 text-sm text-slate-600">
+                      <span>“Greenlit for ESADE interview—send prep doc.”</span>
+                      <span className="text-xs text-slate-400">Claire · 2 hours ago</span>
+                      <span className="text-xs text-slate-400">Shared on Ascenda workspace</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="rounded-[24px] border border-slate-100 px-5 py-4">
+                  <p className="text-xs uppercase tracking-[0.35em] text-slate-500">Active signals</p>
+                  <div className="mt-3 grid gap-3 text-sm text-slate-600 md:grid-cols-3">
+                    <div>
+                      <p className="text-2xl font-semibold text-slate-900">4</p>
+                      <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Programs</p>
+                    </div>
+                    <div>
+                      <p className="text-2xl font-semibold text-slate-900">2</p>
+                      <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Deadlines</p>
+                    </div>
+                    <div>
+                      <p className="text-2xl font-semibold text-slate-900">1</p>
+                      <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Scholarship</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-slate-500">
+                <span>Updated 1 min ago</span>
+                <span className="h-px flex-1 bg-slate-100"></span>
+                <span>View timeline →</span>
+              </div>
             </div>
           </motion.div>
 
           <motion.div
-            className="grid gap-4 lg:grid-cols-[1.05fr_0.95fr]"
+            className="grid gap-4 pt-2 text-sm text-slate-500 sm:grid-cols-3"
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, amount: 0.3 }}
             variants={fadeIn}
           >
-            <div className="space-y-4 rounded-[32px] border border-slate-100 bg-white p-6 shadow-[0_30px_60px_rgba(15,23,42,0.07)]">
-              <div className="text-[0.65rem] uppercase tracking-[0.45em] text-slate-400">Application plan preview</div>
-              <h2 className="text-2xl font-semibold">Fit score: 92% · Parsons Paris</h2>
-              <p className="text-sm text-slate-600">
-                Modules, portfolio cues, and lifestyle insights appear instantly. Scholarship deadlines are flagged—no digging required.
-              </p>
-              <div className="mt-6 grid gap-3 text-sm text-slate-600 sm:grid-cols-2">
-                <div className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3">Real campus clips from Milan to Singapore.</div>
-                <div className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3">Scholarship alerts with auto-tagged essays.</div>
+            {heroStats.map((stat) => (
+              <div
+                key={stat.label}
+                className="rounded-2xl border border-slate-100 bg-white/80 p-4 text-left shadow-[0_12px_35px_rgba(15,23,42,0.06)]"
+              >
+                <p className="text-2xl font-semibold text-slate-900">{stat.value}</p>
+                <p className="uppercase tracking-[0.2em]">{stat.label}</p>
               </div>
-              <div className="flex flex-wrap gap-2 pt-4 text-xs text-slate-500">
-                <span className="rounded-full border border-slate-200 px-3 py-1">Requirements synced</span>
-                <span className="rounded-full border border-slate-200 px-3 py-1">Counselor view</span>
-              </div>
-            </div>
-            <div className="rounded-[32px] border border-slate-100 bg-white p-6">
-              <div className="text-[0.65rem] uppercase tracking-[0.45em] text-slate-400">Your shortlist</div>
-              <h2 className="text-2xl font-semibold">Stay private. Drop the chaos.</h2>
-              <ul className="mt-5 space-y-4 text-sm text-slate-600">
-                <li className="flex items-start justify-between gap-4">
-                  <span>Waterloo · Co-op CS</span>
-                  <span className="text-xs uppercase tracking-[0.3em] text-emerald-500">Fit 89%</span>
-                </li>
-                <li className="flex items-start justify-between gap-4">
-                  <span>ESADE · BBA</span>
-                  <span className="text-xs uppercase tracking-[0.3em] text-amber-500">Interview held</span>
-                </li>
-                <li className="flex items-start justify-between gap-4">
-                  <span>Parsons · Strategic Design</span>
-                  <span className="text-xs uppercase tracking-[0.3em] text-slate-500">Portfolio 5/7</span>
-                </li>
-              </ul>
-              <p className="mt-6 text-xs uppercase tracking-[0.3em] text-slate-500">Counselors stay in the loop.</p>
-            </div>
+            ))}
           </motion.div>
         </section>
 
