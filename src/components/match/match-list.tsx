@@ -75,12 +75,12 @@ export const MatchList = ({ matches }: MatchListProps) => {
 
   return (
     <div className="space-y-6">
-      <section className="grid gap-4 rounded-3xl border border-white/10 bg-white/5 p-5 shadow-glow-sm backdrop-blur sm:grid-cols-2 lg:grid-cols-4">
+      <section className="grid gap-4 rounded-[28px] border border-slate-100 bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] sm:grid-cols-2 lg:grid-cols-4">
         <div>
           <Label htmlFor="country-filter">Country</Label>
           <select
             id="country-filter"
-            className="mt-2 w-full rounded-2xl border border-white/10 bg-night/40 px-4 py-3 text-sm text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan/50"
+            className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/30"
             value={country}
             onChange={(event) => setCountry(event.target.value)}
           >
@@ -96,7 +96,7 @@ export const MatchList = ({ matches }: MatchListProps) => {
           <Label htmlFor="language-filter">Language</Label>
           <select
             id="language-filter"
-            className="mt-2 w-full rounded-2xl border border-white/10 bg-night/40 px-4 py-3 text-sm text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan/50"
+            className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/30"
             value={language}
             onChange={(event) => setLanguage(event.target.value)}
           >
@@ -112,7 +112,7 @@ export const MatchList = ({ matches }: MatchListProps) => {
           <Label htmlFor="level-filter">Level</Label>
           <select
             id="level-filter"
-            className="mt-2 w-full rounded-2xl border border-white/10 bg-night/40 px-4 py-3 text-sm text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan/50"
+            className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/30"
             value={level}
             onChange={(event) => setLevel(event.target.value)}
           >
@@ -138,7 +138,7 @@ export const MatchList = ({ matches }: MatchListProps) => {
 
       <section className="space-y-4">
         {filtered.length === 0 ? (
-          <div className="rounded-3xl border border-dashed border-white/20 bg-white/5 p-8 text-center text-white/60">
+          <div className="rounded-[28px] border border-dashed border-slate-200 bg-slate-50/50 p-8 text-center text-slate-500">
             No matches yet. Adjust your filters or update your profile for better suggestions.
           </div>
         ) : (

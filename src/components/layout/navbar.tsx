@@ -16,22 +16,22 @@ export const Navbar = () => {
   const pathname = usePathname();
 
   return (
-    <header className="sticky top-0 z-40 border-b border-white/10 bg-night/70 backdrop-blur-lg">
+    <header className="sticky top-0 z-40 border-b border-slate-100 bg-white/90 backdrop-blur-md">
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-4 md:px-6">
-        <Link href="/dashboard" className="flex items-center gap-2 font-display text-lg font-semibold text-white">
-          <span className="inline-flex h-8 w-8 items-center justify-center rounded-2xl bg-gradient-to-br from-iris to-sunrise text-sm">
+        <Link href="/dashboard" className="flex items-center gap-2 text-lg font-semibold text-slate-900">
+          <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl border border-slate-200 text-sm">
             A
           </span>
           Ascenda
         </Link>
-        <nav className="hidden items-center gap-6 text-xs uppercase tracking-[0.3em] text-white/60 md:flex">
+        <nav className="hidden items-center gap-6 text-[0.65rem] uppercase tracking-[0.35em] text-slate-400 md:flex">
           {links.map((link) => (
             <Link
               key={link.href}
               href={link.href}
               className={cn(
-                'transition hover:text-white',
-                pathname.startsWith(link.href) && 'text-white'
+                'transition hover:text-slate-900',
+                pathname.startsWith(link.href) && 'text-slate-900'
               )}
             >
               {link.label}
@@ -39,10 +39,10 @@ export const Navbar = () => {
           ))}
         </nav>
         <div className="flex items-center gap-2">
-          <Button asChild variant="ghost" className="hidden text-sm md:inline-flex">
+          <Button asChild variant="ghost" className="hidden border border-slate-200 text-sm text-slate-900 hover:bg-slate-50 md:inline-flex">
             <Link href="/matches">Matches</Link>
           </Button>
-          <Button asChild size="sm">
+          <Button asChild size="sm" className="bg-slate-900 text-white hover:bg-slate-800">
             <Link href="/applications">Planner</Link>
           </Button>
         </div>

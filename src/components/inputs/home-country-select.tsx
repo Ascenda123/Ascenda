@@ -61,7 +61,7 @@ export const HomeCountrySelect = ({ value, onChange, id, name }: HomeCountrySele
       value={value}
       onChange={handleChange}
       className={cn(
-        'w-full rounded-2xl border border-white/10 bg-night/40 px-4 py-3 text-sm text-white shadow-inner focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan/50'
+        'w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-[inset_0_1px_2px_rgba(15,23,42,0.04)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/30'
       )}
     >
       <option value="">Select a country</option>

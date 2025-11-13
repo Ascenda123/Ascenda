@@ -249,34 +249,34 @@ export const ProfileWizard = ({ profile, academics, preferences, aspirations }: 
   };
 
   return (
-    <div className="grid gap-6 text-white lg:grid-cols-[320px,1fr]">
+    <div className="grid gap-6 text-slate-900 lg:grid-cols-[320px,1fr]">
       <aside className="space-y-4">
-        <div className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-glow-sm backdrop-blur">
-          <h2 className="font-display text-xl">Onboarding progress</h2>
+        <div className="rounded-[28px] border border-slate-100 bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
+          <h2 className="text-xl font-semibold">Onboarding progress</h2>
           <ol className="mt-4 space-y-3">
             {steps.map((step, index) => (
               <li key={step.key} className="flex items-start gap-3">
                 <span
                   className={
                     index <= steps.findIndex((item) => item.key === currentStep)
-                      ? 'mt-1 flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-iris to-sunrise text-xs font-semibold text-night'
-                      : 'mt-1 flex h-6 w-6 items-center justify-center rounded-full border border-white/30 text-xs font-semibold text-white/60'
+                      ? 'mt-1 flex h-6 w-6 items-center justify-center rounded-full bg-slate-900 text-xs font-semibold text-white'
+                      : 'mt-1 flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 text-xs font-semibold text-slate-400'
                   }
                   aria-hidden
                 >
                   {index + 1}
                 </span>
                 <div>
-                  <p className="text-sm font-semibold text-white">{step.title}</p>
-                  <p className="text-xs text-white/60">{step.description}</p>
+                  <p className="text-sm font-semibold text-slate-900">{step.title}</p>
+                  <p className="text-xs text-slate-500">{step.description}</p>
                 </div>
               </li>
             ))}
           </ol>
         </div>
-        {status ? <p className="text-sm text-white/70">{status}</p> : null}
+        {status ? <p className="text-sm text-slate-500">{status}</p> : null}
       </aside>
-      <div className="space-y-6 rounded-4xl border border-white/10 bg-white/5 p-6 shadow-glow-sm backdrop-blur">
+      <div className="space-y-6 rounded-[32px] border border-slate-100 bg-white p-6 shadow-[0_25px_70px_rgba(15,23,42,0.08)]">
         {currentStep === 'personal' ? (
           <form className="space-y-4" onSubmit={personalForm.handleSubmit(handlePersonalSubmit)}>
             <input type="hidden" {...personalForm.register('locale')} />
@@ -324,7 +324,7 @@ export const ProfileWizard = ({ profile, academics, preferences, aspirations }: 
               <select
                 id="curriculum"
                 {...academicsForm.register('curriculum')}
-                className="w-full rounded-2xl border border-white/10 bg-night/40 px-4 py-3 text-sm text-white shadow-inner focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan/50"
+                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-[inset_0_1px_2px_rgba(15,23,42,0.04)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/30"
               >
                 <option value="">Select curriculum</option>
                 {CURRICULUM_OPTIONS.map((option) => (
@@ -450,7 +450,7 @@ export const ProfileWizard = ({ profile, academics, preferences, aspirations }: 
                 <select
                   id="campusType"
                   {...preferencesForm.register('campusType')}
-                  className="w-full rounded-2xl border border-white/10 bg-night/40 px-4 py-3 text-sm text-white shadow-inner focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan/50"
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-[inset_0_1px_2px_rgba(15,23,42,0.04)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/30"
                 >
                   <option value="">Select campus type</option>
                   {CAMPUS_TYPE_OPTIONS.map((option) => (
@@ -465,7 +465,7 @@ export const ProfileWizard = ({ profile, academics, preferences, aspirations }: 
                 <select
                   id="setting"
                   {...preferencesForm.register('setting')}
-                  className="w-full rounded-2xl border border-white/10 bg-night/40 px-4 py-3 text-sm text-white shadow-inner focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan/50"
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-[inset_0_1px_2px_rgba(15,23,42,0.04)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/30"
                 >
                   <option value="">Select setting</option>
                   {SETTING_TYPE_OPTIONS.map((option) => (
@@ -480,7 +480,7 @@ export const ProfileWizard = ({ profile, academics, preferences, aspirations }: 
                 <select
                   id="size"
                   {...preferencesForm.register('size')}
-                  className="w-full rounded-2xl border border-white/10 bg-night/40 px-4 py-3 text-sm text-white shadow-inner focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan/50"
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-[inset_0_1px_2px_rgba(15,23,42,0.04)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/30"
                 >
                   <option value="">Select size</option>
                   {SIZE_OPTIONS.map((option) => (
@@ -495,7 +495,7 @@ export const ProfileWizard = ({ profile, academics, preferences, aspirations }: 
                 <select
                   id="delivery"
                   {...preferencesForm.register('delivery')}
-                  className="w-full rounded-2xl border border-white/10 bg-night/40 px-4 py-3 text-sm text-white shadow-inner focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan/50"
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-[inset_0_1px_2px_rgba(15,23,42,0.04)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/30"
                 >
                   <option value="">Select delivery</option>
                   {DELIVERY_OPTIONS.map((option) => (
@@ -516,7 +516,7 @@ export const ProfileWizard = ({ profile, academics, preferences, aspirations }: 
                   const selected = Array.from(event.target.selectedOptions).map((option) => option.value);
                   preferencesForm.setValue('programLevels', selected);
                 }}
-                className="w-full rounded-2xl border border-white/10 bg-night/40 px-4 py-3 text-sm text-white shadow-inner focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan/50"
+                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-[inset_0_1px_2px_rgba(15,23,42,0.04)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/30"
               >
                 {PROGRAM_LEVEL_OPTIONS.map((option) => (
                   <option key={option} value={option}>
@@ -561,7 +561,7 @@ export const ProfileWizard = ({ profile, academics, preferences, aspirations }: 
                   aspirationsForm.setValue('targetFields', selected, { shouldValidate: true });
                   targetFieldsOnChange(event);
                 }}
-                className="w-full rounded-2xl border border-white/10 bg-night/40 px-4 py-3 text-sm text-white shadow-inner focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan/50"
+                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-[inset_0_1px_2px_rgba(15,23,42,0.04)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/30"
               >
                 {TARGET_FIELD_OPTIONS.map((option) => (
                   <option key={option} value={option}>
@@ -606,7 +606,7 @@ export const ProfileWizard = ({ profile, academics, preferences, aspirations }: 
                   aspirationsForm.setValue('jobTitles', selected, { shouldValidate: true });
                   jobTitlesOnChange(event);
                 }}
-                className="w-full rounded-2xl border border-white/10 bg-night/40 px-4 py-3 text-sm text-white shadow-inner focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan/50"
+                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-[inset_0_1px_2px_rgba(15,23,42,0.04)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/30"
               >
                 {JOB_TITLE_OPTIONS.map((title) => (
                   <option key={title} value={title}>
@@ -636,7 +636,7 @@ export const ProfileWizard = ({ profile, academics, preferences, aspirations }: 
               <Label htmlFor="notes">Notes</Label>
               <textarea
                 id="notes"
-                className="h-32 w-full rounded-2xl border border-white/10 bg-night/40 px-4 py-3 text-sm text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan/50"
+                className="h-32 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-[inset_0_1px_2px_rgba(15,23,42,0.04)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/30"
                 {...aspirationsForm.register('notes')}
               />
             </div>

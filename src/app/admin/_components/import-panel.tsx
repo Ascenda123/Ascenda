@@ -32,10 +32,10 @@ export const ImportPanel = () => {
   };
 
   return (
-    <div className="space-y-4 rounded-3xl border border-white/10 bg-white/5 p-6 shadow-glow-sm backdrop-blur">
+    <div className="space-y-4 rounded-[28px] border border-slate-100 bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
       <div className="space-y-2">
-        <h2 className="font-display text-2xl text-white">Import catalog data</h2>
-        <p className="text-sm text-white/70">
+        <h2 className="text-2xl font-semibold">Import catalog data</h2>
+        <p className="text-sm text-slate-600">
           Upload CSV exports to refresh the universities, programs, requirements, or deadlines catalog.
         </p>
       </div>
@@ -43,7 +43,7 @@ export const ImportPanel = () => {
         <Label htmlFor="template">Dataset</Label>
         <select
           id="template"
-          className="w-full rounded-2xl border border-white/10 bg-night/40 px-4 py-3 text-sm text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan/50"
+          className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/30"
           value={template}
           onChange={(event) => setTemplate(event.target.value as Template)}
         >
@@ -61,15 +61,15 @@ export const ImportPanel = () => {
           type="file"
           accept=".csv"
           onChange={handleFile}
-          className="text-sm text-white file:mr-4 file:rounded-2xl file:border-0 file:bg-white/10 file:px-4 file:py-2 file:text-white/80"
+          className="text-sm text-slate-600 file:mr-4 file:rounded-2xl file:border file:border-slate-200 file:bg-slate-50 file:px-4 file:py-2 file:text-slate-900"
         />
       </div>
-      <p className="text-sm text-white/60">Status: {status}</p>
+      <p className="text-sm text-slate-500">Status: {status}</p>
       <Button type="button" variant="outline" disabled>
         Run edge function sync (TODO)
       </Button>
       {rowCount > 0 ? (
-        <p className="text-xs text-white/50">Preview limited to parsing only in this prototype.</p>
+        <p className="text-xs text-slate-400">Preview limited to parsing only in this prototype.</p>
       ) : null}
     </div>
   );

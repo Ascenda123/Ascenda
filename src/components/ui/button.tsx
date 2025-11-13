@@ -4,18 +4,16 @@ import { cn } from '@/lib/utils';
 import type { ButtonHTMLAttributes } from 'react';
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center rounded-2xl text-sm font-semibold tracking-tight transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan/60 focus-visible:ring-offset-0 disabled:pointer-events-none disabled:opacity-60',
+  'inline-flex items-center justify-center rounded-2xl text-sm font-semibold tracking-tight transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/30 focus-visible:ring-offset-0 disabled:pointer-events-none disabled:opacity-60',
   {
     variants: {
       variant: {
-        default:
-          'bg-gradient-to-r from-iris via-sunrise/80 to-cyan text-white shadow-glow-sm hover:-translate-y-0.5 hover:shadow-glow-lg',
-        outline:
-          'border border-white/20 bg-white/5 text-white/90 backdrop-blur hover:border-white/40 hover:-translate-y-0.5',
-        ghost: 'text-white/80 hover:text-white hover:bg-white/5',
+        default: 'bg-slate-900 text-white shadow-[0_15px_35px_rgba(15,23,42,0.2)] hover:-translate-y-0.5 hover:bg-slate-800',
+        outline: 'border border-slate-200 bg-white text-slate-900 hover:bg-slate-50',
+        ghost: 'text-slate-900 hover:bg-slate-50',
         destructive: 'bg-red-600 text-white hover:bg-red-500/90',
-        secondary: 'bg-white text-night hover:bg-sand hover:text-night',
-        soft: 'bg-iris/15 text-iris hover:bg-iris/25'
+        secondary: 'bg-slate-100 text-slate-900 hover:bg-slate-200',
+        soft: 'bg-slate-900/5 text-slate-900 hover:bg-slate-900/10'
       },
       size: {
         default: 'h-11 px-6',

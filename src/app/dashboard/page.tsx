@@ -80,8 +80,8 @@ export default async function DashboardPage() {
   return (
     <DashboardShell>
       <section className="space-y-2">
-        <h1 className="font-display text-3xl">Welcome back</h1>
-        <p className="text-sm text-white/70">Your mission control for applications, deadlines, and match insights.</p>
+        <h1 className="text-3xl font-semibold text-slate-900">Welcome back</h1>
+        <p className="text-sm text-slate-500">Your mission control for applications, deadlines, and match insights.</p>
       </section>
       <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
         <div className="space-y-6">
@@ -94,18 +94,18 @@ export default async function DashboardPage() {
               dueDate: item.due_date ?? undefined
             }))}
           />
-          <div className="space-y-4 rounded-3xl border border-white/10 bg-white/5 p-6 shadow-glow-sm">
-            <h2 className="font-display text-2xl text-white">Recommended programs</h2>
+          <div className="space-y-4 rounded-[28px] border border-slate-100 bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
+            <h2 className="text-2xl font-semibold text-slate-900">Recommended programs</h2>
             {matches.length > 0 ? (
               <MatchList matches={matches} />
             ) : (
-              <p className="text-sm text-white/60">Update your profile to receive tailored suggestions.</p>
+              <p className="text-sm text-slate-500">Update your profile to receive tailored suggestions.</p>
             )}
           </div>
         </div>
         <aside className="space-y-6">
-          <div className="space-y-4 rounded-3xl border border-white/10 bg-white/5 p-6 shadow-glow-sm">
-            <h2 className="font-display text-2xl text-white">Upcoming deadlines</h2>
+          <div className="space-y-4 rounded-[28px] border border-slate-100 bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
+            <h2 className="text-2xl font-semibold text-slate-900">Upcoming deadlines</h2>
             <DeadlineTimeline
               items={(deadlines ?? []).map((deadline) => ({
                 id: deadline.id,

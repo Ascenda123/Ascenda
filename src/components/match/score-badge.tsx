@@ -24,7 +24,7 @@ export const ScoreBadge = ({ score, breakdown }: ScoreBadgeProps) => {
   return (
     <span
       className={cn(
-        'inline-flex min-w-[3.5rem] items-center justify-center rounded-full bg-gradient-to-r px-4 py-1 text-sm font-semibold text-night shadow-glow-sm',
+        'inline-flex min-w-[3.5rem] items-center justify-center rounded-full bg-gradient-to-r px-4 py-1 text-sm font-semibold text-slate-900 shadow-[0_10px_25px_rgba(15,23,42,0.1)]',
         tone
       )}
       role="status"
