@@ -140,7 +140,7 @@ export default function HomePage() {
     >
       <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
         <motion.header
-          className="mb-8 flex flex-col gap-3 border-b border-slate-200 pb-4 text-slate-900 sm:flex-row sm:items-center sm:justify-between"
+          className="mb-8 flex flex-col gap-3 text-slate-900 sm:flex-row sm:items-center sm:justify-between"
           initial="hidden"
           animate="visible"
           variants={fadeIn}
@@ -177,7 +177,7 @@ export default function HomePage() {
           </div>
         </motion.header>
 
-        <section className="space-y-12 border-b border-slate-100 pb-16">
+        <section className="space-y-12 pb-16">
           <motion.div
             className="grid items-center gap-10 lg:grid-cols-[0.9fr,1.1fr]"
             initial="hidden"
@@ -185,7 +185,7 @@ export default function HomePage() {
             variants={fadeIn}
           >
             <div className="space-y-6">
-              <p className="text-xs uppercase tracking-[0.5em] text-slate-400">Admissions OS · Signal clarity</p>
+              <p className="text-xs uppercase tracking-[0.5em] text-slate-400">Admissions OS</p>
               <h1 className="text-5xl font-semibold leading-tight tracking-tight sm:text-[3.6rem] text-[#111111]">
                 The #1 University Application Companion.
               </h1>
