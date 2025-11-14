@@ -153,7 +153,7 @@ export default function HomePage() {
         >
           <Link href="/" className="flex items-center gap-3 text-lg font-semibold tracking-tight">
             <div className="h-12 w-12 overflow-hidden rounded-2xl border border-slate-200 bg-white p-1">
-              <Image src="/ascenda-logo.svg" alt="Ascenda logo" width={44} height={44} priority />
+              <Image src="/Ascenda Logo.png" alt="Ascenda logo" width={44} height={44} priority />
             </div>
           </Link>
           <div className="flex flex-wrap items-center gap-3 text-sm text-slate-500">
