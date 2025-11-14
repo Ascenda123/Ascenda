@@ -155,10 +155,10 @@ export default function HomePage() {
             <Image
               src="/Ascenda Logo.png"
               alt="Ascenda logo"
-              width={96}
-              height={96}
+              width={160}
+              height={160}
               priority
-              className="h-auto w-[96px] object-contain"
+              className="h-auto w-[160px] object-contain"
             />
           </Link>
           <div className="flex flex-wrap items-center gap-3 text-sm text-slate-500">
