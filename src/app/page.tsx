@@ -146,7 +146,7 @@ export default function HomePage() {
     >
       <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
         <motion.header
-          className="mb-10 flex flex-col gap-4 border-b border-slate-200 pb-6 text-slate-900 sm:flex-row sm:items-center sm:justify-between"
+          className="mb-8 flex flex-col gap-3 border-b border-slate-200 pb-4 text-slate-900 sm:flex-row sm:items-center sm:justify-between"
           initial="hidden"
           animate="visible"
           variants={fadeIn}
@@ -161,9 +161,13 @@ export default function HomePage() {
               className="h-auto w-[160px] object-contain"
             />
           </Link>
-          <div className="flex flex-wrap items-center gap-3 text-sm text-slate-500">
+          <div className="flex flex-wrap items-center gap-3 text-[13px] text-slate-500">
             {navLinks.map((link) => (
-              <Link key={link.href} href={link.href} className="rounded-full px-3 py-1 transition hover:text-slate-900">
+              <Link
+                key={link.href}
+                href={link.href}
+                className="rounded-full px-3 py-1 text-[13px] font-semibold transition hover:text-slate-900"
+              >
                 {link.label}
               </Link>
             ))}
