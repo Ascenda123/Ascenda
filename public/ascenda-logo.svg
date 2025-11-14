@@ -1,0 +1,13 @@
+<svg width="160" height="160" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="160" height="160" rx="24" fill="white"/>
+  <g stroke="#262262" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M80 32c11.046 0 20 8.954 20 20v12a5 5 0 0 1-1.25 3.3L90 82l-19-9-10-27a5 5 0 0 1 4.5-3h14z" fill="#1ED4B2"/>
+    <path d="M80 32c-5.523 0-10-4.477-10-10s4.477-10 10-10 10 4.477 10 10-4.477 10-10 10z" fill="#FCD34D"/>
+    <path d="M55 72s-12 24-5 40c0 0 11 6 31 6s30-6 30-6 8-25-5-40l-50 0z" fill="#10B981"/>
+    <path d="M55 72l30-6" stroke="#111827"/>
+    <path d="M80 104l8 16" stroke="#111827"/>
+  </g>
+  <text x="80" y="140" font-family="Poppins, sans-serif" font-size="28" font-weight="700" text-anchor="middle" fill="#1F2A63">
+    Ascenda
+  </text>
+</svg>
