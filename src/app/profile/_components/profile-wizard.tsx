@@ -249,18 +249,18 @@ export const ProfileWizard = ({ profile, academics, preferences, aspirations }: 
   };
 
   return (
-    <div className="grid gap-6 text-slate-900 lg:grid-cols-[320px,1fr]">
-      <aside className="space-y-4">
-        <div className="rounded-[28px] border border-slate-100 bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
+    <div className="grid form-grid form-flow text-slate-900 lg:grid-cols-[320px,1fr]">
+      <aside className="form-stack">
+        <div className="form-panel form-panel--quiet form-stack">
           <h2 className="text-xl font-semibold">Onboarding progress</h2>
-          <ol className="mt-4 space-y-3">
+          <ol className="form-stack">
             {steps.map((step, index) => (
               <li key={step.key} className="flex items-start gap-3">
                 <span
                   className={
                     index <= steps.findIndex((item) => item.key === currentStep)
-                      ? 'mt-1 flex h-6 w-6 items-center justify-center rounded-full bg-slate-900 text-xs font-semibold text-white'
-                      : 'mt-1 flex h-6 w-6 items-center justify-center rounded-full border border-slate-200 text-xs font-semibold text-slate-400'
+                      ? 'mt-1 flex h-7 w-7 items-center justify-center rounded-full bg-slate-900 text-xs font-semibold text-white shadow-sm'
+                      : 'mt-1 flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-500'
                   }
                   aria-hidden
                 >
@@ -274,58 +274,71 @@ export const ProfileWizard = ({ profile, academics, preferences, aspirations }: 
             ))}
           </ol>
         </div>
-        {status ? <p className="text-sm text-slate-500">{status}</p> : null}
       </aside>
-      <div className="space-y-6 rounded-[32px] border border-slate-100 bg-white p-6 shadow-[0_25px_70px_rgba(15,23,42,0.08)]">
+      <div className="form-panel form-panel--roomy form-stack">
+        {status ? (
+          <p className="form-feedback form-feedback--success" role="status">
+            {status}
+          </p>
+        ) : null}
         {currentStep === 'personal' ? (
-          <form className="space-y-4" onSubmit={personalForm.handleSubmit(handlePersonalSubmit)}>
+          <form className="form-stack" onSubmit={personalForm.handleSubmit(handlePersonalSubmit)}>
             <input type="hidden" {...personalForm.register('locale')} />
-            <div>
-              <Label htmlFor="fullName">Full name</Label>
-              <Input id="fullName" {...personalForm.register('fullName')} />
+            <div className="form-field">
+              <Label className="form-label" htmlFor="fullName">
+                Full name
+              </Label>
+              <Input id="fullName" className="form-input" {...personalForm.register('fullName')} />
               {personalForm.formState.errors.fullName ? (
-                <p className="text-xs text-red-600" role="alert">
+                <p className="form-feedback form-feedback--error" role="alert">
                   {personalForm.formState.errors.fullName.message}
                 </p>
               ) : null}
             </div>
-            <div>
-              <Label htmlFor="country">Home country</Label>
+            <div className="form-field">
+              <Label className="form-label" htmlFor="country">
+                Home country
+              </Label>
               <HomeCountrySelect
                 id="country"
                 value={personalForm.watch('country')}
                 onChange={(value) => personalForm.setValue('country', value)}
               />
               {personalForm.formState.errors.country ? (
-                <p className="text-xs text-red-600" role="alert">
+                <p className="form-feedback form-feedback--error" role="alert">
                   {personalForm.formState.errors.country.message}
                 </p>
               ) : null}
             </div>
-            <div>
-              <Label htmlFor="timeZone">Time zone</Label>
-              <Input id="timeZone" readOnly {...personalForm.register('timeZone')} />
+            <div className="form-field">
+              <Label className="form-label" htmlFor="timeZone">
+                Time zone
+              </Label>
+              <Input id="timeZone" className="form-input" readOnly {...personalForm.register('timeZone')} />
               {personalForm.formState.errors.timeZone ? (
-                <p className="text-xs text-red-600" role="alert">
+                <p className="form-feedback form-feedback--error" role="alert">
                   {personalForm.formState.errors.timeZone.message}
                 </p>
               ) : null}
             </div>
-            <Button type="submit" disabled={isPending}>
+            <Button
+              type="submit"
+              className="form-action"
+              disabled={isPending}
+              data-loading={isPending ? 'true' : undefined}
+            >
               Save and continue
             </Button>
           </form>
         ) : null}
 
         {currentStep === 'academics' ? (
-          <form className="space-y-4" onSubmit={academicsForm.handleSubmit(handleAcademicsSubmit)}>
-            <div>
-              <Label htmlFor="curriculum">Curriculum</Label>
-              <select
-                id="curriculum"
-                {...academicsForm.register('curriculum')}
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-[inset_0_1px_2px_rgba(15,23,42,0.04)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/30"
-              >
+          <form className="form-stack" onSubmit={academicsForm.handleSubmit(handleAcademicsSubmit)}>
+            <div className="form-field">
+              <Label className="form-label" htmlFor="curriculum">
+                Curriculum
+              </Label>
+              <select id="curriculum" {...academicsForm.register('curriculum')} className="form-input">
                 <option value="">Select curriculum</option>
                 {CURRICULUM_OPTIONS.map((option) => (
                   <option key={option} value={option}>
@@ -334,104 +347,141 @@ export const ProfileWizard = ({ profile, academics, preferences, aspirations }: 
                 ))}
               </select>
               {academicsForm.formState.errors.curriculum ? (
-                <p className="text-xs text-red-600" role="alert">
+                <p className="form-feedback form-feedback--error" role="alert">
                   {academicsForm.formState.errors.curriculum.message}
                 </p>
               ) : null}
             </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <Label htmlFor="gpa">GPA</Label>
+            <div className="grid form-grid sm:grid-cols-2">
+              <div className="form-field">
+                <Label className="form-label" htmlFor="gpa">
+                  GPA
+                </Label>
                 <Input
                   id="gpa"
                   type="number"
                   step="0.01"
                   min={0}
                   max={4}
+                  className="form-input"
                   {...academicsForm.register('gpa', { valueAsNumber: true })}
                 />
               </div>
-              <div>
-                <Label htmlFor="ibTotal">IB Total</Label>
+              <div className="form-field">
+                <Label className="form-label" htmlFor="ibTotal">
+                  IB Total
+                </Label>
                 <Input
                   id="ibTotal"
                   type="number"
                   min={0}
                   max={45}
+                  className="form-input"
                   {...academicsForm.register('ibTotal', { valueAsNumber: true })}
                 />
               </div>
-              <div>
-                <Label htmlFor="sat">SAT</Label>
+              <div className="form-field">
+                <Label className="form-label" htmlFor="sat">
+                  SAT
+                </Label>
                 <Input
                   id="sat"
                   type="number"
                   min={400}
                   max={1600}
+                  className="form-input"
                   {...academicsForm.register('sat', { valueAsNumber: true })}
                 />
               </div>
-              <div>
-                <Label htmlFor="act">ACT</Label>
+              <div className="form-field">
+                <Label className="form-label" htmlFor="act">
+                  ACT
+                </Label>
                 <Input
                   id="act"
                   type="number"
                   min={1}
                   max={36}
+                  className="form-input"
                   {...academicsForm.register('act', { valueAsNumber: true })}
                 />
               </div>
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <Label htmlFor="toefl">TOEFL</Label>
+              <div className="form-field">
+                <Label className="form-label" htmlFor="toefl">
+                  TOEFL
+                </Label>
                 <Input
                   id="toefl"
                   type="number"
                   min={0}
                   max={120}
+                  className="form-input"
                   {...academicsForm.register('toefl', { valueAsNumber: true })}
                 />
               </div>
-              <div>
-                <Label htmlFor="ielts">IELTS</Label>
+              <div className="form-field">
+                <Label className="form-label" htmlFor="ielts">
+                  IELTS
+                </Label>
                 <Input
                   id="ielts"
                   type="number"
                   min={0}
                   max={9}
                   step="0.5"
+                  className="form-input"
                   {...academicsForm.register('ielts', { valueAsNumber: true })}
                 />
               </div>
             </div>
-            <div>
-              <Label>Subject grades</Label>
+            <div className="form-field">
+              <Label className="form-label">Subject grades</Label>
               <SubjectGradeTable
                 value={academicsForm.watch('subjectGrades')}
                 onChange={(rows) => academicsForm.setValue('subjectGrades', rows)}
               />
             </div>
-            <Button type="submit" disabled={isPending}>
+            <Button
+              type="submit"
+              className="form-action"
+              disabled={isPending}
+              data-loading={isPending ? 'true' : undefined}
+            >
               Save and continue
             </Button>
           </form>
         ) : null}
 
         {currentStep === 'preferences' ? (
-          <form className="space-y-4" onSubmit={preferencesForm.handleSubmit(handlePreferencesSubmit)}>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <Label htmlFor="budgetMin">Budget minimum (USD)</Label>
-                <Input id="budgetMin" type="number" {...preferencesForm.register('budgetMin', { valueAsNumber: true })} />
+          <form className="form-stack" onSubmit={preferencesForm.handleSubmit(handlePreferencesSubmit)}>
+            <div className="grid form-grid sm:grid-cols-2">
+              <div className="form-field">
+                <Label className="form-label" htmlFor="budgetMin">
+                  Budget minimum (USD)
+                </Label>
+                <Input
+                  id="budgetMin"
+                  type="number"
+                  className="form-input"
+                  {...preferencesForm.register('budgetMin', { valueAsNumber: true })}
+                />
               </div>
-              <div>
-                <Label htmlFor="budgetMax">Budget maximum (USD)</Label>
-                <Input id="budgetMax" type="number" {...preferencesForm.register('budgetMax', { valueAsNumber: true })} />
+              <div className="form-field">
+                <Label className="form-label" htmlFor="budgetMax">
+                  Budget maximum (USD)
+                </Label>
+                <Input
+                  id="budgetMax"
+                  type="number"
+                  className="form-input"
+                  {...preferencesForm.register('budgetMax', { valueAsNumber: true })}
+                />
               </div>
             </div>
-            <div>
-              <Label id="countries-label">Preferred countries</Label>
+            <div className="form-field">
+              <Label className="form-label" id="countries-label">
+                Preferred countries
+              </Label>
               <CountrySelect
                 id="countries"
                 name="countries"
@@ -439,19 +489,17 @@ export const ProfileWizard = ({ profile, academics, preferences, aspirations }: 
                 onChange={(val) => preferencesForm.setValue('countries', val)}
               />
               {preferencesForm.formState.errors.countries ? (
-                <p className="text-xs text-red-600" role="alert">
+                <p className="form-feedback form-feedback--error" role="alert">
                   {preferencesForm.formState.errors.countries.message}
                 </p>
               ) : null}
             </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <Label htmlFor="campusType">Campus type</Label>
-                <select
-                  id="campusType"
-                  {...preferencesForm.register('campusType')}
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-[inset_0_1px_2px_rgba(15,23,42,0.04)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/30"
-                >
+            <div className="grid form-grid sm:grid-cols-2">
+              <div className="form-field">
+                <Label className="form-label" htmlFor="campusType">
+                  Campus type
+                </Label>
+                <select id="campusType" {...preferencesForm.register('campusType')} className="form-input">
                   <option value="">Select campus type</option>
                   {CAMPUS_TYPE_OPTIONS.map((option) => (
                     <option key={option} value={option}>
@@ -460,13 +508,11 @@ export const ProfileWizard = ({ profile, academics, preferences, aspirations }: 
                   ))}
                 </select>
               </div>
-              <div>
-                <Label htmlFor="setting">Setting</Label>
-                <select
-                  id="setting"
-                  {...preferencesForm.register('setting')}
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-[inset_0_1px_2px_rgba(15,23,42,0.04)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/30"
-                >
+              <div className="form-field">
+                <Label className="form-label" htmlFor="setting">
+                  Setting
+                </Label>
+                <select id="setting" {...preferencesForm.register('setting')} className="form-input">
                   <option value="">Select setting</option>
                   {SETTING_TYPE_OPTIONS.map((option) => (
                     <option key={option} value={option}>
@@ -475,13 +521,11 @@ export const ProfileWizard = ({ profile, academics, preferences, aspirations }: 
                   ))}
                 </select>
               </div>
-              <div>
-                <Label htmlFor="size">Size</Label>
-                <select
-                  id="size"
-                  {...preferencesForm.register('size')}
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-[inset_0_1px_2px_rgba(15,23,42,0.04)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/30"
-                >
+              <div className="form-field">
+                <Label className="form-label" htmlFor="size">
+                  Size
+                </Label>
+                <select id="size" {...preferencesForm.register('size')} className="form-input">
                   <option value="">Select size</option>
                   {SIZE_OPTIONS.map((option) => (
                     <option key={option} value={option}>
@@ -490,13 +534,11 @@ export const ProfileWizard = ({ profile, academics, preferences, aspirations }: 
                   ))}
                 </select>
               </div>
-              <div>
-                <Label htmlFor="delivery">Delivery</Label>
-                <select
-                  id="delivery"
-                  {...preferencesForm.register('delivery')}
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-[inset_0_1px_2px_rgba(15,23,42,0.04)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/30"
-                >
+              <div className="form-field">
+                <Label className="form-label" htmlFor="delivery">
+                  Delivery
+                </Label>
+                <select id="delivery" {...preferencesForm.register('delivery')} className="form-input">
                   <option value="">Select delivery</option>
                   {DELIVERY_OPTIONS.map((option) => (
                     <option key={option} value={option}>
@@ -506,8 +548,10 @@ export const ProfileWizard = ({ profile, academics, preferences, aspirations }: 
                 </select>
               </div>
             </div>
-            <div>
-              <Label htmlFor="programLevels">Program level</Label>
+            <div className="form-field">
+              <Label className="form-label" htmlFor="programLevels">
+                Program level
+              </Label>
               <select
                 id="programLevels"
                 multiple
@@ -516,7 +560,7 @@ export const ProfileWizard = ({ profile, academics, preferences, aspirations }: 
                   const selected = Array.from(event.target.selectedOptions).map((option) => option.value);
                   preferencesForm.setValue('programLevels', selected);
                 }}
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-[inset_0_1px_2px_rgba(15,23,42,0.04)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/30"
+                className="form-input form-input--multi"
               >
                 {PROGRAM_LEVEL_OPTIONS.map((option) => (
                   <option key={option} value={option}>
@@ -525,30 +569,38 @@ export const ProfileWizard = ({ profile, academics, preferences, aspirations }: 
                 ))}
               </select>
               {preferencesForm.formState.errors.programLevels ? (
-                <p className="text-xs text-red-600" role="alert">
+                <p className="form-feedback form-feedback--error" role="alert">
                   {preferencesForm.formState.errors.programLevels.message}
                 </p>
               ) : null}
             </div>
-            <div className="flex items-center gap-2">
+            <label className="form-touch-target flex items-center gap-3 text-sm text-slate-600">
               <input
                 id="aidNeeded"
                 type="checkbox"
+                className="rounded-full border border-slate-200 accent-slate-900"
                 checked={preferencesForm.watch('aidNeeded')}
                 onChange={(event) => preferencesForm.setValue('aidNeeded', event.target.checked)}
               />
-              <Label htmlFor="aidNeeded">I need financial aid</Label>
-            </div>
-            <Button type="submit" disabled={isPending}>
+              <span>I need financial aid</span>
+            </label>
+            <Button
+              type="submit"
+              className="form-action"
+              disabled={isPending}
+              data-loading={isPending ? 'true' : undefined}
+            >
               Save and continue
             </Button>
           </form>
         ) : null}
 
         {currentStep === 'aspirations' ? (
-          <form className="space-y-4" onSubmit={aspirationsForm.handleSubmit(handleAspirationsSubmit)}>
-            <div>
-              <Label htmlFor="targetFields">Target fields</Label>
+          <form className="form-stack" onSubmit={aspirationsForm.handleSubmit(handleAspirationsSubmit)}>
+            <div className="form-field">
+              <Label className="form-label" htmlFor="targetFields">
+                Target fields
+              </Label>
               <select
                 id="targetFields"
                 name={targetFieldsName}
@@ -561,7 +613,7 @@ export const ProfileWizard = ({ profile, academics, preferences, aspirations }: 
                   aspirationsForm.setValue('targetFields', selected, { shouldValidate: true });
                   targetFieldsOnChange(event);
                 }}
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-[inset_0_1px_2px_rgba(15,23,42,0.04)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/30"
+                className="form-input form-input--multi"
               >
                 {TARGET_FIELD_OPTIONS.map((option) => (
                   <option key={option} value={option}>
@@ -570,21 +622,22 @@ export const ProfileWizard = ({ profile, academics, preferences, aspirations }: 
                 ))}
               </select>
               {aspirationsForm.formState.errors.targetFields ? (
-                <p className="text-xs text-red-600" role="alert">
+                <p className="form-feedback form-feedback--error" role="alert">
                   {aspirationsForm.formState.errors.targetFields.message}
                 </p>
               ) : null}
-              <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                 <Input
                   placeholder="Add another field"
                   value={targetFieldOther}
+                  className="form-input"
                   onChange={(event) => setTargetFieldOther(event.target.value)}
                 />
                 <Button
                   type="button"
                   variant="secondary"
                   size="sm"
-                  className="self-start"
+                  className="form-action self-start"
                   disabled={!targetFieldOther.trim()}
                   onClick={handleAddTargetField}
                 >
@@ -592,8 +645,10 @@ export const ProfileWizard = ({ profile, academics, preferences, aspirations }: 
                 </Button>
               </div>
             </div>
-            <div>
-              <Label htmlFor="jobTitles">Dream jobs</Label>
+            <div className="form-field">
+              <Label className="form-label" htmlFor="jobTitles">
+                Dream jobs
+              </Label>
               <select
                 id="jobTitles"
                 name={jobTitlesName}
@@ -606,7 +661,7 @@ export const ProfileWizard = ({ profile, academics, preferences, aspirations }: 
                   aspirationsForm.setValue('jobTitles', selected, { shouldValidate: true });
                   jobTitlesOnChange(event);
                 }}
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-[inset_0_1px_2px_rgba(15,23,42,0.04)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/30"
+                className="form-input form-input--multi"
               >
                 {JOB_TITLE_OPTIONS.map((title) => (
                   <option key={title} value={title}>
@@ -614,17 +669,18 @@ export const ProfileWizard = ({ profile, academics, preferences, aspirations }: 
                   </option>
                 ))}
               </select>
-              <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                 <Input
                   placeholder="Add another job title"
                   value={jobTitleOther}
+                  className="form-input"
                   onChange={(event) => setJobTitleOther(event.target.value)}
                 />
                 <Button
                   type="button"
                   variant="secondary"
                   size="sm"
-                  className="self-start"
+                  className="form-action self-start"
                   disabled={!jobTitleOther.trim()}
                   onClick={handleAddJobTitle}
                 >
@@ -632,15 +688,22 @@ export const ProfileWizard = ({ profile, academics, preferences, aspirations }: 
                 </Button>
               </div>
             </div>
-            <div>
-              <Label htmlFor="notes">Notes</Label>
+            <div className="form-field">
+              <Label className="form-label" htmlFor="notes">
+                Notes
+              </Label>
               <textarea
                 id="notes"
-                className="h-32 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-[inset_0_1px_2px_rgba(15,23,42,0.04)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/30"
+                className="form-input form-input--textarea"
                 {...aspirationsForm.register('notes')}
               />
             </div>
-            <Button type="submit" disabled={isPending}>
+            <Button
+              type="submit"
+              className="form-action"
+              disabled={isPending}
+              data-loading={isPending ? 'true' : undefined}
+            >
               Save profile
             </Button>
           </form>

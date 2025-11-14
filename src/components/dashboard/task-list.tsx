@@ -16,36 +16,46 @@ interface TaskListProps {
 export const TaskList = ({ title, tasks, onToggle }: TaskListProps) => {
   return (
     <div className="space-y-4 rounded-[28px] border border-slate-100 bg-white p-6 shadow-[0_18px_60px_rgba(15,23,42,0.08)]">
-      <div>
-        <h3 className="text-xl font-semibold text-slate-900">{title}</h3>
-        <p className="text-sm text-slate-500">Stay on track with your application milestones.</p>
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h3 className="text-xl font-semibold text-slate-900">{title}</h3>
+          <p className="text-sm text-slate-500">Stay on track with your application milestones.</p>
+        </div>
+        <Button size="sm" variant="ghost" className="rounded-full px-3 text-xs uppercase tracking-[0.3em] text-slate-500">
+          + Add task
+        </Button>
       </div>
-      <ul className="space-y-3">
+      <div className="space-y-3">
         {tasks.length === 0 ? (
-          <li className="rounded-2xl border border-dashed border-slate-200 px-4 py-3 text-sm text-slate-500">
+          <div className="rounded-2xl border border-dashed border-slate-200 px-4 py-3 text-sm text-slate-500">
             No tasks yet—add programs to generate a checklist.
-          </li>
+          </div>
         ) : (
           tasks.map((task) => (
-            <li key={task.id} className="flex items-center justify-between gap-4 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3">
-              <div>
+            <article
+              key={task.id}
+              className="flex flex-col gap-2 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 transition hover:bg-slate-100"
+            >
+              <div className="flex items-center justify-between gap-3">
                 <p className="text-sm font-semibold text-slate-900">{task.name}</p>
-                {task.dueDate ? <p className="text-xs uppercase tracking-[0.3em] text-slate-500">Due {task.dueDate}</p> : null}
+                {onToggle ? (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={task.status === 'done' ? 'secondary' : 'outline'}
+                    onClick={() => onToggle(task.id)}
+                  >
+                    {task.status === 'done' ? 'Undo' : 'Mark done'}
+                  </Button>
+                ) : (
+                  <span className="text-xs uppercase tracking-[0.3em] text-slate-400">{task.status}</span>
+                )}
               </div>
-              {onToggle ? (
-                <Button
-                  type="button"
-                  size="sm"
-                  variant={task.status === 'done' ? 'secondary' : 'outline'}
-                  onClick={() => onToggle(task.id)}
-                >
-                  {task.status === 'done' ? 'Undo' : 'Mark done'}
-                </Button>
-              ) : null}
-            </li>
+              {task.dueDate ? <p className="text-xs font-semibold text-slate-500">Live due date · {task.dueDate}</p> : null}
+            </article>
           ))
         )}
-      </ul>
+      </div>
     </div>
   );
 };

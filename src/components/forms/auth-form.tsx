@@ -68,47 +68,59 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
   };
 
   return (
-    <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
-      <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
-        <Input id="email" type="email" autoComplete="email" {...form.register('email')} />
+    <form className="form-stack" onSubmit={form.handleSubmit(onSubmit)}>
+      <div className="form-field">
+        <Label className="form-label" htmlFor="email">
+          Email
+        </Label>
+        <Input id="email" type="email" autoComplete="email" className="form-input" {...form.register('email')} />
         {form.formState.errors.email ? (
-          <p className="text-sm text-red-600" role="alert">
+          <p className="form-feedback form-feedback--error" role="alert">
             {form.formState.errors.email.message}
           </p>
         ) : null}
       </div>
-      <div className="space-y-2">
-        <Label htmlFor="password">Password</Label>
+      <div className="form-field">
+        <Label className="form-label" htmlFor="password">
+          Password
+        </Label>
         <Input
           id="password"
           type="password"
           autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
+          className="form-input"
           {...form.register('password')}
         />
         {form.formState.errors.password ? (
-          <p className="text-sm text-red-600" role="alert">
+          <p className="form-feedback form-feedback--error" role="alert">
             {form.formState.errors.password.message}
           </p>
         ) : null}
       </div>
       {error ? (
-        <div className="rounded-2xl border border-red-200 bg-red-50 p-3 text-sm text-red-600" role="alert">
+        <p className="form-feedback form-feedback--error" role="alert">
           {error}
-        </div>
+        </p>
       ) : null}
-      <Button type="submit" className="w-full" disabled={isPending}>
+      <Button
+        type="submit"
+        className="form-action w-full"
+        disabled={isPending}
+        data-loading={isPending ? 'true' : undefined}
+      >
         {isPending ? 'Please wait…' : mode === 'login' ? 'Sign in' : 'Create account'}
       </Button>
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t border-slate-200" aria-hidden />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase tracking-[0.3em]">
-          <span className="bg-white px-2 text-slate-400">or continue with</span>
-        </div>
+      <div className="form-divider">
+        <span>or continue with</span>
       </div>
-      <Button type="button" variant="outline" className="w-full" onClick={handleGoogle} disabled={isPending}>
+      <Button
+        type="button"
+        variant="outline"
+        className="form-action w-full"
+        onClick={handleGoogle}
+        disabled={isPending}
+        data-loading={isPending ? 'true' : undefined}
+      >
         Google
       </Button>
     </form>

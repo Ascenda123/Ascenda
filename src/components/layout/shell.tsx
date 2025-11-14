@@ -11,11 +11,13 @@ export const DashboardShell = ({ children }: { children: ReactNode }) => {
       />
       <div className="relative z-10">
         <Navbar />
-        <div className="mx-auto flex w-full max-w-6xl gap-6 px-4 pb-12 pt-8 md:px-6">
-          <Sidebar />
-          <main className="flex-1 space-y-8 rounded-[32px] border border-slate-100 bg-white p-6 shadow-[0_25px_70px_rgba(15,23,42,0.08)]">
-            {children}
-          </main>
+        <div className="flex w-full flex-col gap-6 px-2 pb-12 pt-6 lg:px-6">
+          <div className="flex w-full gap-6">
+            <Sidebar />
+            <main className="flex-1 space-y-8 rounded-[32px] border border-slate-100 bg-white p-6 shadow-[0_25px_70px_rgba(15,23,42,0.08)]">
+              {children}
+            </main>
+          </div>
         </div>
       </div>
     </div>

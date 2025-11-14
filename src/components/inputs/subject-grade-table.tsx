@@ -30,41 +30,50 @@ export const SubjectGradeTable = ({ value, onChange }: SubjectGradeTableProps) =
   };
 
   return (
-    <div className="space-y-3">
+    <div className="form-stack">
       {value.map((row, index) => (
-        <div key={index} className="grid grid-cols-1 gap-3 sm:grid-cols-4 sm:items-end">
-          <div>
-            <Label htmlFor={`subject-${index}`}>Subject</Label>
+        <div key={index} className="grid form-grid grid-cols-1 sm:grid-cols-4 sm:items-end">
+          <div className="form-field">
+            <Label className="form-label" htmlFor={`subject-${index}`}>
+              Subject
+            </Label>
             <Input
               id={`subject-${index}`}
               value={row.subject}
+              className="form-input"
               onChange={(event) => handleFieldChange(index, 'subject', event.target.value)}
             />
           </div>
-          <div>
-            <Label htmlFor={`level-${index}`}>Level</Label>
+          <div className="form-field">
+            <Label className="form-label" htmlFor={`level-${index}`}>
+              Level
+            </Label>
             <Input
               id={`level-${index}`}
               value={row.level}
+              className="form-input"
               onChange={(event) => handleFieldChange(index, 'level', event.target.value)}
             />
           </div>
-          <div>
-            <Label htmlFor={`score-${index}`}>Score</Label>
+          <div className="form-field">
+            <Label className="form-label" htmlFor={`score-${index}`}>
+              Score
+            </Label>
             <Input
               id={`score-${index}`}
               value={row.score}
+              className="form-input"
               onChange={(event) => handleFieldChange(index, 'score', event.target.value)}
             />
           </div>
-          <div className="flex gap-2">
-            <Button type="button" variant="secondary" onClick={() => handleRemoveRow(index)}>
+          <div className="flex items-end justify-start">
+            <Button type="button" variant="secondary" className="form-action" onClick={() => handleRemoveRow(index)}>
               Remove
             </Button>
           </div>
         </div>
       ))}
-      <Button type="button" variant="outline" onClick={handleAddRow}>
+      <Button type="button" variant="outline" className="form-action" onClick={handleAddRow}>
         Add subject
       </Button>
     </div>
