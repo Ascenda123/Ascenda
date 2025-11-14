@@ -16,7 +16,7 @@ const navLinks = [
 const features = [
   {
     title: 'Fit Score · Find your perfect match',
-    description: 'Instant, data-driven matches that feel like they were tailored for your story.',
+    description: 'Instant, data driven matches that feel like they were tailored for your story.',
     icon: Sparkles
   },
   {
@@ -26,7 +26,7 @@ const features = [
   },
   {
     title: 'Campus insights',
-    description: 'Real stories from real students—see what life actually feels like.',
+    description: 'Real stories from real students show what life actually feels like.',
     icon: Mail
   },
   {
@@ -47,7 +47,7 @@ const steps = [
   },
   {
     title: 'Build & share your plan',
-    copy: 'Auto-timeline essays, tests, references, and direct-apply quirks. Share with collaborators instantly.'
+    copy: 'Automatic timelines for essays, tests, references, and direct apply quirks. Share with collaborators instantly.'
   }
 ];
 
@@ -63,7 +63,7 @@ const comparisons = [
     bullets: [
       'Confusing choices → waste time on wrong universities.',
       'Scattered info → miss deadlines.',
-      'Generic advice → one-size-fits-all stress.',
+      'Generic advice → one size fits all stress.',
       'Frustration at every step.'
     ]
   },
@@ -102,9 +102,9 @@ const metrics = [
 
 const faqs = [
   {
-    question: 'Why do real-time admissions signals matter?',
+    question: 'Why do real time admissions signals matter?',
     answer:
-      'Requirements pivot mid-cycle; Ascenda flags updates instantly so you move before a deadline slips.'
+      'Requirements pivot mid cycle; Ascenda flags updates instantly so you move before a deadline slips.'
   },
   {
     question: 'Who uses Ascenda?',
@@ -118,7 +118,7 @@ const faqs = [
   {
     question: 'Is my data private?',
     answer:
-      'Yes. Ascenda stores data in-region, enforces MFA, and offers permissions for every stakeholder.'
+      'Yes. Ascenda stores data in region, enforces MFA, and offers permissions for every stakeholder.'
   },
   {
     question: 'Which destinations are covered?',
@@ -196,7 +196,7 @@ export default function HomePage() {
                 Aim Higher. Land Smarter.
               </h1>
               <p className="text-lg text-slate-600 sm:text-xl">
-                Ascenda gives students, families, and admissions teams a single, beautifully organized workflow—fit scores, deadlines,
+                Ascenda gives students, families, and admissions teams a single, beautifully organized workflow: fit scores, deadlines,
                 scholarships, and notes stay perfectly aligned without extra dashboards.
               </p>
               <div className="flex flex-wrap gap-3">
@@ -262,7 +262,7 @@ export default function HomePage() {
                   <div className="rounded-[24px] border border-slate-100 px-5 py-4">
                     <p className="text-xs uppercase tracking-[0.35em] text-slate-500">Notes sync</p>
                     <div className="mt-3 flex flex-col gap-2 text-sm text-slate-600">
-                      <span>“Greenlit for ESADE interview—send prep doc.”</span>
+                      <span>“Greenlit for ESADE interview; send prep doc.”</span>
                       <span className="text-xs text-slate-400">Claire · 2 hours ago</span>
                       <span className="text-xs text-slate-400">Shared on Ascenda workspace</span>
                     </div>
@@ -357,7 +357,7 @@ export default function HomePage() {
             <h2 className="text-3xl font-semibold">Paste a dream. Watch the shortlist re-rank.</h2>
             <p className="text-sm text-slate-600">
               Paste predicted grades, hit enter, and Ascenda animates Fit Scores, timelines, and required actions in real time. No extra UI
-              noise—just the next move.
+              noise, just the next move.
             </p>
             <ul className="space-y-2 text-sm text-slate-600">
               <li className="flex items-center gap-2">
@@ -445,7 +445,7 @@ export default function HomePage() {
                   <p className="text-xs uppercase tracking-[0.4em] text-slate-400">With & without Ascenda</p>
                   <h2 className="text-3xl font-semibold text-white">Same student. Different outcome.</h2>
                   <p className="mt-2 text-sm text-slate-300">
-                    Feel the delta between chaos and clarity—each row pairs the old grind with the Ascenda way.
+                    Feel the delta between chaos and clarity, each row pairs the old grind with the Ascenda way.
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-4 text-xs font-semibold uppercase tracking-[0.3em] text-white/70">
@@ -496,7 +496,7 @@ export default function HomePage() {
         <section className="mt-16 rounded-[32px] border border-slate-100 bg-white p-6">
           <div className="flex flex-col gap-2 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-xs uppercase tracking-[0.4em] text-slate-400">Proof points</p>
-            <p>Students and families feel the delta immediately—data shows why.</p>
+            <p>Students and families feel the delta immediately, data shows why.</p>
           </div>
           <div className="mt-6 grid gap-4 sm:grid-cols-3">
             {metrics.map((metric) => (
