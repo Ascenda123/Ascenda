@@ -167,7 +167,7 @@ export default function HomePage() {
             <Button
               asChild
               size="sm"
-              className="bg-slate-900 text-white hover:bg-slate-800 shadow-none hover:shadow-none hover:scale-100"
+              className="bg-slate-900 text-white hover:bg-slate-50 hover:text-slate-900 shadow-none hover:shadow-none hover:scale-100"
             >
               <Link href="/signup" className="flex items-center gap-2">
                 <Laptop className="h-4 w-4" />
@@ -193,7 +193,11 @@ export default function HomePage() {
                 Get matched to the right universities and courses, unlock real campus insights, and receive a tailored application plan in one modern workspace.
               </p>
               <div className="flex flex-wrap gap-3">
-                <Button asChild size="lg" className="bg-slate-900 text-white hover:bg-slate-800">
+                <Button
+                  asChild
+                  size="lg"
+                  className="bg-slate-900 text-white hover:bg-slate-50 hover:text-slate-900 shadow-none hover:shadow-none hover:scale-100"
+                >
                   <Link href="/signup">Launch Ascenda</Link>
                 </Button>
                 <Button asChild size="lg" variant="outline" className="border-slate-200 text-slate-900 hover:bg-slate-50">
@@ -542,7 +546,11 @@ export default function HomePage() {
               Tie programs, essays, scholarships, and deadlines together—so every action is tied to the right school and nothing slips through the cracks.
             </p>
           <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
-            <Button asChild size="lg" className="bg-slate-900 text-white hover:bg-slate-800">
+            <Button
+              asChild
+              size="lg"
+              className="bg-slate-900 text-white hover:bg-slate-50 hover:text-slate-900 shadow-none hover:shadow-none hover:scale-100"
+            >
               <Link href="/signup">Create free account</Link>
             </Button>
             <Button asChild size="lg" variant="ghost" className="border border-slate-200 text-slate-900 hover:bg-slate-50">
