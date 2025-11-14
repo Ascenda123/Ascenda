@@ -151,6 +151,15 @@ export default function HomePage() {
           animate="visible"
           variants={fadeIn}
         >
+          <Link
+            href="/"
+            className="flex items-center gap-1 text-lg font-semibold tracking-tight"
+            aria-label="Ascenda home"
+          >
+            <div className="flex h-12 w-32 items-center justify-center">
+              <Image src="/ascenda-logo.svg" alt="Ascenda logo" width={132} height={48} priority />
+            </div>
+          </Link>
           <div className="flex flex-wrap items-center gap-3 text-sm text-slate-500">
             {navLinks.map((link) => (
               <Link key={link.href} href={link.href} className="rounded-full px-3 py-1 transition hover:text-slate-900">
@@ -173,17 +182,6 @@ export default function HomePage() {
                 Launch Ascenda
               </Link>
             </Button>
-            <Link href="/" className="flex items-center justify-center">
-              <span className="sr-only">Ascenda home</span>
-              <Image
-                src="/ascenda-logo.svg"
-                alt="Ascenda logo"
-                width={132}
-                height={48}
-                priority
-                className="h-auto w-[132px] object-contain"
-              />
-            </Link>
           </div>
         </motion.header>
 
