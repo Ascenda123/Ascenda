@@ -152,9 +152,14 @@ export default function HomePage() {
           variants={fadeIn}
         >
           <Link href="/" className="flex items-center gap-3 text-lg font-semibold tracking-tight">
-            <div className="h-12 w-12 overflow-hidden rounded-2xl border border-slate-200 bg-white p-1">
-              <Image src="/Ascenda Logo.png" alt="Ascenda logo" width={44} height={44} priority />
-            </div>
+            <Image
+              src="/Ascenda Logo.png"
+              alt="Ascenda logo"
+              width={96}
+              height={96}
+              priority
+              className="h-auto w-[96px] object-contain"
+            />
           </Link>
           <div className="flex flex-wrap items-center gap-3 text-sm text-slate-500">
             {navLinks.map((link) => (
