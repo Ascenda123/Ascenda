@@ -140,12 +140,12 @@ export default function HomePage() {
     >
       <div className="mx-auto max-w-6xl px-4 pb-10 pt-10 sm:px-6">
         <motion.header
-          className="mb-8 flex flex-col items-start gap-3 text-slate-900 sm:flex-row sm:items-center sm:gap-6"
+          className="mb-8 flex flex-col gap-3 text-slate-900 sm:flex-row sm:items-center sm:justify-between"
           initial="hidden"
           animate="visible"
           variants={fadeIn}
         >
-          <Link href="/" className="flex w-full items-center gap-3 text-lg font-semibold tracking-tight sm:w-auto">
+          <Link href="/" className="flex items-center gap-3 text-lg font-semibold tracking-tight">
             <Image
               src="/Ascenda Logo.png"
               alt="Ascenda logo"
@@ -155,7 +155,7 @@ export default function HomePage() {
               className="h-auto w-[160px] object-contain"
             />
           </Link>
-          <div className="flex w-full flex-wrap items-center justify-end gap-3 sm:w-auto">
+          <div className="flex flex-wrap items-center gap-3">
             <Button
               asChild
               size="sm"
@@ -198,9 +198,7 @@ export default function HomePage() {
                   size="lg"
                   className="bg-slate-900 text-white hover:bg-slate-50 hover:text-slate-900 shadow-none hover:shadow-none hover:scale-100"
                 >
-              <Link href="/signup" className="w-full justify-center sm:w-auto">
-                Launch Ascenda
-              </Link>
+                  <Link href="/signup">Launch Ascenda</Link>
                 </Button>
                 <Button asChild size="lg" variant="outline" className="border-slate-200 text-slate-900 hover:bg-slate-50">
                   <Link href="/download">See product tour</Link>
