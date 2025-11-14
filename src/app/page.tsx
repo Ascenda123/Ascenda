@@ -338,7 +338,7 @@ export default function HomePage() {
         >
           <div className="space-y-4">
             <p className="text-xs uppercase tracking-[0.4em] text-slate-400">Quick demo</p>
-            <h2 className="text-3xl font-semibold">Paste a dream. Watch the shortlist re-rank.</h2>
+            <h2 className="text-3xl font-semibold">Aim higher. Land smarter.</h2>
             <p className="text-sm text-slate-600">
               Paste predicted grades, hit enter, and Ascenda animates Fit Scores, timelines, and required actions in real time. No extra UI
               noise, just the next move.
