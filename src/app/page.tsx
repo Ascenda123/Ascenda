@@ -138,7 +138,7 @@ export default function HomePage() {
       id="main-content"
       className="bg-white text-slate-900 font-[family:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text',sans-serif]"
     >
-      <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+      <div className="mx-auto max-w-6xl px-4 pb-10 pt-6 sm:px-6">
         <motion.header
           className="mb-8 flex flex-col gap-3 text-slate-900 sm:flex-row sm:items-center sm:justify-between"
           initial="hidden"
@@ -491,6 +491,55 @@ export default function HomePage() {
             ))}
           </div>
         </section>
+        <motion.section
+          className="mt-16 grid gap-8 rounded-[32px] border border-slate-100 bg-white p-6 md:grid-cols-[0.9fr_1.1fr]"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.3 }}
+          variants={fadeIn}
+        >
+          <div className="space-y-4">
+            <p className="text-xs uppercase tracking-[0.4em] text-slate-400">Quick demo</p>
+            <h2 className="text-3xl font-semibold">Aim higher. Land smarter.</h2>
+            <p className="text-sm text-slate-600">
+              Paste predicted grades, hit enter, and Ascenda animates Fit Scores, timelines, and required actions in real time. No extra UI
+              noise, just the next move.
+            </p>
+            <ul className="space-y-2 text-sm text-slate-600">
+              <li className="flex items-center gap-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-slate-900" />
+                Live Fit Score recalculations
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-slate-900" />
+                Scholarships + visa checks in-line
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-slate-900" />
+                Notes stay synced automatically
+              </li>
+            </ul>
+            <div className="flex flex-wrap gap-3 pt-2">
+              <Button asChild size="sm">
+                <Link href="/demo">Watch 45s demo</Link>
+              </Button>
+              <Button asChild size="sm" variant="ghost" className="border border-slate-200 text-slate-900 hover:bg-slate-50">
+                <Link href="/stories">See student reels</Link>
+              </Button>
+            </div>
+          </div>
+          <div className="relative overflow-hidden rounded-[28px] border border-slate-100 bg-slate-50 p-4">
+            <div className="absolute inset-x-4 top-4 h-12 rounded-full bg-white/70 blur-2xl" />
+            <Image
+              src="/demo-loop.gif"
+              alt="Ascenda demo loop"
+              width={960}
+              height={540}
+              className="relative h-auto w-full rounded-[18px] border border-slate-100"
+              priority
+            />
+          </div>
+        </motion.section>
 
         <section className="mt-16">
           <div className="grid gap-8 md:grid-cols-[0.8fr_1.2fr]">
