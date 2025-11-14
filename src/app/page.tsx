@@ -151,12 +151,15 @@ export default function HomePage() {
           animate="visible"
           variants={fadeIn}
         >
-          <div className="flex items-center gap-3 text-lg font-semibold tracking-tight">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-slate-200 text-slate-900">
-              A
+          <Link
+            href="/"
+            className="flex items-center gap-1 text-lg font-semibold tracking-tight"
+            aria-label="Ascenda home"
+          >
+            <div className="flex h-12 w-32 items-center justify-center">
+              <Image src="/ascenda-logo.svg" alt="Ascenda logo" width={132} height={48} priority />
             </div>
-            Ascenda
-          </div>
+          </Link>
           <div className="flex flex-wrap items-center gap-3 text-sm text-slate-500">
             {navLinks.map((link) => (
               <Link key={link.href} href={link.href} className="rounded-full px-3 py-1 transition hover:text-slate-900">
