@@ -177,7 +177,7 @@ export default function HomePage() {
           </div>
         </motion.header>
 
-        <section className="space-y-12 pb-16">
+        <section className="space-y-12 pb-16 pt-4">
           <motion.div
             className="grid items-center gap-10 lg:grid-cols-[0.9fr,1.1fr]"
             initial="hidden"
