@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { DashboardShell } from '@/components/layout/shell';
@@ -195,6 +196,51 @@ export default async function ApplicationsPage() {
           { id: 'event-4', title: 'Wharton interview prep', date: '2024-11-02', category: 'interview', detail: 'Mock interview' }
         ];
 
+  const today = new Date();
+  const isSameDay = (value?: string | null) => {
+    if (!value) return false;
+    const candidate = new Date(value);
+    return !Number.isNaN(candidate.getTime()) && candidate.toDateString() === today.toDateString();
+  };
+
+  const dailySummary = {
+    tasks: checklistRecords.filter((task) => isSameDay(task.due_date)).length,
+    deadlines: deadlineRecords.filter((deadline) => isSameDay(deadline.deadline_date)).length,
+    interviews: plannerEvents.filter((event) => event.category === 'interview' && isSameDay(event.date)).length
+  };
+
+  const disciplineFocus = appRecords[0]?.programs?.discipline ?? 'university';
+  const resourceHighlights = [
+    {
+      id: 'essay-template',
+      tag: 'Templates',
+      title: `${disciplineFocus} essay planner`,
+      description: `Map your story arcs for relevant prompts with this guided outline.`,
+      href: 'https://www.commonapp.org/'
+    },
+    {
+      id: 'interview-prep',
+      tag: 'Interview',
+      title: 'Interview prep checklist',
+      description: 'Practice STAR stories and quick intros before your alumni interviews.',
+      href: 'https://www.linkedin.com/learning/interviewing'
+    },
+    {
+      id: 'scholarship-spotlight',
+      tag: 'Scholarships',
+      title: 'Regional scholarship spotlight',
+      description: 'Weekly roundups tailored to the regions on your program list.',
+      href: 'https://www.scholarshiphunter.com/'
+    },
+    {
+      id: 'reference-guide',
+      tag: 'References',
+      title: 'Recommender checklist',
+      description: 'Share a one-pager with your ref so they know what deadlines matter most.',
+      href: 'https://www.ucanews.com/'
+    }
+  ];
+
   const referenceItems: ReferenceItem[] =
     checklistRecords.filter((task) => task.task_name.toLowerCase().includes('reference')).length > 0
       ? checklistRecords
@@ -300,6 +346,17 @@ export default async function ApplicationsPage() {
 
         <RequirementTracker items={requirementItems} />
 
+        <div className="rounded-[999px] border border-slate-200 bg-slate-50 px-6 py-3 text-sm font-semibold text-slate-900 shadow-inner shadow-slate-100">
+          <div className="flex flex-wrap items-baseline gap-2">
+            <span>
+              Today: {dailySummary.tasks} {dailySummary.tasks === 1 ? 'task' : 'tasks'} • {dailySummary.deadlines}{' '}
+              {dailySummary.deadlines === 1 ? 'deadline' : 'deadlines'} • {dailySummary.interviews}{' '}
+              {dailySummary.interviews === 1 ? 'interview' : 'interviews'}
+            </span>
+            <span className="text-xs font-normal uppercase tracking-[0.4em] text-slate-400">Focus snapshot</span>
+          </div>
+        </div>
+
         <div className="space-y-6">
           <TaskList title="Your checklist" tasks={checklistTasks} />
           <ReferenceTracker references={referenceItems} />
@@ -316,6 +373,38 @@ export default async function ApplicationsPage() {
             <DeadlineTimeline items={timelineItems} />
           </div>
         </div>
+
+        <section className="space-y-4 rounded-[28px] border border-slate-100 bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-[11px] uppercase tracking-[0.4em] text-slate-400">Just in case</p>
+              <h2 className="text-2xl font-semibold text-slate-900">Resources you can grab</h2>
+            </div>
+            <p className="text-xs uppercase tracking-[0.4em] text-slate-400">Updated weekly</p>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {resourceHighlights.map((resource) => (
+              <article
+                key={resource.id}
+                className="flex min-h-[180px] flex-col justify-between gap-3 rounded-2xl border border-slate-100 bg-slate-50 p-4"
+              >
+                <div>
+                  <p className="text-[11px] uppercase tracking-[0.4em] text-slate-400">{resource.tag}</p>
+                  <h3 className="text-base font-semibold text-slate-900">{resource.title}</h3>
+                  <p className="text-sm text-slate-500">{resource.description}</p>
+                </div>
+                <Link
+                  href={resource.href}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-[11px] font-semibold uppercase tracking-[0.4em] text-slate-600 underline-offset-4 hover:text-slate-900"
+                >
+                  Open resource →
+                </Link>
+              </article>
+            ))}
+          </div>
+        </section>
 
         <div className="rounded-[28px] border border-slate-100 bg-white p-6 text-sm text-slate-600 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
           {appRecords.length > 0 ? (
