@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import '@/app/globals.css';
+import '@radix-ui/themes/styles.css';
+import { Theme } from '@radix-ui/themes';
 import { Providers } from './providers';
 import messages from '@/messages/en.json';
 
@@ -23,7 +25,9 @@ export default function RootLayout({
         >
           Skip to content
         </a>
-        <Providers messages={messages}>{children}</Providers>
+        <Theme appearance="light" accentColor="cyan" grayColor="slate" scaling="100%">
+          <Providers messages={messages}>{children}</Providers>
+        </Theme>
       </body>
     </html>
   );

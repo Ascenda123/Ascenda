@@ -9,27 +9,26 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        night: '#040711',
-        iris: '#5C6EFF',
-        cyan: '#4EE0D2',
-        sunrise: '#FF67D7',
-        sand: '#FFE5C8'
-      },
-      backgroundImage: {
-        'orb-gradient': 'radial-gradient(circle at 20% 20%, rgba(92,110,255,0.25), transparent 45%), radial-gradient(circle at 80% 0%, rgba(255,103,215,0.25), transparent 40%)',
-        'mesh-gradient':
-          'linear-gradient(120deg, rgba(5,8,22,0.95), rgba(6,10,28,0.95)), radial-gradient(circle at 10% 20%, rgba(92,110,255,0.35), transparent 40%), radial-gradient(circle at 80% 0%, rgba(255,103,215,0.25), transparent 45%), radial-gradient(circle at 80% 80%, rgba(78,224,210,0.2), transparent 35%)'
-      },
-      boxShadow: {
-        'glow-lg': '0 20px 80px rgba(92, 110, 255, 0.35)',
-        'glow-sm': '0 10px 40px rgba(78, 224, 210, 0.25)'
+        slateInk: '#0f172a',
+        slateMist: '#f8fafc',
+        slateLine: '#e2e8f0'
       },
       fontFamily: {
-        sans: ['var(--font-jakarta)', 'Inter', 'sans-serif'],
-        display: ['var(--font-space)', 'Space Grotesk', 'sans-serif']
+        sans: [
+          '-apple-system',
+          'BlinkMacSystemFont',
+          '"SF Pro Display"',
+          '"SF Pro Text"',
+          'system-ui',
+          'sans-serif'
+        ]
+      },
+      boxShadow: {
+        'surface-sm': '0 12px 40px rgba(15, 23, 42, 0.08)',
+        'surface-lg': '0 25px 80px rgba(15, 23, 42, 0.12)'
       },
       borderRadius: {
-        '4xl': '2.5rem'
+        '4xl': '2.25rem'
       }
     }
   },

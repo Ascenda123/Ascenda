@@ -1,7 +1,6 @@
 'use client';
 
-import type { ChangeEvent } from 'react';
-import { cn } from '@/lib/utils';
+import { Select } from '@radix-ui/themes';
 
 type CountryOption = {
   code: string;
@@ -50,27 +49,20 @@ interface HomeCountrySelectProps {
 }
 
 export const HomeCountrySelect = ({ value, onChange, id, name }: HomeCountrySelectProps) => {
-  const handleChange = (event: ChangeEvent<HTMLSelectElement>) => {
-    onChange(event.target.value);
-  };
-
   return (
-    <select
-      id={id}
-      name={name}
-      value={value}
-      onChange={handleChange}
-      className={cn(
-        'w-full text-sm text-slate-900',
-        'form-input'
-      )}
-    >
-      <option value="">Select a country</option>
-      {COUNTRY_OPTIONS.map((country) => (
-        <option key={country.code} value={country.label}>
-          {country.label}
-        </option>
-      ))}
-    </select>
+    <Select.Root value={value} onValueChange={onChange} name={name}>
+      <Select.Trigger id={id} className="w-full" radius="full" size="3" placeholder="Select a country" />
+      <Select.Content>
+        <Select.Group>
+          <Select.Label>Countries</Select.Label>
+          <Select.Item value="">Select a country</Select.Item>
+          {COUNTRY_OPTIONS.map((country) => (
+            <Select.Item key={country.code} value={country.label}>
+              {country.label}
+            </Select.Item>
+          ))}
+        </Select.Group>
+      </Select.Content>
+    </Select.Root>
   );
 };

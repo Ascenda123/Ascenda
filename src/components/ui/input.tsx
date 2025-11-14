@@ -1,21 +1,14 @@
 import * as React from 'react';
+import { TextField } from '@radix-ui/themes';
 import { cn } from '@/lib/utils';
 
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {}
 
-export const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, type, ...props }, ref) => {
-    return (
-      <input
-        type={type}
-        className={cn(
-          'flex h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-900 placeholder:text-slate-400 shadow-[inset_0_1px_2px_rgba(15,23,42,0.04)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/30 disabled:cursor-not-allowed disabled:opacity-60',
-          className
-        )}
-        ref={ref}
-        {...props}
-      />
-    );
-  }
-);
+export const Input = React.forwardRef<HTMLInputElement, InputProps>(({ className, type, ...props }, ref) => {
+  return (
+    <TextField.Root className={cn('w-full', className)} size="3" radius="full">
+      <TextField.Input ref={ref} type={type} {...props} />
+    </TextField.Root>
+  );
+});
 Input.displayName = 'Input';
