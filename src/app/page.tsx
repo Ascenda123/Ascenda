@@ -377,7 +377,7 @@ export default function HomePage() {
           </div>
         </motion.section>
 
-        <section className="mt-16 space-y-6 border-t border-slate-100 pt-14">
+        <section className="mt-16 space-y-6">
           <div>
             <p className="text-xs uppercase tracking-[0.4em] text-slate-500">Your shortlist in 3 steps</p>
             <h2 className="text-3xl font-semibold">Simple. High impact.</h2>
@@ -492,7 +492,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section className="mt-16 border-t border-slate-100 pt-14">
+        <section className="mt-16">
           <div className="grid gap-8 md:grid-cols-[0.8fr_1.2fr]">
             <div className="space-y-4">
               <p className="text-xs uppercase tracking-[0.4em] text-slate-400">Frequently asked questions</p>
