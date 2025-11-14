@@ -154,6 +154,24 @@ export async function GET() {
   const completionPercent = Math.round((completedSteps / PROFILE_STEPS.length) * 100);
   const nextStep = PROFILE_STEPS.find((step) => !stepCompletion[step.key]);
 
+  const todayString = new Date().toDateString();
+  const isSameToday = (value?: string | null) => {
+    if (!value) return false;
+    const timestamp = Date.parse(value);
+    if (Number.isNaN(timestamp)) {
+      return false;
+    }
+    return new Date(timestamp).toDateString() === todayString;
+  };
+
+  const dailySummary = {
+    tasks: checklist.filter((task) => isSameToday(task.due_date)).length,
+    deadlines: deadlines.filter((deadline) => isSameToday(deadline.deadline_date)).length,
+    interviews: checklist.filter(
+      (task) => isSameToday(task.due_date) && /interview/i.test(task.task_name ?? '')
+    ).length
+  };
+
   const highlightCards = [
     {
       id: 'profile',
@@ -250,7 +268,8 @@ export async function GET() {
       completedSteps,
       steps,
       averageMatchScore,
-      nextStepTitle: nextStep?.title ?? null
+      nextStepTitle: nextStep?.title ?? null,
+      todayFocus: dailySummary
     },
     {
       headers: {

@@ -8,8 +8,7 @@ import { Laptop, Mail, NotepadText, Search, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const navLinks = [
-  { label: 'Matches', href: '/matches' },
-  { label: 'Scholarships', href: '/scholarships' },
+  { label: 'Overview', href: '/dashboard' },
   { label: 'Stories', href: '/stories' }
 ];
 

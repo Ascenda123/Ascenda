@@ -34,6 +34,11 @@ interface OverviewPayload {
   completedSteps: number;
   averageMatchScore: number | null;
   nextStepTitle: string | null;
+  todayFocus: {
+    tasks: number;
+    deadlines: number;
+    interviews: number;
+  };
 }
 
 const toneClass = (tone?: HighlightTone) =>
@@ -127,6 +132,19 @@ export const DashboardOverview = () => {
         <p className="text-sm text-slate-500">
           {overview.nextStepTitle ? `${overview.nextStepTitle} is the next best action.` : 'Everything is synced—keep momentum going.'}
         </p>
+      </div>
+      <div className="grid gap-4 rounded-[24px] border border-slate-100 bg-slate-50/80 p-4 sm:grid-cols-3">
+        {[
+          { label: 'Tasks', value: overview.todayFocus.tasks, detail: 'Due today' },
+          { label: 'Deadlines', value: overview.todayFocus.deadlines, detail: 'On your radar' },
+          { label: 'Interviews', value: overview.todayFocus.interviews, detail: 'Prep slots' }
+        ].map((item) => (
+          <div key={item.label} className="flex flex-col gap-1">
+            <p className="text-[11px] uppercase tracking-[0.4em] text-slate-400">{item.label}</p>
+            <p className="text-3xl font-semibold text-slate-900">{item.value}</p>
+            <p className="text-xs uppercase tracking-[0.4em] text-slate-400">{item.detail}</p>
+          </div>
+        ))}
       </div>
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {overview.highlightCards.map((card) => (
