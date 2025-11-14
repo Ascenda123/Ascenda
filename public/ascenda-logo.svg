@@ -1,9 +1,0 @@
-<svg width="160" height="48" viewBox="0 0 160 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="160" height="48" rx="12" fill="white"/>
-  <path d="M34 32L42 16L52 32L62 28L70 40H36L34 32Z" fill="#1F2937"/>
-  <path d="M46 12L52 4L60 12L54 18L46 12Z" fill="#FBBF24"/>
-  <circle cx="58" cy="12" r="4" fill="#10B981"/>
-  <path d="M16 16H20V32H16V16Z" fill="#2563EB"/>
-  <path d="M12 32C12 28.6863 14.6863 26 18 26H72C75.3137 26 78 28.6863 78 32C78 35.3137 75.3137 38 72 38H18C14.6863 38 12 35.3137 12 32Z" fill="#1F2937"/>
-  <text x="96" y="32" font-family="Inter, sans-serif" font-size="20" font-weight="600" fill="#1F2937">Ascenda</text>
-</svg>
