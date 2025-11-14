@@ -6,12 +6,6 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Laptop, Mail, NotepadText, Search, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-
-const navLinks = [
-  { label: 'Overview', href: '/dashboard' },
-  { label: 'Stories', href: '/stories' }
-];
-
 const features = [
   {
     title: 'Fit Score · Find your perfect match',
@@ -161,27 +155,20 @@ export default function HomePage() {
               className="h-auto w-[160px] object-contain"
             />
           </Link>
-          <div className="flex flex-wrap items-center gap-3 text-[13px] text-slate-500">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="rounded-full px-3 py-1 text-[13px] font-semibold transition hover:text-slate-900"
-              >
-                {link.label}
-              </Link>
-            ))}
-          </div>
           <div className="flex flex-wrap items-center gap-3">
             <Button
               asChild
               size="sm"
               variant="ghost"
-              className="border border-slate-300 text-slate-900 hover:bg-slate-50"
+              className="border border-slate-300 text-slate-900 shadow-none hover:bg-slate-50 hover:shadow-none hover:scale-100"
             >
               <Link href="/login">Sign in</Link>
             </Button>
-            <Button asChild size="sm" className="bg-slate-900 text-white hover:bg-slate-800">
+            <Button
+              asChild
+              size="sm"
+              className="bg-slate-900 text-white hover:bg-slate-800 shadow-none hover:shadow-none hover:scale-100"
+            >
               <Link href="/signup" className="flex items-center gap-2">
                 <Laptop className="h-4 w-4" />
                 Launch Ascenda
