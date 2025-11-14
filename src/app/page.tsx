@@ -193,7 +193,7 @@ export default function HomePage() {
             <div className="space-y-6">
               <p className="text-xs uppercase tracking-[0.5em] text-slate-400">Admissions OS · Minimal decisions</p>
               <h1 className="text-5xl font-semibold leading-tight tracking-tight sm:text-[3.6rem]">
-                Ascenda: Match. Apply. Ascend.
+                Aim Higher. Land Smarter.
               </h1>
               <p className="text-lg text-slate-600 sm:text-xl">
                 Ascenda gives students, families, and admissions teams a single, beautifully organized workflow—fit scores, deadlines,
