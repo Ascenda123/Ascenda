@@ -177,7 +177,7 @@ export default function HomePage() {
           </div>
         </motion.header>
 
-        <section className="flex min-h-screen flex-col justify-center space-y-12 pb-16">
+        <section className="space-y-12 pb-16">
           <motion.div
             className="grid items-center gap-10 lg:grid-cols-[0.9fr,1.1fr]"
             initial="hidden"
@@ -285,13 +285,14 @@ export default function HomePage() {
               </div>
               <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-slate-500">
                 <span>Updated 1 min ago</span>
+                <span className="h-px flex-1 bg-slate-100"></span>
                 <span>View timeline →</span>
               </div>
             </div>
           </motion.div>
         </section>
 
-        <section className="flex min-h-screen flex-col justify-center space-y-8">
+        <section className="mt-16 space-y-8">
           <div className="max-w-2xl space-y-2">
             <p className="text-xs uppercase tracking-[0.4em] text-slate-400">Why Ascenda</p>
             <h2 className="text-3xl font-semibold text-[#111111]">Four ways to make your application journey easier</h2>
@@ -327,7 +328,7 @@ export default function HomePage() {
         </section>
 
         <motion.section
-          className="grid min-h-screen gap-8 rounded-[32px] border border-slate-100 bg-white p-6 md:grid-cols-[0.9fr_1.1fr]"
+          className="mt-16 grid gap-8 rounded-[32px] border border-slate-100 bg-white p-6 md:grid-cols-[0.9fr_1.1fr]"
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, amount: 0.3 }}
@@ -376,7 +377,7 @@ export default function HomePage() {
           </div>
         </motion.section>
 
-        <section className="flex min-h-screen flex-col justify-center space-y-6">
+        <section className="mt-16 space-y-6 border-t border-slate-100 pt-14">
           <div>
             <p className="text-xs uppercase tracking-[0.4em] text-slate-500">Your shortlist in 3 steps</p>
             <h2 className="text-3xl font-semibold">Simple. High impact.</h2>
@@ -409,7 +410,7 @@ export default function HomePage() {
         </section>
 
         <motion.section
-          className="min-h-screen py-12"
+          className="mt-16"
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, amount: 0.3 }}
@@ -473,7 +474,7 @@ export default function HomePage() {
           </div>
         </motion.section>
 
-        <section className="flex min-h-screen flex-col justify-center rounded-[32px] border border-slate-100 bg-white p-6">
+        <section className="mt-16 rounded-[32px] border border-slate-100 bg-white p-6">
           <div className="flex flex-col gap-2 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-xs uppercase tracking-[0.4em] text-slate-400">Proof points</p>
             <p>Students and families feel the delta immediately, data shows why.</p>
@@ -491,7 +492,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section className="flex min-h-screen flex-col justify-center">
+        <section className="mt-16 border-t border-slate-100 pt-14">
           <div className="grid gap-8 md:grid-cols-[0.8fr_1.2fr]">
             <div className="space-y-4">
               <p className="text-xs uppercase tracking-[0.4em] text-slate-400">Frequently asked questions</p>
@@ -533,17 +534,17 @@ export default function HomePage() {
           </div>
         </section>
 
-        <motion.section
-          className="mt-0 flex min-h-screen flex-col justify-center space-y-4 rounded-[36px] border border-slate-100 bg-white px-8 py-10 text-center text-slate-900 shadow-[0_25px_80px_rgba(15,23,42,0.08)]"
-          initial="hidden"
-          animate="visible"
-          variants={fadeIn}
-        >
-          <p className="text-xs uppercase tracking-[0.5em] text-slate-400">Plan confidently</p>
-          <h2 className="text-3xl font-semibold">Launch with the decisions that matter.</h2>
-          <p className="text-sm text-slate-600">
-            Tie programs, essays, scholarships, and deadlines together—so every action is tied to the right school and nothing slips through the cracks.
-          </p>
+          <motion.section
+            className="mt-16 space-y-4 rounded-[36px] border border-slate-100 bg-white px-8 py-10 text-center text-slate-900 shadow-[0_25px_80px_rgba(15,23,42,0.08)]"
+            initial="hidden"
+            animate="visible"
+            variants={fadeIn}
+          >
+            <p className="text-xs uppercase tracking-[0.5em] text-slate-400">Plan confidently</p>
+            <h2 className="text-3xl font-semibold">Launch with the decisions that matter.</h2>
+            <p className="text-sm text-slate-600">
+              Tie programs, essays, scholarships, and deadlines together—so every action is tied to the right school and nothing slips through the cracks.
+            </p>
           <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
             <Button
               asChild
