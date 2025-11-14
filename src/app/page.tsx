@@ -191,13 +191,12 @@ export default function HomePage() {
             variants={fadeIn}
           >
             <div className="space-y-6">
-              <p className="text-xs uppercase tracking-[0.5em] text-slate-400">Admissions OS · Minimal decisions</p>
-              <h1 className="text-5xl font-semibold leading-tight tracking-tight sm:text-[3.6rem]">
-                Aim Higher. Land Smarter.
+              <p className="text-xs uppercase tracking-[0.5em] text-slate-400">Admissions OS · Signal clarity</p>
+              <h1 className="text-5xl font-semibold leading-tight tracking-tight sm:text-[3.6rem] text-[#111111]">
+                The #1 University Application Companion.
               </h1>
-              <p className="text-lg text-slate-600 sm:text-xl">
-                Ascenda gives students, families, and admissions teams a single, beautifully organized workflow: fit scores, deadlines,
-                scholarships, and notes stay perfectly aligned without extra dashboards.
+              <p className="text-lg text-[#666666] sm:text-xl">
+                Get matched to the right universities and courses, unlock real campus insights, and receive a tailored application plan in one modern workspace.
               </p>
               <div className="flex flex-wrap gap-3">
                 <Button asChild size="lg" className="bg-slate-900 text-white hover:bg-slate-800">
@@ -293,31 +292,16 @@ export default function HomePage() {
               </div>
             </div>
           </motion.div>
-
-          <motion.div
-            className="grid gap-4 pt-2 text-sm text-slate-500 sm:grid-cols-3"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.3 }}
-            variants={fadeIn}
-          >
-            {heroStats.map((stat) => (
-              <div
-                key={stat.label}
-                className="rounded-2xl border border-slate-100 bg-white/80 p-4 text-left shadow-[0_12px_35px_rgba(15,23,42,0.06)]"
-              >
-                <p className="text-2xl font-semibold text-slate-900">{stat.value}</p>
-                <p className="uppercase tracking-[0.2em]">{stat.label}</p>
-              </div>
-            ))}
-          </motion.div>
         </section>
 
         <section className="mt-16 space-y-8">
           <div className="max-w-2xl space-y-2">
             <p className="text-xs uppercase tracking-[0.4em] text-slate-400">Why Ascenda</p>
-            <h2 className="text-3xl font-semibold">Tools that feel invisible but do the work.</h2>
-            <p className="text-sm text-slate-600">Each feature is opinionated, minimalist, and tuned for modern admissions teams.</p>
+            <h2 className="text-3xl font-semibold text-[#111111]">Four ways to make your application journey easier</h2>
+            <p className="text-sm text-[#666666]">
+              Everything in Ascenda is tuned to blend calm clarity with clear actions—so you and your team can move through the cycle with
+              confidence and zero guesswork.
+            </p>
           </div>
           <div className="grid gap-5 md:grid-cols-2">
             {features.map((feature, index) => (
@@ -402,7 +386,6 @@ export default function HomePage() {
             <p className="text-sm text-slate-600">Each scroll answers the next question: what now, why is Ascenda different, and how do I act?</p>
           </div>
           <div className="relative space-y-4 pt-4">
-            <span className="pointer-events-none absolute left-[1.85rem] top-9 hidden h-[calc(100%-3rem)] w-px bg-slate-200 sm:block" />
             {steps.map((step, index) => (
               <motion.div
                 key={step.title}
@@ -553,17 +536,17 @@ export default function HomePage() {
           </div>
         </section>
 
-        <motion.section
-          className="mt-16 space-y-4 rounded-[36px] border border-slate-100 bg-white px-8 py-10 text-center text-slate-900 shadow-[0_25px_80px_rgba(15,23,42,0.08)]"
-          initial="hidden"
-          animate="visible"
-          variants={fadeIn}
-        >
-          <p className="text-xs uppercase tracking-[0.5em] text-slate-400">Minimalism meets impact</p>
-          <h2 className="text-3xl font-semibold">Launch your admissions era with Ascenda.</h2>
-          <p className="text-sm text-slate-600">
-            Keep every essay, scholarship, and plan update in one clean studio. Students stay creative, teams stay informed.
-          </p>
+          <motion.section
+            className="mt-16 space-y-4 rounded-[36px] border border-slate-100 bg-white px-8 py-10 text-center text-slate-900 shadow-[0_25px_80px_rgba(15,23,42,0.08)]"
+            initial="hidden"
+            animate="visible"
+            variants={fadeIn}
+          >
+            <p className="text-xs uppercase tracking-[0.5em] text-slate-400">Plan confidently</p>
+            <h2 className="text-3xl font-semibold">Launch with the decisions that matter.</h2>
+            <p className="text-sm text-slate-600">
+              Tie programs, essays, scholarships, and deadlines together—so every action is tied to the right school and nothing slips through the cracks.
+            </p>
           <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
             <Button asChild size="lg" className="bg-slate-900 text-white hover:bg-slate-800">
               <Link href="/signup">Create free account</Link>

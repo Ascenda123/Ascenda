@@ -26,7 +26,11 @@ export default function RootLayout({
           Skip to content
         </a>
         <Theme appearance="light" accentColor="cyan" grayColor="slate" scaling="100%">
-          <Providers messages={messages}>{children}</Providers>
+          <div className="relative min-h-screen overflow-hidden bg-white">
+            <div className="pointer-events-none absolute inset-x-0 top-[-200px] mx-auto h-[420px] w-[420px] rounded-[40%] bg-gradient-to-br from-[#E9F1FA] to-transparent blur-3xl" />
+            <div className="pointer-events-none absolute inset-x-0 bottom-[-220px] mx-auto h-[480px] w-[480px] rounded-[35%] bg-gradient-to-tr from-[#F0F8FF] to-transparent blur-3xl" />
+            <Providers messages={messages}>{children}</Providers>
+          </div>
         </Theme>
       </body>
     </html>

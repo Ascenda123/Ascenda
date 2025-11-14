@@ -1,14 +1,11 @@
+'use client';
+
 import * as React from 'react';
-import { TextField } from '@radix-ui/themes';
 import { cn } from '@/lib/utils';
 
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {}
 
-export const Input = React.forwardRef<HTMLInputElement, InputProps>(({ className, type, ...props }, ref) => {
-  return (
-    <TextField.Root className={cn('w-full', className)} size="3" radius="full">
-      <TextField.Input ref={ref} type={type} {...props} />
-    </TextField.Root>
-  );
+export const Input = React.forwardRef<HTMLInputElement, InputProps>(({ className, type = 'text', ...props }, ref) => {
+  return <input ref={ref} type={type} className={cn('form-input', className)} {...props} />;
 });
 Input.displayName = 'Input';

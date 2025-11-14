@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { cn } from '@/lib/utils';
 import {
   profilePersonalSchema,
   profileAcademicsSchema,
@@ -29,9 +30,11 @@ import {
   savePreferencesStep,
   saveAspirationsStep
 } from '../actions';
+import { PROFILE_STEPS, STEP_ORDER, type StepKey, type StepCompletionMap } from '../constants';
 import { CountrySelect } from '@/components/inputs/country-select';
 import { HomeCountrySelect } from '@/components/inputs/home-country-select';
 import { SubjectGradeTable } from '@/components/inputs/subject-grade-table';
+import { Check } from 'lucide-react';
 
 const DESTINATION_COUNTRY_SET = new Set<string>(DESTINATION_COUNTRIES);
 const PROGRAM_LEVEL_SET = new Set<string>(PROGRAM_LEVEL_OPTIONS);
@@ -71,12 +74,20 @@ interface ProfileWizardProps {
   academics: Record<string, any> | null;
   preferences: Record<string, any> | null;
   aspirations: Record<string, any> | null;
+  initialStep: StepKey;
+  stepCompletion: StepCompletionMap;
 }
 
-type StepKey = 'personal' | 'academics' | 'preferences' | 'aspirations';
-
-export const ProfileWizard = ({ profile, academics, preferences, aspirations }: ProfileWizardProps) => {
-  const [currentStep, setCurrentStep] = useState<StepKey>('personal');
+export const ProfileWizard = ({
+  profile,
+  academics,
+  preferences,
+  aspirations,
+  initialStep,
+  stepCompletion
+}: ProfileWizardProps) => {
+  const [currentStep, setCurrentStep] = useState<StepKey>(initialStep);
+  const [completionState, setCompletionState] = useState<StepCompletionMap>(stepCompletion);
   const [isPending, startTransition] = useTransition();
   const [status, setStatus] = useState<string | null>(null);
   const [targetFieldOther, setTargetFieldOther] = useState('');
@@ -162,43 +173,26 @@ export const ProfileWizard = ({ profile, academics, preferences, aspirations }: 
     name: jobTitlesName
   } = aspirationsForm.register('jobTitles');
 
-  const steps: { key: StepKey; title: string; description: string }[] = useMemo(
-    () => [
-      {
-        key: 'personal',
-        title: 'Personal details',
-        description: 'Tell us about yourself so we can personalize guidance.'
-      },
-      {
-        key: 'academics',
-        title: 'Academic profile',
-        description: 'Share grades and test scores to assess eligibility.'
-      },
-      {
-        key: 'preferences',
-        title: 'Preferences',
-        description: 'Where do you want to study and under what conditions?'
-      },
-      {
-        key: 'aspirations',
-        title: 'Aspirations',
-        description: 'Help us understand your goals and target outcomes.'
-      }
-    ],
-    []
-  );
+  const switchStep = (key: StepKey) => {
+    setStatus(null);
+    setCurrentStep(key);
+  };
 
   const goToNext = (key: StepKey) => {
-    const order: StepKey[] = ['personal', 'academics', 'preferences', 'aspirations'];
-    const currentIndex = order.indexOf(key);
-    const nextKey = order[currentIndex + 1] ?? 'aspirations';
-    setCurrentStep(nextKey);
+    const currentIndex = STEP_ORDER.indexOf(key);
+    const nextKey = STEP_ORDER[currentIndex + 1] ?? 'aspirations';
+    switchStep(nextKey);
+  };
+
+  const markStepComplete = (key: StepKey) => {
+    setCompletionState((prev) => ({ ...prev, [key]: true }));
   };
 
   const handlePersonalSubmit = (values: ProfilePersonalValues) => {
     startTransition(async () => {
       await savePersonalStep(values);
       setStatus('Personal information saved');
+      markStepComplete('personal');
       goToNext('personal');
     });
   };
@@ -207,6 +201,7 @@ export const ProfileWizard = ({ profile, academics, preferences, aspirations }: 
     startTransition(async () => {
       await saveAcademicsStep(values);
       setStatus('Academic profile saved');
+      markStepComplete('academics');
       goToNext('academics');
     });
   };
@@ -215,6 +210,7 @@ export const ProfileWizard = ({ profile, academics, preferences, aspirations }: 
     startTransition(async () => {
       await savePreferencesStep(values);
       setStatus('Preferences saved');
+      markStepComplete('preferences');
       goToNext('preferences');
     });
   };
@@ -223,6 +219,7 @@ export const ProfileWizard = ({ profile, academics, preferences, aspirations }: 
     startTransition(async () => {
       await saveAspirationsStep(values);
       setStatus('Aspirations saved. You are all set!');
+      markStepComplete('aspirations');
     });
   };
 
@@ -248,34 +245,69 @@ export const ProfileWizard = ({ profile, academics, preferences, aspirations }: 
     setJobTitleOther('');
   };
 
+  const stepIndex = Math.max(0, STEP_ORDER.indexOf(currentStep));
+
   return (
     <div className="grid form-grid form-flow text-slate-900 lg:grid-cols-[320px,1fr]">
       <aside className="form-stack">
         <div className="form-panel form-panel--quiet form-stack">
           <h2 className="text-xl font-semibold">Onboarding progress</h2>
           <ol className="form-stack">
-            {steps.map((step, index) => (
-              <li key={step.key} className="flex items-start gap-3">
-                <span
-                  className={
-                    index <= steps.findIndex((item) => item.key === currentStep)
-                      ? 'mt-1 flex h-7 w-7 items-center justify-center rounded-full bg-slate-900 text-xs font-semibold text-white shadow-sm'
-                      : 'mt-1 flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-500'
-                  }
-                  aria-hidden
-                >
-                  {index + 1}
-                </span>
-                <div>
-                  <p className="text-sm font-semibold text-slate-900">{step.title}</p>
-                  <p className="text-xs text-slate-500">{step.description}</p>
-                </div>
-              </li>
-            ))}
+            {PROFILE_STEPS.map((step, index) => {
+              const complete = completionState[step.key];
+              const active = currentStep === step.key;
+              return (
+                <li key={step.key}>
+                  <button
+                    type="button"
+                    className={cn(
+                      'flex w-full items-start gap-3 rounded-2xl p-2 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300',
+                      active && 'bg-slate-50'
+                    )}
+                    onClick={() => switchStep(step.key)}
+                    disabled={isPending}
+                  >
+                    <span
+                      className={cn(
+                        'mt-1 flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold shadow-sm',
+                        complete
+                          ? 'bg-emerald-600 text-white'
+                          : active
+                            ? 'bg-slate-900 text-white'
+                            : 'bg-slate-100 text-slate-500'
+                      )}
+                      aria-hidden
+                    >
+                      {complete ? <Check className="h-4 w-4" /> : index + 1}
+                    </span>
+                    <div>
+                      <p className="text-sm font-semibold text-slate-900">{step.title}</p>
+                      <p className="text-xs text-slate-500">{step.description}</p>
+                      <p
+                        className={cn(
+                          'text-xs font-medium',
+                          complete ? 'text-emerald-600' : active ? 'text-slate-900' : 'text-slate-400'
+                        )}
+                      >
+                        {complete ? 'Complete' : active ? 'In progress' : 'Pending'}
+                      </p>
+                    </div>
+                  </button>
+                </li>
+              );
+            })}
           </ol>
         </div>
       </aside>
       <div className="form-panel form-panel--roomy form-stack">
+        <div className="flex items-center justify-between text-xs uppercase tracking-[0.2em] text-slate-400">
+          <span>
+            Step {stepIndex + 1} of {PROFILE_STEPS.length}
+          </span>
+          <span className={completionState[currentStep] ? 'text-emerald-600' : 'text-slate-500'}>
+            {completionState[currentStep] ? 'Saved' : 'In progress'}
+          </span>
+        </div>
         {status ? (
           <p className="form-feedback form-feedback--success" role="status">
             {status}

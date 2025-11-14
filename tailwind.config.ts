@@ -9,9 +9,16 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        slateInk: '#0f172a',
-        slateMist: '#f8fafc',
-        slateLine: '#e2e8f0'
+        ink: '#111111',
+        charcoal: '#1C1C1C',
+        ash: '#666666',
+        cloud: '#808080',
+        mist: '#F0F8FF',
+        powder: '#B3D9F2',
+        skyline: '#4FC3F7',
+        accentBlue: '#A8D5E3',
+        divider: '#E0E0E0',
+        hoverGrey: '#F5F5F5'
       },
       fontFamily: {
         sans: [
