@@ -160,7 +160,7 @@ export default function HomePage() {
             <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 text-white">
               <Link href="/" className="flex items-center gap-3 text-lg font-semibold tracking-tight text-white">
                 <Image
-                  src="/Ascenda_Logo-removebg-.png"
+                  src="/Gemini_Generated_Image_t7l91wt7l91wt7l9-removebg-preview.png"
                   alt="Ascenda logo"
                   width={160}
                   height={160}
