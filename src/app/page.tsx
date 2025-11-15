@@ -291,21 +291,37 @@ export default function HomePage() {
                         <p className="text-xs uppercase tracking-[0.35em] text-white">Next actions</p>
                         <ul className="mt-3 space-y-2 text-sm text-white">
                           <li className="flex items-center justify-between text-white">
-                            <span className="text-white">Scholarship essay · Draft 2</span>
-                            <span className="text-xs text-white">Due Fri</span>
+                            <div className="flex items-center gap-3">
+                              <span className="h-2.5 w-2.5 rounded-full bg-gradient-to-b from-emerald-200 to-cyan-300" />
+                              <span className="font-medium text-white">Scholarship essay · Draft 2</span>
+                            </div>
+                            <span className="rounded-full border border-white/40 px-3 py-1 text-[0.6rem] uppercase tracking-[0.35em] text-white">
+                              Due Fri
+                            </span>
                           </li>
                           <li className="flex items-center justify-between text-white">
-                            <span className="text-white">Portfolio upload · Motion study</span>
-                            <span className="text-xs text-white">Needs review</span>
+                            <div className="flex items-center gap-3">
+                              <span className="h-2.5 w-2.5 rounded-full bg-gradient-to-b from-amber-200 to-rose-300" />
+                              <span className="font-medium text-white">Portfolio upload · Motion study</span>
+                            </div>
+                            <span className="rounded-full border border-white/40 px-3 py-1 text-[0.6rem] uppercase tracking-[0.35em] text-white">
+                              Needs review
+                            </span>
                           </li>
                         </ul>
                       </div>
                       <div className="rounded-[24px] border border-white/20 bg-white/5 px-5 py-4">
                         <p className="text-xs uppercase tracking-[0.35em] text-white">Notes sync</p>
-                        <div className="mt-3 flex flex-col gap-2 text-sm text-white">
-                          <span className="text-white">“Greenlit for ESADE interview; send prep doc.”</span>
-                          <span className="text-xs text-white">Claire · 2 hours ago</span>
-                          <span className="text-xs text-white">Shared on Ascenda workspace</span>
+                        <div className="mt-3 space-y-2 text-sm text-white">
+                          <p className="text-base font-medium leading-relaxed text-white/95">
+                            <span className="text-2xl text-amber-200">“</span>Greenlit for ESADE interview; send prep doc.&rdquo;
+                          </p>
+                          <div className="flex items-center gap-3 text-[0.65rem] uppercase tracking-[0.35em] text-white/80">
+                            <span className="font-semibold text-white">Claire</span>
+                            <span className="h-0.5 w-8 bg-white/30" />
+                            <span className="text-white/95">2 hours ago</span>
+                          </div>
+                          <span className="text-xs text-white/80">Shared on Ascenda workspace</span>
                         </div>
                       </div>
                     </div>
