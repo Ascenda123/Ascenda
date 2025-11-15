@@ -612,45 +612,35 @@ export default function HomePage() {
           </div>
         </motion.section>
 
-        <section className="mt-16">
-          <div className="grid gap-8 md:grid-cols-[0.8fr_1.2fr]">
-            <div className="space-y-4">
-              <p className="text-xs uppercase tracking-[0.4em] text-slate-400">Frequently asked questions</p>
-              <h2 className="text-3xl font-semibold">Answers before you even ask.</h2>
-              <p className="text-sm text-slate-600">
-                We keep the playbook simple: transparent timelines, privacy controls, and human support whenever you need it.
-              </p>
-              <div className="flex flex-wrap gap-3 text-sm text-slate-600">
-                <Button asChild size="sm" className="bg-slate-900 text-white hover:bg-slate-800">
-                  <Link href="mailto:hello@ascenda.com">Talk to our team</Link>
-                </Button>
-                <Button asChild size="sm" variant="ghost" className="border border-slate-200 text-slate-900 hover:bg-slate-50">
-                  <Link href="/stories">Read stories</Link>
-                </Button>
-              </div>
-            </div>
-            <div className="space-y-3">
-              {faqs.map((faq) => (
-                <motion.div
-                  key={faq.question}
-                  className="rounded-[24px] border border-slate-100 bg-white/70 p-5"
-                  initial="hidden"
-                  whileInView="visible"
-                  viewport={{ once: true, amount: 0.3 }}
-                  variants={fadeIn}
+        <section className="mt-16 space-y-8 rounded-[32px] border border-slate-100 bg-white p-6 shadow-[0_18px_45px_rgba(15,23,42,0.06)]">
+          <div className="text-center text-slate-600 md:text-left">
+            <p className="text-xs uppercase tracking-[0.4em] text-slate-400">Frequently asked questions</p>
+            <h2 className="mt-2 text-3xl font-semibold text-slate-900">Answers before you even ask.</h2>
+            <p className="text-sm">
+              We keep the playbook simple: transparent timelines, privacy controls, and human support whenever you need it.
+            </p>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            {faqs.map((faq) => (
+              <motion.div
+                key={faq.question}
+                className="rounded-[24px] border border-slate-100 bg-slate-50/70 p-5"
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, amount: 0.3 }}
+                variants={fadeIn}
+              >
+                <button
+                  type="button"
+                  className="flex w-full items-center justify-between text-left text-base font-semibold text-slate-900"
+                  onClick={() => setOpenFaq((prev) => (prev === faq.question ? '' : faq.question))}
                 >
-                  <button
-                    type="button"
-                    className="flex w-full items-center justify-between text-left text-base font-semibold text-slate-900"
-                    onClick={() => setOpenFaq((prev) => (prev === faq.question ? '' : faq.question))}
-                  >
-                    <span>{faq.question}</span>
-                    <span className="text-sm text-slate-500">{openFaq === faq.question ? '−' : '+'}</span>
-                  </button>
-                  {openFaq === faq.question && <p className="mt-3 text-sm text-slate-600">{faq.answer}</p>}
-                </motion.div>
-              ))}
-            </div>
+                  <span>{faq.question}</span>
+                  <span className="text-sm text-slate-500">{openFaq === faq.question ? '−' : '+'}</span>
+                </button>
+                {openFaq === faq.question && <p className="mt-3 text-sm text-slate-600">{faq.answer}</p>}
+              </motion.div>
+            ))}
           </div>
         </section>
         <motion.section
