@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   Activity,
@@ -16,6 +16,8 @@ import {
   Sparkles
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+const heroHeadline = 'The #1 University Application Companion.';
+
 const features = [
   {
     title: 'Fit Score · Find your perfect match',
@@ -140,8 +142,39 @@ const fadeIn = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: 'easeOut' } }
 };
 
+const heroBoardVariants = {
+  hidden: { opacity: 0, scale: 0.9, y: 20 },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    y: 0,
+    transition: { duration: 0.9, ease: [0.16, 1, 0.3, 1], delay: 0.15 }
+  }
+};
+
 export default function HomePage() {
   const [openFaq, setOpenFaq] = useState(faqs[0].question);
+  const [typedHeadline, setTypedHeadline] = useState('');
+  const [isTypingDone, setIsTypingDone] = useState(false);
+
+  useEffect(() => {
+    let index = 0;
+    const timer = window.setInterval(() => {
+      index += 1;
+      setTypedHeadline(heroHeadline.slice(0, index));
+      if (index >= heroHeadline.length) {
+        setIsTypingDone(true);
+        window.clearInterval(timer);
+      }
+    }, 30);
+
+    return () => {
+      window.clearInterval(timer);
+    };
+  }, []);
+
+  const heroRevealClass = isTypingDone ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2';
+  const displayedHeadline = typedHeadline || ' ';
 
   return (
     <main
@@ -213,13 +246,28 @@ export default function HomePage() {
               >
                 <div className="space-y-6">
                   <p className="text-xs uppercase tracking-[0.5em] text-white/70">Admissions OS</p>
-                  <h1 className="text-5xl font-semibold leading-tight tracking-tight sm:text-[3.6rem] text-white">
-                    The #1 University Application Companion.
+                  <h1
+                    className="text-5xl font-semibold leading-tight tracking-tight text-white sm:text-[3.6rem]"
+                    aria-label={heroHeadline}
+                  >
+                    <span className="text-white">{displayedHeadline}</span>
+                    <span
+                      aria-hidden
+                      className={`ml-2 inline-block h-[1.1em] w-px bg-white align-middle transition-opacity duration-300 ${
+                        isTypingDone ? 'opacity-0' : 'opacity-100 animate-pulse'
+                      }`}
+                    />
                   </h1>
-                  <p className="text-lg text-white/80 sm:text-xl">
+                  <p
+                    className={`text-lg text-white/80 sm:text-xl transition-all duration-500 ease-out ${heroRevealClass}`}
+                    style={{ transitionDelay: isTypingDone ? '120ms' : '0ms' }}
+                  >
                     Get matched to the right universities and courses, unlock real campus insights, and receive a tailored application plan in one modern workspace.
                   </p>
-                  <div className="flex flex-wrap gap-3">
+                  <div
+                    className={`flex flex-wrap gap-3 transition-all duration-500 ease-out ${heroRevealClass}`}
+                    style={{ transitionDelay: isTypingDone ? '200ms' : '0ms' }}
+                  >
                     <Button
                       asChild
                       size="lg"
@@ -236,7 +284,10 @@ export default function HomePage() {
                       <Link href="/download">See product tour</Link>
                     </Button>
                   </div>
-                  <ul className="flex flex-wrap gap-4 text-sm text-white/80">
+                  <ul
+                    className={`flex flex-wrap gap-4 text-sm text-white/80 transition-all duration-500 ease-out ${heroRevealClass}`}
+                    style={{ transitionDelay: isTypingDone ? '260ms' : '0ms' }}
+                  >
                     <li className="flex items-center gap-2">
                       <span className="h-1.5 w-1.5 rounded-full bg-white" />
                       Fit scores auto recalibrate with every edit.
@@ -251,7 +302,12 @@ export default function HomePage() {
                     </li>
                   </ul>
                 </div>
-                <div className="rounded-[36px] border border-white/30 bg-black/40 p-6 shadow-[0_35px_80px_rgba(2,6,23,0.45)] backdrop-blur text-white">
+                <motion.div
+                  className="rounded-[36px] border border-white/30 bg-black/40 p-6 text-white shadow-[0_35px_80px_rgba(2,6,23,0.45)] backdrop-blur"
+                  initial="hidden"
+                  animate={isTypingDone ? 'visible' : 'hidden'}
+                  variants={heroBoardVariants}
+                >
                   <div className="flex items-center justify-between gap-4 text-[0.7rem] uppercase tracking-[0.4em] text-white">
                     <span className="flex items-center gap-2 !text-white" style={{ color: '#fff' }}>
                       <LayoutDashboard className="h-4 w-4 text-cyan-200" />
@@ -348,7 +404,7 @@ export default function HomePage() {
                     <span className="h-px flex-1 bg-white/30"></span>
                     <span>View timeline →</span>
                   </div>
-                </div>
+                </motion.div>
               </motion.div>
             </section>
           </div>
