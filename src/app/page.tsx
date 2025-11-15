@@ -136,161 +136,188 @@ export default function HomePage() {
   return (
     <main
       id="main-content"
-      className="bg-white text-slate-900 font-[family:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text',sans-serif]"
+      className="bg-transparent text-slate-900 font-[family:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text',sans-serif]"
     >
-      <div className="mx-auto max-w-6xl px-4 pb-10 pt-10 sm:px-6">
-        <motion.header
-          className="mb-8 flex flex-col gap-3 text-slate-900 sm:flex-row sm:items-center sm:justify-between"
-          initial="hidden"
-          animate="visible"
-          variants={fadeIn}
-        >
-          <Link href="/" className="flex items-center gap-3 text-lg font-semibold tracking-tight">
-            <Image
-              src="/Ascenda Logo.png"
-              alt="Ascenda logo"
-              width={160}
-              height={160}
-              priority
-              className="h-auto w-[160px] object-contain"
-            />
-          </Link>
-          <div className="flex flex-wrap items-center gap-3">
-            <Button
-              asChild
-              size="sm"
-              variant="ghost"
-              className="border border-slate-300 text-slate-900 shadow-none hover:bg-slate-50 hover:shadow-none hover:scale-100"
-            >
-              <Link href="/login">Sign in</Link>
-            </Button>
-            <Button
-              asChild
-              size="sm"
-              className="bg-slate-900 text-white hover:bg-slate-50 hover:text-slate-900 shadow-none hover:shadow-none hover:scale-100"
-            >
-              <Link href="/signup" className="flex items-center gap-2">
-                <Laptop className="h-4 w-4" />
-                Launch Ascenda
-              </Link>
-            </Button>
-          </div>
-        </motion.header>
-
-        <section className="space-y-12 pb-16 pt-4">
-          <motion.div
-            className="grid items-center gap-10 lg:grid-cols-[0.9fr,1.1fr]"
+      <section className="relative min-h-[75vh] overflow-hidden">
+        <div className="absolute inset-0">
+          <Image
+            src="/Ascenda Banner.png"
+            alt="Ascenda hero banner"
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/75 via-transparent to-white pointer-events-none" />
+        </div>
+        <div className="relative z-10">
+          <motion.header
+            className="sticky top-0 z-30 w-full mb-8 bg-transparent px-4 py-4 sm:px-6"
             initial="hidden"
             animate="visible"
             variants={fadeIn}
           >
-            <div className="space-y-6">
-              <p className="text-xs uppercase tracking-[0.5em] text-slate-400">Admissions OS</p>
-              <h1 className="text-5xl font-semibold leading-tight tracking-tight sm:text-[3.6rem] text-[#111111]">
-                The #1 University Application Companion.
-              </h1>
-              <p className="text-lg text-[#666666] sm:text-xl">
-                Get matched to the right universities and courses, unlock real campus insights, and receive a tailored application plan in one modern workspace.
-              </p>
-              <div className="flex flex-wrap gap-3">
+            <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 text-white">
+              <Link href="/" className="flex items-center gap-3 text-lg font-semibold tracking-tight text-white">
+                <Image
+                  src="/Ascenda_Logo-removebg-.png"
+                  alt="Ascenda logo"
+                  width={160}
+                  height={160}
+                  priority
+                  className="h-auto w-[205px] object-contain"
+                />
+              </Link>
+              <div className="flex flex-wrap items-center gap-3">
                 <Button
                   asChild
-                  size="lg"
-                  className="bg-slate-900 text-white hover:bg-slate-50 hover:text-slate-900 shadow-none hover:shadow-none hover:scale-100"
+                  size="sm"
+                  variant="ghost"
+                  className="border border-white/40 text-white shadow-none hover:bg-white/10 hover:shadow-none hover:scale-100 !text-white"
                 >
-                  <Link href="/signup">Launch Ascenda</Link>
+                  <Link href="/login" className="text-white">
+                    Sign in
+                  </Link>
                 </Button>
-                <Button asChild size="lg" variant="outline" className="border-slate-200 text-slate-900 hover:bg-slate-50">
-                  <Link href="/download">See product tour</Link>
+                <Button
+                  asChild
+                  size="sm"
+                  className="bg-white/10 text-white border border-white/50 shadow-none hover:bg-white/20 hover:text-white hover:shadow-none hover:scale-100 !text-white"
+                >
+                  <Link href="/signup" className="flex items-center gap-2 text-white">
+                    <Laptop className="h-4 w-4 text-white" />
+                    Launch Ascenda
+                  </Link>
                 </Button>
-              </div>
-              <ul className="flex flex-wrap gap-4 text-sm text-slate-500">
-                <li className="flex items-center gap-2">
-                  <span className="h-1.5 w-1.5 rounded-full bg-slate-900" />
-                  Fit scores auto recalibrate with every edit.
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="h-1.5 w-1.5 rounded-full bg-slate-900" />
-                  Notes stay perfectly in sync.
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="h-1.5 w-1.5 rounded-full bg-slate-900" />
-                  Timeline nudges prevent deadline drift.
-                </li>
-              </ul>
-            </div>
-            <div className="rounded-[36px] border border-slate-100 bg-white p-6 shadow-[0_35px_80px_rgba(15,23,42,0.08)]">
-              <div className="flex items-center justify-between gap-4 text-[0.7rem] uppercase tracking-[0.4em] text-slate-400">
-                <span>Ascenda board</span>
-                <div className="flex gap-2">
-                  <span className="rounded-full border border-slate-200 px-3 py-0.5 text-[0.55rem]">Plan</span>
-                  <span className="rounded-full border border-slate-200 px-3 py-0.5 text-[0.55rem] text-slate-500">Signals</span>
-                  <span className="rounded-full border border-slate-200 px-3 py-0.5 text-[0.55rem] text-slate-500">Notes</span>
-                </div>
-              </div>
-              <div className="mt-6 space-y-4">
-                <div className="rounded-[24px] border border-slate-100 bg-slate-50 px-5 py-4">
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs uppercase tracking-[0.35em] text-slate-500">Fit score</p>
-                    <span className="text-xs uppercase tracking-[0.3em] text-emerald-500">On target</span>
-                  </div>
-                  <div className="mt-2 flex items-end justify-between">
-                    <p className="text-4xl font-semibold text-slate-900">92%</p>
-                    <p className="text-sm text-slate-600">Parsons Paris · Strategic Design</p>
-                  </div>
-                  <div className="mt-3 h-2 rounded-full bg-white">
-                    <div className="h-full rounded-full bg-gradient-to-r from-slate-900 via-cyan to-emerald-400" style={{ width: '92%' }} />
-                  </div>
-                </div>
-                <div className="grid gap-3 md:grid-cols-2">
-                  <div className="rounded-[24px] border border-slate-100 px-5 py-4">
-                    <p className="text-xs uppercase tracking-[0.35em] text-slate-500">Next actions</p>
-                    <ul className="mt-3 space-y-2 text-sm text-slate-700">
-                      <li className="flex items-center justify-between">
-                        <span>Scholarship essay · Draft 2</span>
-                        <span className="text-xs text-slate-400">Due Fri</span>
-                      </li>
-                      <li className="flex items-center justify-between">
-                        <span>Portfolio upload · Motion study</span>
-                        <span className="text-xs text-slate-400">Needs review</span>
-                      </li>
-                    </ul>
-                  </div>
-                  <div className="rounded-[24px] border border-slate-100 px-5 py-4">
-                    <p className="text-xs uppercase tracking-[0.35em] text-slate-500">Notes sync</p>
-                    <div className="mt-3 flex flex-col gap-2 text-sm text-slate-600">
-                      <span>“Greenlit for ESADE interview; send prep doc.”</span>
-                      <span className="text-xs text-slate-400">Claire · 2 hours ago</span>
-                      <span className="text-xs text-slate-400">Shared on Ascenda workspace</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="rounded-[24px] border border-slate-100 px-5 py-4">
-                  <p className="text-xs uppercase tracking-[0.35em] text-slate-500">Active signals</p>
-                  <div className="mt-3 grid gap-3 text-sm text-slate-600 md:grid-cols-3">
-                    <div>
-                      <p className="text-2xl font-semibold text-slate-900">4</p>
-                      <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Programs</p>
-                    </div>
-                    <div>
-                      <p className="text-2xl font-semibold text-slate-900">2</p>
-                      <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Deadlines</p>
-                    </div>
-                    <div>
-                      <p className="text-2xl font-semibold text-slate-900">1</p>
-                      <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Scholarship</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-slate-500">
-                <span>Updated 1 min ago</span>
-                <span className="h-px flex-1 bg-slate-100"></span>
-                <span>View timeline →</span>
               </div>
             </div>
-          </motion.div>
-        </section>
+          </motion.header>
+
+          <div className="mx-auto max-w-6xl px-4 pb-10 pt-10 sm:px-6">
+            <section className="space-y-12 pb-16 pt-4">
+              <motion.div
+                className="grid items-center gap-10 lg:grid-cols-[0.9fr,1.1fr]"
+                initial="hidden"
+                animate="visible"
+                variants={fadeIn}
+              >
+                <div className="space-y-6">
+                  <p className="text-xs uppercase tracking-[0.5em] text-white/70">Admissions OS</p>
+                  <h1 className="text-5xl font-semibold leading-tight tracking-tight sm:text-[3.6rem] text-white">
+                    The #1 University Application Companion.
+                  </h1>
+                  <p className="text-lg text-white/80 sm:text-xl">
+                    Get matched to the right universities and courses, unlock real campus insights, and receive a tailored application plan in one modern workspace.
+                  </p>
+                  <div className="flex flex-wrap gap-3">
+                    <Button
+                      asChild
+                      size="lg"
+                      className="bg-white/20 text-white border border-white/30 shadow-none hover:bg-white/30 hover:text-white hover:shadow-none hover:scale-100"
+                    >
+                      <Link href="/signup">Launch Ascenda</Link>
+                    </Button>
+                    <Button
+                      asChild
+                      size="lg"
+                      variant="outline"
+                      className="border border-white/70 text-white hover:bg-white/10 hover:text-white"
+                    >
+                      <Link href="/download">See product tour</Link>
+                    </Button>
+                  </div>
+                  <ul className="flex flex-wrap gap-4 text-sm text-white/80">
+                    <li className="flex items-center gap-2">
+                      <span className="h-1.5 w-1.5 rounded-full bg-white" />
+                      Fit scores auto recalibrate with every edit.
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="h-1.5 w-1.5 rounded-full bg-white" />
+                      Notes stay perfectly in sync.
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="h-1.5 w-1.5 rounded-full bg-white" />
+                      Timeline nudges prevent deadline drift.
+                    </li>
+                  </ul>
+                </div>
+                <div className="rounded-[36px] border border-white/30 bg-black/40 p-6 shadow-[0_35px_80px_rgba(2,6,23,0.45)] backdrop-blur">
+                  <div className="flex items-center justify-between gap-4 text-[0.7rem] uppercase tracking-[0.4em] text-white/70">
+                    <span>Ascenda board</span>
+                    <div className="flex gap-2">
+                      <span className="rounded-full border border-white/40 px-3 py-0.5 text-[0.55rem]">Plan</span>
+                      <span className="rounded-full border border-white/40 px-3 py-0.5 text-[0.55rem] text-white/70">Signals</span>
+                      <span className="rounded-full border border-white/40 px-3 py-0.5 text-[0.55rem] text-white/70">Notes</span>
+                    </div>
+                  </div>
+                  <div className="mt-6 space-y-4">
+                    <div className="rounded-[24px] border border-white/20 bg-white/10 px-5 py-4">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs uppercase tracking-[0.35em] text-white/70">Fit score</p>
+                        <span className="text-xs uppercase tracking-[0.3em] text-emerald-300">On target</span>
+                      </div>
+                      <div className="mt-2 flex items-end justify-between">
+                        <p className="text-4xl font-semibold text-white">92%</p>
+                        <p className="text-sm text-white/70">Parsons Paris · Strategic Design</p>
+                      </div>
+                      <div className="mt-3 h-2 rounded-full bg-white/10">
+                        <div className="h-full rounded-full bg-gradient-to-r from-slate-900 via-cyan to-emerald-400" style={{ width: '92%' }} />
+                      </div>
+                    </div>
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <div className="rounded-[24px] border border-white/20 bg-white/5 px-5 py-4">
+                        <p className="text-xs uppercase tracking-[0.35em] text-white/70">Next actions</p>
+                        <ul className="mt-3 space-y-2 text-sm text-white/80">
+                          <li className="flex items-center justify-between">
+                            <span>Scholarship essay · Draft 2</span>
+                            <span className="text-xs text-white/60">Due Fri</span>
+                          </li>
+                          <li className="flex items-center justify-between">
+                            <span>Portfolio upload · Motion study</span>
+                            <span className="text-xs text-white/60">Needs review</span>
+                          </li>
+                        </ul>
+                      </div>
+                      <div className="rounded-[24px] border border-white/20 bg-white/5 px-5 py-4">
+                        <p className="text-xs uppercase tracking-[0.35em] text-white/70">Notes sync</p>
+                        <div className="mt-3 flex flex-col gap-2 text-sm text-white/80">
+                          <span>“Greenlit for ESADE interview; send prep doc.”</span>
+                          <span className="text-xs text-white/60">Claire · 2 hours ago</span>
+                          <span className="text-xs text-white/60">Shared on Ascenda workspace</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="rounded-[24px] border border-white/20 px-5 py-4">
+                      <p className="text-xs uppercase tracking-[0.35em] text-white/70">Active signals</p>
+                      <div className="mt-3 grid gap-3 text-sm text-white/80 md:grid-cols-3">
+                        <div>
+                          <p className="text-2xl font-semibold text-white">4</p>
+                          <p className="text-xs uppercase tracking-[0.3em] text-white/60">Programs</p>
+                        </div>
+                        <div>
+                          <p className="text-2xl font-semibold text-white">2</p>
+                          <p className="text-xs uppercase tracking-[0.3em] text-white/60">Deadlines</p>
+                        </div>
+                        <div>
+                          <p className="text-2xl font-semibold text-white">1</p>
+                          <p className="text-xs uppercase tracking-[0.3em] text-white/60">Scholarship</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-white/60">
+                    <span>Updated 1 min ago</span>
+                    <span className="h-px flex-1 bg-white/30"></span>
+                    <span>View timeline →</span>
+                  </div>
+                </div>
+              </motion.div>
+            </section>
+          </div>
+        </div>
+      </section>
+
+      <div className="mx-auto max-w-6xl px-4 pb-10 pt-10 sm:px-6">
 
         <section className="mt-16 space-y-8">
           <div className="max-w-2xl space-y-2">
@@ -532,8 +559,7 @@ export default function HomePage() {
             </div>
           </div>
         </section>
-
-          <motion.section
+        <motion.section
             className="mt-16 space-y-4 rounded-[36px] border border-slate-100 bg-white px-8 py-10 text-center text-slate-900 shadow-[0_25px_80px_rgba(15,23,42,0.08)]"
             initial="hidden"
             animate="visible"
