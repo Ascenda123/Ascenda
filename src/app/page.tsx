@@ -4,7 +4,17 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Laptop, Mail, NotepadText, Search, Sparkles } from 'lucide-react';
+import {
+  Activity,
+  ClipboardList,
+  Laptop,
+  LayoutDashboard,
+  Mail,
+  NotepadText,
+  NotebookPen,
+  Search,
+  Sparkles
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 const features = [
   {
@@ -241,24 +251,36 @@ export default function HomePage() {
                     </li>
                   </ul>
                 </div>
-                <div className="rounded-[36px] border border-white/30 bg-black/40 p-6 shadow-[0_35px_80px_rgba(2,6,23,0.45)] backdrop-blur">
-                  <div className="flex items-center justify-between gap-4 text-[0.7rem] uppercase tracking-[0.4em] text-white/70">
-                    <span>Ascenda board</span>
+                <div className="rounded-[36px] border border-white/30 bg-black/40 p-6 shadow-[0_35px_80px_rgba(2,6,23,0.45)] backdrop-blur text-white">
+                  <div className="flex items-center justify-between gap-4 text-[0.7rem] uppercase tracking-[0.4em] text-white">
+                    <span className="flex items-center gap-2 !text-white" style={{ color: '#fff' }}>
+                      <LayoutDashboard className="h-4 w-4 text-cyan-200" />
+                      Ascenda board
+                    </span>
                     <div className="flex gap-2">
-                      <span className="rounded-full border border-white/40 px-3 py-0.5 text-[0.55rem]">Plan</span>
-                      <span className="rounded-full border border-white/40 px-3 py-0.5 text-[0.55rem] text-white/70">Signals</span>
-                      <span className="rounded-full border border-white/40 px-3 py-0.5 text-[0.55rem] text-white/70">Notes</span>
+                      <span className="flex items-center gap-1 rounded-full border border-white/40 px-3 py-0.5 text-[0.55rem] !text-white">
+                        <ClipboardList className="h-3.5 w-3.5 text-cyan-100" />
+                        Plan
+                      </span>
+                      <span className="flex items-center gap-1 rounded-full border border-white/40 px-3 py-0.5 text-[0.55rem] !text-white">
+                        <Activity className="h-3.5 w-3.5 text-emerald-200" />
+                        Signals
+                      </span>
+                      <span className="flex items-center gap-1 rounded-full border border-white/40 px-3 py-0.5 text-[0.55rem] !text-white">
+                        <NotebookPen className="h-3.5 w-3.5 text-amber-100" />
+                        Notes
+                      </span>
                     </div>
                   </div>
                   <div className="mt-6 space-y-4">
                     <div className="rounded-[24px] border border-white/20 bg-white/10 px-5 py-4">
                       <div className="flex items-center justify-between">
-                        <p className="text-xs uppercase tracking-[0.35em] text-white/70">Fit score</p>
+                        <p className="text-xs uppercase tracking-[0.35em] text-white">Fit score</p>
                         <span className="text-xs uppercase tracking-[0.3em] text-emerald-300">On target</span>
                       </div>
                       <div className="mt-2 flex items-end justify-between">
                         <p className="text-4xl font-semibold text-white">92%</p>
-                        <p className="text-sm text-white/70">Parsons Paris · Strategic Design</p>
+                        <p className="text-sm text-white">Parsons Paris · Strategic Design</p>
                       </div>
                       <div className="mt-3 h-2 rounded-full bg-white/10">
                         <div className="h-full rounded-full bg-gradient-to-r from-slate-900 via-cyan to-emerald-400" style={{ width: '92%' }} />
@@ -266,46 +288,46 @@ export default function HomePage() {
                     </div>
                     <div className="grid gap-3 md:grid-cols-2">
                       <div className="rounded-[24px] border border-white/20 bg-white/5 px-5 py-4">
-                        <p className="text-xs uppercase tracking-[0.35em] text-white/70">Next actions</p>
-                        <ul className="mt-3 space-y-2 text-sm text-white/80">
-                          <li className="flex items-center justify-between">
-                            <span>Scholarship essay · Draft 2</span>
-                            <span className="text-xs text-white/60">Due Fri</span>
+                        <p className="text-xs uppercase tracking-[0.35em] text-white">Next actions</p>
+                        <ul className="mt-3 space-y-2 text-sm text-white">
+                          <li className="flex items-center justify-between text-white">
+                            <span className="text-white">Scholarship essay · Draft 2</span>
+                            <span className="text-xs text-white">Due Fri</span>
                           </li>
-                          <li className="flex items-center justify-between">
-                            <span>Portfolio upload · Motion study</span>
-                            <span className="text-xs text-white/60">Needs review</span>
+                          <li className="flex items-center justify-between text-white">
+                            <span className="text-white">Portfolio upload · Motion study</span>
+                            <span className="text-xs text-white">Needs review</span>
                           </li>
                         </ul>
                       </div>
                       <div className="rounded-[24px] border border-white/20 bg-white/5 px-5 py-4">
-                        <p className="text-xs uppercase tracking-[0.35em] text-white/70">Notes sync</p>
-                        <div className="mt-3 flex flex-col gap-2 text-sm text-white/80">
-                          <span>“Greenlit for ESADE interview; send prep doc.”</span>
-                          <span className="text-xs text-white/60">Claire · 2 hours ago</span>
-                          <span className="text-xs text-white/60">Shared on Ascenda workspace</span>
+                        <p className="text-xs uppercase tracking-[0.35em] text-white">Notes sync</p>
+                        <div className="mt-3 flex flex-col gap-2 text-sm text-white">
+                          <span className="text-white">“Greenlit for ESADE interview; send prep doc.”</span>
+                          <span className="text-xs text-white">Claire · 2 hours ago</span>
+                          <span className="text-xs text-white">Shared on Ascenda workspace</span>
                         </div>
                       </div>
                     </div>
                     <div className="rounded-[24px] border border-white/20 px-5 py-4">
-                      <p className="text-xs uppercase tracking-[0.35em] text-white/70">Active signals</p>
+                      <p className="text-xs uppercase tracking-[0.35em] text-white">Active signals</p>
                       <div className="mt-3 grid gap-3 text-sm text-white/80 md:grid-cols-3">
                         <div>
                           <p className="text-2xl font-semibold text-white">4</p>
-                          <p className="text-xs uppercase tracking-[0.3em] text-white/60">Programs</p>
+                          <p className="text-xs uppercase tracking-[0.3em] text-white">Programs</p>
                         </div>
                         <div>
                           <p className="text-2xl font-semibold text-white">2</p>
-                          <p className="text-xs uppercase tracking-[0.3em] text-white/60">Deadlines</p>
+                          <p className="text-xs uppercase tracking-[0.3em] text-white">Deadlines</p>
                         </div>
                         <div>
                           <p className="text-2xl font-semibold text-white">1</p>
-                          <p className="text-xs uppercase tracking-[0.3em] text-white/60">Scholarship</p>
+                          <p className="text-xs uppercase tracking-[0.3em] text-white">Scholarship</p>
                         </div>
                       </div>
                     </div>
                   </div>
-                  <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-white/60">
+                  <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-white">
                     <span>Updated 1 min ago</span>
                     <span className="h-px flex-1 bg-white/30"></span>
                     <span>View timeline →</span>
