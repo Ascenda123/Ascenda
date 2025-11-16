@@ -1,8 +1,7 @@
+import { Search } from 'lucide-react';
 import { AnimatedBlobBanner } from '@/components/animated-blob-banner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-
-const interestPills = ['AI labs', 'Global cities', 'Scholarships', 'STEM-heavy', 'Portfolio-friendly'];
 
 const filterGroups = [
   {
@@ -32,7 +31,7 @@ export default function UniversitySearchPage() {
     <div className="space-y-8">
       <section className="relative overflow-hidden rounded-[32px] border border-slate-100 bg-gradient-to-br from-white to-slate-50 p-8 shadow-[0_30px_60px_rgba(15,23,42,0.08)]">
         <AnimatedBlobBanner className="opacity-80" />
-        <div className="relative z-10 grid gap-10 lg:grid-cols-[minmax(0,1fr),320px]">
+        <div className="relative z-10 space-y-8">
           <div className="space-y-5">
             <p className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Search hub</p>
             <div className="space-y-4">
@@ -43,61 +42,52 @@ export default function UniversitySearchPage() {
             </div>
             <div className="space-y-3 rounded-[28px] border border-slate-200 bg-white/80 p-4 shadow-[0_20px_45px_rgba(15,23,42,0.08)]">
               <label htmlFor="search-keyword" className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-500">
-                keyword search
+                universities or courses
               </label>
-              <div className="flex flex-col gap-3 lg:flex-row">
-                <Input
-                  id="search-keyword"
-                  placeholder="Search by university, course, or vibe"
-                  className="flex-1 rounded-2xl border border-slate-200 bg-white px-5 py-3 text-slate-900 placeholder:text-slate-400"
-                />
-                <Button size="sm" className="lg:self-start">
-                  Start scouting
+              <div className="space-y-3">
+                <div className="flex w-full items-center gap-3 rounded-full border border-slate-200 bg-white px-6 py-3 shadow-[0_18px_35px_rgba(15,23,42,0.08)] focus-within:border-slate-900">
+                  <Search className="h-5 w-5 text-slate-400" aria-hidden />
+                  <Input
+                    id="search-keyword"
+                    placeholder="Search universities or courses by name, subject, or vibe"
+                    className="h-16 flex-1 border-0 bg-transparent text-base text-slate-900 placeholder:text-slate-400 focus-visible:ring-0"
+                  />
+                </div>
+                <Button size="lg" className="w-full">
+                  Search
                 </Button>
-              </div>
-              <div className="flex flex-wrap gap-2 pt-2">
-                {interestPills.map((pill) => (
-                  <button
-                    key={pill}
-                    type="button"
-                    className="rounded-full border border-slate-200 px-4 py-1 text-xs font-semibold uppercase tracking-wider text-slate-500 transition hover:border-slate-900 hover:text-slate-900"
-                  >
-                    {pill}
-                  </button>
-                ))}
               </div>
             </div>
           </div>
 
-          <div className="rounded-[28px] border border-slate-100 bg-white p-6 shadow-[0_18px_45px_rgba(15,23,42,0.1)]">
-            <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">
-              <span>Preview match</span>
-              <span>Beta</span>
-            </div>
-            <div className="mt-5 flex items-center gap-4">
-              <div className="h-16 w-16 rounded-2xl bg-slate-200" aria-hidden />
-              <div>
-                <p className="text-lg font-semibold text-slate-900">Harvard University</p>
-                <p className="text-sm text-slate-500">Computational Design</p>
+          <div className="rounded-[32px] border border-slate-100 bg-white p-6 shadow-[0_18px_45px_rgba(15,23,42,0.1)] lg:flex lg:items-center lg:gap-8">
+            <div className="space-y-3 flex-1">
+              <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">
+                <span>Preview match</span>
+                <span>Beta</span>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="h-16 w-16 rounded-2xl bg-slate-200" aria-hidden />
+                <div>
+                  <p className="text-lg font-semibold text-slate-900">Harvard University</p>
+                  <p className="text-sm text-slate-500">Computational Design</p>
+                </div>
+              </div>
+              <div className="rounded-2xl border border-slate-100 bg-slate-50/80 p-4">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">fit score</p>
+                  <p className="text-2xl font-semibold text-slate-900">92%</p>
+                </div>
+                <ul className="mt-4 space-y-2 text-sm text-slate-600">
+                  <li>• Portfolio ready; aligns with your design internship history.</li>
+                  <li>• Entry requirements match your predicted IB scores.</li>
+                  <li>• Flagged interview prep window in mid-November.</li>
+                </ul>
               </div>
             </div>
-            <div className="mt-6 rounded-2xl border border-slate-100 bg-slate-50/80 p-4">
-              <div className="flex items-center justify-between">
-                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">fit score</p>
-                <p className="text-2xl font-semibold text-slate-900">92%</p>
-              </div>
-              <ul className="mt-4 space-y-2 text-sm text-slate-600">
-                <li>• Portfolio ready; aligns with your design internship history.</li>
-                <li>• Entry requirements match your predicted IB scores.</li>
-                <li>• Flagged interview prep window in mid-November.</li>
-              </ul>
-            </div>
-            <div className="mt-6 flex flex-wrap gap-3">
+            <div className="mt-6 flex flex-1 flex-wrap gap-3 lg:mt-0 lg:justify-end">
               {['Studio vibe', 'Scholarship friendly', 'Urban campus'].map((tag) => (
-                <span
-                  key={tag}
-                  className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600"
-                >
+                <span key={tag} className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600">
                   {tag}
                 </span>
               ))}
