@@ -102,7 +102,7 @@ export async function GET() {
   if (academics && preferences && aspirations && programs.length > 0 && universities.length > 0) {
     const requirementMap = new Map(requirements.map((item: any) => [item.program_id, item]));
     const universityMap = new Map(universities.map((item: any) => [item.id, item]));
-    const inputs: MatchInput[] = programs
+    const inputs = programs
       .map((program: any) => {
         const university = universityMap.get(program.university_id);
         if (!university) return null;
@@ -113,9 +113,9 @@ export async function GET() {
           program,
           university,
           requirement: requirementMap.get(program.id) ?? undefined
-        } satisfies MatchInput;
+        } as MatchInput;
       })
-      .filter((value): value is MatchInput => value !== null);
+      .filter((value) => value !== null) as MatchInput[];
 
     matchResults = rankMatches(inputs).slice(0, 3);
   }
