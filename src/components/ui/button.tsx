@@ -13,12 +13,13 @@ export interface ButtonProps extends Omit<RadixButtonProps, 'variant' | 'size' |
 }
 
 const variantClasses: Record<Variant, string> = {
-  default: 'bg-black text-white hover:bg-[#111111]',
-  outline: 'border border-[#E0E0E0] text-[#1C1C1C] hover:bg-[#F5F5F5]',
-  ghost: 'text-[#666666] hover:bg-[#F5F5F5]',
-  destructive: 'bg-[#C53030] text-white hover:bg-[#A52626]',
-  secondary: 'bg-[#E9F1FA] text-[#1C1C1C] hover:bg-[#d9e7f7]',
-  soft: 'bg-[#F6FBFF] text-[#1C1C1C] hover:bg-[#edf5fb]'
+  default:
+    'bg-gradient-to-r from-[#0b1224] via-[#111c32] to-[#0b1224] text-white shadow-[0_28px_60px_rgba(15,23,42,0.25)] hover:from-[#0d1730] hover:via-[#182540] hover:to-[#0d1730] hover:shadow-[0_38px_80px_rgba(15,23,42,0.3)]',
+  outline: 'border border-[#E0E0E0] text-[#1C1C1C] hover:bg-[#F5F5F5] shadow-none',
+  ghost: 'text-[#666666] hover:bg-[#F5F5F5] shadow-none',
+  destructive: 'bg-[#C53030] text-white hover:bg-[#A52626] shadow-[0_18px_45px_rgba(197,48,48,0.35)]',
+  secondary: 'bg-[#E9F1FA] text-[#1C1C1C] hover:bg-[#d9e7f7] shadow-none',
+  soft: 'bg-[#F6FBFF] text-[#1C1C1C] hover:bg-[#edf5fb] shadow-none'
 };
 
 const sizeClasses: Record<Size, string> = {
@@ -39,7 +40,7 @@ export const Button = ({ className, variant = 'default', size = 'default', ...pr
       variant="ghost"
       color="gray"
       className={cn(
-        'font-semibold tracking-tight transition-all duration-200 shadow-[0_12px_35px_rgba(0,0,0,0.08)] hover:scale-[1.02]',
+        'font-semibold tracking-tight transition-all duration-200 hover:scale-[1.02]',
         variantClass,
         sizeClass,
         className

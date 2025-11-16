@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -117,6 +118,7 @@ export const ProfileWizard = ({
   initialStep,
   stepCompletion
 }: ProfileWizardProps) => {
+  const router = useRouter();
   const [currentStep, setCurrentStep] = useState<StepKey>(initialStep);
   const [completionState, setCompletionState] = useState<StepCompletionMap>(stepCompletion);
   const [isPending, startTransition] = useTransition();
@@ -251,6 +253,8 @@ export const ProfileWizard = ({
       await saveAspirationsStep(values);
       setStatus('Aspirations saved. You are all set!');
       markStepComplete('aspirations');
+      router.push('/dashboard');
+      router.refresh();
     });
   };
 
