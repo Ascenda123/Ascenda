@@ -3,12 +3,13 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { GraduationCap, ListChecks, Target, FileText, LayoutDashboard, Settings } from 'lucide-react';
+import { GraduationCap, ListChecks, Target, FileText, LayoutDashboard, Settings, Search } from 'lucide-react';
 
 const items = [
   { href: '/dashboard', label: 'Overview', icon: LayoutDashboard },
   { href: '/profile', label: 'Profile', icon: Target },
   { href: '/matches', label: 'Matches', icon: GraduationCap },
+  { href: '/university-search/search', label: 'Search', icon: Search },
   { href: '/applications', label: 'Applications', icon: FileText },
   { href: '/applications/tasks', label: 'Checklist', icon: ListChecks },
   { href: '/admin', label: 'Admin', icon: Settings }
@@ -37,6 +38,17 @@ export const Sidebar = () => {
           );
         })}
       </nav>
+      <div className="mt-6 space-y-3 rounded-2xl border border-slate-900 bg-slate-900 p-5 text-white">
+        <p className="text-xs font-semibold uppercase tracking-[0.35em] text-white/60">University search</p>
+        <p className="text-lg font-semibold leading-tight">Preview the new scouting workspace.</p>
+        <p className="text-sm text-white/80">Filter prospects, review fit signals, and build a shortlist.</p>
+        <Link
+          href="/university-search/search"
+          className="inline-flex items-center justify-center rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm transition hover:translate-y-0.5"
+        >
+          Launch search →
+        </Link>
+      </div>
       <div className="mt-6 space-y-2 rounded-2xl border border-[#e5e5e7] bg-[#f9f9fb] p-4 text-slate-700">
         <p className="text-xs uppercase tracking-[0.35em] text-slate-400">Support</p>
         <p className="text-base font-semibold leading-tight text-slate-900">Need a counselor nudge?</p>

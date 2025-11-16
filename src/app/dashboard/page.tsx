@@ -130,6 +130,9 @@ export default async function DashboardPage() {
         actions={
           <>
             <Button asChild size="sm">
+              <Link href="/university-search/search">Open university search</Link>
+            </Button>
+            <Button asChild size="sm" variant="secondary">
               <Link href="/matches">Review matches</Link>
             </Button>
             <Button asChild size="sm" variant="outline">
