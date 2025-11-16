@@ -215,16 +215,6 @@ export default function HomePage() {
                 <Button
                   asChild
                   size="sm"
-                  variant="ghost"
-                  className="border border-white/40 text-white shadow-none hover:bg-white/10 hover:shadow-none hover:scale-100 !text-white"
-                >
-                  <Link href="/login" className="text-white">
-                    Sign in
-                  </Link>
-                </Button>
-                <Button
-                  asChild
-                  size="sm"
                   className="bg-white/10 text-white border border-white/50 shadow-none hover:bg-white/20 hover:text-white hover:shadow-none hover:scale-100 !text-white"
                 >
                   <Link href="/signup" className="flex items-center gap-2 text-white">
