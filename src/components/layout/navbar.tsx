@@ -9,7 +9,7 @@ const links = [
   { href: '/dashboard', label: 'Dashboard' },
   { href: '/profile', label: 'Profile' },
   { href: '/matches', label: 'Matches' },
-  { href: '/applications', label: 'Applications' },
+  { href: '/applications', label: 'Applications', exact: true },
   { href: '/applications/tasks', label: 'Checklist' }
 ];
 
@@ -27,7 +27,7 @@ export const Navbar = () => {
         </Link>
         <nav className="hidden items-center gap-5 text-xs font-medium text-slate-500 md:flex">
           {links.map((link) => {
-            const active = pathname.startsWith(link.href);
+            const active = pathname === link.href || (!link.exact && pathname.startsWith(`${link.href}/`));
             return (
               <Link
                 key={link.href}
