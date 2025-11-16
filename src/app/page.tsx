@@ -450,9 +450,8 @@ export default function HomePage() {
 
         <section className="mt-16 space-y-6">
           <div>
-            <p className="text-xs uppercase tracking-[0.4em] text-slate-500">Your shortlist in 3 steps</p>
-            <h2 className="text-3xl font-semibold">Simple. High impact.</h2>
-            <p className="text-sm text-slate-600">Each scroll answers the next question: what now, why is Ascenda different, and how do I act?</p>
+            <h2 className="text-3xl font-semibold">Your shortlist in 3 steps</h2>
+            <p className="text-sm text-slate-600">The easiest way to see what’s next, why it matters, and how to act.</p>
           </div>
           <div className="relative space-y-4 pt-4">
             {steps.map((step, index) => (
