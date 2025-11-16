@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useTransition } from 'react';
 import Papa from 'papaparse';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { trackEvent } from '@/lib/analytics';
 
 const templates = ['universities', 'programs', 'requirements', 'deadlines'] as const;
 type Template = (typeof templates)[number];
@@ -12,23 +13,62 @@ export const ImportPanel = () => {
   const [template, setTemplate] = useState<Template>('universities');
   const [status, setStatus] = useState<string>('Awaiting upload');
   const [rowCount, setRowCount] = useState<number>(0);
+  const [rows, setRows] = useState<Record<string, unknown>[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [isParsing, startParsing] = useTransition();
+  const [isSyncing, setIsSyncing] = useState(false);
 
   const handleFile = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
+    setError(null);
     setStatus('Parsing…');
-    Papa.parse(file, {
-      header: true,
-      skipEmptyLines: true,
-      complete: async (result) => {
-        setRowCount(result.data.length);
-        setStatus(`Parsed ${result.data.length} rows for ${template}. (Stubbed upsert)`);
-      },
-      error: (error) => {
-        setStatus(`Error parsing file: ${error.message}`);
-      }
+    startParsing(() => {
+      Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        complete: async (result) => {
+          setRowCount(result.data.length);
+          setRows(result.data as Record<string, unknown>[]);
+          setStatus(`Parsed ${result.data.length} rows for ${template}. Review & sync.`);
+        },
+        error: (parseError) => {
+          setStatus('Parsing failed');
+          setError(parseError.message);
+        }
+      });
     });
+  };
+
+  const syncRows = async () => {
+    if (!rows.length) return;
+    setIsSyncing(true);
+    setStatus('Syncing with Supabase…');
+    setError(null);
+
+    try {
+      const response = await fetch('/api/admin/import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ template, rows })
+      });
+
+      const payload = await response.json();
+
+      if (!response.ok) {
+        throw new Error(payload.error ?? 'Failed to sync data.');
+      }
+
+      setStatus(`Synced ${payload.count ?? rows.length} ${template} rows.`);
+      trackEvent('admin_import_synced', { template, count: payload.count ?? rows.length });
+    } catch (syncError) {
+      const message = syncError instanceof Error ? syncError.message : 'Sync failed.';
+      setError(message);
+      setStatus('Sync failed');
+    } finally {
+      setIsSyncing(false);
+    }
   };
 
   return (
@@ -45,6 +85,7 @@ export const ImportPanel = () => {
           id="template"
           className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/30"
           value={template}
+          disabled={isParsing || isSyncing}
           onChange={(event) => setTemplate(event.target.value as Template)}
         >
           {templates.map((item) => (
@@ -60,16 +101,22 @@ export const ImportPanel = () => {
           id="csv-upload"
           type="file"
           accept=".csv"
+          disabled={isParsing || isSyncing}
           onChange={handleFile}
           className="text-sm text-slate-600 file:mr-4 file:rounded-2xl file:border file:border-slate-200 file:bg-slate-50 file:px-4 file:py-2 file:text-slate-900"
         />
       </div>
       <p className="text-sm text-slate-500">Status: {status}</p>
-      <Button type="button" variant="outline" disabled>
-        Run edge function sync (TODO)
+      {error ? (
+        <p className="text-xs text-red-500" role="alert">
+          {error}
+        </p>
+      ) : null}
+      <Button type="button" variant="outline" disabled={!rows.length || isSyncing} onClick={syncRows}>
+        {isSyncing ? 'Syncing…' : 'Run data sync'}
       </Button>
       {rowCount > 0 ? (
-        <p className="text-xs text-slate-400">Preview limited to parsing only in this prototype.</p>
+        <p className="text-xs text-slate-400">Ready to sync {rowCount} rows. Server-side validation runs before upserts.</p>
       ) : null}
     </div>
   );

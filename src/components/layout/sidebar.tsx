@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { GraduationCap, ListChecks, Target, FileText, LayoutDashboard, Settings, Search, Award } from 'lucide-react';
+import { GraduationCap, ListChecks, Target, FileText, LayoutDashboard, Settings, Search, Award, BookmarkCheck } from 'lucide-react';
 
 const items = [
   { href: '/dashboard', label: 'Overview', icon: LayoutDashboard },
@@ -12,7 +12,8 @@ const items = [
   { href: '/university-search/search', label: 'Search', icon: Search },
   { href: '/applications', label: 'Applications', icon: FileText },
   { href: '/applications/tasks', label: 'Checklist', icon: ListChecks },
-  { href: '/shortlist', label: 'Course details', icon: Award },
+  { href: '/shortlist', label: 'Course details', icon: BookmarkCheck },
+  { href: '/scholarships', label: 'Scholarships', icon: Award },
   { href: '/admin', label: 'Admin', icon: Settings }
 ];
 

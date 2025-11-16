@@ -8,10 +8,12 @@ Ascenda is a Next.js 14 EdTech platform that supports international high-school 
 - Role-based dashboards for students and admins powered by Row Level Security.
 - Matching engine that scores academic eligibility, preference fit, and outcome signals.
 - Student onboarding wizard capturing academics, preferences, and aspirations with Zod validation.
-- Application tracker with checklist, deadline timeline, and document uploader scaffolding.
-- Admin data ingestion workflow with CSV parsing and edge-function hook for deadline updates.
+- Application tracker with checklist, deadline timeline, and Supabase-backed document uploads.
+- Scholarship discovery workspace with filters, saved awards, and planner handoff.
+- Admin data ingestion workflow with CSV parsing, server-side validation, and upsert sync.
 - Tailwind CSS + shadcn-inspired UI components with accessible defaults.
 - TanStack Query, React Hook Form, Next Intl scaffolding, and Jest unit tests.
+- Lightweight analytics hooks to track critical student and admin actions.
 
 ## Getting Started
 
@@ -47,6 +49,7 @@ NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
+NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET=application-documents
 ```
 
 > ⚠️ Never expose the service role key to browsers. It is read in server-only contexts.

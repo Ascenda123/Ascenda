@@ -28,7 +28,7 @@ export const ShortlistMarquee = ({ className, label = 'Shortlist flow', tone = '
       )}
     >
       <div className={cn('mb-1 text-[0.6rem] uppercase tracking-[0.4em]', labelClasses)}>{label}</div>
-      <div className="flex flex-wrap items-center justify-between gap-4 text-lg font-semibold uppercase tracking-[0.3em]">
+      <div className="flex flex-wrap items-center justify-center gap-4 text-lg font-semibold uppercase tracking-[0.3em] sm:justify-between">
         {marqueeItems.map((text) => (
           <span key={text} className={cn('flex items-center gap-2', textClasses)}>
             {text}

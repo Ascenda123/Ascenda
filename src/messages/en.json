@@ -1,5 +1,9 @@
 {
-  "marketing.hero.title": "Global pathways for ambitious students",
-  "marketing.hero.subtitle": "Ascenda matches international high-school students with the right-fit university programs, application strategy, and deadline guidance.",
-  "marketing.hero.cta": "Get started"
+  "marketing": {
+    "hero": {
+      "title": "Global pathways for ambitious students",
+      "subtitle": "Ascenda matches international high-school students with the right-fit university programs, application strategy, and deadline guidance.",
+      "cta": "Get started"
+    }
+  }
 }

@@ -10,7 +10,8 @@ const links = [
   { href: '/profile', label: 'Profile' },
   { href: '/matches', label: 'Matches' },
   { href: '/applications', label: 'Applications', exact: true },
-  { href: '/applications/tasks', label: 'Checklist' }
+  { href: '/applications/tasks', label: 'Checklist' },
+  { href: '/scholarships', label: 'Scholarships' }
 ];
 
 export const Navbar = () => {
