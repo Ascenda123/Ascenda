@@ -17,8 +17,8 @@ export const Navbar = () => {
   const pathname = usePathname();
 
   return (
-    <header className="sticky top-0 z-40 bg-transparent px-4 py-4 backdrop-blur-xl">
-      <div className="mx-auto flex w-full max-w-6xl items-center justify-between rounded-[999px] border border-white/60 bg-white/80 px-4 py-3 shadow-[0_30px_80px_rgba(15,23,42,0.08)]">
+    <header className="sticky top-0 z-40 bg-white/90 px-4 py-4">
+      <div className="mx-auto flex w-full max-w-6xl items-center justify-between rounded-[999px] border border-[#e5e5e7] bg-white px-4 py-3 shadow-[0_30px_80px_rgba(15,23,42,0.08)]">
         <Link href="/dashboard" className="flex items-center gap-2 text-lg font-semibold text-slate-900">
           <div className="flex flex-col leading-tight">
             <span>Ascenda</span>
