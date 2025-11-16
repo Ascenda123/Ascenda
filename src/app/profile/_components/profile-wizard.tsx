@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -286,6 +287,14 @@ export const ProfileWizard = ({
   return (
     <div className="grid form-grid form-flow text-slate-900 lg:grid-cols-[320px,1fr]">
       <aside className="form-stack">
+        <Button
+          asChild
+          size="sm"
+          variant="secondary"
+          className="w-full border border-slate-900/20 text-slate-900 shadow-[0_10px_30px_rgba(15,23,42,0.12)] hover:shadow-[0_14px_34px_rgba(15,23,42,0.18)] uppercase tracking-[0.2em]"
+        >
+          <Link href="/profile?onboarding=true">Start profile wizard</Link>
+        </Button>
         <div className="form-panel form-panel--quiet form-stack">
           <h2 className="text-xl font-semibold">Onboarding progress</h2>
           <ol className="form-stack">

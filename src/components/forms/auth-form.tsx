@@ -22,6 +22,7 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
   const router = useRouter();
   const supabase = useSupabase();
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const form = useForm<AuthFormValues>({
@@ -29,17 +30,50 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
     defaultValues: { email: '', password: '' }
   });
 
+  const buildAuthCallbackUrl = (nextPath: string) => {
+    const envUrl = process.env.NEXT_PUBLIC_SITE_URL;
+    const baseUrl =
+      envUrl && envUrl.length
+        ? envUrl
+        : typeof window !== 'undefined'
+          ? window.location.origin
+          : '';
+    if (!baseUrl) {
+      return undefined;
+    }
+    const normalizedBase = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+    return `${normalizedBase}/auth/callback?next=${encodeURIComponent(nextPath)}`;
+  };
+
+  const onboardingRedirectUrl = buildAuthCallbackUrl('/profile?onboarding=true');
+  const dashboardRedirectUrl = buildAuthCallbackUrl('/dashboard');
+
   const onSubmit = (values: AuthFormValues) => {
     setError(null);
+    setSuccess(null);
     startTransition(async () => {
       let authError: AuthError | null = null;
+      let shouldRedirect = false;
 
       if (mode === 'login') {
         const { error: signInError } = await supabase.auth.signInWithPassword(values);
         authError = signInError;
+        shouldRedirect = !signInError;
       } else {
-        const { error: signUpError } = await supabase.auth.signUp(values);
+        const { error: signUpError, data } = await supabase.auth.signUp({
+          ...values,
+          options: onboardingRedirectUrl ? { emailRedirectTo: onboardingRedirectUrl } : undefined
+        });
         authError = signUpError;
+        if (!signUpError) {
+          if (data.session) {
+            shouldRedirect = true;
+          } else {
+            setSuccess('Almost there! Confirm the link we sent to your email to finish setting up your account.');
+            form.reset();
+            return;
+          }
+        }
       }
 
       if (authError) {
@@ -51,18 +85,25 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
         window.localStorage.setItem(RETURNING_USER_STORAGE_KEY, 'true');
       }
 
-      router.refresh();
-      router.push('/dashboard');
+      if (shouldRedirect) {
+        router.refresh();
+        const target = mode === 'signup' ? '/profile?onboarding=true' : '/dashboard';
+        router.push(target);
+      }
     });
   };
 
   const handleGoogle = () => {
     setError(null);
+    setSuccess(null);
     startTransition(async () => {
+      const redirectTo =
+        dashboardRedirectUrl ??
+        (typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : undefined);
       const { error: signInError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/dashboard`
+          redirectTo
         }
       });
 
@@ -110,6 +151,11 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
       {error ? (
         <p className="form-feedback form-feedback--error" role="alert">
           {error}
+        </p>
+      ) : null}
+      {success ? (
+        <p className="form-feedback form-feedback--success" role="status">
+          {success}
         </p>
       ) : null}
       <Button

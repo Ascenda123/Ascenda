@@ -15,6 +15,18 @@ export async function middleware(req: NextRequest) {
   const isProtected = PROTECTED_PREFIXES.some((prefix) => pathname.startsWith(prefix));
   const isAuthRoute = pathname.startsWith('/login') || pathname.startsWith('/signup');
 
+  const getOnboardingStatus = async () => {
+    if (!session) {
+      return false;
+    }
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('full_name, country, time_zone')
+      .eq('id', session.user.id)
+      .maybeSingle();
+    return !(profile?.full_name && profile?.country && profile?.time_zone);
+  };
+
   if (!session && isProtected) {
     const redirectUrl = req.nextUrl.clone();
     redirectUrl.pathname = '/login';
@@ -24,9 +36,23 @@ export async function middleware(req: NextRequest) {
 
   if (session && isAuthRoute) {
     const redirectUrl = req.nextUrl.clone();
-    redirectUrl.pathname = '/dashboard';
+    const needsOnboarding = await getOnboardingStatus();
+    redirectUrl.pathname = needsOnboarding ? '/profile' : '/dashboard';
+    if (needsOnboarding) {
+      redirectUrl.searchParams.set('onboarding', 'true');
+    }
     redirectUrl.searchParams.delete('redirectedFrom');
     return NextResponse.redirect(redirectUrl);
+  }
+
+  if (session && isProtected && !pathname.startsWith('/profile')) {
+    const needsOnboarding = await getOnboardingStatus();
+    if (needsOnboarding) {
+      const redirectUrl = req.nextUrl.clone();
+      redirectUrl.pathname = '/profile';
+      redirectUrl.searchParams.set('onboarding', 'true');
+      return NextResponse.redirect(redirectUrl);
+    }
   }
 
   return res;

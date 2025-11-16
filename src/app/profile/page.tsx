@@ -7,12 +7,17 @@ import { ProfileWizard } from './_components/profile-wizard';
 import { PROFILE_STEPS, type StepCompletionMap, type StepKey } from './constants';
 import { PageHero } from '@/components/layout/page-hero';
 import { Button } from '@/components/ui/button';
+import { AnimatedBlobBanner } from '@/components/animated-blob-banner';
 
 export const metadata: Metadata = {
   title: 'Profile onboarding | Ascenda'
 };
 
-export default async function ProfilePage() {
+interface ProfilePageProps {
+  searchParams?: Record<string, string | string[] | undefined>;
+}
+
+export default async function ProfilePage({ searchParams }: ProfilePageProps) {
   const supabase = createServerSupabaseClient();
   const {
     data: { user }
@@ -51,6 +56,41 @@ export default async function ProfilePage() {
     { label: 'Steps done', value: `${completedCount}/${PROFILE_STEPS.length}`, detail: 'Sections' },
     { label: 'Next', value: nextStep?.title ?? 'All set', detail: 'Focus area' }
   ];
+
+  const onboardingParam = searchParams?.onboarding;
+  const forceOnboarding = Array.isArray(onboardingParam)
+    ? onboardingParam.includes('true')
+    : onboardingParam === 'true';
+  const isNewUser = completedCount === 0;
+  const showFullScreenWizard = forceOnboarding || isNewUser;
+
+  if (showFullScreenWizard) {
+    return (
+      <div className="relative min-h-screen overflow-hidden bg-slate-950 text-white">
+        <AnimatedBlobBanner className="opacity-60" variant="cool" />
+        <div className="relative z-10 mx-auto flex max-w-6xl flex-col gap-8 px-4 pb-16 pt-24">
+          <header className="text-center">
+            <p className="text-xs uppercase tracking-[0.6em] text-white/50">Welcome aboard</p>
+            <h1 className="mt-4 text-4xl font-semibold text-white">Let&apos;s build your profile</h1>
+            <p className="mx-auto mt-3 max-w-2xl text-sm text-white/70">
+              We’ll use this information to personalize matches, recommendations, and counselor updates. You can always
+              tweak the details later.
+            </p>
+          </header>
+          <div className="rounded-[32px] border border-white/10 bg-white/95 p-6 shadow-[0_35px_120px_rgba(15,23,42,0.55)] backdrop-blur">
+            <ProfileWizard
+              profile={profile ?? null}
+              academics={academics ?? null}
+              preferences={preferences ?? null}
+              aspirations={aspirations ?? null}
+              initialStep={nextStepKey}
+              stepCompletion={stepCompletion}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <DashboardShell>
