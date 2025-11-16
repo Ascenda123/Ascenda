@@ -1,8 +1,9 @@
 'use client';
 
-import { useMemo, useState, useTransition } from 'react';
+import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { AnimatePresence, motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -68,6 +69,35 @@ const JOB_TITLE_OPTIONS = [
   'Designer',
   'Investment Banker'
 ] as const;
+
+const STEP_PAGE_TRANSITION = {
+  duration: 0.45,
+  ease: [0.32, 0.72, 0, 1]
+};
+
+const STEP_PAGE_VARIANTS = {
+  initial: (direction: number) => ({
+    opacity: 0,
+    x: direction > 0 ? 72 : -72,
+    filter: 'blur(12px)'
+  }),
+  animate: {
+    opacity: 1,
+    x: 0,
+    filter: 'blur(0px)',
+    transition: {
+      ...STEP_PAGE_TRANSITION
+    }
+  },
+  exit: (direction: number) => ({
+    opacity: 0,
+    x: direction > 0 ? -72 : 72,
+    filter: 'blur(12px)',
+    transition: {
+      ...STEP_PAGE_TRANSITION
+    }
+  })
+};
 
 interface ProfileWizardProps {
   profile: Record<string, any> | null;
@@ -246,6 +276,12 @@ export const ProfileWizard = ({
   };
 
   const stepIndex = Math.max(0, STEP_ORDER.indexOf(currentStep));
+  const previousStepIndex = useRef(stepIndex);
+  const stepDirection = stepIndex >= previousStepIndex.current ? 1 : -1;
+
+  useEffect(() => {
+    previousStepIndex.current = stepIndex;
+  }, [stepIndex]);
 
   return (
     <div className="grid form-grid form-flow text-slate-900 lg:grid-cols-[320px,1fr]">
@@ -313,8 +349,18 @@ export const ProfileWizard = ({
             {status}
           </p>
         ) : null}
-        {currentStep === 'personal' ? (
-          <form className="form-stack" onSubmit={personalForm.handleSubmit(handlePersonalSubmit)}>
+        <AnimatePresence mode="wait" initial={false}>
+          {currentStep === 'personal' ? (
+            <motion.form
+              key="personal"
+              className="form-stack"
+              onSubmit={personalForm.handleSubmit(handlePersonalSubmit)}
+              variants={STEP_PAGE_VARIANTS}
+              custom={stepDirection}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+            >
             <input type="hidden" {...personalForm.register('locale')} />
             <div className="form-field">
               <Label className="form-label" htmlFor="fullName">
@@ -355,17 +401,27 @@ export const ProfileWizard = ({
             </div>
             <Button
               type="submit"
+              variant="secondary"
               className="form-action"
               disabled={isPending}
               data-loading={isPending ? 'true' : undefined}
             >
               Save and continue
             </Button>
-          </form>
-        ) : null}
+            </motion.form>
+          ) : null}
 
-        {currentStep === 'academics' ? (
-          <form className="form-stack" onSubmit={academicsForm.handleSubmit(handleAcademicsSubmit)}>
+          {currentStep === 'academics' ? (
+            <motion.form
+              key="academics"
+              className="form-stack"
+              onSubmit={academicsForm.handleSubmit(handleAcademicsSubmit)}
+              variants={STEP_PAGE_VARIANTS}
+              custom={stepDirection}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+            >
             <div className="form-field">
               <Label className="form-label" htmlFor="curriculum">
                 Curriculum
@@ -475,17 +531,27 @@ export const ProfileWizard = ({
             </div>
             <Button
               type="submit"
+              variant="secondary"
               className="form-action"
               disabled={isPending}
               data-loading={isPending ? 'true' : undefined}
             >
               Save and continue
             </Button>
-          </form>
-        ) : null}
+            </motion.form>
+          ) : null}
 
-        {currentStep === 'preferences' ? (
-          <form className="form-stack" onSubmit={preferencesForm.handleSubmit(handlePreferencesSubmit)}>
+          {currentStep === 'preferences' ? (
+            <motion.form
+              key="preferences"
+              className="form-stack"
+              onSubmit={preferencesForm.handleSubmit(handlePreferencesSubmit)}
+              variants={STEP_PAGE_VARIANTS}
+              custom={stepDirection}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+            >
             <div className="grid form-grid sm:grid-cols-2">
               <div className="form-field">
                 <Label className="form-label" htmlFor="budgetMin">
@@ -618,17 +684,27 @@ export const ProfileWizard = ({
             </label>
             <Button
               type="submit"
+              variant="secondary"
               className="form-action"
               disabled={isPending}
               data-loading={isPending ? 'true' : undefined}
             >
               Save and continue
             </Button>
-          </form>
-        ) : null}
+            </motion.form>
+          ) : null}
 
-        {currentStep === 'aspirations' ? (
-          <form className="form-stack" onSubmit={aspirationsForm.handleSubmit(handleAspirationsSubmit)}>
+          {currentStep === 'aspirations' ? (
+            <motion.form
+              key="aspirations"
+              className="form-stack"
+              onSubmit={aspirationsForm.handleSubmit(handleAspirationsSubmit)}
+              variants={STEP_PAGE_VARIANTS}
+              custom={stepDirection}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+            >
             <div className="form-field">
               <Label className="form-label" htmlFor="targetFields">
                 Target fields
@@ -732,14 +808,16 @@ export const ProfileWizard = ({
             </div>
             <Button
               type="submit"
+              variant="secondary"
               className="form-action"
               disabled={isPending}
               data-loading={isPending ? 'true' : undefined}
             >
               Save profile
             </Button>
-          </form>
-        ) : null}
+            </motion.form>
+          ) : null}
+        </AnimatePresence>
       </div>
     </div>
   );
