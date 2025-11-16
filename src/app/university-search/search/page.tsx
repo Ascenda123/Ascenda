@@ -40,7 +40,10 @@ export default function UniversitySearchPage() {
                 Drop a keyword, layer filters, and preview how well each program syncs with your profile before you meet a counselor.
               </p>
             </div>
-            <div className="space-y-3 rounded-[28px] border border-slate-200 bg-white/80 p-4 shadow-[0_20px_45px_rgba(15,23,42,0.08)]">
+            <form
+              action="/university-search/results"
+              className="space-y-3 rounded-[28px] border border-slate-200 bg-white/80 p-4 shadow-[0_20px_45px_rgba(15,23,42,0.08)]"
+            >
               <label htmlFor="search-keyword" className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-500">
                 universities or courses
               </label>
@@ -49,15 +52,16 @@ export default function UniversitySearchPage() {
                   <Search className="h-5 w-5 text-slate-400" aria-hidden />
                   <Input
                     id="search-keyword"
+                    name="q"
                     placeholder="Search universities or courses by name, subject, or vibe"
                     className="h-16 flex-1 border-0 bg-transparent text-base text-slate-900 placeholder:text-slate-400 focus-visible:ring-0"
                   />
                 </div>
-                <Button size="lg" className="w-full">
+                <Button size="lg" className="w-full" type="submit" variant="soft">
                   Search
                 </Button>
               </div>
-            </div>
+            </form>
           </div>
 
           <div className="rounded-[32px] border border-slate-100 bg-white p-6 shadow-[0_18px_45px_rgba(15,23,42,0.1)] lg:flex lg:items-center lg:gap-8">

@@ -1,5 +1,6 @@
 'use client';
 
+import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { useShortlist } from '@/components/university-search/shortlist-store';
 
@@ -67,7 +68,17 @@ const placeholderResults = [
 ];
 
 export default function UniversitySearchResultsPage() {
+  const searchParams = useSearchParams();
+  const query = searchParams.get('q')?.trim() ?? '';
+  const normalizedQuery = query.toLowerCase();
   const { items: shortlist, addItem } = useShortlist();
+  const results = normalizedQuery
+    ? placeholderResults.filter((result) => {
+        const haystack = `${result.name} ${result.program} ${result.location}`.toLowerCase();
+        return haystack.includes(normalizedQuery);
+      })
+    : placeholderResults;
+  const hasNoMatches = normalizedQuery.length > 0 && results.length === 0;
 
   const handleAdd = (result: (typeof placeholderResults)[number]) => {
     addItem({
@@ -88,9 +99,14 @@ export default function UniversitySearchResultsPage() {
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Search results</p>
-            <h1 className="text-3xl font-semibold text-slate-900">Preview how universities align with your fit signals.</h1>
+            <h1 className="text-3xl font-semibold text-slate-900">
+              {normalizedQuery ? `Matches for “${query}”` : 'Preview how universities align with your fit signals.'}
+            </h1>
             <p className="text-sm text-slate-500">
               This grid is populated with placeholders—the final experience will pull from matches and shortlisted choices.
+            </p>
+            <p className="text-xs uppercase tracking-[0.35em] text-slate-400">
+              {hasNoMatches ? 'No matches found' : `${results.length} result${results.length === 1 ? '' : 's'}`}
             </p>
           </div>
           <div className="rounded-[24px] border border-slate-100 bg-slate-50/70 px-6 py-4 text-center">
@@ -102,51 +118,57 @@ export default function UniversitySearchResultsPage() {
       </section>
 
       <section className="rounded-[32px] border border-slate-100 bg-white p-6 shadow-[0_24px_50px_rgba(15,23,42,0.08)]">
-        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-          {placeholderResults.map((result) => {
-            const isShortlisted = shortlist.some((item) => item.id === result.id);
-            return (
-              <article
-                key={`${result.name}-${result.program}`}
-                className="flex h-full flex-col rounded-[28px] border border-slate-100 bg-white p-5 shadow-[0_18px_45px_rgba(15,23,42,0.07)]"
-              >
-              <div className="flex items-center justify-between">
-                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">fit score</p>
-                <span className="text-2xl font-semibold text-slate-900">{result.fitScore}%</span>
-              </div>
-              <div className="mt-4 flex items-center gap-4">
-                <div className="h-14 w-14 rounded-2xl bg-slate-200" aria-hidden />
-                <div>
-                  <p className="text-lg font-semibold text-slate-900">{result.name}</p>
-                  <p className="text-sm text-slate-500">{result.program}</p>
-                  <p className="text-xs uppercase tracking-[0.3em] text-slate-400">{result.location}</p>
-                </div>
-              </div>
-              <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                {result.highlights.map((highlight) => (
-                  <span key={highlight} className="rounded-full border border-slate-200 px-3 py-1 text-[11px]">
-                    {highlight}
-                  </span>
-                ))}
-              </div>
-              <div className="mt-auto flex flex-col gap-3 pt-5 sm:flex-row sm:items-center sm:justify-between">
-                <Button size="sm" variant="soft" className="w-full sm:w-auto">
-                  View details
-                </Button>
-                <Button
-                  size="sm"
-                  variant="soft"
-                  className="w-full sm:w-auto"
-                  onClick={() => handleAdd(result)}
-                  disabled={isShortlisted}
+        {hasNoMatches ? (
+          <div className="rounded-[28px] border border-dashed border-slate-200 bg-slate-50/50 p-10 text-center text-slate-500">
+            We couldn&apos;t find any placeholder matches for “{query}”. Try another keyword or reset your filters.
+          </div>
+        ) : (
+          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+            {results.map((result) => {
+              const isShortlisted = shortlist.some((item) => item.id === result.id);
+              return (
+                <article
+                  key={`${result.name}-${result.program}`}
+                  className="flex h-full flex-col rounded-[28px] border border-slate-100 bg-white p-5 shadow-[0_18px_45px_rgba(15,23,42,0.07)]"
                 >
-                  {isShortlisted ? 'Shortlisted' : 'Add to shortlist'}
-                </Button>
-              </div>
-            </article>
-            );
-          })}
-        </div>
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">fit score</p>
+                    <span className="text-2xl font-semibold text-slate-900">{result.fitScore}%</span>
+                  </div>
+                  <div className="mt-4 flex items-center gap-4">
+                    <div className="h-14 w-14 rounded-2xl bg-slate-200" aria-hidden />
+                    <div>
+                      <p className="text-lg font-semibold text-slate-900">{result.name}</p>
+                      <p className="text-sm text-slate-500">{result.program}</p>
+                      <p className="text-xs uppercase tracking-[0.3em] text-slate-400">{result.location}</p>
+                    </div>
+                  </div>
+                  <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    {result.highlights.map((highlight) => (
+                      <span key={highlight} className="rounded-full border border-slate-200 px-3 py-1 text-[11px]">
+                        {highlight}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="mt-auto flex flex-col gap-3 pt-5 sm:flex-row sm:items-center sm:justify-between">
+                    <Button size="sm" variant="soft" className="w-full sm:w-auto">
+                      View details
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="soft"
+                      className="w-full sm:w-auto"
+                      onClick={() => handleAdd(result)}
+                      disabled={isShortlisted}
+                    >
+                      {isShortlisted ? 'Shortlisted' : 'Add to shortlist'}
+                    </Button>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        )}
       </section>
     </div>
   );
