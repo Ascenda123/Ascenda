@@ -3,7 +3,6 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { DashboardShell } from '@/components/layout/shell';
-import { TaskList } from '@/components/dashboard/task-list';
 import { DeadlineTimeline } from '@/components/dashboard/deadline-timeline';
 import { DocumentUploader } from '@/components/applications/document-uploader';
 import { ApplicationPriorityBoard, type PriorityItem } from '@/components/applications/application-priority-board';
@@ -318,13 +317,6 @@ export default async function ApplicationsPage() {
           }
         ];
 
-  const checklistTasks = checklistRecords.map((task) => ({
-    id: task.id,
-    name: task.task_name,
-    status: task.status,
-    dueDate: task.due_date ?? undefined
-  }));
-
   const timelineItems = deadlineRecords.map((deadline) => ({
     id: deadline.id,
     name: deadline.name,
@@ -347,38 +339,35 @@ export default async function ApplicationsPage() {
         highlight={`Today • ${dailySummary.tasks} tasks, ${dailySummary.deadlines} deadlines`}
         stats={heroStats}
         actions={
-          <>
-            <Button asChild size="sm">
-              <Link href="/matches">Add from matches</Link>
-            </Button>
-            <Button asChild size="sm" variant="outline">
-              <Link href="/applications/tasks">Open checklist</Link>
-            </Button>
-          </>
-        }
-      />
+        <>
+          <Button asChild size="sm" variant="soft">
+            <Link className="text-slate-900" href="/matches">
+              Add from matches
+            </Link>
+          </Button>
+          <Button asChild size="sm" variant="outline">
+            <Link href="/applications/tasks">Open checklist</Link>
+          </Button>
+        </>
+      }
+    />
 
       <div className="space-y-8">
         <ApplicationPriorityBoard items={priorityItems} />
-
         <PlannerCalendar events={plannerEvents} />
-
-        <RequirementTracker items={requirementItems} />
-
-        <div className="rounded-[999px] border border-slate-200 bg-slate-50 px-6 py-3 text-sm font-semibold text-slate-900 shadow-inner shadow-slate-100">
-          <div className="flex flex-wrap items-baseline gap-2">
-            <span>
-              Today: {dailySummary.tasks} {dailySummary.tasks === 1 ? 'task' : 'tasks'} • {dailySummary.deadlines}{' '}
-              {dailySummary.deadlines === 1 ? 'deadline' : 'deadlines'} • {dailySummary.interviews}{' '}
-              {dailySummary.interviews === 1 ? 'interview' : 'interviews'}
-            </span>
-            <span className="text-xs font-normal uppercase tracking-[0.4em] text-slate-400">Focus snapshot</span>
+        <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
+          <RequirementTracker items={requirementItems} />
+          <div className="space-y-4 rounded-[32px] border border-[#e5e5e7] bg-white p-6 shadow-[0_15px_40px_rgba(15,23,42,0.08)]">
+            <div>
+              <p className="text-sm font-semibold text-slate-900">Today’s focus</p>
+              <p className="mt-2 text-sm text-slate-700 leading-relaxed">
+                {dailySummary.tasks} {dailySummary.tasks === 1 ? 'task' : 'tasks'} • {dailySummary.deadlines}{' '}
+                {dailySummary.deadlines === 1 ? 'deadline' : 'deadlines'} • {dailySummary.interviews}{' '}
+                {dailySummary.interviews === 1 ? 'interview' : 'interviews'}
+              </p>
+            </div>
+            <ReferenceTracker references={referenceItems} />
           </div>
-        </div>
-
-        <div className="space-y-6">
-          <TaskList title="Your checklist" tasks={checklistTasks} />
-          <ReferenceTracker references={referenceItems} />
         </div>
 
         <div className="grid gap-6 lg:grid-cols-3">
