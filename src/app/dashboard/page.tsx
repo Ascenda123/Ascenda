@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { DashboardShell } from '@/components/layout/shell';
@@ -8,6 +9,8 @@ import { MatchList } from '@/components/match/match-list';
 import type { EnrichedMatch } from '@/components/match/match-list';
 import { rankMatches, type MatchInput } from '@/lib/matching/engine';
 import { DashboardOverview } from '@/components/dashboard/overview';
+import { PageHero } from '@/components/layout/page-hero';
+import { Button } from '@/components/ui/button';
 
 interface ChecklistRow {
   id: string;
@@ -108,17 +111,38 @@ export default async function DashboardPage() {
       });
   }
 
+  const completedTasks = checklist.filter((task) => task.status === 'done').length;
+  const heroStats = [
+    { label: 'Checklist', value: checklist.length ? `${completedTasks}/${checklist.length}` : '0', detail: 'Completed' },
+    { label: 'Deadlines', value: `${deadlines.length}`, detail: 'On radar' },
+    { label: 'Matches', value: matches.length ? `${matches[0].score}%` : '—', detail: matches.length ? 'Top score' : 'Update profile' }
+  ];
+  const heroHighlight = matches.length ? 'Matches refreshed' : 'Complete your profile';
+
   return (
     <DashboardShell>
-      <section className="space-y-2">
-        <h1 className="text-3xl font-semibold text-slate-900">Welcome back</h1>
-        <p className="text-sm text-slate-500">Your mission control for applications, deadlines, and match insights.</p>
-      </section>
+      <PageHero
+        eyebrow="Mission control"
+        title="Welcome back"
+        description="Track every checklist, deadline, and match signal in one calm dashboard. Keep momentum rolling."
+        highlight={heroHighlight}
+        stats={heroStats}
+        actions={
+          <>
+            <Button asChild size="sm">
+              <Link href="/matches">Review matches</Link>
+            </Button>
+            <Button asChild size="sm" variant="outline">
+              <Link href="/profile">Update profile</Link>
+            </Button>
+          </>
+        }
+      />
 
       <DashboardOverview />
 
-      <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
-        <div className="space-y-6">
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="space-y-6 lg:col-span-2">
           <TaskList
             title="Application checklist"
             tasks={checklist.map((item) => ({
@@ -128,14 +152,6 @@ export default async function DashboardPage() {
               dueDate: item.due_date ?? undefined
             }))}
           />
-          <div className="space-y-4 rounded-[28px] border border-slate-100 bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
-            <h2 className="text-2xl font-semibold text-slate-900">Recommended programs</h2>
-            {matches.length > 0 ? (
-              <MatchList matches={matches} />
-            ) : (
-              <p className="text-sm text-slate-500">Update your profile to receive tailored suggestions.</p>
-            )}
-          </div>
         </div>
         <aside className="space-y-6">
           <div className="space-y-4 rounded-[28px] border border-slate-100 bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
@@ -150,6 +166,16 @@ export default async function DashboardPage() {
             />
           </div>
         </aside>
+        <div className="lg:col-span-3">
+          <div className="space-y-4 rounded-[28px] border border-slate-100 bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
+            <h2 className="text-2xl font-semibold text-slate-900">Recommended programs</h2>
+            {matches.length > 0 ? (
+              <MatchList matches={matches} />
+            ) : (
+              <p className="text-sm text-slate-500">Update your profile to receive tailored suggestions.</p>
+            )}
+          </div>
+        </div>
       </div>
     </DashboardShell>
   );

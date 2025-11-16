@@ -48,7 +48,7 @@ export const ApplicationPriorityBoard = ({ items }: { items: PriorityItem[] }) =
         {items.map((item) => (
           <article
             key={item.id}
-            className="group flex flex-col gap-4 rounded-[28px] border border-slate-100 bg-gradient-to-br from-white to-slate-50/60 p-5 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_35px_80px_rgba(15,23,42,0.12)]"
+            className="group flex flex-col gap-4 rounded-[28px] border border-slate-100 bg-white p-5 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_35px_80px_rgba(15,23,42,0.12)]"
           >
             <div className="flex items-center justify-between gap-3">
               <div>

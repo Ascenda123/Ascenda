@@ -1,9 +1,12 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { DashboardShell } from '@/components/layout/shell';
 import { ProfileWizard } from './_components/profile-wizard';
 import { PROFILE_STEPS, type StepCompletionMap, type StepKey } from './constants';
+import { PageHero } from '@/components/layout/page-hero';
+import { Button } from '@/components/ui/button';
 
 export const metadata: Metadata = {
   title: 'Profile onboarding | Ascenda'
@@ -43,15 +46,31 @@ export default async function ProfilePage() {
   const completionPercent = Math.round((completedCount / PROFILE_STEPS.length) * 100);
   const nextStep = PROFILE_STEPS.find((step) => !stepCompletion[step.key]);
   const nextStepKey: StepKey = nextStep?.key ?? 'aspirations';
+  const heroStats = [
+    { label: 'Completion', value: `${completionPercent}%`, detail: 'Profile ready' },
+    { label: 'Steps done', value: `${completedCount}/${PROFILE_STEPS.length}`, detail: 'Sections' },
+    { label: 'Next', value: nextStep?.title ?? 'All set', detail: 'Focus area' }
+  ];
 
   return (
     <DashboardShell>
-      <section className="space-y-2">
-        <h1 className="text-3xl font-semibold text-slate-900">Build your student profile</h1>
-        <p className="text-sm text-slate-500">
-          We use this information to personalize match suggestions, academic guidance, and your application plan.
-        </p>
-      </section>
+      <PageHero
+        eyebrow="Profile"
+        title="Build your student profile"
+        description="We use this information to personalize match suggestions, academic guidance, and your application plan."
+        highlight={nextStep ? `Next • ${nextStep.title}` : 'All set'}
+        stats={heroStats}
+        actions={
+          <>
+            <Button asChild size="sm" variant="soft">
+              <Link href="/dashboard">Back to dashboard</Link>
+            </Button>
+            <Button asChild size="sm" variant="outline">
+              <Link href="/matches">Preview matches</Link>
+            </Button>
+          </>
+        }
+      />
       <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
         <div className="rounded-[28px] border border-slate-100 bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">

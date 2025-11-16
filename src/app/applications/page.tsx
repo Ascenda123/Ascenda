@@ -11,6 +11,8 @@ import { RequirementTracker, type RequirementItem } from '@/components/applicati
 import { PlannerCalendar, type PlannerEvent } from '@/components/applications/planner-calendar';
 import { ReferenceTracker, type ReferenceItem } from '@/components/applications/reference-tracker';
 import { SignalCenter, type SignalItem } from '@/components/applications/signal-center';
+import { PageHero } from '@/components/layout/page-hero';
+import { Button } from '@/components/ui/button';
 
 export const metadata: Metadata = {
   title: 'Applications | Ascenda'
@@ -330,14 +332,31 @@ export default async function ApplicationsPage() {
     context: deadline.intake ?? 'Submission'
   }));
 
+  const heroStats = [
+    { label: 'Applications', value: `${appRecords.length || fallbackPriorities.length}`, detail: 'Tracked' },
+    { label: 'Deadlines', value: `${deadlineRecords.length || plannerEvents.length}`, detail: 'Synced' },
+    { label: 'Signals', value: `${signalItems.length}`, detail: 'Latest updates' }
+  ];
+
   return (
     <DashboardShell>
-      <section className="space-y-2">
-        <h1 className="text-3xl font-semibold text-slate-900">Application planner</h1>
-        <p className="text-sm text-slate-500">
-          Prioritize, schedule, and execute every requirement—documents, references, tasks, and signals in one calm space.
-        </p>
-      </section>
+      <PageHero
+        eyebrow="Planner"
+        title="Application planner"
+        description="Prioritize, schedule, and execute every requirement—documents, references, tasks, and signals in one calm space."
+        highlight={`Today • ${dailySummary.tasks} tasks, ${dailySummary.deadlines} deadlines`}
+        stats={heroStats}
+        actions={
+          <>
+            <Button asChild size="sm">
+              <Link href="/matches">Add from matches</Link>
+            </Button>
+            <Button asChild size="sm" variant="outline">
+              <Link href="/applications/tasks">Open checklist</Link>
+            </Button>
+          </>
+        }
+      />
 
       <div className="space-y-8">
         <ApplicationPriorityBoard items={priorityItems} />

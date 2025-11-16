@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
 import { ProgramCard } from './program-card';
 import { ScoreBadge } from './score-badge';
 
@@ -73,66 +74,106 @@ export const MatchList = ({ matches }: MatchListProps) => {
     });
   }, [matches, country, language, level, maxTuition]);
 
+  const activeFilters = [
+    country ? { label: 'Country', value: country, onClear: () => setCountry('') } : null,
+    language ? { label: 'Language', value: language, onClear: () => setLanguage('') } : null,
+    level ? { label: 'Level', value: level, onClear: () => setLevel('') } : null,
+    maxTuition ? { label: 'Budget', value: `≤ ${maxTuition}`, onClear: () => setMaxTuition('') } : null
+  ].filter(Boolean) as { label: string; value: string; onClear: () => void }[];
+
+  const resetFilters = () => {
+    setCountry('');
+    setLanguage('');
+    setLevel('');
+    setMaxTuition('');
+  };
+
   return (
     <div className="space-y-6">
-      <section className="grid gap-4 rounded-[28px] border border-slate-100 bg-white p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)] sm:grid-cols-2 lg:grid-cols-4">
-        <div>
-          <Label htmlFor="country-filter">Country</Label>
-          <select
-            id="country-filter"
-            className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/30"
-            value={country}
-            onChange={(event) => setCountry(event.target.value)}
-          >
-            <option value="">All</option>
-            {countries.map((item) => (
-              <option key={item} value={item}>
-                {item}
-              </option>
-            ))}
-          </select>
+      <section className="space-y-4 rounded-[32px] border border-[#e5e5e7] bg-white p-5 shadow-[0_20px_50px_rgba(15,23,42,0.08)]">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4">
+          <div>
+            <Label htmlFor="country-filter">Country</Label>
+            <select
+              id="country-filter"
+              className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/30"
+              value={country}
+              onChange={(event) => setCountry(event.target.value)}
+            >
+              <option value="">All</option>
+              {countries.map((item) => (
+                <option key={item} value={item}>
+                  {item}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <Label htmlFor="language-filter">Language</Label>
+            <select
+              id="language-filter"
+              className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/30"
+              value={language}
+              onChange={(event) => setLanguage(event.target.value)}
+            >
+              <option value="">All</option>
+              {languages.map((item) => (
+                <option key={item} value={item}>
+                  {item}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <Label htmlFor="level-filter">Level</Label>
+            <select
+              id="level-filter"
+              className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/30"
+              value={level}
+              onChange={(event) => setLevel(event.target.value)}
+            >
+              <option value="">All</option>
+              {levels.map((item) => (
+                <option key={item} value={item}>
+                  {item}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <Label htmlFor="maxTuition">Max tuition</Label>
+            <Input
+              id="maxTuition"
+              type="number"
+              placeholder="e.g. 45000"
+              value={maxTuition}
+              onChange={(event) => setMaxTuition(event.target.value)}
+              className="max-w-[190px]"
+            />
+          </div>
         </div>
-        <div>
-          <Label htmlFor="language-filter">Language</Label>
-          <select
-            id="language-filter"
-            className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/30"
-            value={language}
-            onChange={(event) => setLanguage(event.target.value)}
-          >
-            <option value="">All</option>
-            {languages.map((item) => (
-              <option key={item} value={item}>
-                {item}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <Label htmlFor="level-filter">Level</Label>
-          <select
-            id="level-filter"
-            className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/30"
-            value={level}
-            onChange={(event) => setLevel(event.target.value)}
-          >
-            <option value="">All</option>
-            {levels.map((item) => (
-              <option key={item} value={item}>
-                {item}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <Label htmlFor="maxTuition">Max tuition</Label>
-          <Input
-            id="maxTuition"
-            type="number"
-            placeholder="e.g. 45000"
-            value={maxTuition}
-            onChange={(event) => setMaxTuition(event.target.value)}
-          />
+        <div className="flex flex-wrap items-center gap-2">
+          {activeFilters.length ? (
+            <>
+              {activeFilters.map((filter) => (
+                <button
+                  key={`${filter.label}-${filter.value}`}
+                  type="button"
+                  onClick={filter.onClear}
+                  className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600 transition hover:border-slate-400"
+                >
+                  <span className="text-slate-400">{filter.label}</span>
+                  <span className="text-slate-900">{filter.value}</span>
+                  <span aria-hidden>✕</span>
+                </button>
+              ))}
+              <Button size="sm" variant="ghost" onClick={resetFilters}>
+                Reset filters
+              </Button>
+            </>
+          ) : (
+            <p className="text-xs text-slate-500">Apply filters to shape your shortlist. Fit Scores update instantly.</p>
+          )}
         </div>
       </section>
 

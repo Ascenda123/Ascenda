@@ -1,9 +1,12 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { DashboardShell } from '@/components/layout/shell';
 import { rankMatches, type MatchInput } from '@/lib/matching/engine';
 import { MatchList } from '@/components/match/match-list';
+import { PageHero } from '@/components/layout/page-hero';
+import { Button } from '@/components/ui/button';
 
 export const metadata: Metadata = {
   title: 'Match suggestions | Ascenda'
@@ -28,6 +31,18 @@ export default async function MatchesPage() {
   if (!academics || !preferences || !aspirations) {
     return (
       <DashboardShell>
+        <PageHero
+          eyebrow="Matches"
+          title="Dial in your Fit Score"
+          description="Complete your profile to unlock personalized program rankings, tuition filters, and signal tracking."
+          highlight="Profile info missing"
+          stats={[{ label: 'Matches', value: '—' }, { label: 'Programs', value: '0' }, { label: 'Signals', value: '—' }]}
+          actions={
+            <Button asChild size="sm">
+              <Link href="/profile">Finish profile</Link>
+            </Button>
+          }
+        />
         <div className="rounded-[28px] border border-dashed border-slate-200 bg-slate-50/50 p-8 text-center text-slate-500">
           Complete your profile to receive personalized matches.
         </div>
@@ -82,12 +97,31 @@ export default async function MatchesPage() {
     };
   });
 
+  const heroStats = [
+    { label: 'Programs', value: `${programs.length}`, detail: 'in catalog' },
+    { label: 'Live matches', value: `${enriched.length}`, detail: 'Ranked for you' },
+    { label: 'Top fit', value: enriched[0] ? `${enriched[0].score}%` : '—', detail: 'Highest score' }
+  ];
+
   return (
     <DashboardShell>
-      <section className="space-y-2">
-        <h1 className="text-3xl font-semibold text-slate-900">Match suggestions</h1>
-        <p className="text-sm text-slate-500">Ranked by eligibility, academic alignment, preferences, and outcome indicators.</p>
-      </section>
+      <PageHero
+        eyebrow="Matches"
+        title="Match suggestions"
+        description="Ranked by eligibility, academic alignment, preferences, and outcome indicators."
+        highlight="Signals watchlist"
+        stats={heroStats}
+        actions={
+          <>
+            <Button asChild size="sm">
+              <Link href="/applications">Add to planner</Link>
+            </Button>
+            <Button asChild size="sm" variant="outline">
+              <Link href="/dashboard">Return to dashboard</Link>
+            </Button>
+          </>
+        }
+      />
       <MatchList matches={enriched} />
     </DashboardShell>
   );

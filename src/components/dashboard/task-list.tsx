@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 interface TaskItem {
   id: string;
@@ -14,16 +15,33 @@ interface TaskListProps {
 }
 
 export const TaskList = ({ title, tasks, onToggle }: TaskListProps) => {
+  const completed = tasks.filter((task) => task.status === 'done').length;
+  const total = tasks.length;
+  const progress = total ? Math.round((completed / total) * 100) : 0;
+  const statusTone: Record<TaskItem['status'], string> = {
+    todo: 'border-amber-100 bg-amber-50/40',
+    doing: 'border-sky-100 bg-sky-50/50',
+    done: 'border-emerald-100 bg-emerald-50/60'
+  };
+
   return (
-    <div className="space-y-4 rounded-[28px] border border-slate-100 bg-white p-6 shadow-[0_18px_60px_rgba(15,23,42,0.08)]">
-      <div className="flex items-center justify-between gap-3">
+    <div className="space-y-4 rounded-[32px] border border-[#e5e5e7] bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h3 className="text-xl font-semibold text-slate-900">{title}</h3>
           <p className="text-sm text-slate-500">Stay on track with your application milestones.</p>
         </div>
-        <Button size="sm" variant="ghost" className="rounded-full px-3 text-xs uppercase tracking-[0.3em] text-slate-500">
-          + Add task
-        </Button>
+        <div className="flex items-center gap-3">
+          <div className="rounded-full bg-slate-900/5 px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">
+            {progress}% ready
+          </div>
+          <Button size="sm" variant="ghost" className="rounded-full px-3 text-xs uppercase tracking-[0.3em] text-slate-500">
+            + Add task
+          </Button>
+        </div>
+      </div>
+      <div className="h-1.5 rounded-full bg-slate-100" aria-hidden>
+        <div className="h-1.5 rounded-full bg-slate-900 transition-all" style={{ width: `${progress}%` }} />
       </div>
       <div className="space-y-3">
         {tasks.length === 0 ? (
@@ -34,7 +52,10 @@ export const TaskList = ({ title, tasks, onToggle }: TaskListProps) => {
           tasks.map((task) => (
             <article
               key={task.id}
-              className="flex flex-col gap-2 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 transition hover:bg-slate-100"
+              className={cn(
+                'relative flex flex-col gap-2 rounded-2xl border px-4 py-3 transition hover:translate-x-1 hover:shadow-[0_10px_30px_rgba(15,23,42,0.08)]',
+                statusTone[task.status]
+              )}
             >
               <div className="flex items-center justify-between gap-3">
                 <p className="text-sm font-semibold text-slate-900">{task.name}</p>
