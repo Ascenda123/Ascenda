@@ -16,6 +16,8 @@ import {
   Sparkles
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useSupabase } from '@/hooks/useSupabase';
+import { RETURNING_USER_STORAGE_KEY } from '@/lib/constants';
 const heroHeadline = 'The #1 University Application Companion.';
 
 const features = [
@@ -156,6 +158,8 @@ export default function HomePage() {
   const [openFaq, setOpenFaq] = useState(faqs[0].question);
   const [typedHeadline, setTypedHeadline] = useState('');
   const [isTypingDone, setIsTypingDone] = useState(false);
+  const [launchHref, setLaunchHref] = useState('/signup');
+  const supabase = useSupabase();
 
   useEffect(() => {
     let index = 0;
@@ -172,6 +176,34 @@ export default function HomePage() {
       window.clearInterval(timer);
     };
   }, []);
+
+  useEffect(() => {
+    let isActive = true;
+
+    const determineDestination = async () => {
+      const hasVisitedBefore =
+        typeof window !== 'undefined' &&
+        window.localStorage.getItem(RETURNING_USER_STORAGE_KEY) === 'true';
+
+      if (hasVisitedBefore) {
+        if (isActive) {
+          setLaunchHref('/dashboard');
+        }
+        return;
+      }
+
+      const { data, error } = await supabase.auth.getSession();
+      if (!error && data.session && isActive) {
+        setLaunchHref('/dashboard');
+      }
+    };
+
+    void determineDestination();
+
+    return () => {
+      isActive = false;
+    };
+  }, [supabase]);
 
   const heroRevealClass = isTypingDone ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2';
   const displayedHeadline = typedHeadline || ' ';
@@ -217,7 +249,7 @@ export default function HomePage() {
                   size="sm"
                   className="bg-white/10 text-white border border-white/50 shadow-none hover:bg-white/20 hover:text-white hover:shadow-none hover:scale-100 !text-white"
                 >
-                  <Link href="/signup" className="flex items-center gap-2 text-white">
+                  <Link href={launchHref} className="flex items-center gap-2 text-white">
                     <Laptop className="h-4 w-4 text-white" />
                     Launch Ascenda
                   </Link>
@@ -263,7 +295,7 @@ export default function HomePage() {
                       size="lg"
                       className="bg-white/20 text-white border border-white/30 shadow-none hover:bg-white/30 hover:text-white hover:shadow-none hover:scale-100"
                     >
-                      <Link href="/signup">Launch Ascenda</Link>
+                      <Link href={launchHref}>Launch Ascenda</Link>
                     </Button>
                     <Button
                       asChild

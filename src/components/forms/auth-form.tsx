@@ -6,6 +6,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { AuthError } from '@supabase/supabase-js';
 import { authSchema, type AuthFormValues } from '@/lib/validation/auth';
+import { RETURNING_USER_STORAGE_KEY } from '@/lib/constants';
 import { useSupabase } from '@/hooks/useSupabase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -46,6 +47,10 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
         return;
       }
 
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem(RETURNING_USER_STORAGE_KEY, 'true');
+      }
+
       router.refresh();
       router.push('/dashboard');
     });
@@ -63,6 +68,11 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
 
       if (signInError) {
         setError(signInError.message);
+        return;
+      }
+
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem(RETURNING_USER_STORAGE_KEY, 'true');
       }
     });
   };
