@@ -4,7 +4,8 @@ import { redirect } from 'next/navigation';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { DashboardShell } from '@/components/layout/shell';
 import { ProfileWizard } from './_components/profile-wizard';
-import { PROFILE_STEPS, type StepCompletionMap, type StepKey } from './constants';
+import { PROFILE_STEPS, type StepCompletionMap, type StepKey } from '@/lib/profile/steps';
+import { buildStepCompletion, isProfileComplete, type ProfileRecordGroup } from '@/lib/profile/completion';
 import { PageHero } from '@/components/layout/page-hero';
 import { Button } from '@/components/ui/button';
 import { AnimatedBlobBanner } from '@/components/animated-blob-banner';
@@ -40,13 +41,14 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
     .eq('profile_id', user?.id ?? '')
     .single();
 
-  const stepCompletion: StepCompletionMap = {
-    personal: Boolean(profile?.full_name && profile?.country && profile?.time_zone),
-    academics: Boolean(academics?.curriculum),
-    preferences: Boolean((preferences?.countries ?? []).length),
-    aspirations: Boolean((aspirations?.target_fields ?? []).length)
+  const recordGroup: ProfileRecordGroup = {
+    profile: profile ?? null,
+    academics: academics ?? null,
+    preferences: preferences ?? null,
+    aspirations: aspirations ?? null
   };
-
+  const stepCompletion: StepCompletionMap = buildStepCompletion(recordGroup);
+  const hasCompletedProfile = isProfileComplete(recordGroup);
   const completedCount = PROFILE_STEPS.filter((step) => stepCompletion[step.key]).length;
   const completionPercent = Math.round((completedCount / PROFILE_STEPS.length) * 100);
   const nextStep = PROFILE_STEPS.find((step) => !stepCompletion[step.key]);
@@ -62,7 +64,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
     ? onboardingParam.includes('true')
     : onboardingParam === 'true';
   const isNewUser = completedCount === 0;
-  const showFullScreenWizard = forceOnboarding || isNewUser;
+  const showFullScreenWizard = forceOnboarding || !hasCompletedProfile;
 
   if (showFullScreenWizard) {
     return (
@@ -166,14 +168,26 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
           </p>
         </div>
       </div>
-      <ProfileWizard
-        profile={profile ?? null}
-        academics={academics ?? null}
-        preferences={preferences ?? null}
-        aspirations={aspirations ?? null}
-        initialStep={nextStepKey}
-        stepCompletion={stepCompletion}
-      />
+      {forceOnboarding || !hasCompletedProfile ? (
+        <ProfileWizard
+          profile={profile ?? null}
+          academics={academics ?? null}
+          preferences={preferences ?? null}
+          aspirations={aspirations ?? null}
+          initialStep={nextStepKey}
+          stepCompletion={stepCompletion}
+        />
+      ) : (
+        <div className="mt-6 rounded-[28px] border border-slate-100 bg-white p-6 text-slate-600 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
+          <p className="text-base font-semibold text-slate-900">Profile complete</p>
+          <p className="mt-2 text-sm">
+            You&apos;ve already finished onboarding. You can revisit the wizard anytime if you need to update details.
+          </p>
+          <Button className="mt-4" size="sm" asChild>
+            <Link href="/profile?onboarding=true">Open profile wizard</Link>
+          </Button>
+        </div>
+      )}
     </DashboardShell>
   );
 }

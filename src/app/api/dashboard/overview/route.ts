@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
-import { PROFILE_STEPS, type StepKey } from '@/app/profile/constants';
+import { PROFILE_STEPS, type StepKey } from '@/lib/profile/steps';
+import { buildStepCompletion } from '@/lib/profile/completion';
 import { rankMatches, type MatchInput } from '@/lib/matching/engine';
 import type { EnrichedMatch } from '@/components/match/match-list';
 
@@ -36,18 +37,6 @@ const formatShortDate = (value?: string | null) => {
   }
   return shortDateFormatter.format(new Date(timestamp));
 };
-
-const computeStepCompletion = (
-  profile: ProfileRow | null,
-  academics: Record<string, any> | null,
-  preferences: Record<string, any> | null,
-  aspirations: Record<string, any> | null
-): Record<StepKey, boolean> => ({
-  personal: Boolean(profile?.full_name && profile?.country && profile?.time_zone),
-  academics: Boolean(academics?.curriculum),
-  preferences: Boolean((preferences?.countries ?? []).length),
-  aspirations: Boolean((aspirations?.target_fields ?? []).length)
-});
 
 export async function GET() {
   const supabase = createServerSupabaseClient();
@@ -149,7 +138,12 @@ export async function GET() {
     ? Math.round(enrichedMatches.reduce((total, item) => total + item.score, 0) / enrichedMatches.length)
     : null;
 
-  const stepCompletion = computeStepCompletion(profileRecord, academics, preferences, aspirations);
+  const stepCompletion = buildStepCompletion({
+    profile: profileRecord,
+    academics,
+    preferences,
+    aspirations
+  });
   const completedSteps = PROFILE_STEPS.filter((step) => stepCompletion[step.key]).length;
   const completionPercent = Math.round((completedSteps / PROFILE_STEPS.length) * 100);
   const nextStep = PROFILE_STEPS.find((step) => !stepCompletion[step.key]);

@@ -11,6 +11,7 @@ import { useSupabase } from '@/hooks/useSupabase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { isProfileComplete } from '@/lib/profile/completion';
 
 export type AuthMode = 'login' | 'signup';
 
@@ -48,17 +49,58 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
   const onboardingRedirectUrl = buildAuthCallbackUrl('/profile?onboarding=true');
   const dashboardRedirectUrl = buildAuthCallbackUrl('/dashboard');
 
+  const determineRedirectTarget = async (userId?: string | null) => {
+    if (!userId) {
+      const { data } = await supabase.auth.getUser();
+      userId = data.user?.id ?? null;
+    }
+    if (!userId) {
+      return '/dashboard';
+    }
+
+    const [profileResponse, academicsResponse, preferencesResponse, aspirationsResponse] = await Promise.all([
+      supabase.from('profiles').select('full_name,country,time_zone').eq('id', userId).maybeSingle(),
+      supabase.from('student_academics').select('curriculum').eq('profile_id', userId).maybeSingle(),
+      supabase.from('student_preferences').select('countries').eq('profile_id', userId).maybeSingle(),
+      supabase.from('student_aspirations').select('target_fields').eq('profile_id', userId).maybeSingle()
+    ]);
+
+    const firstError = [
+      profileResponse.error,
+      academicsResponse.error,
+      preferencesResponse.error,
+      aspirationsResponse.error
+    ].find(Boolean);
+
+    if (firstError) {
+      console.error('Unable to determine onboarding status', firstError);
+      return '/dashboard';
+    }
+
+    const needsOnboarding = !isProfileComplete({
+      profile: profileResponse.data ?? null,
+      academics: academicsResponse.data ?? null,
+      preferences: preferencesResponse.data ?? null,
+      aspirations: aspirationsResponse.data ?? null
+    });
+    return needsOnboarding ? '/profile?onboarding=true' : '/dashboard';
+  };
+
   const onSubmit = (values: AuthFormValues) => {
     setError(null);
     setSuccess(null);
     startTransition(async () => {
       let authError: AuthError | null = null;
       let shouldRedirect = false;
+      let redirectTarget = '/dashboard';
 
       if (mode === 'login') {
-        const { error: signInError } = await supabase.auth.signInWithPassword(values);
+        const { error: signInError, data } = await supabase.auth.signInWithPassword(values);
         authError = signInError;
-        shouldRedirect = !signInError;
+        if (!signInError) {
+          redirectTarget = await determineRedirectTarget(data.user?.id);
+          shouldRedirect = true;
+        }
       } else {
         const { error: signUpError, data } = await supabase.auth.signUp({
           ...values,
@@ -87,7 +129,7 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
 
       if (shouldRedirect) {
         router.refresh();
-        const target = mode === 'signup' ? '/profile?onboarding=true' : '/dashboard';
+        const target = mode === 'signup' ? '/profile?onboarding=true' : redirectTarget;
         router.push(target);
       }
     });

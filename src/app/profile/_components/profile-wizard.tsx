@@ -33,7 +33,7 @@ import {
   savePreferencesStep,
   saveAspirationsStep
 } from '../actions';
-import { PROFILE_STEPS, STEP_ORDER, type StepKey, type StepCompletionMap } from '../constants';
+import { PROFILE_STEPS, STEP_ORDER, type StepKey, type StepCompletionMap } from '@/lib/profile/steps';
 import { CountrySelect } from '@/components/inputs/country-select';
 import { HomeCountrySelect } from '@/components/inputs/home-country-select';
 import { SubjectGradeTable } from '@/components/inputs/subject-grade-table';

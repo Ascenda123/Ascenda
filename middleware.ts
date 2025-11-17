@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
 import type { Database } from '@/lib/types/database';
+import { isProfileComplete } from '@/lib/profile/completion';
 
 const PROTECTED_PREFIXES = ['/dashboard', '/profile', '/matches', '/applications', '/admin'];
 
@@ -19,12 +20,21 @@ export async function middleware(req: NextRequest) {
     if (!session) {
       return false;
     }
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('full_name, country, time_zone')
-      .eq('id', session.user.id)
-      .maybeSingle();
-    return !(profile?.full_name && profile?.country && profile?.time_zone);
+    const [profileResponse, academicsResponse, preferencesResponse, aspirationsResponse] = await Promise.all([
+      supabase.from('profiles').select('full_name,country,time_zone').eq('id', session.user.id).maybeSingle(),
+      supabase.from('student_academics').select('curriculum').eq('profile_id', session.user.id).maybeSingle(),
+      supabase.from('student_preferences').select('countries').eq('profile_id', session.user.id).maybeSingle(),
+      supabase.from('student_aspirations').select('target_fields').eq('profile_id', session.user.id).maybeSingle()
+    ]);
+
+    const completionRecords = {
+      profile: profileResponse.data ?? null,
+      academics: academicsResponse.data ?? null,
+      preferences: preferencesResponse.data ?? null,
+      aspirations: aspirationsResponse.data ?? null
+    };
+
+    return !isProfileComplete(completionRecords);
   };
 
   if (!session && isProtected) {
