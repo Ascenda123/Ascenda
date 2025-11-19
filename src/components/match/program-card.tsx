@@ -1,5 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import type { MatchTier } from '@/lib/matching/engine';
 import Link from 'next/link';
 
 export interface ProgramCardProps {
@@ -24,9 +26,16 @@ export interface ProgramCardProps {
   scoreBadge: React.ReactNode;
   onSave?: () => void;
   saved?: boolean;
+  tier?: MatchTier;
 }
 
-export const ProgramCard = ({ program, university, scoreBadge, onSave, saved }: ProgramCardProps) => {
+const TIER_STYLES: Record<MatchTier, string> = {
+  Reach: 'bg-rose-100 text-rose-800 ring-rose-100',
+  Match: 'bg-amber-100 text-amber-800 ring-amber-100',
+  Safe: 'bg-emerald-100 text-emerald-800 ring-emerald-100'
+};
+
+export const ProgramCard = ({ program, university, scoreBadge, onSave, saved, tier }: ProgramCardProps) => {
   return (
     <Card className="flex flex-col">
       <CardHeader className="flex flex-col gap-2 bg-transparent">
@@ -39,9 +48,21 @@ export const ProgramCard = ({ program, university, scoreBadge, onSave, saved }: 
           </div>
           {scoreBadge}
         </div>
-        <p className="text-sm text-slate-600">
-          {program.field ?? 'General program'} · {program.level ?? 'N/A'} · {program.language ?? 'Language TBD'}
-        </p>
+        <div className="flex flex-wrap items-center gap-3 text-sm text-slate-600">
+          <p className="flex-1">
+            {program.field ?? 'General program'} · {program.level ?? 'N/A'} · {program.language ?? 'Language TBD'}
+          </p>
+          {tier ? (
+            <span
+              className={cn(
+                'inline-flex items-center justify-center rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] ring-1',
+                TIER_STYLES[tier]
+              )}
+            >
+              {tier}
+            </span>
+          ) : null}
+        </div>
       </CardHeader>
       <CardContent className="flex flex-1 flex-col gap-4 text-sm text-slate-600">
         <div className="flex flex-wrap gap-6">

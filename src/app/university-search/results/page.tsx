@@ -1,8 +1,40 @@
 'use client';
 
+import { useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import { MatchTier } from '@/lib/matching/engine';
 import { useShortlist } from '@/components/university-search/shortlist-store';
+
+type PlaceholderResult = {
+  id: string;
+  name: string;
+  program: string;
+  location: string;
+  fitScore: number;
+  highlights: string[];
+  nextAction: string;
+  due: string;
+};
+
+const TIER_ORDER: MatchTier[] = ['Reach', 'Match', 'Safe'];
+const TIER_DESCRIPTIONS: Record<MatchTier, string> = {
+  Reach: 'Prestigious programs that stretch your profile.',
+  Match: 'Programs that align closely with your interests and stats.',
+  Safe: 'Options you exceed academically and logistically.'
+};
+const TIER_BADGE_STYLES: Record<MatchTier, string> = {
+  Reach: 'bg-rose-100 text-rose-800 ring-rose-100',
+  Match: 'bg-amber-100 text-amber-800 ring-amber-100',
+  Safe: 'bg-emerald-100 text-emerald-800 ring-emerald-100'
+};
+
+const tierForFitScore = (score: number): MatchTier => {
+  if (score >= 88) return 'Reach';
+  if (score >= 82) return 'Match';
+  return 'Safe';
+};
 
 const placeholderResults = [
   {
@@ -65,7 +97,7 @@ const placeholderResults = [
     nextAction: 'List tech clubs to explore if admitted.',
     due: 'Club shortlist by June 8'
   }
-];
+].map((result) => ({ ...result, tier: tierForFitScore(result.fitScore) })) satisfies (PlaceholderResult & { tier: MatchTier })[];
 
 export default function UniversitySearchResultsPage() {
   const searchParams = useSearchParams();
@@ -79,6 +111,14 @@ export default function UniversitySearchResultsPage() {
       })
     : placeholderResults;
   const hasNoMatches = normalizedQuery.length > 0 && results.length === 0;
+  const groupedResults = useMemo(
+    () =>
+      TIER_ORDER.map((tier) => ({
+        tier,
+        matches: results.filter((result) => result.tier === tier)
+      })),
+    [results]
+  );
 
   const handleAdd = (result: (typeof placeholderResults)[number]) => {
     addItem({
@@ -117,57 +157,76 @@ export default function UniversitySearchResultsPage() {
         </div>
       </section>
 
-      <section className="rounded-[32px] border border-slate-100 bg-white p-6 shadow-[0_24px_50px_rgba(15,23,42,0.08)]">
+      <section className="space-y-6 rounded-[32px] border border-slate-100 bg-white p-6 shadow-[0_24px_50px_rgba(15,23,42,0.08)]">
         {hasNoMatches ? (
           <div className="rounded-[28px] border border-dashed border-slate-200 bg-slate-50/50 p-10 text-center text-slate-500">
             We couldn&apos;t find any placeholder matches for “{query}”. Try another keyword or reset your filters.
           </div>
         ) : (
-          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-            {results.map((result) => {
-              const isShortlisted = shortlist.some((item) => item.id === result.id);
-              return (
-                <article
-                  key={`${result.name}-${result.program}`}
-                  className="flex h-full flex-col rounded-[28px] border border-slate-100 bg-white p-5 shadow-[0_18px_45px_rgba(15,23,42,0.07)]"
-                >
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">fit score</p>
-                    <span className="text-2xl font-semibold text-slate-900">{result.fitScore}%</span>
-                  </div>
-                  <div className="mt-4 flex items-center gap-4">
-                    <div className="h-14 w-14 rounded-2xl bg-slate-200" aria-hidden />
-                    <div>
-                      <p className="text-lg font-semibold text-slate-900">{result.name}</p>
-                      <p className="text-sm text-slate-500">{result.program}</p>
-                      <p className="text-xs uppercase tracking-[0.3em] text-slate-400">{result.location}</p>
+          groupedResults.map(
+            ({ tier, matches }) =>
+              matches.length > 0 && (
+                <div key={tier} className="space-y-5">
+                  <div className="flex flex-col gap-2 border-b border-slate-100 pb-3">
+                    <div className="flex items-center justify-between gap-4">
+                      <p className="text-xs uppercase tracking-[0.35em] text-slate-400">Tier</p>
+                      <span className={cn('rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em]', TIER_BADGE_STYLES[tier])}>
+                        {tier}
+                      </span>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <h2 className="text-2xl font-semibold text-slate-900">{tier} programs</h2>
+                      <p className="text-sm text-slate-500">{TIER_DESCRIPTIONS[tier]}</p>
                     </div>
                   </div>
-                  <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                    {result.highlights.map((highlight) => (
-                      <span key={highlight} className="rounded-full border border-slate-200 px-3 py-1 text-[11px]">
-                        {highlight}
-                      </span>
-                    ))}
+                  <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+                    {matches.map((result) => {
+                      const isShortlisted = shortlist.some((item) => item.id === result.id);
+                      return (
+                        <article
+                          key={`${result.name}-${result.program}`}
+                          className="flex h-full flex-col rounded-[28px] border border-slate-100 bg-white p-5 shadow-[0_18px_45px_rgba(15,23,42,0.07)]"
+                        >
+                          <div className="flex items-center justify-between">
+                            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">fit score</p>
+                            <span className="text-2xl font-semibold text-slate-900">{result.fitScore}%</span>
+                          </div>
+                          <div className="mt-4 flex items-center gap-4">
+                            <div className="h-14 w-14 rounded-2xl bg-slate-200" aria-hidden />
+                            <div>
+                              <p className="text-lg font-semibold text-slate-900">{result.name}</p>
+                              <p className="text-sm text-slate-500">{result.program}</p>
+                              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">{result.location}</p>
+                            </div>
+                          </div>
+                          <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                            {result.highlights.map((highlight) => (
+                              <span key={highlight} className="rounded-full border border-slate-200 px-3 py-1 text-[11px]">
+                                {highlight}
+                              </span>
+                            ))}
+                          </div>
+                          <div className="mt-auto flex flex-col gap-3 pt-5 sm:flex-row sm:items-center sm:justify-between">
+                            <Button size="sm" variant="soft" className="w-full sm:w-auto">
+                              View details
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="soft"
+                              className="w-full sm:w-auto"
+                              onClick={() => handleAdd(result)}
+                              disabled={isShortlisted}
+                            >
+                              {isShortlisted ? 'Shortlisted' : 'Add to shortlist'}
+                            </Button>
+                          </div>
+                        </article>
+                      );
+                    })}
                   </div>
-                  <div className="mt-auto flex flex-col gap-3 pt-5 sm:flex-row sm:items-center sm:justify-between">
-                    <Button size="sm" variant="soft" className="w-full sm:w-auto">
-                      View details
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="soft"
-                      className="w-full sm:w-auto"
-                      onClick={() => handleAdd(result)}
-                      disabled={isShortlisted}
-                    >
-                      {isShortlisted ? 'Shortlisted' : 'Add to shortlist'}
-                    </Button>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
+                </div>
+              )
+          )
         )}
       </section>
     </div>

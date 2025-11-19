@@ -82,12 +82,15 @@ export type MatchBreakdown = {
   outcomes: number;
 };
 
+export type MatchTier = 'Reach' | 'Match' | 'Safe';
+
 export type MatchResult = {
   programId: string;
   universityId: string;
   score: number;
   breakdown: MatchBreakdown;
   blockingReasons: string[];
+  tier: MatchTier;
 };
 
 const clampScore = (value: number) => Math.max(0, Math.min(100, value));
@@ -266,12 +269,15 @@ export const scoreMatch = (input: MatchInput, weights: MatchingWeights = default
     score = Math.min(score, 40);
   }
 
+  const tier = determineMatchTier(input, score);
+
   return {
     programId: input.program.id,
     universityId: input.university.id,
     score,
     breakdown,
-    blockingReasons: eligibility.reasons
+    blockingReasons: eligibility.reasons,
+    tier
   };
 };
 
@@ -279,4 +285,22 @@ export const rankMatches = (inputs: MatchInput[], weights: MatchingWeights = def
   return inputs
     .map((input) => scoreMatch(input, weights))
     .sort((a, b) => b.score - a.score);
+};
+
+const describePrestige = (university: University) => {
+  const rank =
+    typeof university.rank_overall === 'number' && university.rank_overall > 0 ? university.rank_overall : undefined;
+  const rankScore = rank ? Math.max(0, 1 - (rank - 1) / 500) : 0.4;
+  const acceptanceScore =
+    typeof university.acceptance_rate === 'number' ? Math.max(0, Math.min(1, 1 - university.acceptance_rate)) : 0.4;
+  return (rankScore + acceptanceScore) / 2;
+};
+
+const determineMatchTier = (input: MatchInput, score: number): MatchTier => {
+  const prestige = describePrestige(input.university);
+  const combinedScore = Math.max(0, Math.min(1, (score / 100) * 0.6 + prestige * 0.4));
+
+  if (combinedScore >= 0.75) return 'Reach';
+  if (combinedScore >= 0.5) return 'Match';
+  return 'Safe';
 };

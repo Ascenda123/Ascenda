@@ -129,7 +129,8 @@ export async function GET() {
         university,
         score: result.score,
         breakdown: result.breakdown,
-        blockingReasons: result.blockingReasons
+        blockingReasons: result.blockingReasons,
+        tier: result.tier
       };
     })
     .filter((entry): entry is EnrichedMatch => entry !== null);

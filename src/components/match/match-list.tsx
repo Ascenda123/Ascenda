@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { ProgramCard } from './program-card';
 import { ScoreBadge } from './score-badge';
+import type { MatchTier } from '@/lib/matching/engine';
 
 export interface EnrichedMatch {
   program: {
@@ -34,11 +35,19 @@ export interface EnrichedMatch {
     outcomes: number;
   };
   blockingReasons: string[];
+  tier: MatchTier;
 }
 
 interface MatchListProps {
   matches: EnrichedMatch[];
 }
+
+const TIER_ORDER: MatchTier[] = ['Reach', 'Match', 'Safe'];
+const TIER_DESCRIPTIONS: Record<MatchTier, string> = {
+  Reach: 'Highly selective universities that stretch your profile.',
+  Match: 'Programs that align closely with your academic and preference fit.',
+  Safe: 'Comfortable options where you exceed the entry expectations.'
+};
 
 export const MatchList = ({ matches }: MatchListProps) => {
   const [country, setCountry] = useState('');
@@ -73,6 +82,18 @@ export const MatchList = ({ matches }: MatchListProps) => {
       return true;
     });
   }, [matches, country, language, level, maxTuition]);
+
+  const tierGroups = useMemo(() => {
+    const accumulator: Record<MatchTier, EnrichedMatch[]> = {
+      Reach: [],
+      Match: [],
+      Safe: []
+    };
+    filtered.forEach((match) => {
+      accumulator[match.tier].push(match);
+    });
+    return TIER_ORDER.map((tier) => ({ tier, matches: accumulator[tier] }));
+  }, [filtered]);
 
   const activeFilters = [
     country ? { label: 'Country', value: country, onClear: () => setCountry('') } : null,
@@ -183,14 +204,33 @@ export const MatchList = ({ matches }: MatchListProps) => {
             No matches yet. Adjust your filters or update your profile for better suggestions.
           </div>
         ) : (
-          filtered.map((match) => (
-            <ProgramCard
-              key={match.program.id}
-              program={match.program}
-              university={match.university}
-              scoreBadge={<ScoreBadge score={match.score} breakdown={match.breakdown} />}
-            />
-          ))
+          tierGroups.map(({ tier, matches }) =>
+            matches.length ? (
+              <div
+                key={tier}
+                className="space-y-4 rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_20px_50px_rgba(15,23,42,0.08)]"
+              >
+                <div className="space-y-2">
+                  <p className="text-xs uppercase tracking-[0.35em] text-slate-400">Tier</p>
+                  <div className="flex items-center justify-between gap-4">
+                    <h3 className="text-2xl font-semibold text-slate-900">{tier}</h3>
+                    <p className="text-sm text-slate-500">{TIER_DESCRIPTIONS[tier]}</p>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  {matches.map((match) => (
+                    <ProgramCard
+                      key={match.program.id}
+                      program={match.program}
+                      university={match.university}
+                      scoreBadge={<ScoreBadge score={match.score} breakdown={match.breakdown} />}
+                      tier={match.tier}
+                    />
+                  ))}
+                </div>
+              </div>
+            ) : null
+          )
         )}
       </section>
     </div>
