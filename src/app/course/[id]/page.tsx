@@ -426,13 +426,13 @@ export default function CoursePage({ params }: { params: { id: string } }) {
                   <Button
                     asChild
                     variant="outline"
-                    className="w-full border-slate-900 text-slate-900 hover:-translate-y-0.5 hover:bg-slate-900 hover:text-white"
+                    className="w-full"
                   >
                     <Link href={course.applyUrl ?? '#'}>Apply Now</Link>
                   </Button>
                   <Button
                     asChild
-                    className="w-full bg-slate-900 text-white shadow-[0_18px_45px_rgba(15,23,42,0.16)] transition-all duration-150 hover:-translate-y-0.5 hover:bg-black"
+                    className="w-full"
                   >
                     <Link href={course.courseUrl ?? '#'}>Visit Course Page</Link>
                   </Button>
@@ -477,17 +477,10 @@ const QuickActions = ({ shortlisted, applyUrl, courseUrl }: { shortlisted: boole
           <p className="text-sm text-slate-600">Keep key links and actions in reach while you scan details.</p>
         </div>
         <div className="space-y-3">
-          <Button
-            asChild
-            className="w-full bg-slate-900 text-white shadow-[0_18px_45px_rgba(15,23,42,0.16)] transition-all duration-150 hover:-translate-y-0.5 hover:bg-black"
-          >
+          <Button asChild className="w-full">
             <Link href={applyUrl ?? '#'}>Apply now</Link>
           </Button>
-          <Button
-            asChild
-            variant="outline"
-            className="w-full border-slate-900 text-slate-900 hover:-translate-y-0.5 hover:bg-slate-900 hover:text-white"
-          >
+          <Button asChild variant="outline" className="w-full">
             <Link href={courseUrl ?? '#'}>Visit course page</Link>
           </Button>
           <Button variant="secondary" className="w-full hover:-translate-y-0.5">
