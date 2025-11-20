@@ -9,7 +9,6 @@ import {
   BookmarkPlus,
   Brain,
   CalendarDays,
-  ClipboardList,
   Code,
   FileText,
   Globe2,
@@ -325,7 +324,7 @@ export default function CoursePage({ params }: { params: { id: string } }) {
             </Card>
           </div>
 
-          <Section title="Course key metrics" subtitle="A quick snapshot of outcomes and rankings.">
+          <Section title="Course key metrics" description="A quick snapshot of outcomes and rankings.">
             <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-4">
               {metricCards.map((metric) => (
                 <Card
@@ -350,7 +349,7 @@ export default function CoursePage({ params }: { params: { id: string } }) {
             </div>
           </Section>
 
-          <Section title="Entry requirements" subtitle="Understand what you need to apply.">
+          <Section title="Entry requirements" description="Understand what you need to apply.">
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {course.entryRequirements.map((item) => (
                 <Card
@@ -371,7 +370,7 @@ export default function CoursePage({ params }: { params: { id: string } }) {
             </div>
           </Section>
 
-          <Section title="Cohort information" subtitle="Who you will study with.">
+          <Section title="Cohort information" description="Who you will study with.">
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               {course.cohort.map((item) => (
                 <Card
@@ -387,7 +386,7 @@ export default function CoursePage({ params }: { params: { id: string } }) {
             </div>
           </Section>
 
-          <Section title="Modules" subtitle="View the curriculum across all years.">
+          <Section title="Modules" description="View the curriculum across all years.">
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               {course.modules.map((module, index) => (
                 <Card
@@ -416,7 +415,7 @@ export default function CoursePage({ params }: { params: { id: string } }) {
             </div>
           </Section>
 
-          <Section title="Application information" subtitle="Find out how to apply to this program.">
+          <Section title="Application information" description="Find out how to apply to this program.">
             <div className="grid gap-6 lg:grid-cols-[1.15fr,1fr]">
               <Card className="border-slate-100 bg-white shadow-[0_20px_55px_rgba(15,23,42,0.1)]">
                 <CardHeader>
@@ -619,12 +618,17 @@ const Hero = ({
   );
 };
 
-const Section = ({ title, subtitle, children }: { title: string; subtitle: string; children: React.ReactNode }) => (
+const Section = ({ title, description, children }: { title: string; description: string; children: React.ReactNode }) => (
   <section className="space-y-4">
-    <div className="space-y-1">
-      <h2 className="text-2xl font-semibold text-slate-900">{title}</h2>
-      <p className="text-sm text-slate-600">{subtitle}</p>
+    <div className="space-y-2">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.35em] text-slate-400">{title}</p>
+      <div className="space-y-1">
+        <h2 className="text-3xl font-semibold text-slate-900">{title}</h2>
+        <p className="text-base text-slate-600">{description}</p>
+      </div>
     </div>
-    {children}
+    <Card className="border-slate-100 bg-white shadow-[0_24px_60px_rgba(15,23,42,0.08)] transition-all duration-300 hover:shadow-[0_30px_80px_rgba(15,23,42,0.1)]">
+      <CardContent className="space-y-6 p-6 lg:p-8">{children}</CardContent>
+    </Card>
   </section>
 );
