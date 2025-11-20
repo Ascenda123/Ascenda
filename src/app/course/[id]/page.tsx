@@ -15,6 +15,7 @@ import {
   Globe2,
   Layers,
   Link2,
+  Search,
   Laptop,
   Pencil,
   Plus,
