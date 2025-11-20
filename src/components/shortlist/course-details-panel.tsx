@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { NotebookPen } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -87,6 +88,12 @@ export const CourseDetailsPanel = ({ courses }: { courses: ShortlistCourse[] }) 
               <p className="text-2xl font-semibold text-slate-900">{activeCourse.fitScore}%</p>
               <p className="text-xs text-slate-500">{activeCourse.stage}</p>
             </div>
+            <Link
+              href={`/course/${activeCourse.id}`}
+              className="text-xs font-semibold uppercase tracking-[0.28em] text-indigo-600 underline-offset-4 hover:underline"
+            >
+              Open course page
+            </Link>
           </div>
           <div className="rounded-[26px] border border-slate-200 bg-white p-4">
             <p className="text-xs uppercase tracking-[0.35em] text-slate-400">Modules</p>

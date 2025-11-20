@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -207,8 +208,8 @@ export default function UniversitySearchResultsPage() {
                             ))}
                           </div>
                           <div className="mt-auto flex flex-col gap-3 pt-5 sm:flex-row sm:items-center sm:justify-between">
-                            <Button size="sm" variant="soft" className="w-full sm:w-auto">
-                              View details
+                            <Button asChild size="sm" variant="soft" className="w-full sm:w-auto">
+                              <Link href={`/course/${result.id}`}>View details</Link>
                             </Button>
                             <Button
                               size="sm"
