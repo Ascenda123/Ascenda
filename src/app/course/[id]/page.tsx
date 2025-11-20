@@ -4,23 +4,27 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import {
   BadgeCheck,
+  BarChart3,
   BookOpen,
   BookmarkPlus,
+  Brain,
   CalendarDays,
+  ClipboardList,
   Code,
   FileText,
   Globe2,
+  Layers,
   Link2,
   Laptop,
   Pencil,
   Plus,
   Presentation,
-  Search,
+  ShieldCheck,
+  Workflow,
   Users
 } from 'lucide-react';
 import { Navbar } from '@/components/layout/navbar';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 type IconType = (props: { className?: string; size?: number }) => JSX.Element;
@@ -89,9 +93,9 @@ const courseDataset: CourseData[] = [
     ],
     modules: [
       { title: 'Year 1 Modules', items: ['Intro to Programming', 'Geometry & Graphics'], icon: Laptop },
-      { title: 'Year 2 Modules', items: ['Algorithms', 'Generative Design'], icon: Presentation },
-      { title: 'Year 3 Modules', items: ['ML for Design', 'Systems Studio'], icon: Code },
-      { title: 'Optional Modules', items: ['Data Science', 'Cybersecurity'], icon: Plus }
+      { title: 'Year 2 Modules', items: ['Algorithms', 'Generative Design'], icon: Workflow },
+      { title: 'Year 3 Modules', items: ['ML for Design', 'Systems Studio'], icon: Brain },
+      { title: 'Optional Modules', items: ['Data Science', 'Cybersecurity'], icon: ShieldCheck }
     ],
     quickFacts: [
       { label: 'Mode', value: 'On campus' },
@@ -159,9 +163,9 @@ const courseDataset: CourseData[] = [
     ],
     modules: [
       { title: 'Year 1 Modules', items: ['Foundations of Engineering', 'Programming Basics'], icon: Laptop },
-      { title: 'Year 2 Modules', items: ['Algorithms', 'Systems Design'], icon: Presentation },
-      { title: 'Year 3 Modules', items: ['Ethics & Tech', 'Product Studio'], icon: Code },
-      { title: 'Optional Modules', items: ['Data Science', 'Cybersecurity'], icon: Plus }
+      { title: 'Year 2 Modules', items: ['Algorithms', 'Systems Design'], icon: Workflow },
+      { title: 'Year 3 Modules', items: ['Ethics & Tech', 'Product Studio'], icon: Presentation },
+      { title: 'Optional Modules', items: ['Data Science', 'Cybersecurity'], icon: ShieldCheck }
     ],
     quickFacts: [
       { label: 'Mode', value: 'On campus' },
@@ -230,8 +234,8 @@ const courseDataset: CourseData[] = [
     modules: [
       { title: 'Year 1 Modules', items: ['Intro to PPE', 'Logic & Reasoning'], icon: Laptop },
       { title: 'Year 2 Modules', items: ['Microeconomics', 'Political Theory'], icon: Presentation },
-      { title: 'Year 3 Modules', items: ['Philosophy of Ethics', 'International Relations'], icon: Code },
-      { title: 'Optional Modules', items: ['Data Science', 'Cybersecurity'], icon: Plus }
+      { title: 'Year 3 Modules', items: ['Philosophy of Ethics', 'International Relations'], icon: BookOpen },
+      { title: 'Optional Modules', items: ['Data Science', 'Cybersecurity'], icon: ShieldCheck }
     ],
     quickFacts: [
       { label: 'Mode', value: 'On campus' },
@@ -398,8 +402,8 @@ export default function CoursePage({ params }: { params: { id: string } }) {
                     </div>
                     <ul className="space-y-2 text-sm text-slate-700">
                       {module.items.map((item) => (
-                        <li key={item} className="flex gap-2">
-                          <span className="mt-1 h-1.5 w-1.5 rounded-full bg-slate-900" />
+                        <li key={item} className="flex items-center gap-2">
+                          <ModuleIcon label={item} />
                           <span>{item}</span>
                         </li>
                       ))}
@@ -519,6 +523,38 @@ const Pill = ({ label }: { label: string }) => (
   </span>
 );
 
+const ModuleIcon = ({ label }: { label: string }) => {
+  const normalized = label.toLowerCase();
+  if (normalized.includes('programming') || normalized.includes('web')) {
+    return <Laptop size={14} className="text-slate-700" />;
+  }
+  if (normalized.includes('data structure') || normalized.includes('data ')) {
+    return <Layers size={14} className="text-slate-700" />;
+  }
+  if (normalized.includes('algorithm')) {
+    return <Workflow size={14} className="text-slate-700" />;
+  }
+  if (normalized.includes('ml') || normalized.includes('machine learning')) {
+    return <Brain size={14} className="text-slate-700" />;
+  }
+  if (normalized.includes('security')) {
+    return <ShieldCheck size={14} className="text-slate-700" />;
+  }
+  if (normalized.includes('system')) {
+    return <Code size={14} className="text-slate-700" />;
+  }
+  if (normalized.includes('design')) {
+    return <Presentation size={14} className="text-slate-700" />;
+  }
+  if (normalized.includes('econom') || normalized.includes('ethics')) {
+    return <BookOpen size={14} className="text-slate-700" />;
+  }
+  if (normalized.includes('science')) {
+    return <BarChart3 size={14} className="text-slate-700" />;
+  }
+  return <BookOpen size={14} className="text-slate-700" />;
+};
+
 const Hero = ({
   activeTab,
   onTabChange,
@@ -543,13 +579,9 @@ const Hero = ({
           <h1 className="text-4xl font-semibold text-slate-900 md:text-5xl">{meta.title}</h1>
           <p className="text-lg text-slate-700">{meta.university}</p>
           <div className="flex flex-wrap items-center gap-3">
-            <div className="flex w-full max-w-md items-center gap-3 rounded-[20px] border border-slate-200 bg-slate-50 px-3 py-2 shadow-inner shadow-slate-100">
-              <Search size={18} className="text-slate-400" />
-              <Input
-                defaultValue={`University Location: ${meta.location}`}
-                readOnly
-                className="w-full border-0 bg-transparent text-sm text-slate-800 shadow-none focus-visible:ring-0"
-              />
+            <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm">
+              <Globe2 size={16} className="text-slate-500" />
+              <span>{meta.location}</span>
             </div>
             <div className="flex flex-wrap gap-3">
               <Button variant="outline" className="border-slate-900 bg-white text-slate-900 hover:bg-slate-900 hover:text-white">
