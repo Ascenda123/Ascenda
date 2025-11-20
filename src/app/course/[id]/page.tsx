@@ -356,8 +356,8 @@ export default function CoursePage({ params }: { params: { id: string } }) {
                   key={item.label}
                   className="border-slate-100 bg-white shadow-[0_18px_35px_rgba(15,23,42,0.06)] transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_22px_48px_rgba(15,23,42,0.1)]"
                 >
-                  <CardContent className="flex items-start gap-3 p-4">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-50 text-slate-700 shadow-[0_8px_20px_rgba(15,23,42,0.06)]">
+                  <CardContent className="flex items-start gap-4 p-5">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-50 text-slate-700 shadow-[0_10px_22px_rgba(15,23,42,0.06)]">
                       <item.icon size={18} />
                     </div>
                     <div className="space-y-1">
@@ -417,8 +417,8 @@ export default function CoursePage({ params }: { params: { id: string } }) {
 
           <Section title="Application information" description="Find out how to apply to this program.">
             <div className="grid gap-6 lg:grid-cols-[1.15fr,1fr]">
-              <Card className="border-slate-100 bg-white shadow-[0_20px_55px_rgba(15,23,42,0.1)]">
-                <CardHeader>
+              <Card className="border-slate-100 bg-slate-50/60 shadow-[0_20px_55px_rgba(15,23,42,0.1)]">
+                <CardHeader className="border-b border-slate-200/80">
                   <CardTitle className="text-2xl text-slate-900">Application Information</CardTitle>
                   <p className="text-sm text-slate-600">Find out how to apply to this program.</p>
                 </CardHeader>
@@ -445,19 +445,22 @@ export default function CoursePage({ params }: { params: { id: string } }) {
                     key={card.title}
                     className="border-slate-100 bg-white shadow-[0_16px_35px_rgba(15,23,42,0.08)] transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_22px_48px_rgba(15,23,42,0.1)]"
                   >
-                    <CardContent className="flex items-start justify-between gap-3 p-4">
+                    <CardContent className="flex items-start justify-between gap-3 p-5">
                       <div className="space-y-1">
-                        <p className="text-sm font-semibold text-slate-900">{card.title}</p>
+                        <div className="flex items-center gap-2">
+                          <span className="h-2.5 w-2.5 rounded-full bg-slate-900" />
+                          <p className="text-sm font-semibold text-slate-900">{card.title}</p>
+                        </div>
                         <p className="text-sm text-slate-600">{card.body}</p>
+                        <Link
+                          href={card.href}
+                          className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-900 underline-offset-4 hover:underline"
+                        >
+                          {card.linkLabel}
+                        </Link>
                       </div>
-                      <Link
-                        href={card.href}
-                        className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-900 underline-offset-4 hover:underline"
-                      >
-                        {card.linkLabel}
-                      </Link>
-                    </CardContent>
-                  </Card>
+                  </CardContent>
+                </Card>
                 ))}
               </div>
             </div>
@@ -593,35 +596,46 @@ const Hero = ({
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-2">
-          {(['course', 'university'] as const).map((tab) => (
-            <button
-              key={tab}
-              onClick={() => onTabChange(tab)}
-              className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${
-                activeTab === tab ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-200 bg-white text-slate-700'
-              }`}
-            >
-              {tab === 'course' ? 'Course' : 'University'}
-            </button>
-          ))}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap gap-2">
+            {(['course', 'university'] as const).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => onTabChange(tab)}
+                className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${
+                  activeTab === tab ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-200 bg-white text-slate-700'
+                }`}
+              >
+                {tab === 'course' ? 'Course' : 'University'}
+              </button>
+            ))}
+          </div>
+          <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-slate-600">
+            <span>Fall 2025</span>
+            <span className="text-slate-900">Open</span>
+          </span>
         </div>
+        <div className="h-[3px] w-full rounded-full bg-gradient-to-r from-slate-900 via-slate-700 to-slate-900 opacity-80" />
+        <p className="text-sm text-slate-600">
+          Scan every key signal for this course: rankings, requirements, cohort makeup, modules, and how to apply.
+        </p>
       </CardContent>
     </Card>
   );
 };
 
 const Section = ({ title, description, children }: { title: string; description: string; children: React.ReactNode }) => (
-  <section className="space-y-4">
+  <section className="space-y-6">
     <div className="space-y-2">
       <p className="text-[11px] font-semibold uppercase tracking-[0.35em] text-slate-400">{title}</p>
       <div className="space-y-1">
-        <h2 className="text-3xl font-semibold text-slate-900">{title}</h2>
-        <p className="text-base text-slate-600">{description}</p>
+        <h2 className="text-3xl font-semibold text-slate-900 md:text-[34px]">{title}</h2>
+        <p className="text-base text-slate-600 md:text-lg">{description}</p>
       </div>
     </div>
-    <Card className="border-slate-100 bg-white shadow-[0_24px_60px_rgba(15,23,42,0.08)] transition-all duration-300 hover:shadow-[0_30px_80px_rgba(15,23,42,0.1)]">
-      <CardContent className="space-y-6 p-6 lg:p-8">{children}</CardContent>
+    <Card className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-[0_24px_60px_rgba(15,23,42,0.08)] transition-all duration-300 hover:-translate-y-[2px] hover:shadow-[0_30px_80px_rgba(15,23,42,0.1)]">
+      <div className="h-1 w-full bg-gradient-to-r from-slate-100 via-white to-slate-100" />
+      <CardContent className="space-y-8 p-6 lg:p-8">{children}</CardContent>
     </Card>
   </section>
 );
