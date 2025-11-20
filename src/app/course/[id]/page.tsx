@@ -21,6 +21,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Navbar } from '@/components/layout/navbar';
 
 const courseMeta = {
   title: 'Bachelor of Science in Computer Science',
@@ -106,6 +107,7 @@ export default function CoursePage() {
 
   return (
     <div className="min-h-screen bg-[#f5f5f7] text-slate-900">
+      <Navbar />
       <div className="mx-auto max-w-screen-2xl space-y-10 px-4 py-10 md:px-8 lg:px-12">
         <Hero
           activeTab={activeTab}
