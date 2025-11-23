@@ -1,6 +1,8 @@
 'use client';
 
 import { motion, type Variants } from 'framer-motion';
+import { cn } from '@/lib/utils';
+import { useThemeMode } from '../theme/theme-provider';
 
 const comparisons = [
     {
@@ -45,6 +47,8 @@ const fadeIn: Variants = {
 };
 
 export function ComparisonSection() {
+    const { mode } = useThemeMode();
+
     return (
         <motion.section
             className="mt-16"
@@ -53,9 +57,23 @@ export function ComparisonSection() {
             viewport={{ once: true, amount: 0.3 }}
             variants={fadeIn}
         >
-            <div className="relative overflow-hidden rounded-[30px] border border-white/10 bg-card/80 text-foreground shadow-2xl">
+            <div
+                className={cn(
+                    'relative overflow-hidden rounded-[30px] text-foreground transition-colors',
+                    mode === 'light'
+                        ? 'border border-border bg-white shadow-[0_18px_45px_rgba(15,23,42,0.08)]'
+                        : 'border border-white/10 bg-card/80 shadow-2xl'
+                )}
+            >
                 <div className="pointer-events-none absolute inset-0 opacity-20">
-                    <div className="h-full w-full bg-[radial-gradient(circle_at_top,_var(--accent),_transparent_60%)]" />
+                    <div
+                        className={cn(
+                            'h-full w-full',
+                            mode === 'light'
+                                ? 'bg-[radial-gradient(circle_at_top,_rgba(99,102,241,0.15),_transparent_55%)]'
+                                : 'bg-[radial-gradient(circle_at_top,_var(--accent),_transparent_60%)]'
+                        )}
+                    />
                 </div>
                 <div className="relative p-6 sm:p-10">
                     <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -83,7 +101,14 @@ export function ComparisonSection() {
                                 key={`${pair.without.headline}-${pair.with.headline}-${index}`}
                                 className="grid items-center gap-4 md:grid-cols-[1fr_auto_1fr]"
                             >
-                                <div className="rounded-[24px] border border-white/5 bg-white/5 p-5">
+                                <div
+                                    className={cn(
+                                        'rounded-[24px] p-5 transition-colors',
+                                        mode === 'light'
+                                            ? 'border border-border bg-muted/50 shadow-sm'
+                                            : 'border border-white/5 bg-white/5'
+                                    )}
+                                >
                                     <p className="text-xs font-semibold uppercase tracking-[0.4em] text-destructive">
                                         {comparisons[0].title}
                                     </p>
@@ -91,13 +116,41 @@ export function ComparisonSection() {
                                     {pair.without.detail && <p className="mt-1 text-sm text-muted-foreground">{pair.without.detail}</p>}
                                 </div>
                                 <div className="relative flex flex-col items-center gap-2">
-                                    {index !== 0 && <span className="hidden h-8 w-px bg-white/10 md:block" />}
-                                    <span className="flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-white/5 text-[0.65rem] font-semibold uppercase tracking-[0.3em] text-muted-foreground">
+                                    {index !== 0 && (
+                                        <span
+                                            className={cn(
+                                                'hidden h-8 w-px md:block',
+                                                mode === 'light' ? 'bg-border/80' : 'bg-white/10'
+                                            )}
+                                        />
+                                    )}
+                                    <span
+                                        className={cn(
+                                            'flex h-12 w-12 items-center justify-center rounded-full text-[0.65rem] font-semibold uppercase tracking-[0.3em] text-muted-foreground transition-colors',
+                                            mode === 'light'
+                                                ? 'border border-border bg-white'
+                                                : 'border border-white/10 bg-white/5'
+                                        )}
+                                    >
                                         vs
                                     </span>
-                                    {index !== comparisonPairs.length - 1 && <span className="hidden h-8 w-px bg-white/10 md:block" />}
+                                    {index !== comparisonPairs.length - 1 && (
+                                        <span
+                                            className={cn(
+                                                'hidden h-8 w-px md:block',
+                                                mode === 'light' ? 'bg-border/80' : 'bg-white/10'
+                                            )}
+                                        />
+                                    )}
                                 </div>
-                                <div className="rounded-[24px] border border-emerald-500/20 bg-emerald-500/5 p-5 text-foreground shadow-lg">
+                                <div
+                                    className={cn(
+                                        'rounded-[24px] p-5 text-foreground transition-colors',
+                                        mode === 'light'
+                                            ? 'border border-emerald-500/25 bg-emerald-50/80 shadow-[0_12px_30px_rgba(16,185,129,0.2)]'
+                                            : 'border border-emerald-500/20 bg-emerald-500/5 shadow-lg'
+                                    )}
+                                >
                                     <p className="text-xs font-semibold uppercase tracking-[0.4em] text-emerald-400">
                                         {comparisons[1].title}
                                     </p>
