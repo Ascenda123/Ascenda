@@ -164,7 +164,7 @@ export const UniversityInformation = ({
   };
 
   return (
-    <div className={cn('min-h-screen w-full space-y-10 bg-background px-4 pb-12 pt-6 text-foreground md:px-8 lg:px-12', className)}>
+    <div className={cn('min-h-screen w-full space-y-10 bg-background px-4 pb-12 pt-28 text-foreground md:px-8 lg:px-12', className)}>
       {error ? (
         <Card className="p-6">
           <p className="text-xl font-semibold text-foreground">We hit a snag loading this university.</p>

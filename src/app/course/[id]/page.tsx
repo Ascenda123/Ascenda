@@ -314,7 +314,7 @@ export default function CoursePage({ params }: { params: { id: string } }) {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Navbar />
-      <div className="mx-auto max-w-screen-2xl space-y-10 px-4 py-10 md:px-8 lg:px-12">
+      <div className="mx-auto max-w-screen-2xl space-y-10 px-4 pb-12 pt-28 md:px-8 lg:px-12">
         <Hero
           shortlisted={shortlisted}
           onShortlist={() => setShortlisted(!shortlisted)}
