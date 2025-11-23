@@ -19,7 +19,7 @@ export const Navbar = () => {
   const pathname = usePathname();
 
   return (
-    <header className="sticky top-0 z-40 bg-card/90 px-4 py-4 backdrop-blur">
+    <header className="fixed inset-x-0 top-0 z-50 bg-card/90 px-4 py-4 backdrop-blur">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between rounded-[999px] border border-border bg-card px-4 py-3 text-foreground shadow-[0_30px_80px_rgba(15,23,42,0.08)] transition-colors">
         <Link href="/dashboard" className="flex items-center gap-2 text-lg font-semibold text-foreground">
           <div className="flex flex-col leading-tight">
