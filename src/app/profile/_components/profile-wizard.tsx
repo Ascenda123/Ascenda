@@ -289,13 +289,13 @@ export const ProfileWizard = ({
   }, [stepIndex]);
 
   return (
-    <div className="grid form-grid form-flow text-slate-900 lg:grid-cols-[320px,1fr]">
+    <div className="grid form-grid form-flow text-foreground lg:grid-cols-[320px,1fr]">
       <aside className="form-stack">
         <Button
           asChild
           size="sm"
           variant="secondary"
-          className="w-full border border-slate-900/20 text-slate-900 shadow-[0_10px_30px_rgba(15,23,42,0.12)] hover:shadow-[0_14px_34px_rgba(15,23,42,0.18)] uppercase tracking-[0.2em]"
+          className="w-full border border-border bg-background text-foreground shadow-[0_10px_30px_rgba(15,23,42,0.12)] hover:shadow-[0_14px_34px_rgba(15,23,42,0.18)] uppercase tracking-[0.2em]"
         >
           <Link href="/profile?onboarding=true">Start profile wizard</Link>
         </Button>
@@ -310,8 +310,8 @@ export const ProfileWizard = ({
                   <button
                     type="button"
                     className={cn(
-                      'flex w-full items-start gap-3 rounded-2xl p-2 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300',
-                      active && 'bg-slate-50'
+                      'flex w-full items-start gap-3 rounded-2xl p-2 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                      active && 'bg-muted'
                     )}
                     onClick={() => switchStep(step.key)}
                     disabled={isPending}
@@ -322,20 +322,20 @@ export const ProfileWizard = ({
                         complete
                           ? 'bg-emerald-600 text-white'
                           : active
-                            ? 'bg-slate-900 text-white'
-                            : 'bg-slate-100 text-slate-500'
+                            ? 'bg-primary text-primary-foreground'
+                            : 'bg-muted text-muted-foreground'
                       )}
                       aria-hidden
                     >
                       {complete ? <Check className="h-4 w-4" /> : index + 1}
                     </span>
                     <div>
-                      <p className="text-sm font-semibold text-slate-900">{step.title}</p>
-                      <p className="text-xs text-slate-500">{step.description}</p>
+                      <p className="text-sm font-semibold text-foreground">{step.title}</p>
+                      <p className="text-xs text-muted-foreground">{step.description}</p>
                       <p
                         className={cn(
                           'text-xs font-medium',
-                          complete ? 'text-emerald-600' : active ? 'text-slate-900' : 'text-slate-400'
+                          complete ? 'text-emerald-500' : active ? 'text-foreground' : 'text-muted-foreground'
                         )}
                       >
                         {complete ? 'Complete' : active ? 'In progress' : 'Pending'}
@@ -349,11 +349,11 @@ export const ProfileWizard = ({
         </div>
       </aside>
       <div className="form-panel form-panel--roomy form-stack">
-        <div className="flex items-center justify-between text-xs uppercase tracking-[0.2em] text-slate-400">
+        <div className="flex items-center justify-between text-xs uppercase tracking-[0.2em] text-muted-foreground">
           <span>
             Step {stepIndex + 1} of {PROFILE_STEPS.length}
           </span>
-          <span className={completionState[currentStep] ? 'text-emerald-600' : 'text-slate-500'}>
+          <span className={completionState[currentStep] ? 'text-emerald-500' : 'text-muted-foreground'}>
             {completionState[currentStep] ? 'Saved' : 'In progress'}
           </span>
         </div>
@@ -685,11 +685,11 @@ export const ProfileWizard = ({
                 </p>
               ) : null}
             </div>
-            <label className="form-touch-target flex items-center gap-3 text-sm text-slate-600">
+            <label className="form-touch-target flex items-center gap-3 text-sm text-foreground">
               <input
                 id="aidNeeded"
                 type="checkbox"
-                className="rounded-full border border-slate-200 accent-slate-900"
+                className="rounded-full border border-input bg-background text-primary accent-primary"
                 checked={preferencesForm.watch('aidNeeded')}
                 onChange={(event) => preferencesForm.setValue('aidNeeded', event.target.checked)}
               />
