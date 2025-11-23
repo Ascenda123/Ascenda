@@ -56,31 +56,31 @@ export default function UniversitySearchResultsPage() {
 
   return (
     <div className="space-y-8">
-      <section className="rounded-[32px] border border-slate-100 bg-white p-6 shadow-[0_24px_50px_rgba(15,23,42,0.08)]">
+      <section className="rounded-[32px] border border-border bg-card p-6 shadow-[0_24px_50px_rgba(15,23,42,0.08)] transition-colors">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">Search results</p>
-            <h1 className="text-3xl font-semibold text-slate-900">
+            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-muted-foreground">Search results</p>
+            <h1 className="text-3xl font-semibold text-foreground">
               {normalizedQuery ? `Matches for “${query}”` : 'Preview how universities align with your fit signals.'}
             </h1>
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-muted-foreground">
               This grid is populated with placeholders—the final experience will pull from matches and shortlisted choices.
             </p>
-            <p className="text-xs uppercase tracking-[0.35em] text-slate-400">
+            <p className="text-xs uppercase tracking-[0.35em] text-muted-foreground">
               {hasNoMatches ? 'No matches found' : `${results.length} result${results.length === 1 ? '' : 's'}`}
             </p>
           </div>
-          <div className="rounded-[24px] border border-slate-100 bg-slate-50/70 px-6 py-4 text-center">
-            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-500">Shortlist</p>
-            <p className="text-3xl font-semibold text-slate-900">{shortlist.length}</p>
-            <p className="text-xs text-slate-500">Universities</p>
+          <div className="rounded-[24px] border border-border bg-muted/70 px-6 py-4 text-center">
+            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-muted-foreground">Shortlist</p>
+            <p className="text-3xl font-semibold text-foreground">{shortlist.length}</p>
+            <p className="text-xs text-muted-foreground">Universities</p>
           </div>
         </div>
       </section>
 
-      <section className="space-y-6 rounded-[32px] border border-slate-100 bg-white p-6 shadow-[0_24px_50px_rgba(15,23,42,0.08)]">
+      <section className="space-y-6 rounded-[32px] border border-border bg-card p-6 shadow-[0_24px_50px_rgba(15,23,42,0.08)] transition-colors">
         {hasNoMatches ? (
-          <div className="rounded-[28px] border border-dashed border-slate-200 bg-slate-50/50 p-10 text-center text-slate-500">
+          <div className="rounded-[28px] border border-dashed border-border bg-muted/60 p-10 text-center text-muted-foreground">
             We couldn&apos;t find any placeholder matches for “{query}”. Try another keyword or reset your filters.
           </div>
         ) : (
@@ -88,16 +88,16 @@ export default function UniversitySearchResultsPage() {
             ({ tier, matches }) =>
               matches.length > 0 && (
                 <div key={tier} className="space-y-5">
-                  <div className="flex flex-col gap-2 border-b border-slate-100 pb-3">
+                  <div className="flex flex-col gap-2 border-b border-border pb-3">
                     <div className="flex items-center justify-between gap-4">
-                      <p className="text-xs uppercase tracking-[0.35em] text-slate-400">Tier</p>
+                      <p className="text-xs uppercase tracking-[0.35em] text-muted-foreground">Tier</p>
                       <span className={cn('rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em]', TIER_BADGE_STYLES[tier])}>
                         {tier}
                       </span>
                     </div>
                     <div className="flex flex-col gap-1">
-                      <h2 className="text-2xl font-semibold text-slate-900">{tier} programs</h2>
-                      <p className="text-sm text-slate-500">{TIER_DESCRIPTIONS[tier]}</p>
+                      <h2 className="text-2xl font-semibold text-foreground">{tier} programs</h2>
+                      <p className="text-sm text-muted-foreground">{TIER_DESCRIPTIONS[tier]}</p>
                     </div>
                   </div>
                   <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
@@ -106,23 +106,23 @@ export default function UniversitySearchResultsPage() {
                       return (
                         <article
                           key={`${result.name}-${result.program}`}
-                          className="flex h-full flex-col rounded-[28px] border border-slate-100 bg-white p-5 shadow-[0_18px_45px_rgba(15,23,42,0.07)]"
+                          className="flex h-full flex-col rounded-[28px] border border-border bg-card p-5 shadow-[0_18px_45px_rgba(15,23,42,0.07)] transition-colors"
                         >
                           <div className="flex items-center justify-between">
-                            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">fit score</p>
-                            <span className="text-2xl font-semibold text-slate-900">{result.fitScore}%</span>
+                            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground">fit score</p>
+                            <span className="text-2xl font-semibold text-foreground">{result.fitScore}%</span>
                           </div>
                           <div className="mt-4 flex items-center gap-4">
-                            <div className="h-14 w-14 rounded-2xl bg-slate-200" aria-hidden />
+                            <div className="h-14 w-14 rounded-2xl bg-muted" aria-hidden />
                             <div>
-                              <p className="text-lg font-semibold text-slate-900">{result.name}</p>
-                              <p className="text-sm text-slate-500">{result.program}</p>
-                              <p className="text-xs uppercase tracking-[0.3em] text-slate-400">{result.location}</p>
+                              <p className="text-lg font-semibold text-foreground">{result.name}</p>
+                              <p className="text-sm text-muted-foreground">{result.program}</p>
+                              <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">{result.location}</p>
                             </div>
                           </div>
-                          <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                          <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                             {result.highlights.map((highlight) => (
-                              <span key={highlight} className="rounded-full border border-slate-200 px-3 py-1 text-[11px]">
+                              <span key={highlight} className="rounded-full border border-border px-3 py-1 text-[11px]">
                                 {highlight}
                               </span>
                             ))}

@@ -210,9 +210,9 @@ export default async function ShortlistPage() {
       />
 
       <section className="grid gap-6 lg:grid-cols-[1.5fr,1fr]">
-        <div className="space-y-5 rounded-[34px] border border-slate-100 bg-white p-6 shadow-[0_35px_80px_rgba(15,23,42,0.08)]">
+        <div className="space-y-5 rounded-[34px] border border-border bg-card p-6 text-foreground shadow-[0_35px_80px_rgba(15,23,42,0.08)] transition-colors">
           <ShortlistMarquee label="Live shortlist" tone="light" />
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-muted-foreground">
             Your shortlist stays calm with cadence, modules, and handoffs. Use this snapshot to prep counselor syncs or send parents a
             course digest.
           </p>
