@@ -30,9 +30,9 @@ export interface ProgramCardProps {
 }
 
 const TIER_STYLES: Record<MatchTier, string> = {
-  Reach: 'bg-rose-100 text-rose-800 ring-rose-100',
-  Match: 'bg-amber-100 text-amber-800 ring-amber-100',
-  Safe: 'bg-emerald-100 text-emerald-800 ring-emerald-100'
+  Reach: 'bg-rose-500/15 text-rose-100 ring-rose-200/40 border border-rose-200/30',
+  Match: 'bg-amber-500/15 text-amber-100 ring-amber-200/40 border border-amber-200/30',
+  Safe: 'bg-emerald-500/15 text-emerald-100 ring-emerald-200/40 border border-emerald-200/30'
 };
 
 export const ProgramCard = ({ program, university, scoreBadge, onSave, saved, tier }: ProgramCardProps) => {
@@ -48,7 +48,7 @@ export const ProgramCard = ({ program, university, scoreBadge, onSave, saved, ti
           </div>
           {scoreBadge}
         </div>
-        <div className="flex flex-wrap items-center gap-3 text-sm text-slate-600">
+        <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
           <p className="flex-1">
             {program.field ?? 'General program'} · {program.level ?? 'N/A'} · {program.language ?? 'Language TBD'}
           </p>
@@ -64,24 +64,24 @@ export const ProgramCard = ({ program, university, scoreBadge, onSave, saved, ti
           ) : null}
         </div>
       </CardHeader>
-      <CardContent className="flex flex-1 flex-col gap-4 text-sm text-slate-600">
+      <CardContent className="flex flex-1 flex-col gap-4 text-sm text-muted-foreground">
         <div className="flex flex-wrap gap-6">
           <div>
-            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Tuition</p>
-            <p className="text-base font-semibold text-slate-900">
+            <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Tuition</p>
+            <p className="text-base font-semibold text-foreground">
               {program.tuition ? `${program.currency ?? 'USD'} ${program.tuition.toLocaleString()}` : 'Varies'}
             </p>
           </div>
           <div>
-            <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Ranking</p>
-            <p className="text-base font-semibold text-slate-900">
+            <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Ranking</p>
+            <p className="text-base font-semibold text-foreground">
               {university.rank_overall ? `#${university.rank_overall}` : 'Top university'}
             </p>
           </div>
         </div>
         <div className="mt-auto flex flex-wrap gap-2">
           {program.url ? (
-            <Button asChild variant="outline" size="sm" className="border-slate-200 text-slate-900 hover:bg-slate-50">
+            <Button asChild variant="outline" size="sm" className="border-border text-foreground hover:bg-muted/60">
               <Link href={program.url} target="_blank" rel="noopener noreferrer">
                 View program
               </Link>

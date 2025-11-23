@@ -31,32 +31,32 @@ export const PageHero = ({
   return (
     <section
       className={cn(
-        'rounded-[28px] border border-[#e5e5e7] bg-white p-6 shadow-[0_15px_40px_rgba(15,23,42,0.06)]',
+        'rounded-[28px] border border-border bg-card p-6 text-foreground shadow-[0_15px_40px_rgba(15,23,42,0.06)] transition-colors',
         className
       )}
     >
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="space-y-3">
           {eyebrow ? (
-            <p className="text-[11px] uppercase tracking-[0.5em] text-slate-400">{eyebrow}</p>
+            <p className="text-[11px] uppercase tracking-[0.5em] text-muted-foreground">{eyebrow}</p>
           ) : null}
           <div className="space-y-2">
-            <div className="inline-flex items-center gap-2 rounded-full border border-[#e5e5e7] bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.4em] text-slate-500">
+            <div className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.4em] text-muted-foreground">
               <span>{accent}</span>
-              {highlight ? <span className="text-slate-900">{highlight}</span> : null}
+              {highlight ? <span className="text-foreground">{highlight}</span> : null}
             </div>
-            <h1 className="text-3xl font-semibold text-slate-900 md:text-4xl">{title}</h1>
-            <p className="max-w-xl text-sm text-slate-500">{description}</p>
+            <h1 className="text-3xl font-semibold text-foreground md:text-4xl">{title}</h1>
+            <p className="max-w-xl text-sm text-muted-foreground">{description}</p>
           </div>
           {actions ? <div className="flex flex-wrap gap-2">{actions}</div> : null}
         </div>
         {stats && stats.length > 0 ? (
           <div className="grid gap-3 sm:grid-cols-3">
             {stats.map((stat) => (
-              <div key={stat.label} className="rounded-2xl border border-[#e5e5e7] bg-white px-4 py-3 text-center">
-                <p className="text-2xl font-semibold text-slate-900">{stat.value}</p>
-                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400">{stat.label}</p>
-                {stat.detail ? <p className="text-[11px] text-slate-500">{stat.detail}</p> : null}
+              <div key={stat.label} className="rounded-2xl border border-border bg-background px-4 py-3 text-center shadow-sm transition-colors">
+                <p className="text-2xl font-semibold text-foreground">{stat.value}</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground">{stat.label}</p>
+                {stat.detail ? <p className="text-[11px] text-muted-foreground">{stat.detail}</p> : null}
               </div>
             ))}
           </div>

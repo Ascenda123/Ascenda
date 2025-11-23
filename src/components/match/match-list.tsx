@@ -111,13 +111,13 @@ export const MatchList = ({ matches }: MatchListProps) => {
 
   return (
     <div className="space-y-6">
-      <section className="space-y-4 rounded-[32px] border border-[#e5e5e7] bg-white p-5 shadow-[0_20px_50px_rgba(15,23,42,0.08)]">
+      <section className="space-y-4 rounded-[32px] border border-border bg-card p-5 text-foreground shadow-[0_20px_50px_rgba(15,23,42,0.08)] transition-colors">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4">
           <div>
             <Label htmlFor="country-filter">Country</Label>
             <select
               id="country-filter"
-              className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/30"
+              className="mt-2 w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               value={country}
               onChange={(event) => setCountry(event.target.value)}
             >
@@ -133,7 +133,7 @@ export const MatchList = ({ matches }: MatchListProps) => {
             <Label htmlFor="language-filter">Language</Label>
             <select
               id="language-filter"
-              className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/30"
+              className="mt-2 w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               value={language}
               onChange={(event) => setLanguage(event.target.value)}
             >
@@ -149,7 +149,7 @@ export const MatchList = ({ matches }: MatchListProps) => {
             <Label htmlFor="level-filter">Level</Label>
             <select
               id="level-filter"
-              className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/30"
+              className="mt-2 w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               value={level}
               onChange={(event) => setLevel(event.target.value)}
             >
@@ -181,10 +181,10 @@ export const MatchList = ({ matches }: MatchListProps) => {
                   key={`${filter.label}-${filter.value}`}
                   type="button"
                   onClick={filter.onClear}
-                  className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600 transition hover:border-slate-400"
+                  className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1 text-xs font-semibold text-muted-foreground transition hover:border-primary/40 hover:text-foreground"
                 >
-                  <span className="text-slate-400">{filter.label}</span>
-                  <span className="text-slate-900">{filter.value}</span>
+                  <span className="text-muted-foreground">{filter.label}</span>
+                  <span className="text-foreground">{filter.value}</span>
                   <span aria-hidden>✕</span>
                 </button>
               ))}
@@ -193,7 +193,7 @@ export const MatchList = ({ matches }: MatchListProps) => {
               </Button>
             </>
           ) : (
-            <p className="text-xs text-slate-500">Apply filters to shape your shortlist. Fit Scores update instantly.</p>
+            <p className="text-xs text-muted-foreground">Apply filters to shape your shortlist. Fit Scores update instantly.</p>
           )}
         </div>
       </section>

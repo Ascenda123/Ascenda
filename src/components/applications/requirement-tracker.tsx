@@ -16,20 +16,20 @@ const STATUS_LABEL: Record<RequirementItem['status'], string> = {
 };
 
 const STATUS_TONE: Record<RequirementItem['status'], string> = {
-  pending: 'bg-amber-100 text-amber-800',
-  requested: 'bg-sky-100 text-sky-800',
-  submitted: 'bg-emerald-100 text-emerald-800'
+  pending: 'bg-amber-500/15 text-amber-100 border border-amber-200/40',
+  requested: 'bg-sky-500/15 text-sky-100 border border-sky-200/40',
+  submitted: 'bg-emerald-500/15 text-emerald-100 border border-emerald-200/40'
 };
 
 export const RequirementTracker = ({ items }: { items: RequirementItem[] }) => {
   return (
-    <div className="space-y-4 rounded-[36px] border border-[#e5e5e7] bg-white p-6 shadow-[0_25px_60px_rgba(15,23,42,0.08)]">
+    <div className="space-y-4 rounded-[36px] border border-border bg-card p-6 text-foreground shadow-[0_25px_60px_rgba(15,23,42,0.08)] transition-colors">
       <header className="flex items-center justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-semibold text-slate-900">Documents & references</h2>
-          <p className="text-sm text-slate-500">Every document and recommendation in one glance.</p>
+          <h2 className="text-2xl font-semibold text-foreground">Documents & references</h2>
+          <p className="text-sm text-muted-foreground">Every document and recommendation in one glance.</p>
         </div>
-        <Button size="sm" variant="ghost" className="rounded-full px-3 text-xs uppercase tracking-[0.3em] text-slate-500">
+        <Button size="sm" variant="ghost" className="rounded-full px-3 text-xs uppercase tracking-[0.3em] text-muted-foreground">
           Update status
         </Button>
       </header>
@@ -49,22 +49,22 @@ export const RequirementTracker = ({ items }: { items: RequirementItem[] }) => {
         ).map((item) => (
           <article
             key={item.id}
-            className="flex flex-col gap-3 rounded-[26px] border border-[#e5e5e7] bg-white p-5 shadow-[0_18px_45px_rgba(15,23,42,0.08)]"
+            className="flex flex-col gap-3 rounded-[26px] border border-border bg-card/80 p-5 text-foreground shadow-[0_18px_45px_rgba(15,23,42,0.08)] transition-colors"
           >
             <div className="min-h-[3rem]">
-              <p className="text-base font-semibold text-slate-900 truncate" title={item.requirement}>
+              <p className="text-base font-semibold text-foreground truncate" title={item.requirement}>
                 {item.requirement}
               </p>
-              <p className="text-xs text-slate-500 truncate">{item.application || 'Add an application'}</p>
+              <p className="text-xs text-muted-foreground truncate">{item.application || 'Add an application'}</p>
             </div>
-            <div className="flex items-center justify-between text-xs text-slate-500">
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
               <div className="min-w-[40%]">
-                <p className="uppercase tracking-[0.3em] text-slate-400">Owner</p>
-                <p className="text-sm text-slate-700 truncate">{item.owner || 'You'}</p>
+                <p className="uppercase tracking-[0.3em] text-muted-foreground">Owner</p>
+                <p className="text-sm text-foreground truncate">{item.owner || 'You'}</p>
               </div>
               <div>
-                <p className="uppercase tracking-[0.3em] text-slate-400">Due</p>
-                <p className="text-sm text-slate-700">{item.dueDate ?? 'Rolling'}</p>
+                <p className="uppercase tracking-[0.3em] text-muted-foreground">Due</p>
+                <p className="text-sm text-foreground">{item.dueDate ?? 'Rolling'}</p>
               </div>
             </div>
             <div className="flex items-center justify-between gap-3">
