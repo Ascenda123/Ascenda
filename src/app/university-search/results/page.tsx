@@ -7,19 +7,8 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { MatchTier } from '@/lib/matching/engine';
 import { useShortlist } from '@/components/university-search/shortlist-store';
+import { placeholderResults, TIER_ORDER, type PlaceholderResult } from '@/components/university-search/placeholder-results';
 
-type PlaceholderResult = {
-  id: string;
-  name: string;
-  program: string;
-  location: string;
-  fitScore: number;
-  highlights: string[];
-  nextAction: string;
-  due: string;
-};
-
-const TIER_ORDER: MatchTier[] = ['Reach', 'Match', 'Safe'];
 const TIER_DESCRIPTIONS: Record<MatchTier, string> = {
   Reach: 'Prestigious programs that stretch your profile.',
   Match: 'Programs that align closely with your interests and stats.',
@@ -30,75 +19,6 @@ const TIER_BADGE_STYLES: Record<MatchTier, string> = {
   Match: 'bg-amber-100 text-amber-800 ring-amber-100',
   Safe: 'bg-emerald-100 text-emerald-800 ring-emerald-100'
 };
-
-const tierForFitScore = (score: number): MatchTier => {
-  if (score >= 88) return 'Reach';
-  if (score >= 82) return 'Match';
-  return 'Safe';
-};
-
-const placeholderResults = [
-  {
-    id: 'harvard-computational-design',
-    name: 'Harvard University',
-    program: 'Computational Design',
-    location: 'Cambridge, USA',
-    fitScore: 92,
-    highlights: ['Studio-based learning', 'Research mentorship', 'Portfolio review'],
-    nextAction: 'Flag portfolio pieces for counselor review.',
-    due: 'Outline by May 20'
-  },
-  {
-    id: 'stanford-engineering-society',
-    name: 'Stanford University',
-    program: 'Engineering & Society',
-    location: 'Palo Alto, USA',
-    fitScore: 88,
-    highlights: ['Silicon Valley immersion', 'Entrepreneurship minor', 'Campus incubator'],
-    nextAction: 'Draft note on why social impact matters to you.',
-    due: 'Journal entry by May 18'
-  },
-  {
-    id: 'oxford-phil-politics',
-    name: 'University of Oxford',
-    program: 'Philosophy & Politics',
-    location: 'Oxford, UK',
-    fitScore: 85,
-    highlights: ['Tutorial model', 'Collegiate community', 'Essay-focused'],
-    nextAction: 'Collect writing samples for tutorial preview.',
-    due: 'Samples ready by May 25'
-  },
-  {
-    id: 'eth-robotics-ai',
-    name: 'ETH Zürich',
-    program: 'Robotics & AI',
-    location: 'Zürich, Switzerland',
-    fitScore: 83,
-    highlights: ['Lab rotations', 'Co-op terms', 'German immersion'],
-    nextAction: 'Review language course options with counselor.',
-    due: 'Plan session by May 30'
-  },
-  {
-    id: 'nus-global-business',
-    name: 'National University of Singapore',
-    program: 'Global Business',
-    location: 'Singapore',
-    fitScore: 80,
-    highlights: ['Southeast Asia markets', 'Dual degree pathways', 'City campus'],
-    nextAction: 'Research internships in Singapore to cite interest.',
-    due: 'Talking points by June 3'
-  },
-  {
-    id: 'utoronto-data-science',
-    name: 'University of Toronto',
-    program: 'Data Science',
-    location: 'Toronto, Canada',
-    fitScore: 78,
-    highlights: ['Co-op placements', 'Urban campus', 'AI research hub'],
-    nextAction: 'List tech clubs to explore if admitted.',
-    due: 'Club shortlist by June 8'
-  }
-].map((result) => ({ ...result, tier: tierForFitScore(result.fitScore) })) satisfies (PlaceholderResult & { tier: MatchTier })[];
 
 export default function UniversitySearchResultsPage() {
   const searchParams = useSearchParams();
@@ -207,18 +127,21 @@ export default function UniversitySearchResultsPage() {
                               </span>
                             ))}
                           </div>
-                          <div className="mt-auto flex flex-col gap-3 pt-5 sm:flex-row sm:items-center sm:justify-between">
-                            <Button asChild size="sm" variant="soft" className="w-full sm:w-auto">
-                              <Link href={`/course/${result.id}`}>View details</Link>
+                          <div className="mt-auto grid gap-2 pt-5 sm:grid-cols-2 lg:grid-cols-3">
+                            <Button asChild size="sm" variant="soft" className="w-full">
+                              <Link href={`/course/${result.id}`}>Course details</Link>
                             </Button>
                             <Button
                               size="sm"
                               variant="soft"
-                              className="w-full sm:w-auto"
+                              className="w-full"
                               onClick={() => handleAdd(result)}
                               disabled={isShortlisted}
                             >
                               {isShortlisted ? 'Shortlisted' : 'Add to shortlist'}
+                            </Button>
+                            <Button asChild size="sm" variant="outline" className="w-full">
+                              <Link href={`/university-search/university/${result.id}?from=search`}>University info</Link>
                             </Button>
                           </div>
                         </article>

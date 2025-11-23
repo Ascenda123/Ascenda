@@ -273,7 +273,6 @@ const courseDataset: CourseData[] = [
 ];
 
 export default function CoursePage({ params }: { params: { id: string } }) {
-  const [activeTab, setActiveTab] = useState<'course' | 'university'>('course');
   const [shortlisted, setShortlisted] = useState(false);
 
   const course = useMemo(() => {
@@ -304,7 +303,7 @@ export default function CoursePage({ params }: { params: { id: string } }) {
     <div className="min-h-screen bg-[#f5f5f7] text-slate-900">
       <Navbar />
       <div className="mx-auto max-w-screen-2xl space-y-10 px-4 py-10 md:px-8 lg:px-12">
-        <Hero activeTab={activeTab} onTabChange={setActiveTab} shortlisted={shortlisted} onShortlist={() => setShortlisted(!shortlisted)} meta={heroMeta} />
+        <Hero shortlisted={shortlisted} onShortlist={() => setShortlisted(!shortlisted)} meta={heroMeta} programId={course.id} />
 
         <div className="space-y-8">
           <div className="grid gap-4 md:grid-cols-2">
@@ -552,17 +551,15 @@ const ModuleIcon = ({ label }: { label: string }) => {
 };
 
 const Hero = ({
-  activeTab,
-  onTabChange,
   shortlisted,
   onShortlist,
-  meta
+  meta,
+  programId
 }: {
-  activeTab: 'course' | 'university';
-  onTabChange: (tab: 'course' | 'university') => void;
   shortlisted: boolean;
   onShortlist: () => void;
   meta: { title: string; university: string; location: string };
+  programId: string;
 }) => {
   return (
     <Card className="border-slate-100 bg-white shadow-[0_28px_70px_rgba(15,23,42,0.08)]">
@@ -598,17 +595,13 @@ const Hero = ({
 
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap gap-2">
-            {(['course', 'university'] as const).map((tab) => (
-              <button
-                key={tab}
-                onClick={() => onTabChange(tab)}
-                className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${
-                  activeTab === tab ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-200 bg-white text-slate-700'
-                }`}
-              >
-                {tab === 'course' ? 'Course' : 'University'}
-              </button>
-            ))}
+            <span className="rounded-full border border-slate-900 bg-slate-900 px-4 py-2 text-sm font-semibold text-white">Course</span>
+            <Link
+              href={`/university-search/university/${programId}?from=course`}
+              className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-900 hover:bg-slate-900 hover:text-white"
+            >
+              University
+            </Link>
           </div>
           <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-slate-600">
             <span>Fall 2025</span>
