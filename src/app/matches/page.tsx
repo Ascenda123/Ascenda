@@ -28,11 +28,7 @@ export default async function MatchesPage() {
     supabase.from('student_aspirations').select('*').eq('profile_id', user.id).single()
   ]);
 
-  const academics = academicsData as unknown as MatchInput['academics'];
-  const preferences = preferencesData as unknown as MatchInput['preferences'];
-  const aspirations = aspirationsData as unknown as MatchInput['aspirations'];
-
-  if (!academics || !preferences || !aspirations) {
+  if (!academicsData || !preferencesData || !aspirationsData) {
     return (
       <DashboardShell>
         <PageHero
@@ -60,11 +56,11 @@ export default async function MatchesPage() {
     supabase.from('program_requirements').select('*')
   ]);
 
-  const programs = programsData as unknown as Program[];
-  const universities = universitiesData as unknown as University[];
-  const requirements = requirementsData as unknown as ProgramRequirement[];
+  const programsRaw = programsData ?? [];
+  const universitiesRaw = universitiesData ?? [];
+  const requirementsRaw = requirementsData ?? [];
 
-  if (!programs || !universities) {
+  if (programsRaw.length === 0 || universitiesRaw.length === 0) {
     return (
       <DashboardShell>
         <div className="rounded-[28px] border border-dashed border-slate-200 bg-slate-50/50 p-8 text-center text-slate-500">
@@ -74,12 +70,81 @@ export default async function MatchesPage() {
     );
   }
 
-  const requirementMap = new Map(requirements?.map((item) => [item.program_id, item]) ?? []);
+  // Transform catalog data to camelCase
+  const programs: Program[] = programsRaw.map((p: any) => ({
+    id: p.id,
+    name: p.name,
+    field: p.field,
+    level: p.level,
+    durationYears: p.duration_years,
+    language: p.language,
+    mode: p.mode,
+    intakeMonths: p.intake_months,
+    tuition: p.tuition,
+    currency: p.currency,
+    url: p.url,
+    universityId: p.university_id
+  }));
+
+  const universities: University[] = universitiesRaw.map((u: any) => ({
+    id: u.id,
+    name: u.name,
+    country: u.country,
+    region: u.region,
+    rankOverall: u.rank_overall,
+    rankSource: u.rank_source,
+    acceptanceRate: u.acceptance_rate,
+    requiresTest: u.requires_test
+  }));
+
+  const requirements: ProgramRequirement[] = requirementsRaw.map((r: any) => ({
+    programId: r.program_id,
+    curriculum: r.curriculum,
+    minGpa: r.min_gpa,
+    minIbTotal: r.min_ib_total,
+    minSat: r.min_sat,
+    minAct: r.min_act,
+    requiredSubjects: r.required_subjects,
+    languageTests: r.language_tests,
+    otherRequirements: r.other_requirements
+  }));
+
+  const requirementMap = new Map(requirements.map((item) => [item.programId, item]));
   const universityMap = new Map(universities.map((item) => [item.id, item]));
 
-  const inputs: MatchInput[] = programs
+  // Transform user profile data to camelCase
+  const academics = {
+    curriculum: academicsData.curriculum,
+    gpa: academicsData.gpa,
+    ibTotal: academicsData.ib_total,
+    sat: academicsData.sat,
+    act: academicsData.act,
+    toefl: academicsData.toefl,
+    ielts: academicsData.ielts,
+    subjectGrades: academicsData.subject_grades
+  };
+
+  const preferences = {
+    budgetMin: preferencesData.budget_min,
+    budgetMax: preferencesData.budget_max,
+    aidNeeded: preferencesData.aid_needed,
+    countries: preferencesData.countries,
+    languages: preferencesData.languages,
+    campusType: preferencesData.campus_type,
+    setting: preferencesData.setting,
+    size: preferencesData.size,
+    programLevels: preferencesData.program_levels,
+    delivery: preferencesData.delivery
+  };
+
+  const aspirations = {
+    targetFields: aspirationsData.target_fields,
+    jobTitles: aspirationsData.job_titles
+  };
+
+  const inputs = programs
     .map((program) => {
-      const university = universityMap.get(program.university_id);
+      const university = universityMap.get(program.universityId);
       if (!university) return null;
       return {
         academics,
@@ -87,7 +152,7 @@ export default async function MatchesPage() {
         aspirations,
         program,
         university,
-        requirement: requirementMap.get(program.id) ?? undefined
+        requirement: requirementMap.get(program.id)
       } as MatchInput;
     })
     .filter((value): value is MatchInput => value !== null);

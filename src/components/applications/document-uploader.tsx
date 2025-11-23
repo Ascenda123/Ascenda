@@ -71,37 +71,37 @@ export const DocumentUploader = ({ onUpload }: DocumentUploaderProps) => {
   };
 
   return (
-    <div className="space-y-4 rounded-[30px] border border-[#e5e5e7] bg-white p-6 text-sm shadow-[0_25px_50px_rgba(15,23,42,0.08)]">
+    <div className="space-y-4 rounded-[30px] border border-border bg-card p-6 text-sm shadow-[0_25px_50px_rgba(15,23,42,0.08)]">
       <div>
         <Label htmlFor="document-upload">Upload document</Label>
-        <p className="text-xs text-slate-500">PDF, DOCX up to 20 MB.</p>
+        <p className="text-xs text-muted-foreground">PDF, DOCX up to 20 MB.</p>
       </div>
       <label
         htmlFor="document-upload"
-        className="group flex cursor-pointer flex-col items-center justify-center gap-2 rounded-[26px] border border-dashed border-slate-200 bg-slate-50/60 p-8 text-center transition hover:border-slate-400 hover:bg-white"
+        className="group flex cursor-pointer flex-col items-center justify-center gap-2 rounded-[26px] border border-dashed border-border bg-muted/60 p-8 text-center transition hover:border-muted-foreground hover:bg-card"
       >
         <span className="text-2xl">⬆️</span>
-        <p className="text-sm font-semibold text-slate-900">Drag & drop or click to browse</p>
-        <p className="text-xs text-slate-500">We auto-tag the document to the right checklist item.</p>
+        <p className="text-sm font-semibold text-foreground">Drag & drop or click to browse</p>
+        <p className="text-xs text-muted-foreground">We auto-tag the document to the right checklist item.</p>
       </label>
       <input id="document-upload" type="file" className="hidden" onChange={handleFileChange} disabled={isUploading} />
-      {status ? <p className="text-xs text-slate-500">{status}</p> : <p className="text-xs text-slate-400">No document selected yet.</p>}
+      {status ? <p className="text-xs text-muted-foreground">{status}</p> : <p className="text-xs text-muted-foreground">No document selected yet.</p>}
       {error ? (
         <p className="text-xs text-red-500" role="alert">
           {error}
         </p>
       ) : null}
       {uploaded.length ? (
-        <ul className="space-y-2 text-xs text-slate-600">
+        <ul className="space-y-2 text-xs text-muted-foreground">
           {uploaded.map((item) => (
-            <li key={`${item.name}-${item.url ?? 'local'}`} className="flex items-center justify-between gap-3 rounded-2xl border border-slate-100 px-3 py-2">
+            <li key={`${item.name}-${item.url ?? 'local'}`} className="flex items-center justify-between gap-3 rounded-2xl border border-border px-3 py-2">
               <span className="truncate font-medium">{item.name}</span>
               {item.url ? (
                 <a
                   href={item.url}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-[11px] uppercase tracking-[0.3em] text-slate-500 hover:text-slate-900"
+                  className="text-[11px] uppercase tracking-[0.3em] text-muted-foreground hover:text-foreground"
                 >
                   View
                 </a>

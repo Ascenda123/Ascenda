@@ -74,7 +74,7 @@ const JOB_TITLE_OPTIONS = [
 
 const STEP_PAGE_TRANSITION = {
   duration: 0.45,
-  ease: [0.32, 0.72, 0, 1]
+  ease: [0.32, 0.72, 0, 1] as const
 };
 
 const STEP_PAGE_VARIANTS = {
@@ -263,7 +263,7 @@ export const ProfileWizard = ({
     if (!trimmed) {
       return;
     }
-    const current = aspirationsForm.getValues('targetFields');
+    const current = aspirationsForm.getValues('targetFields') || [];
     const nextValues = current.includes(trimmed) ? current : [...current, trimmed];
     aspirationsForm.setValue('targetFields', nextValues, { shouldValidate: true });
     setTargetFieldOther('');
@@ -274,7 +274,7 @@ export const ProfileWizard = ({
     if (!trimmed) {
       return;
     }
-    const current = aspirationsForm.getValues('jobTitles');
+    const current = aspirationsForm.getValues('jobTitles') || [];
     const nextValues = current.includes(trimmed) ? current : [...current, trimmed];
     aspirationsForm.setValue('jobTitles', nextValues, { shouldValidate: true });
     setJobTitleOther('');
@@ -374,53 +374,53 @@ export const ProfileWizard = ({
               animate="animate"
               exit="exit"
             >
-            <input type="hidden" {...personalForm.register('locale')} />
-            <div className="form-field">
-              <Label className="form-label" htmlFor="fullName">
-                Full name
-              </Label>
-              <Input id="fullName" className="form-input" {...personalForm.register('fullName')} />
-              {personalForm.formState.errors.fullName ? (
-                <p className="form-feedback form-feedback--error" role="alert">
-                  {personalForm.formState.errors.fullName.message}
-                </p>
-              ) : null}
-            </div>
-            <div className="form-field">
-              <Label className="form-label" htmlFor="country">
-                Home country
-              </Label>
-              <HomeCountrySelect
-                id="country"
-                value={personalForm.watch('country')}
-                onChange={(value) => personalForm.setValue('country', value)}
-              />
-              {personalForm.formState.errors.country ? (
-                <p className="form-feedback form-feedback--error" role="alert">
-                  {personalForm.formState.errors.country.message}
-                </p>
-              ) : null}
-            </div>
-            <div className="form-field">
-              <Label className="form-label" htmlFor="timeZone">
-                Time zone
-              </Label>
-              <Input id="timeZone" className="form-input" readOnly {...personalForm.register('timeZone')} />
-              {personalForm.formState.errors.timeZone ? (
-                <p className="form-feedback form-feedback--error" role="alert">
-                  {personalForm.formState.errors.timeZone.message}
-                </p>
-              ) : null}
-            </div>
-            <Button
-              type="submit"
-              variant="secondary"
-              className="form-action"
-              disabled={isPending}
-              data-loading={isPending ? 'true' : undefined}
-            >
-              Save and continue
-            </Button>
+              <input type="hidden" {...personalForm.register('locale')} />
+              <div className="form-field">
+                <Label className="form-label" htmlFor="fullName">
+                  Full name
+                </Label>
+                <Input id="fullName" className="form-input" {...personalForm.register('fullName')} />
+                {personalForm.formState.errors.fullName ? (
+                  <p className="form-feedback form-feedback--error" role="alert">
+                    {personalForm.formState.errors.fullName.message}
+                  </p>
+                ) : null}
+              </div>
+              <div className="form-field">
+                <Label className="form-label" htmlFor="country">
+                  Home country
+                </Label>
+                <HomeCountrySelect
+                  id="country"
+                  value={personalForm.watch('country')}
+                  onChange={(value) => personalForm.setValue('country', value)}
+                />
+                {personalForm.formState.errors.country ? (
+                  <p className="form-feedback form-feedback--error" role="alert">
+                    {personalForm.formState.errors.country.message}
+                  </p>
+                ) : null}
+              </div>
+              <div className="form-field">
+                <Label className="form-label" htmlFor="timeZone">
+                  Time zone
+                </Label>
+                <Input id="timeZone" className="form-input" readOnly {...personalForm.register('timeZone')} />
+                {personalForm.formState.errors.timeZone ? (
+                  <p className="form-feedback form-feedback--error" role="alert">
+                    {personalForm.formState.errors.timeZone.message}
+                  </p>
+                ) : null}
+              </div>
+              <Button
+                type="submit"
+                variant="secondary"
+                className="form-action"
+                disabled={isPending}
+                data-loading={isPending ? 'true' : undefined}
+              >
+                Save and continue
+              </Button>
             </motion.form>
           ) : null}
 
@@ -435,122 +435,122 @@ export const ProfileWizard = ({
               animate="animate"
               exit="exit"
             >
-            <div className="form-field">
-              <Label className="form-label" htmlFor="curriculum">
-                Curriculum
-              </Label>
-              <select id="curriculum" {...academicsForm.register('curriculum')} className="form-input">
-                <option value="">Select curriculum</option>
-                {CURRICULUM_OPTIONS.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
-              {academicsForm.formState.errors.curriculum ? (
-                <p className="form-feedback form-feedback--error" role="alert">
-                  {academicsForm.formState.errors.curriculum.message}
-                </p>
-              ) : null}
-            </div>
-            <div className="grid form-grid sm:grid-cols-2">
               <div className="form-field">
-                <Label className="form-label" htmlFor="gpa">
-                  GPA
+                <Label className="form-label" htmlFor="curriculum">
+                  Curriculum
                 </Label>
-                <Input
-                  id="gpa"
-                  type="number"
-                  step="0.01"
-                  min={0}
-                  max={4}
-                  className="form-input"
-                  {...academicsForm.register('gpa', { valueAsNumber: true })}
-                />
+                <select id="curriculum" {...academicsForm.register('curriculum')} className="form-input">
+                  <option value="">Select curriculum</option>
+                  {CURRICULUM_OPTIONS.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+                {academicsForm.formState.errors.curriculum ? (
+                  <p className="form-feedback form-feedback--error" role="alert">
+                    {academicsForm.formState.errors.curriculum.message}
+                  </p>
+                ) : null}
+              </div>
+              <div className="grid form-grid sm:grid-cols-2">
+                <div className="form-field">
+                  <Label className="form-label" htmlFor="gpa">
+                    GPA
+                  </Label>
+                  <Input
+                    id="gpa"
+                    type="number"
+                    step="0.01"
+                    min={0}
+                    max={4}
+                    className="form-input"
+                    {...academicsForm.register('gpa', { valueAsNumber: true })}
+                  />
+                </div>
+                <div className="form-field">
+                  <Label className="form-label" htmlFor="ibTotal">
+                    IB Total
+                  </Label>
+                  <Input
+                    id="ibTotal"
+                    type="number"
+                    min={0}
+                    max={45}
+                    className="form-input"
+                    {...academicsForm.register('ibTotal', { valueAsNumber: true })}
+                  />
+                </div>
+                <div className="form-field">
+                  <Label className="form-label" htmlFor="sat">
+                    SAT
+                  </Label>
+                  <Input
+                    id="sat"
+                    type="number"
+                    min={400}
+                    max={1600}
+                    className="form-input"
+                    {...academicsForm.register('sat', { valueAsNumber: true })}
+                  />
+                </div>
+                <div className="form-field">
+                  <Label className="form-label" htmlFor="act">
+                    ACT
+                  </Label>
+                  <Input
+                    id="act"
+                    type="number"
+                    min={1}
+                    max={36}
+                    className="form-input"
+                    {...academicsForm.register('act', { valueAsNumber: true })}
+                  />
+                </div>
+                <div className="form-field">
+                  <Label className="form-label" htmlFor="toefl">
+                    TOEFL
+                  </Label>
+                  <Input
+                    id="toefl"
+                    type="number"
+                    min={0}
+                    max={120}
+                    className="form-input"
+                    {...academicsForm.register('toefl', { valueAsNumber: true })}
+                  />
+                </div>
+                <div className="form-field">
+                  <Label className="form-label" htmlFor="ielts">
+                    IELTS
+                  </Label>
+                  <Input
+                    id="ielts"
+                    type="number"
+                    min={0}
+                    max={9}
+                    step="0.5"
+                    className="form-input"
+                    {...academicsForm.register('ielts', { valueAsNumber: true })}
+                  />
+                </div>
               </div>
               <div className="form-field">
-                <Label className="form-label" htmlFor="ibTotal">
-                  IB Total
-                </Label>
-                <Input
-                  id="ibTotal"
-                  type="number"
-                  min={0}
-                  max={45}
-                  className="form-input"
-                  {...academicsForm.register('ibTotal', { valueAsNumber: true })}
+                <Label className="form-label">Subject grades</Label>
+                <SubjectGradeTable
+                  value={academicsForm.watch('subjectGrades')}
+                  onChange={(rows) => academicsForm.setValue('subjectGrades', rows)}
                 />
               </div>
-              <div className="form-field">
-                <Label className="form-label" htmlFor="sat">
-                  SAT
-                </Label>
-                <Input
-                  id="sat"
-                  type="number"
-                  min={400}
-                  max={1600}
-                  className="form-input"
-                  {...academicsForm.register('sat', { valueAsNumber: true })}
-                />
-              </div>
-              <div className="form-field">
-                <Label className="form-label" htmlFor="act">
-                  ACT
-                </Label>
-                <Input
-                  id="act"
-                  type="number"
-                  min={1}
-                  max={36}
-                  className="form-input"
-                  {...academicsForm.register('act', { valueAsNumber: true })}
-                />
-              </div>
-              <div className="form-field">
-                <Label className="form-label" htmlFor="toefl">
-                  TOEFL
-                </Label>
-                <Input
-                  id="toefl"
-                  type="number"
-                  min={0}
-                  max={120}
-                  className="form-input"
-                  {...academicsForm.register('toefl', { valueAsNumber: true })}
-                />
-              </div>
-              <div className="form-field">
-                <Label className="form-label" htmlFor="ielts">
-                  IELTS
-                </Label>
-                <Input
-                  id="ielts"
-                  type="number"
-                  min={0}
-                  max={9}
-                  step="0.5"
-                  className="form-input"
-                  {...academicsForm.register('ielts', { valueAsNumber: true })}
-                />
-              </div>
-            </div>
-            <div className="form-field">
-              <Label className="form-label">Subject grades</Label>
-              <SubjectGradeTable
-                value={academicsForm.watch('subjectGrades')}
-                onChange={(rows) => academicsForm.setValue('subjectGrades', rows)}
-              />
-            </div>
-            <Button
-              type="submit"
-              variant="secondary"
-              className="form-action"
-              disabled={isPending}
-              data-loading={isPending ? 'true' : undefined}
-            >
-              Save and continue
-            </Button>
+              <Button
+                type="submit"
+                variant="secondary"
+                className="form-action"
+                disabled={isPending}
+                data-loading={isPending ? 'true' : undefined}
+              >
+                Save and continue
+              </Button>
             </motion.form>
           ) : null}
 
@@ -565,145 +565,145 @@ export const ProfileWizard = ({
               animate="animate"
               exit="exit"
             >
-            <div className="grid form-grid sm:grid-cols-2">
+              <div className="grid form-grid sm:grid-cols-2">
+                <div className="form-field">
+                  <Label className="form-label" htmlFor="budgetMin">
+                    Budget minimum (USD)
+                  </Label>
+                  <Input
+                    id="budgetMin"
+                    type="number"
+                    className="form-input"
+                    {...preferencesForm.register('budgetMin', { valueAsNumber: true })}
+                  />
+                </div>
+                <div className="form-field">
+                  <Label className="form-label" htmlFor="budgetMax">
+                    Budget maximum (USD)
+                  </Label>
+                  <Input
+                    id="budgetMax"
+                    type="number"
+                    className="form-input"
+                    {...preferencesForm.register('budgetMax', { valueAsNumber: true })}
+                  />
+                </div>
+              </div>
               <div className="form-field">
-                <Label className="form-label" htmlFor="budgetMin">
-                  Budget minimum (USD)
+                <Label className="form-label" id="countries-label">
+                  Preferred countries
                 </Label>
-                <Input
-                  id="budgetMin"
-                  type="number"
-                  className="form-input"
-                  {...preferencesForm.register('budgetMin', { valueAsNumber: true })}
+                <CountrySelect
+                  id="countries"
+                  name="countries"
+                  value={preferencesForm.watch('countries')}
+                  onChange={(val) => preferencesForm.setValue('countries', val as any)}
                 />
+                {preferencesForm.formState.errors.countries ? (
+                  <p className="form-feedback form-feedback--error" role="alert">
+                    {preferencesForm.formState.errors.countries.message}
+                  </p>
+                ) : null}
+              </div>
+              <div className="grid form-grid sm:grid-cols-2">
+                <div className="form-field">
+                  <Label className="form-label" htmlFor="campusType">
+                    Campus type
+                  </Label>
+                  <select id="campusType" {...preferencesForm.register('campusType')} className="form-input">
+                    <option value="">Select campus type</option>
+                    {CAMPUS_TYPE_OPTIONS.map((option) => (
+                      <option key={option} value={option}>
+                        {humanizeLabel(option)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="form-field">
+                  <Label className="form-label" htmlFor="setting">
+                    Setting
+                  </Label>
+                  <select id="setting" {...preferencesForm.register('setting')} className="form-input">
+                    <option value="">Select setting</option>
+                    {SETTING_TYPE_OPTIONS.map((option) => (
+                      <option key={option} value={option}>
+                        {humanizeLabel(option)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="form-field">
+                  <Label className="form-label" htmlFor="size">
+                    Size
+                  </Label>
+                  <select id="size" {...preferencesForm.register('size')} className="form-input">
+                    <option value="">Select size</option>
+                    {SIZE_OPTIONS.map((option) => (
+                      <option key={option} value={option}>
+                        {humanizeLabel(option)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="form-field">
+                  <Label className="form-label" htmlFor="delivery">
+                    Delivery
+                  </Label>
+                  <select id="delivery" {...preferencesForm.register('delivery')} className="form-input">
+                    <option value="">Select delivery</option>
+                    {DELIVERY_OPTIONS.map((option) => (
+                      <option key={option} value={option}>
+                        {humanizeLabel(option)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
               <div className="form-field">
-                <Label className="form-label" htmlFor="budgetMax">
-                  Budget maximum (USD)
+                <Label className="form-label" htmlFor="programLevels">
+                  Program level
                 </Label>
-                <Input
-                  id="budgetMax"
-                  type="number"
-                  className="form-input"
-                  {...preferencesForm.register('budgetMax', { valueAsNumber: true })}
+                <select
+                  id="programLevels"
+                  multiple
+                  value={preferencesForm.watch('programLevels')}
+                  onChange={(event) => {
+                    const selected = Array.from(event.target.selectedOptions).map((option) => option.value);
+                    preferencesForm.setValue('programLevels', selected as any);
+                  }}
+                  className="form-input form-input--multi"
+                >
+                  {PROGRAM_LEVEL_OPTIONS.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+                {preferencesForm.formState.errors.programLevels ? (
+                  <p className="form-feedback form-feedback--error" role="alert">
+                    {preferencesForm.formState.errors.programLevels.message}
+                  </p>
+                ) : null}
+              </div>
+              <label className="form-touch-target flex items-center gap-3 text-sm text-foreground">
+                <input
+                  id="aidNeeded"
+                  type="checkbox"
+                  className="rounded-full border border-input bg-background text-primary accent-primary"
+                  checked={preferencesForm.watch('aidNeeded')}
+                  onChange={(event) => preferencesForm.setValue('aidNeeded', event.target.checked)}
                 />
-              </div>
-            </div>
-            <div className="form-field">
-              <Label className="form-label" id="countries-label">
-                Preferred countries
-              </Label>
-              <CountrySelect
-                id="countries"
-                name="countries"
-                value={preferencesForm.watch('countries')}
-                onChange={(val) => preferencesForm.setValue('countries', val)}
-              />
-              {preferencesForm.formState.errors.countries ? (
-                <p className="form-feedback form-feedback--error" role="alert">
-                  {preferencesForm.formState.errors.countries.message}
-                </p>
-              ) : null}
-            </div>
-            <div className="grid form-grid sm:grid-cols-2">
-              <div className="form-field">
-                <Label className="form-label" htmlFor="campusType">
-                  Campus type
-                </Label>
-                <select id="campusType" {...preferencesForm.register('campusType')} className="form-input">
-                  <option value="">Select campus type</option>
-                  {CAMPUS_TYPE_OPTIONS.map((option) => (
-                    <option key={option} value={option}>
-                      {humanizeLabel(option)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="form-field">
-                <Label className="form-label" htmlFor="setting">
-                  Setting
-                </Label>
-                <select id="setting" {...preferencesForm.register('setting')} className="form-input">
-                  <option value="">Select setting</option>
-                  {SETTING_TYPE_OPTIONS.map((option) => (
-                    <option key={option} value={option}>
-                      {humanizeLabel(option)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="form-field">
-                <Label className="form-label" htmlFor="size">
-                  Size
-                </Label>
-                <select id="size" {...preferencesForm.register('size')} className="form-input">
-                  <option value="">Select size</option>
-                  {SIZE_OPTIONS.map((option) => (
-                    <option key={option} value={option}>
-                      {humanizeLabel(option)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="form-field">
-                <Label className="form-label" htmlFor="delivery">
-                  Delivery
-                </Label>
-                <select id="delivery" {...preferencesForm.register('delivery')} className="form-input">
-                  <option value="">Select delivery</option>
-                  {DELIVERY_OPTIONS.map((option) => (
-                    <option key={option} value={option}>
-                      {humanizeLabel(option)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            <div className="form-field">
-              <Label className="form-label" htmlFor="programLevels">
-                Program level
-              </Label>
-              <select
-                id="programLevels"
-                multiple
-                value={preferencesForm.watch('programLevels')}
-                onChange={(event) => {
-                  const selected = Array.from(event.target.selectedOptions).map((option) => option.value);
-                  preferencesForm.setValue('programLevels', selected);
-                }}
-                className="form-input form-input--multi"
+                <span>I need financial aid</span>
+              </label>
+              <Button
+                type="submit"
+                variant="secondary"
+                className="form-action"
+                disabled={isPending}
+                data-loading={isPending ? 'true' : undefined}
               >
-                {PROGRAM_LEVEL_OPTIONS.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
-              {preferencesForm.formState.errors.programLevels ? (
-                <p className="form-feedback form-feedback--error" role="alert">
-                  {preferencesForm.formState.errors.programLevels.message}
-                </p>
-              ) : null}
-            </div>
-            <label className="form-touch-target flex items-center gap-3 text-sm text-foreground">
-              <input
-                id="aidNeeded"
-                type="checkbox"
-                className="rounded-full border border-input bg-background text-primary accent-primary"
-                checked={preferencesForm.watch('aidNeeded')}
-                onChange={(event) => preferencesForm.setValue('aidNeeded', event.target.checked)}
-              />
-              <span>I need financial aid</span>
-            </label>
-            <Button
-              type="submit"
-              variant="secondary"
-              className="form-action"
-              disabled={isPending}
-              data-loading={isPending ? 'true' : undefined}
-            >
-              Save and continue
-            </Button>
+                Save and continue
+              </Button>
             </motion.form>
           ) : null}
 
@@ -718,116 +718,116 @@ export const ProfileWizard = ({
               animate="animate"
               exit="exit"
             >
-            <div className="form-field">
-              <Label className="form-label" htmlFor="targetFields">
-                Target fields
-              </Label>
-              <select
-                id="targetFields"
-                name={targetFieldsName}
-                ref={targetFieldsRef}
-                multiple
-                value={aspirationsForm.watch('targetFields')}
-                onBlur={targetFieldsOnBlur}
-                onChange={(event) => {
-                  const selected = Array.from(event.target.selectedOptions).map((option) => option.value);
-                  aspirationsForm.setValue('targetFields', selected, { shouldValidate: true });
-                  targetFieldsOnChange(event);
-                }}
-                className="form-input form-input--multi"
-              >
-                {TARGET_FIELD_OPTIONS.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
-              {aspirationsForm.formState.errors.targetFields ? (
-                <p className="form-feedback form-feedback--error" role="alert">
-                  {aspirationsForm.formState.errors.targetFields.message}
-                </p>
-              ) : null}
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                <Input
-                  placeholder="Add another field"
-                  value={targetFieldOther}
-                  className="form-input"
-                  onChange={(event) => setTargetFieldOther(event.target.value)}
-                />
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="sm"
-                  className="form-action self-start"
-                  disabled={!targetFieldOther.trim()}
-                  onClick={handleAddTargetField}
+              <div className="form-field">
+                <Label className="form-label" htmlFor="targetFields">
+                  Target fields
+                </Label>
+                <select
+                  id="targetFields"
+                  name={targetFieldsName}
+                  ref={targetFieldsRef}
+                  multiple
+                  value={aspirationsForm.watch('targetFields')}
+                  onBlur={targetFieldsOnBlur}
+                  onChange={(event) => {
+                    const selected = Array.from(event.target.selectedOptions).map((option) => option.value);
+                    aspirationsForm.setValue('targetFields', selected, { shouldValidate: true });
+                    targetFieldsOnChange(event);
+                  }}
+                  className="form-input form-input--multi"
                 >
-                  Add
-                </Button>
+                  {TARGET_FIELD_OPTIONS.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+                {aspirationsForm.formState.errors.targetFields ? (
+                  <p className="form-feedback form-feedback--error" role="alert">
+                    {aspirationsForm.formState.errors.targetFields.message}
+                  </p>
+                ) : null}
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <Input
+                    placeholder="Add another field"
+                    value={targetFieldOther}
+                    className="form-input"
+                    onChange={(event) => setTargetFieldOther(event.target.value)}
+                  />
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    className="form-action self-start"
+                    disabled={!targetFieldOther.trim()}
+                    onClick={handleAddTargetField}
+                  >
+                    Add
+                  </Button>
+                </div>
               </div>
-            </div>
-            <div className="form-field">
-              <Label className="form-label" htmlFor="jobTitles">
-                Dream jobs
-              </Label>
-              <select
-                id="jobTitles"
-                name={jobTitlesName}
-                ref={jobTitlesRef}
-                multiple
-                value={aspirationsForm.watch('jobTitles')}
-                onBlur={jobTitlesOnBlur}
-                onChange={(event) => {
-                  const selected = Array.from(event.target.selectedOptions).map((option) => option.value);
-                  aspirationsForm.setValue('jobTitles', selected, { shouldValidate: true });
-                  jobTitlesOnChange(event);
-                }}
-                className="form-input form-input--multi"
-              >
-                {JOB_TITLE_OPTIONS.map((title) => (
-                  <option key={title} value={title}>
-                    {title}
-                  </option>
-                ))}
-              </select>
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                <Input
-                  placeholder="Add another job title"
-                  value={jobTitleOther}
-                  className="form-input"
-                  onChange={(event) => setJobTitleOther(event.target.value)}
-                />
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="sm"
-                  className="form-action self-start"
-                  disabled={!jobTitleOther.trim()}
-                  onClick={handleAddJobTitle}
+              <div className="form-field">
+                <Label className="form-label" htmlFor="jobTitles">
+                  Dream jobs
+                </Label>
+                <select
+                  id="jobTitles"
+                  name={jobTitlesName}
+                  ref={jobTitlesRef}
+                  multiple
+                  value={aspirationsForm.watch('jobTitles')}
+                  onBlur={jobTitlesOnBlur}
+                  onChange={(event) => {
+                    const selected = Array.from(event.target.selectedOptions).map((option) => option.value);
+                    aspirationsForm.setValue('jobTitles', selected, { shouldValidate: true });
+                    jobTitlesOnChange(event);
+                  }}
+                  className="form-input form-input--multi"
                 >
-                  Add
-                </Button>
+                  {JOB_TITLE_OPTIONS.map((title) => (
+                    <option key={title} value={title}>
+                      {title}
+                    </option>
+                  ))}
+                </select>
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <Input
+                    placeholder="Add another job title"
+                    value={jobTitleOther}
+                    className="form-input"
+                    onChange={(event) => setJobTitleOther(event.target.value)}
+                  />
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    className="form-action self-start"
+                    disabled={!jobTitleOther.trim()}
+                    onClick={handleAddJobTitle}
+                  >
+                    Add
+                  </Button>
+                </div>
               </div>
-            </div>
-            <div className="form-field">
-              <Label className="form-label" htmlFor="notes">
-                Notes
-              </Label>
-              <textarea
-                id="notes"
-                className="form-input form-input--textarea"
-                {...aspirationsForm.register('notes')}
-              />
-            </div>
-            <Button
-              type="submit"
-              variant="secondary"
-              className="form-action"
-              disabled={isPending}
-              data-loading={isPending ? 'true' : undefined}
-            >
-              Save profile
-            </Button>
+              <div className="form-field">
+                <Label className="form-label" htmlFor="notes">
+                  Notes
+                </Label>
+                <textarea
+                  id="notes"
+                  className="form-input form-input--textarea"
+                  {...aspirationsForm.register('notes')}
+                />
+              </div>
+              <Button
+                type="submit"
+                variant="secondary"
+                className="form-action"
+                disabled={isPending}
+                data-loading={isPending ? 'true' : undefined}
+              >
+                Save profile
+              </Button>
             </motion.form>
           ) : null}
         </AnimatePresence>

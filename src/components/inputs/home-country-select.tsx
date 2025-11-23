@@ -25,14 +25,14 @@ const getCountryOptions = (): CountryOption[] => {
   if (typeof Intl?.supportedValuesOf === 'function' && typeof Intl.DisplayNames === 'function') {
     try {
       const displayNames = new Intl.DisplayNames(['en'], { type: 'region' });
-      const codes = Intl.supportedValuesOf('region').filter((code) => /^[A-Z]{2}$/.test(code));
+      const codes = (Intl as any).supportedValuesOf('region').filter((code: string) => /^[A-Z]{2}$/.test(code));
       return codes
-        .map((code) => ({
+        .map((code: string) => ({
           code,
           label: displayNames.of(code) ?? code
         }))
-        .filter((option) => Boolean(option.label))
-        .sort((a, b) => a.label.localeCompare(b.label));
+        .filter((option: { code: string; label: string }) => Boolean(option.label))
+        .sort((a: { label: string }, b: { label: string }) => a.label.localeCompare(b.label));
     } catch (error) {
       // fall through to fallback list
     }
@@ -51,14 +51,13 @@ interface HomeCountrySelectProps {
 
 export const HomeCountrySelect = ({ value, onChange, id, name }: HomeCountrySelectProps) => {
   return (
-    <Select.Root value={value || undefined} onValueChange={onChange} name={name}>
+    <Select.Root value={value || undefined} onValueChange={onChange} name={name} size="3">
       <Select.Trigger
         id={id}
         className={cn(
-          'w-full rounded-full border border-[#E0E0E0] bg-white px-4 py-3 text-sm text-[#1C1C1C] shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)] hover:bg-[#F5F5F5]'
+          'w-full rounded-full border border-input bg-background px-4 py-3 text-sm text-foreground shadow-sm hover:bg-accent hover:text-accent-foreground'
         )}
         radius="full"
-        size="3"
         placeholder="Select a country"
       />
       <Select.Content>

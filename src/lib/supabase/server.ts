@@ -16,11 +16,9 @@ export const createServerActionSupabaseClient = (): Client => {
   return createServerActionClient<Database>({ cookies: () => cookieStore });
 };
 
-export const createRouteHandlerSupabaseClient = (): Client => {
+export const createRouteHandlerSupabaseClient = () => {
   const cookieStore = cookies();
-  const headerStore = headers();
   return createRouteHandlerClient<Database>({
     cookies: () => cookieStore,
-    headers: () => headerStore
   });
 };

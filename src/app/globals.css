@@ -4,31 +4,41 @@
 
 @layer base {
   :root {
-    --background: 240 20% 98%; /* #f9f9fb */
-    --foreground: 222 47% 11%; /* #0f172a */
+    --background: 240 20% 98%;
+    /* #f9f9fb */
+    --foreground: 222 47% 11%;
+    /* #0f172a */
 
-    --card: 0 0% 100%; /* #ffffff */
+    --card: 0 0% 100%;
+    /* #ffffff */
     --card-foreground: 222 47% 11%;
 
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
-    --primary: 243 75% 59%; /* #6366f1 */
+    --primary: 243 75% 59%;
+    /* #6366f1 */
     --primary-foreground: 210 40% 98%;
 
-    --secondary: 214 32% 91%; /* #e2e8f0 */
+    --secondary: 214 32% 91%;
+    /* #e2e8f0 */
     --secondary-foreground: 222 47% 11%;
 
-    --muted: 240 11% 96%; /* #f5f5f7 */
-    --muted-foreground: 215 16% 47%; /* #64748b */
+    --muted: 240 11% 96%;
+    /* #f5f5f7 */
+    --muted-foreground: 215 16% 47%;
+    /* #64748b */
 
-    --accent: 199 89% 48%; /* #38bdf8 */
+    --accent: 199 89% 48%;
+    /* #38bdf8 */
     --accent-foreground: 222 47% 11%;
 
-    --destructive: 0 63% 31%; /* #b91c1c */
+    --destructive: 0 63% 31%;
+    /* #b91c1c */
     --destructive-foreground: 210 40% 98%;
 
-    --border: 240 5% 90%; /* #e5e5e7 */
+    --border: 240 5% 90%;
+    /* #e5e5e7 */
     --input: 240 5% 90%;
     --ring: 243 75% 59%;
 
@@ -36,8 +46,10 @@
   }
 
   [data-theme='dark'] {
-    --background: 222 47% 4%; /* #030712 */
-    --foreground: 210 40% 98%; /* #f8fafc */
+    --background: 222 47% 4%;
+    /* #030712 */
+    --foreground: 210 40% 98%;
+    /* #f8fafc */
 
     --card: 222 47% 6%;
     --card-foreground: 210 40% 98%;
@@ -45,16 +57,19 @@
     --popover: 222 47% 4%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 243 75% 59%; /* #6366f1 */
+    --primary: 243 75% 59%;
+    /* #6366f1 */
     --primary-foreground: 210 40% 98%;
 
-    --secondary: 217 33% 17%; /* #1e293b */
+    --secondary: 217 33% 17%;
+    /* #1e293b */
     --secondary-foreground: 210 40% 98%;
 
     --muted: 217 33% 17%;
     --muted-foreground: 215 20% 65%;
 
-    --accent: 199 89% 48%; /* #38bdf8 */
+    --accent: 199 89% 48%;
+    /* #38bdf8 */
     --accent-foreground: 210 40% 98%;
 
     --destructive: 0 62.8% 30.6%;
@@ -70,10 +85,17 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
   }
-  h1, h2, h3, h4, h5, h6 {
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply font-heading tracking-tight;
   }
 }
@@ -82,7 +104,7 @@
   .glass {
     @apply bg-white/5 backdrop-blur-lg border border-white/10;
   }
-  
+
   .glass-card {
     @apply bg-card/50 backdrop-blur-xl border border-white/10 shadow-xl;
   }
@@ -156,4 +178,47 @@
   .form-action {
     @apply w-full sm:w-auto;
   }
+}
+
+/* React Big Calendar Dark Mode Overrides */
+[data-theme='dark'] .rbc-calendar {
+  @apply text-foreground;
+}
+
+[data-theme='dark'] .rbc-off-range-bg {
+  @apply bg-muted/30;
+}
+
+[data-theme='dark'] .rbc-today {
+  @apply bg-accent/10;
+}
+
+[data-theme='dark'] .rbc-header {
+  @apply border-border text-muted-foreground;
+}
+
+[data-theme='dark'] .rbc-month-view,
+[data-theme='dark'] .rbc-time-view,
+[data-theme='dark'] .rbc-agenda-view {
+  @apply border-border bg-card;
+}
+
+[data-theme='dark'] .rbc-day-bg+.rbc-day-bg,
+[data-theme='dark'] .rbc-month-row+.rbc-month-row,
+[data-theme='dark'] .rbc-header+.rbc-header,
+[data-theme='dark'] .rbc-day-slot .rbc-events-container,
+[data-theme='dark'] .rbc-day-slot .rbc-time-slot {
+  @apply border-border;
+}
+
+[data-theme='dark'] .rbc-event {
+  @apply bg-primary text-primary-foreground;
+}
+
+[data-theme='dark'] .rbc-toolbar button {
+  @apply text-foreground hover:bg-muted;
+}
+
+[data-theme='dark'] .rbc-toolbar button.rbc-active {
+  @apply bg-primary text-primary-foreground hover:bg-primary/90;
 }

@@ -23,7 +23,7 @@ export const Navbar = () => {
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between rounded-[999px] border border-border bg-card px-4 py-2 text-foreground shadow-[0_30px_80px_rgba(15,23,42,0.08)] transition-colors">
         <Link href="/dashboard" className="flex items-center gap-3 text-lg font-semibold text-foreground">
           <div className="relative h-12 w-12 shrink-0 scale-125">
-            <Image src="/Ascenda Logo.png" alt="Ascenda logo" fill className="rounded-full object-contain" />
+            <Image src="/Ascenda Logo.png" alt="Ascenda logo" fill className="rounded-full object-contain dark:invert" />
           </div>
           <div className="flex flex-col leading-tight">
             <span>Ascenda</span>

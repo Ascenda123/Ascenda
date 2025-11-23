@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
-import { Calendar, dateFnsLocalizer, Event as CalendarEvent } from 'react-big-calendar';
+import { Calendar, dateFnsLocalizer, Event as CalendarEvent, type View, type ToolbarProps } from 'react-big-calendar';
 import { format, getDay, parse, startOfWeek } from 'date-fns';
 import enUS from 'date-fns/locale/en-US';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
@@ -17,6 +17,14 @@ export interface PlannerEvent {
   category: 'deadline' | 'reference' | 'interview' | 'task' | 'external';
   detail?: string;
   source?: string;
+}
+
+interface MyCalendarEvent extends CalendarEvent {
+  id: string;
+  title: string;
+  start: Date;
+  end: Date;
+  resource: PlannerEvent;
 }
 
 const locales = {
@@ -56,7 +64,7 @@ const fetchCalendarFeed = async (): Promise<CalendarFeedResponse> => {
   return response.json();
 };
 
-const mapToCalendarEvent = (event: PlannerEvent): CalendarEvent => {
+const mapToCalendarEvent = (event: PlannerEvent): MyCalendarEvent => {
   const start = new Date(event.date);
   const end = event.endDate ? new Date(event.endDate) : new Date(start);
   end.setDate(end.getDate() + 1);
@@ -100,7 +108,7 @@ export const PlannerCalendar = ({ events }: { events: PlannerEvent[] }) => {
       title: event.title,
       date: event.start,
       endDate: event.end,
-      category: 'external',
+      category: 'external' as const,
       detail: event.description ?? event.location,
       source: event.sourceLabel
     }));
@@ -118,11 +126,11 @@ export const PlannerCalendar = ({ events }: { events: PlannerEvent[] }) => {
   const connectedSources = feedData?.connectedSources ?? [];
 
   return (
-    <div className="space-y-6 rounded-[36px] border border-[#e5e5e7] bg-white p-6 shadow-[0_30px_80px_rgba(15,23,42,0.08)]">
+    <div className="space-y-6 rounded-[36px] border border-border bg-card p-6 shadow-[0_30px_80px_rgba(15,23,42,0.08)]">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-semibold text-slate-900">Calendar view</h2>
-          <p className="text-sm text-slate-500">
+          <h2 className="text-2xl font-semibold text-foreground">Calendar view</h2>
+          <p className="text-sm text-muted-foreground">
             Seamless planner view with week, month, and day filters plus quick access to upcoming events.
           </p>
         </div>
@@ -138,29 +146,29 @@ export const PlannerCalendar = ({ events }: { events: PlannerEvent[] }) => {
               {option.label}
             </Button>
           ))}
-          <div className="rounded-full bg-slate-100 px-4 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">
+          <div className="rounded-full bg-muted px-4 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground">
             sync ready
           </div>
         </div>
       </header>
       <div className="grid gap-6 lg:grid-cols-[3fr,1fr]">
-        <div className="overflow-hidden rounded-[32px] border border-[#e5e5e7] bg-white shadow-[0_25px_60px_rgba(15,23,42,0.06)]">
-          <Calendar
-            className="bg-white text-slate-900"
+        <div className="overflow-hidden rounded-[32px] border border-border bg-card shadow-[0_25px_60px_rgba(15,23,42,0.06)]">
+          <Calendar<MyCalendarEvent>
+            className="bg-card text-foreground"
             localizer={localizer}
             events={calendarEvents}
             startAccessor="start"
             endAccessor="end"
             views={['day', 'week', 'month']}
             view={selectedView}
-            onView={(view) => setSelectedView(view as CalendarView)}
+            onView={(view: View) => setSelectedView(view as CalendarView)}
             eventPropGetter={eventStyleGetter}
             components={{
-              toolbar: (toolbarProps) => (
-                <div className="flex flex-wrap items-center justify-between gap-3 rounded-t-[28px] border-b border-slate-100 bg-white p-4 text-sm font-semibold text-slate-800">
+              toolbar: (toolbarProps: ToolbarProps<MyCalendarEvent>) => (
+                <div className="flex flex-wrap items-center justify-between gap-3 rounded-t-[28px] border-b border-border bg-card p-4 text-sm font-semibold text-foreground">
                   <div>
                     <p>{toolbarProps.label}</p>
-                    <p className="text-xs font-normal uppercase tracking-[0.4em] text-slate-400">Plan view</p>
+                    <p className="text-xs font-normal uppercase tracking-[0.4em] text-muted-foreground">Plan view</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <Button size="xs" variant="ghost" onClick={() => toolbarProps.onNavigate('PREV')}>
@@ -179,15 +187,15 @@ export const PlannerCalendar = ({ events }: { events: PlannerEvent[] }) => {
             style={{ minHeight: selectedView === 'month' ? 420 : 340 }}
           />
         </div>
-        <aside className="space-y-4 rounded-[32px] border border-[#e5e5e7] bg-white p-5 shadow-[0_22px_55px_rgba(15,23,42,0.08)]">
+        <aside className="space-y-4 rounded-[32px] border border-border bg-card p-5 shadow-[0_22px_55px_rgba(15,23,42,0.08)]">
           <div className="flex flex-col gap-1">
             <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold text-slate-900">Upcoming events</p>
+              <p className="text-sm font-semibold text-foreground">Upcoming events</p>
               <span className="text-xs font-semibold uppercase tracking-[0.4em] text-emerald-600">
                 {isFeedLoading ? 'Syncing' : 'Live'}
               </span>
             </div>
-            <p className="text-[11px] uppercase tracking-[0.4em] text-slate-400">
+            <p className="text-[11px] uppercase tracking-[0.4em] text-muted-foreground">
               {connectedSources.length > 0
                 ? `${connectedSources.length} feed${connectedSources.length > 1 ? 's' : ''} connected`
                 : 'No external feeds configured yet'}
@@ -200,32 +208,32 @@ export const PlannerCalendar = ({ events }: { events: PlannerEvent[] }) => {
                 return (
                   <li
                     key={event.id}
-                    className="rounded-2xl border border-[#e5e5e7] bg-white p-3 text-sm text-slate-700 shadow-[0_12px_35px_rgba(15,23,42,0.08)]"
+                    className="rounded-2xl border border-border bg-card p-3 text-sm text-foreground shadow-[0_12px_35px_rgba(15,23,42,0.08)]"
                   >
-                    <p className="font-semibold text-slate-900">{plannerEvent.title}</p>
-                    <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
+                    <p className="font-semibold text-foreground">{plannerEvent.title}</p>
+                    <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
                       {plannerEvent.source ?? plannerEvent.category} • {format(event.start, 'MMM d')}
                     </p>
-                    {plannerEvent.detail && <p className="text-xs text-slate-500">{plannerEvent.detail}</p>}
+                    {plannerEvent.detail && <p className="text-xs text-muted-foreground">{plannerEvent.detail}</p>}
                   </li>
                 );
               })
             ) : (
-              <p className="text-xs text-slate-500">No upcoming events. Schedule something and sync your calendars to see it here.</p>
+              <p className="text-xs text-muted-foreground">No upcoming events. Schedule something and sync your calendars to see it here.</p>
             )}
           </ul>
           <Button size="sm" variant="outline" className="w-full" onClick={() => setShowSyncOptions((prev) => !prev)}>
             {showSyncOptions ? 'Hide calendar sync options' : 'Connect more calendars'}
           </Button>
           {showSyncOptions && (
-            <div className="space-y-3 rounded-2xl border border-slate-100 bg-slate-50 p-4 text-[13px] text-slate-500">
+            <div className="space-y-3 rounded-2xl border border-border bg-muted/50 p-4 text-[13px] text-muted-foreground">
               {CALENDAR_FEED_CONFIG.map((source) => {
                 const isConnected = connectedSources.includes(source.id);
                 return (
-                  <div key={source.id} className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-3 py-2">
+                  <div key={source.id} className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-card px-3 py-2">
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-slate-900">{source.label}</p>
-                      <p className="text-[11px] text-slate-400">
+                      <p className="text-sm font-semibold text-foreground">{source.label}</p>
+                      <p className="text-[11px] text-muted-foreground">
                         {isConnected
                           ? `Synced via ${source.envKey}`
                           : `Export ICS → set ${source.envKey}`}
@@ -247,7 +255,7 @@ export const PlannerCalendar = ({ events }: { events: PlannerEvent[] }) => {
               </p>
             </div>
           )}
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-muted-foreground">
             Supports Google, Outlook, and any ICS feed—events merge with planner deadlines for a unified view.
           </p>
         </aside>

@@ -59,8 +59,8 @@ export const CourseDetailsPanel = ({ courses }: { courses: ShortlistCourse[] }) 
                 className={cn(
                   'w-full rounded-2xl border px-4 py-3 text-left transition',
                   isActive
-                    ? 'border-slate-900 bg-white shadow-[0_18px_40px_rgba(15,23,42,0.12)]'
-                    : 'border-slate-200 bg-white/70 hover:border-slate-400 hover:bg-white'
+                    ? 'border-foreground bg-card shadow-[0_18px_40px_rgba(15,23,42,0.12)]'
+                    : 'border-border bg-muted/70 hover:border-muted-foreground hover:bg-card'
                 )}
               >
                 <p className="text-xs uppercase tracking-[0.4em] text-slate-400">{course.university}</p>
@@ -83,7 +83,7 @@ export const CourseDetailsPanel = ({ courses }: { courses: ShortlistCourse[] }) 
               <h3 className="text-2xl font-semibold text-slate-900">{activeCourse.program}</h3>
               <p className="text-sm text-slate-500">{activeCourse.location}</p>
             </div>
-            <div className="rounded-2xl bg-white px-4 py-2 text-right shadow-sm">
+            <div className="rounded-2xl bg-card px-4 py-2 text-right shadow-sm">
               <p className="text-xs uppercase tracking-[0.35em] text-slate-400">Fit</p>
               <p className="text-2xl font-semibold text-slate-900">{activeCourse.fitScore}%</p>
               <p className="text-xs text-slate-500">{activeCourse.stage}</p>
@@ -95,7 +95,7 @@ export const CourseDetailsPanel = ({ courses }: { courses: ShortlistCourse[] }) 
               Open course page
             </Link>
           </div>
-          <div className="rounded-[26px] border border-slate-200 bg-white p-4">
+          <div className="rounded-[26px] border border-border bg-card p-4">
             <p className="text-xs uppercase tracking-[0.35em] text-slate-400">Modules</p>
             <ul className="mt-3 space-y-3">
               {activeCourse.modules.map((module) => (
@@ -110,20 +110,20 @@ export const CourseDetailsPanel = ({ courses }: { courses: ShortlistCourse[] }) 
             </ul>
           </div>
           <div className="grid gap-4 text-sm text-slate-600 sm:grid-cols-3">
-            <div className="rounded-2xl border border-slate-100 bg-white px-3 py-2">
+            <div className="rounded-2xl border border-border bg-card px-3 py-2">
               <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Tutorials</p>
               <p className="font-semibold text-slate-900">{activeCourse.schedule.tutorials}</p>
             </div>
-            <div className="rounded-2xl border border-slate-100 bg-white px-3 py-2">
+            <div className="rounded-2xl border border-border bg-card px-3 py-2">
               <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Seminars / studios</p>
               <p className="font-semibold text-slate-900">{activeCourse.schedule.seminars}</p>
             </div>
-            <div className="rounded-2xl border border-slate-100 bg-white px-3 py-2">
+            <div className="rounded-2xl border border-border bg-card px-3 py-2">
               <p className="text-xs uppercase tracking-[0.3em] text-slate-400">Assessments</p>
               <p className="font-semibold text-slate-900">{activeCourse.schedule.assessments}</p>
             </div>
           </div>
-          <div className="rounded-[26px] border border-dashed border-slate-200 bg-white/70 p-4">
+          <div className="rounded-[26px] border border-dashed border-border bg-muted/70 p-4">
             <p className="text-xs uppercase tracking-[0.35em] text-slate-400">Immersion</p>
             <p className="text-sm text-slate-600">{activeCourse.immersion}</p>
           </div>

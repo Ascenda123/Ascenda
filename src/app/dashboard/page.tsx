@@ -7,7 +7,7 @@ import { TaskList } from '@/components/dashboard/task-list';
 import { DeadlineTimeline } from '@/components/dashboard/deadline-timeline';
 import { MatchList } from '@/components/match/match-list';
 import type { EnrichedMatch } from '@/components/match/match-list';
-import { rankMatches, type MatchInput } from '@/lib/matching/engine';
+import { rankMatches, type MatchInput, type Program, type University, type ProgramRequirement } from '@/lib/matching/engine';
 import { DashboardOverview } from '@/components/dashboard/overview';
 import { PageHero } from '@/components/layout/page-hero';
 import { Button } from '@/components/ui/button';
@@ -69,37 +69,108 @@ export default async function DashboardPage() {
 
   const checklist = (checklistResponse.data ?? []) as ChecklistRow[];
   const deadlines = (deadlinesResponse.data ?? []) as DeadlineRow[];
-  const academics = academicsResponse.data ?? null;
-  const preferences = preferencesResponse.data ?? null;
-  const aspirations = aspirationsResponse.data ?? null;
-  const programs = (programsResponse.data ?? []) as Program[];
-  const universities = (universitiesResponse.data ?? []) as University[];
-  const requirements = (requirementsResponse.data ?? []) as ProgramRequirement[];
+  const academicsData = academicsResponse.data;
+  const preferencesData = preferencesResponse.data;
+  const aspirationsData = aspirationsResponse.data;
+
+  const programsRaw = programsResponse.data ?? [];
+  const universitiesRaw = universitiesResponse.data ?? [];
+  const requirementsRaw = requirementsResponse.data ?? [];
+
+  const programs: Program[] = programsRaw.map((p: any) => ({
+    id: p.id,
+    name: p.name,
+    field: p.field,
+    level: p.level,
+    durationYears: p.duration_years,
+    language: p.language,
+    mode: p.mode,
+    intakeMonths: p.intake_months,
+    tuition: p.tuition,
+    currency: p.currency,
+    url: p.url,
+    universityId: p.university_id
+  }));
+
+  const universities: University[] = universitiesRaw.map((u: any) => ({
+    id: u.id,
+    name: u.name,
+    country: u.country,
+    region: u.region,
+    rankOverall: u.rank_overall,
+    rankSource: u.rank_source,
+    acceptanceRate: u.acceptance_rate,
+    requiresTest: u.requires_test
+  }));
+
+  const requirements: ProgramRequirement[] = requirementsRaw.map((r: any) => ({
+    programId: r.program_id,
+    curriculum: r.curriculum,
+    minGpa: r.min_gpa,
+    minIbTotal: r.min_ib_total,
+    minSat: r.min_sat,
+    minAct: r.min_act,
+    requiredSubjects: r.required_subjects,
+    languageTests: r.language_tests,
+    otherRequirements: r.other_requirements
+  }));
 
   let matches: EnrichedMatch[] = [];
 
-  if (academics && preferences && aspirations && programs.length > 0 && universities.length > 0) {
-    const requirementMap = new Map(requirements.map((item: any) => [item.program_id, item]));
-    const universityMap = new Map(universities.map((item: any) => [item.id, item]));
-    const inputs: MatchInput[] = programs
-      .map((program: any) => {
-        const university = universityMap.get(program.university_id);
+  if (academicsData && preferencesData && aspirationsData && programs.length > 0 && universities.length > 0) {
+    const requirementMap = new Map(requirements.map((item) => [item.programId, item]));
+    const universityMap = new Map(universities.map((item) => [item.id, item]));
+
+    // Transform user profile data
+    const academics = {
+      curriculum: academicsData.curriculum,
+      gpa: academicsData.gpa,
+      ibTotal: academicsData.ib_total,
+      sat: academicsData.sat,
+      act: academicsData.act,
+      toefl: academicsData.toefl,
+      ielts: academicsData.ielts,
+      subjectGrades: academicsData.subject_grades
+    };
+
+    const preferences = {
+      budgetMin: preferencesData.budget_min,
+      budgetMax: preferencesData.budget_max,
+      aidNeeded: preferencesData.aid_needed,
+      countries: preferencesData.countries,
+      languages: preferencesData.languages,
+      campusType: preferencesData.campus_type,
+      setting: preferencesData.setting,
+      size: preferencesData.size,
+      programLevels: preferencesData.program_levels,
+      delivery: preferencesData.delivery
+    };
+
+    const aspirations = {
+      targetFields: aspirationsData.target_fields,
+      jobTitles: aspirationsData.job_titles
+    };
+
+    const inputs = programs
+      .map((program) => {
+        const university = universityMap.get(program.universityId);
         if (!university) return null;
+
         return {
           academics,
           preferences,
           aspirations,
           program,
           university,
-          requirement: requirementMap.get(program.id) ?? undefined
-        } satisfies MatchInput;
+          requirement: requirementMap.get(program.id)
+        } as MatchInput;
       })
-      .filter((value): value is MatchInput => value !== null);
+      .filter((item): item is MatchInput => item !== null);
 
     matches = rankMatches(inputs)
       .slice(0, 3)
       .map((result) => {
-        const program = programs.find((item: any) => item.id === result.programId)!;
+        const program = programs.find((item) => item.id === result.programId)!;
         const university = universityMap.get(result.universityId)!;
         return {
           program,

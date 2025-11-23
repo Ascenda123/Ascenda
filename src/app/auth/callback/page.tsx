@@ -17,7 +17,9 @@ const parseHashParams = () => {
   return new URLSearchParams(hash);
 };
 
-export default function AuthCallbackPage() {
+import { Suspense } from 'react';
+
+function AuthCallbackContent() {
   const supabase = useSupabase();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -60,11 +62,19 @@ export default function AuthCallbackPage() {
   }, [router, searchParams, supabase]);
 
   return (
+    <div className="space-y-3">
+      <p className="text-lg font-semibold">Finishing sign-in…</p>
+      <p className="text-sm text-slate-500">You will be redirected shortly.</p>
+    </div>
+  );
+}
+
+export default function AuthCallbackPage() {
+  return (
     <main className="flex min-h-screen items-center justify-center bg-slate-50 px-4 py-16 text-center text-slate-900">
-      <div className="space-y-3">
-        <p className="text-lg font-semibold">Finishing sign-in…</p>
-        <p className="text-sm text-slate-500">You will be redirected shortly.</p>
-      </div>
+      <Suspense fallback={<p>Loading...</p>}>
+        <AuthCallbackContent />
+      </Suspense>
     </main>
   );
 }

@@ -3,30 +3,30 @@ import { defaultWeights, type MatchingWeights, OUTCOME_RANKING_BENCHMARK } from 
 export type StudentAcademics = {
   curriculum?: string | null;
   gpa?: number | null;
-  ib_total?: number | null;
+  ibTotal?: number | null;
   sat?: number | null;
   act?: number | null;
   toefl?: number | null;
   ielts?: number | null;
-  subject_grades?: { subject: string; level: string; score: string }[] | null;
+  subjectGrades?: { subject: string; level: string; score: string }[] | null;
 };
 
 export type StudentPreferences = {
-  budget_min?: number | null;
-  budget_max?: number | null;
-  aid_needed?: boolean | null;
+  budgetMin?: number | null;
+  budgetMax?: number | null;
+  aidNeeded?: boolean | null;
   countries?: string[] | null;
   languages?: string[] | null;
-  campus_type?: string | null;
+  campusType?: string | null;
   setting?: string | null;
   size?: string | null;
-  program_levels?: string[] | null;
+  programLevels?: string[] | null;
   delivery?: string | null;
 };
 
 export type StudentAspirations = {
-  target_fields?: string[] | null;
-  job_titles?: string[] | null;
+  targetFields?: string[] | null;
+  jobTitles?: string[] | null;
 };
 
 export type Program = {
@@ -34,14 +34,14 @@ export type Program = {
   name: string;
   field?: string | null;
   level?: string | null;
-  duration_years?: number | null;
+  durationYears?: number | null;
   language?: string | null;
   mode?: string | null;
-  intake_months?: string[] | null;
+  intakeMonths?: string[] | null;
   tuition?: number | null;
   currency?: string | null;
   url?: string | null;
-  university_id: string;
+  universityId: string;
 };
 
 export type University = {
@@ -49,22 +49,22 @@ export type University = {
   name: string;
   country: string;
   region?: string | null;
-  rank_overall?: number | null;
-  rank_source?: string | null;
-  acceptance_rate?: number | null;
-  requires_test?: boolean | null;
+  rankOverall?: number | null;
+  rankSource?: string | null;
+  acceptanceRate?: number | null;
+  requiresTest?: boolean | null;
 };
 
 export type ProgramRequirement = {
-  program_id: string;
+  programId: string;
   curriculum?: string | null;
-  min_gpa?: number | null;
-  min_ib_total?: number | null;
-  min_sat?: number | null;
-  min_act?: number | null;
-  required_subjects?: string[] | null;
-  language_tests?: Record<string, number> | null;
-  other_requirements?: string | null;
+  minGpa?: number | null;
+  minIbTotal?: number | null;
+  minSat?: number | null;
+  minAct?: number | null;
+  requiredSubjects?: string[] | null;
+  languageTests?: Record<string, number> | null;
+  otherRequirements?: string | null;
 };
 
 export type MatchInput = {
@@ -109,36 +109,36 @@ const calculateEligibility = (input: MatchInput) => {
     reasons.push(`Program requires ${requirement.curriculum} curriculum`);
   }
 
-  if (requirement.min_gpa && (academics.gpa ?? 0) < requirement.min_gpa) {
-    reasons.push(`Minimum GPA ${requirement.min_gpa}`);
+  if (requirement.minGpa && (academics.gpa ?? 0) < requirement.minGpa) {
+    reasons.push(`Minimum GPA ${requirement.minGpa}`);
   }
 
-  if (requirement.min_ib_total && (academics.ib_total ?? 0) < requirement.min_ib_total) {
-    reasons.push(`Minimum IB total ${requirement.min_ib_total}`);
+  if (requirement.minIbTotal && (academics.ibTotal ?? 0) < requirement.minIbTotal) {
+    reasons.push(`Minimum IB total ${requirement.minIbTotal}`);
   }
 
-  if (requirement.min_sat && (academics.sat ?? 0) < requirement.min_sat) {
-    reasons.push(`Minimum SAT ${requirement.min_sat}`);
+  if (requirement.minSat && (academics.sat ?? 0) < requirement.minSat) {
+    reasons.push(`Minimum SAT ${requirement.minSat}`);
   }
 
-  if (requirement.min_act && (academics.act ?? 0) < requirement.min_act) {
-    reasons.push(`Minimum ACT ${requirement.min_act}`);
+  if (requirement.minAct && (academics.act ?? 0) < requirement.minAct) {
+    reasons.push(`Minimum ACT ${requirement.minAct}`);
   }
 
-  if (requirement.required_subjects && requirement.required_subjects.length > 0) {
-    const subjects = (academics.subject_grades ?? []).map((entry) => entry.subject.toLowerCase());
-    const missing = requirement.required_subjects.filter((subject) => !subjects.includes(subject.toLowerCase()));
+  if (requirement.requiredSubjects && requirement.requiredSubjects.length > 0) {
+    const subjects = (academics.subjectGrades ?? []).map((entry) => entry.subject.toLowerCase());
+    const missing = requirement.requiredSubjects.filter((subject) => !subjects.includes(subject.toLowerCase()));
     if (missing.length > 0) {
       reasons.push(`Missing required subjects: ${missing.join(', ')}`);
     }
   }
 
-  if (requirement.language_tests) {
-    if (requirement.language_tests.ielts && (academics.ielts ?? 0) < requirement.language_tests.ielts) {
-      reasons.push(`IELTS minimum ${requirement.language_tests.ielts}`);
+  if (requirement.languageTests) {
+    if (requirement.languageTests.ielts && (academics.ielts ?? 0) < requirement.languageTests.ielts) {
+      reasons.push(`IELTS minimum ${requirement.languageTests.ielts}`);
     }
-    if (requirement.language_tests.toefl && (academics.toefl ?? 0) < requirement.language_tests.toefl) {
-      reasons.push(`TOEFL minimum ${requirement.language_tests.toefl}`);
+    if (requirement.languageTests.toefl && (academics.toefl ?? 0) < requirement.languageTests.toefl) {
+      reasons.push(`TOEFL minimum ${requirement.languageTests.toefl}`);
     }
   }
 
@@ -152,20 +152,20 @@ const calculateAcademicFit = (input: MatchInput) => {
 
   const ratios: number[] = [];
 
-  if (requirement.min_gpa && academics.gpa) {
-    ratios.push((academics.gpa - requirement.min_gpa + 4) / 4);
+  if (requirement.minGpa && academics.gpa) {
+    ratios.push((academics.gpa - requirement.minGpa + 4) / 4);
   }
 
-  if (requirement.min_ib_total && academics.ib_total) {
-    ratios.push((academics.ib_total - requirement.min_ib_total + 45) / 45);
+  if (requirement.minIbTotal && academics.ibTotal) {
+    ratios.push((academics.ibTotal - requirement.minIbTotal + 45) / 45);
   }
 
-  if (requirement.min_sat && academics.sat) {
-    ratios.push((academics.sat - requirement.min_sat + 1600) / 1600);
+  if (requirement.minSat && academics.sat) {
+    ratios.push((academics.sat - requirement.minSat + 1600) / 1600);
   }
 
-  if (requirement.min_act && academics.act) {
-    ratios.push((academics.act - requirement.min_act + 36) / 36);
+  if (requirement.minAct && academics.act) {
+    ratios.push((academics.act - requirement.minAct + 36) / 36);
   }
 
   if (ratios.length === 0) return 70;
@@ -198,17 +198,17 @@ const calculatePreferenceFit = (input: MatchInput) => {
     scores.push(jaccard(preferences.languages, [program.language]));
   }
 
-  if (preferences.program_levels && preferences.program_levels.length > 0 && program.level) {
-    scores.push(jaccard(preferences.program_levels, [program.level]));
+  if (preferences.programLevels && preferences.programLevels.length > 0 && program.level) {
+    scores.push(jaccard(preferences.programLevels, [program.level]));
   }
 
   if (preferences.delivery && program.mode) {
     scores.push(program.mode.toLowerCase() === preferences.delivery.toLowerCase() ? 1 : 0.5);
   }
 
-  if (typeof preferences.budget_max === 'number' && program.tuition) {
-    const withinBudget = program.tuition <= preferences.budget_max;
-    const penalty = withinBudget ? 1 : Math.max(0, 1 - (program.tuition - preferences.budget_max) / (preferences.budget_max || 1));
+  if (typeof preferences.budgetMax === 'number' && program.tuition) {
+    const withinBudget = program.tuition <= preferences.budgetMax;
+    const penalty = withinBudget ? 1 : Math.max(0, 1 - (program.tuition - preferences.budgetMax) / (preferences.budgetMax || 1));
     scores.push(penalty);
   }
 
@@ -221,22 +221,22 @@ const calculateOutcomeSignal = (input: MatchInput) => {
   const { university, program, aspirations } = input;
   const scores: number[] = [];
 
-  if (university.rank_overall) {
-    const rankScore = Math.max(0, 1 - (university.rank_overall - 1) / OUTCOME_RANKING_BENCHMARK);
+  if (university.rankOverall) {
+    const rankScore = Math.max(0, 1 - (university.rankOverall - 1) / OUTCOME_RANKING_BENCHMARK);
     scores.push(rankScore);
   }
 
-  if (typeof university.acceptance_rate === 'number') {
-    const acceptance = university.acceptance_rate;
+  if (typeof university.acceptanceRate === 'number') {
+    const acceptance = university.acceptanceRate;
     const acceptanceScore = acceptance > 0 ? clampScore((1 - acceptance) * 100) / 100 : 0.5;
     scores.push(acceptanceScore);
   }
 
-  if (program.field && aspirations.target_fields && aspirations.target_fields.length > 0) {
-    scores.push(jaccard(aspirations.target_fields, [program.field]));
+  if (program.field && aspirations.targetFields && aspirations.targetFields.length > 0) {
+    scores.push(jaccard(aspirations.targetFields, [program.field]));
   }
 
-  if (university.requires_test === false) {
+  if (university.requiresTest === false) {
     scores.push(0.6);
   }
 
@@ -292,10 +292,10 @@ export const rankMatches = (inputs: MatchInput[], weights: MatchingWeights = def
 
 const describePrestige = (university: University) => {
   const rank =
-    typeof university.rank_overall === 'number' && university.rank_overall > 0 ? university.rank_overall : undefined;
+    typeof university.rankOverall === 'number' && university.rankOverall > 0 ? university.rankOverall : undefined;
   const rankScore = rank ? Math.max(0, 1 - (rank - 1) / 500) : 0.4;
   const acceptanceScore =
-    typeof university.acceptance_rate === 'number' ? Math.max(0, Math.min(1, 1 - university.acceptance_rate)) : 0.4;
+    typeof university.acceptanceRate === 'number' ? Math.max(0, Math.min(1, 1 - university.acceptanceRate)) : 0.4;
   return (rankScore + acceptanceScore) / 2;
 };
 

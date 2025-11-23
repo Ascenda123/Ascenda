@@ -62,7 +62,7 @@ export const ScholarshipExplorer = ({ scholarships }: ScholarshipExplorerProps) 
             <Label htmlFor="country-filter">Country</Label>
             <select
               id="country-filter"
-              className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/30"
+              className="mt-2 w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               value={country}
               onChange={(event) => setCountry(event.target.value)}
             >
@@ -78,7 +78,7 @@ export const ScholarshipExplorer = ({ scholarships }: ScholarshipExplorerProps) 
             <Label htmlFor="level-filter">Level</Label>
             <select
               id="level-filter"
-              className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/30"
+              className="mt-2 w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               value={level}
               onChange={(event) => setLevel(event.target.value)}
             >
@@ -111,30 +111,30 @@ export const ScholarshipExplorer = ({ scholarships }: ScholarshipExplorerProps) 
 
       <section className="space-y-3">
         {filtered.length === 0 ? (
-          <div className="rounded-[28px] border border-dashed border-slate-200 bg-white/70 p-8 text-center text-slate-500">
+          <div className="rounded-[28px] border border-dashed border-border bg-muted/30 p-8 text-center text-muted-foreground">
             No scholarships match these filters. Try widening your search.
           </div>
         ) : (
           filtered.map((scholarship) => (
             <article
               key={scholarship.id}
-              className="rounded-[28px] border border-slate-100 bg-white p-6 shadow-[0_12px_30px_rgba(15,23,42,0.08)]"
+              className="rounded-[28px] border border-border bg-card p-6 shadow-[0_12px_30px_rgba(15,23,42,0.08)]"
             >
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
-                  <p className="text-[11px] uppercase tracking-[0.4em] text-slate-400">
+                  <p className="text-[11px] uppercase tracking-[0.4em] text-muted-foreground">
                     {scholarship.category ?? 'General'}
                   </p>
-                  <h3 className="text-xl font-semibold text-slate-900">{scholarship.name}</h3>
-                  <p className="text-sm text-slate-500">
+                  <h3 className="text-xl font-semibold text-foreground">{scholarship.name}</h3>
+                  <p className="text-sm text-muted-foreground">
                     {scholarship.country ?? scholarship.region ?? 'Global'} • {scholarship.level ?? 'Any level'}
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-2xl font-semibold text-slate-900">
+                  <p className="text-2xl font-semibold text-foreground">
                     {scholarship.currency ?? 'USD'} {scholarship.amount?.toLocaleString() ?? '—'}
                   </p>
-                  <p className="text-xs text-slate-500">Deadline {scholarship.deadline ?? 'Rolling'}</p>
+                  <p className="text-xs text-muted-foreground">Deadline {scholarship.deadline ?? 'Rolling'}</p>
                 </div>
               </div>
               <div className="mt-4 flex flex-wrap items-center gap-3">
