@@ -218,24 +218,24 @@ export default async function ShortlistPage() {
           </p>
           <div className="grid gap-4 sm:grid-cols-3">
             {coverageStats.map((stat) => (
-              <div key={stat.label} className="rounded-[24px] border border-slate-100 bg-slate-50/80 px-4 py-3">
-                <p className="text-xs uppercase tracking-[0.3em] text-slate-400">{stat.label}</p>
-                <p className="text-2xl font-semibold text-slate-900">{stat.value}</p>
-                <p className="text-xs text-slate-500">{stat.detail}</p>
+              <div key={stat.label} className="rounded-[24px] border border-border bg-muted/70 px-4 py-3 transition-colors">
+                <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">{stat.label}</p>
+                <p className="text-2xl font-semibold text-foreground">{stat.value}</p>
+                <p className="text-xs text-muted-foreground">{stat.detail}</p>
               </div>
             ))}
           </div>
-          <div className="rounded-[28px] border border-slate-100 bg-slate-50/70 p-4">
-            <p className="text-xs uppercase tracking-[0.35em] text-slate-400">Next actions</p>
+          <div className="rounded-[28px] border border-border bg-muted/70 p-4 transition-colors">
+            <p className="text-xs uppercase tracking-[0.35em] text-muted-foreground">Next actions</p>
             <div className="mt-3 space-y-3">
               {nextActionDigest.map((item) => (
-                <div key={item.id} className="rounded-2xl border border-white bg-white px-4 py-3 shadow-[0_10px_25px_rgba(15,23,42,0.05)]">
+                <div key={item.id} className="rounded-2xl border border-border bg-background px-4 py-3 text-foreground shadow-[0_10px_25px_rgba(15,23,42,0.05)] transition-colors">
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="text-sm font-semibold text-slate-900">{item.label}</p>
-                      <p className="text-xs text-slate-500">{item.action}</p>
+                      <p className="text-sm font-semibold text-foreground">{item.label}</p>
+                      <p className="text-xs text-muted-foreground">{item.action}</p>
                     </div>
-                    <span className="text-[0.65rem] font-semibold uppercase tracking-[0.35em] text-slate-400">{item.stage}</span>
+                    <span className="text-[0.65rem] font-semibold uppercase tracking-[0.35em] text-muted-foreground">{item.stage}</span>
                   </div>
                 </div>
               ))}
@@ -245,29 +245,29 @@ export default async function ShortlistPage() {
             </Button>
           </div>
         </div>
-        <div className="space-y-4 rounded-[34px] border border-slate-100 bg-white p-6 shadow-[0_35px_80px_rgba(15,23,42,0.08)]">
+        <div className="space-y-4 rounded-[34px] border border-border bg-card p-6 text-foreground shadow-[0_35px_80px_rgba(15,23,42,0.08)] transition-colors">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs uppercase tracking-[0.35em] text-slate-400">Collaboration</p>
-              <h2 className="text-2xl font-semibold text-slate-900">Partner board</h2>
+              <p className="text-xs uppercase tracking-[0.35em] text-muted-foreground">Collaboration</p>
+              <h2 className="text-2xl font-semibold text-foreground">Partner board</h2>
             </div>
-            <LayoutList className="h-6 w-6 text-slate-400" aria-hidden />
+            <LayoutList className="h-6 w-6 text-muted-foreground" aria-hidden />
           </div>
           <ul className="space-y-3">
             {collaborationBoard.map((item) => (
-              <li key={item.id} className="rounded-[24px] border border-slate-100 bg-slate-50/80 px-4 py-3">
+              <li key={item.id} className="rounded-[24px] border border-border bg-muted/70 px-4 py-3 transition-colors">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-sm font-semibold text-slate-900">{item.title}</p>
-                    <p className="text-xs text-slate-500">Owner: {item.owner}</p>
+                    <p className="text-sm font-semibold text-foreground">{item.title}</p>
+                    <p className="text-xs text-muted-foreground">Owner: {item.owner}</p>
                   </div>
-                  <span className="text-xs uppercase tracking-[0.3em] text-slate-400">{item.status}</span>
+                  <span className="text-xs uppercase tracking-[0.3em] text-muted-foreground">{item.status}</span>
                 </div>
-                <p className="mt-1 text-xs text-slate-500">Due {item.due}</p>
+                <p className="mt-1 text-xs text-muted-foreground">Due {item.due}</p>
               </li>
             ))}
           </ul>
-          <div className="rounded-[24px] border border-dashed border-slate-200 bg-slate-50/60 px-4 py-3 text-xs text-slate-500">
+          <div className="rounded-[24px] border border-dashed border-border bg-muted/60 px-4 py-3 text-xs text-muted-foreground">
             Share this board to give counselors the full module view before next sync.
           </div>
           <Button type="button" size="sm" variant="soft">
@@ -276,12 +276,12 @@ export default async function ShortlistPage() {
         </div>
       </section>
 
-      <section className="space-y-6 rounded-[34px] border border-slate-100 bg-white p-6 shadow-[0_35px_80px_rgba(15,23,42,0.08)]">
+      <section className="space-y-6 rounded-[34px] border border-border bg-card p-6 text-foreground shadow-[0_35px_80px_rgba(15,23,42,0.08)] transition-colors">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <p className="text-xs uppercase tracking-[0.35em] text-slate-400">Shortlist stack</p>
-            <h2 className="text-3xl font-semibold text-slate-900">Course details</h2>
-            <p className="text-sm text-slate-500">Modules, cadence, and immersion notes pulled straight from the shortlist.</p>
+            <p className="text-xs uppercase tracking-[0.35em] text-muted-foreground">Shortlist stack</p>
+            <h2 className="text-3xl font-semibold text-foreground">Course details</h2>
+            <p className="text-sm text-muted-foreground">Modules, cadence, and immersion notes pulled straight from the shortlist.</p>
           </div>
           <Button size="sm" variant="ghost">
             Export PDF
@@ -290,31 +290,31 @@ export default async function ShortlistPage() {
         <CourseDetailsPanel courses={shortlistCourses} />
       </section>
 
-      <section className="space-y-4 rounded-[34px] border border-slate-100 bg-white p-6 shadow-[0_30px_70px_rgba(15,23,42,0.08)]">
+      <section className="space-y-4 rounded-[34px] border border-border bg-card p-6 text-foreground shadow-[0_30px_70px_rgba(15,23,42,0.08)] transition-colors">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs uppercase tracking-[0.35em] text-slate-400">Rhythm</p>
-            <h2 className="text-2xl font-semibold text-slate-900">Weekly focus timeline</h2>
+            <p className="text-xs uppercase tracking-[0.35em] text-muted-foreground">Rhythm</p>
+            <h2 className="text-2xl font-semibold text-foreground">Weekly focus timeline</h2>
           </div>
-          <CalendarDays className="h-6 w-6 text-slate-400" aria-hidden />
+          <CalendarDays className="h-6 w-6 text-muted-foreground" aria-hidden />
         </div>
         <div className="space-y-4">
           {weekTimeline.map((phase) => (
             <article
               key={phase.id}
-              className="rounded-[28px] border border-slate-100 bg-slate-50/80 p-4 shadow-[0_15px_45px_rgba(15,23,42,0.08)]"
+              className="rounded-[28px] border border-border bg-muted/70 p-4 text-foreground shadow-[0_15px_45px_rgba(15,23,42,0.08)] transition-colors"
             >
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.3em] text-slate-400">{phase.window}</p>
-                  <p className="text-base font-semibold text-slate-900">{phase.focus}</p>
+                  <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">{phase.window}</p>
+                  <p className="text-base font-semibold text-foreground">{phase.focus}</p>
                 </div>
-                <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">
+                <span className="rounded-full bg-background px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground">
                   {phase.course}
                 </span>
               </div>
-              <p className="mt-2 text-sm text-slate-600">{phase.detail}</p>
-              <div className="mt-3 flex items-center gap-2 text-xs text-slate-500">
+              <p className="mt-2 text-sm text-muted-foreground">{phase.detail}</p>
+              <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
                 <Target className="h-4 w-4 text-emerald-500" aria-hidden />
                 {phase.action}
               </div>
@@ -324,54 +324,54 @@ export default async function ShortlistPage() {
       </section>
 
       <section className="grid gap-6 lg:grid-cols-[1.2fr,0.8fr]">
-        <div className="space-y-4 rounded-[34px] border border-slate-100 bg-white p-6 shadow-[0_30px_70px_rgba(15,23,42,0.08)]">
+        <div className="space-y-4 rounded-[34px] border border-border bg-card p-6 text-foreground shadow-[0_30px_70px_rgba(15,23,42,0.08)] transition-colors">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs uppercase tracking-[0.35em] text-slate-400">Signals</p>
-              <h2 className="text-2xl font-semibold text-slate-900">Course updates</h2>
+              <p className="text-xs uppercase tracking-[0.35em] text-muted-foreground">Signals</p>
+              <h2 className="text-2xl font-semibold text-foreground">Course updates</h2>
             </div>
-            <Clock className="h-6 w-6 text-slate-400" aria-hidden />
+            <Clock className="h-6 w-6 text-muted-foreground" aria-hidden />
           </div>
           <ul className="space-y-3">
             {courseSignals.map((signal) => (
               <li
                 key={signal.id}
-                className="rounded-[26px] border border-slate-100 bg-slate-50/70 px-4 py-3 shadow-[0_15px_40px_rgba(15,23,42,0.08)]"
+                className="rounded-[26px] border border-border bg-muted/70 px-4 py-3 text-foreground shadow-[0_15px_40px_rgba(15,23,42,0.08)] transition-colors"
               >
                 <div className="flex items-center justify-between gap-3">
-                  <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">{signal.course}</p>
-                  <span className="text-[0.6rem] uppercase tracking-[0.4em] text-slate-400">{signal.timeAgo}</span>
+                  <p className="text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground">{signal.course}</p>
+                  <span className="text-[0.6rem] uppercase tracking-[0.4em] text-muted-foreground">{signal.timeAgo}</span>
                 </div>
-                <p className="text-sm font-semibold text-slate-900">{signal.title}</p>
-                <p className="text-xs text-slate-500">{signal.detail}</p>
+                <p className="text-sm font-semibold text-foreground">{signal.title}</p>
+                <p className="text-xs text-muted-foreground">{signal.detail}</p>
               </li>
             ))}
           </ul>
         </div>
-        <div className="space-y-4 rounded-[34px] border border-slate-100 bg-white p-6 shadow-[0_30px_70px_rgba(15,23,42,0.08)]">
+        <div className="space-y-4 rounded-[34px] border border-border bg-card p-6 text-foreground shadow-[0_30px_70px_rgba(15,23,42,0.08)] transition-colors">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs uppercase tracking-[0.35em] text-slate-400">Load summary</p>
-              <h2 className="text-2xl font-semibold text-slate-900">What to expect</h2>
+              <p className="text-xs uppercase tracking-[0.35em] text-muted-foreground">Load summary</p>
+              <h2 className="text-2xl font-semibold text-foreground">What to expect</h2>
             </div>
-            <Map className="h-6 w-6 text-slate-400" aria-hidden />
+            <Map className="h-6 w-6 text-muted-foreground" aria-hidden />
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             {loadInsights.map((insight) => (
-              <div key={insight.label} className="rounded-[24px] border border-slate-100 bg-slate-50/70 px-4 py-3">
-                <p className="text-xs uppercase tracking-[0.3em] text-slate-400">{insight.label}</p>
-                <p className="text-2xl font-semibold text-slate-900">{insight.value}</p>
-                <p className="text-xs text-slate-500">{insight.detail}</p>
+              <div key={insight.label} className="rounded-[24px] border border-border bg-muted/70 px-4 py-3 transition-colors">
+                <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">{insight.label}</p>
+                <p className="text-2xl font-semibold text-foreground">{insight.value}</p>
+                <p className="text-xs text-muted-foreground">{insight.detail}</p>
               </div>
             ))}
           </div>
-          <div className="rounded-[26px] border border-slate-100 bg-slate-50/80 px-4 py-3 text-sm text-slate-600">
+          <div className="rounded-[26px] border border-border bg-muted/70 px-4 py-3 text-sm text-muted-foreground transition-colors">
             Keep logging reflections after each tutorial or studio—Ascenda will soon surface trends to guide decisions.
           </div>
           <Button type="button" size="sm" variant="secondary" className="w-full">
             Add reflection
           </Button>
-          <div className="flex items-center gap-2 rounded-[24px] border border-slate-100 bg-white px-4 py-3 text-xs text-slate-500">
+          <div className="flex items-center gap-2 rounded-[24px] border border-border bg-background px-4 py-3 text-xs text-muted-foreground transition-colors">
             <CheckCircle2 className="h-4 w-4 text-emerald-500" aria-hidden />
             Immersion docs are synced for Oxford + NUS.
           </div>

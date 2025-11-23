@@ -72,9 +72,9 @@ export default async function DashboardPage() {
   const academics = academicsResponse.data ?? null;
   const preferences = preferencesResponse.data ?? null;
   const aspirations = aspirationsResponse.data ?? null;
-  const programs = programsResponse.data ?? [];
-  const universities = universitiesResponse.data ?? [];
-  const requirements = requirementsResponse.data ?? [];
+  const programs = (programsResponse.data ?? []) as Program[];
+  const universities = (universitiesResponse.data ?? []) as University[];
+  const requirements = (requirementsResponse.data ?? []) as ProgramRequirement[];
 
   let matches: EnrichedMatch[] = [];
 

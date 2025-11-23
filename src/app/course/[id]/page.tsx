@@ -22,13 +22,14 @@ import {
   Presentation,
   ShieldCheck,
   Workflow,
-  Users
+  Users,
+  type LucideIcon
 } from 'lucide-react';
 import { Navbar } from '@/components/layout/navbar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
-type IconType = (props: { className?: string; size?: number }) => JSX.Element;
+type IconType = LucideIcon;
 
 type EntryRequirement = { label: string; value: string; icon: IconType };
 type CohortFact = { label: string; value: string };
@@ -311,7 +312,7 @@ export default function CoursePage({ params }: { params: { id: string } }) {
   ];
 
   return (
-    <div className="min-h-screen bg-[#f5f5f7] text-slate-900">
+    <div className="min-h-screen bg-background text-foreground">
       <Navbar />
       <div className="mx-auto max-w-screen-2xl space-y-10 px-4 py-10 md:px-8 lg:px-12">
         <Hero
@@ -326,14 +327,14 @@ export default function CoursePage({ params }: { params: { id: string } }) {
         <div className="space-y-8">
           <div className="grid gap-4 md:grid-cols-2">
             <QuickActions shortlisted={shortlisted} applyUrl={course.applyUrl} courseUrl={course.courseUrl} />
-            <Card className="border-slate-100 bg-white shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+            <Card className="border-border bg-card shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
               <CardContent className="space-y-3 p-5">
-                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">Key facts</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground">Key facts</p>
                 <div className="space-y-3">
                   {course.quickFacts.map((fact) => (
-                    <div key={fact.label} className="flex items-center justify-between text-sm text-slate-700">
-                      <span className="text-slate-500">{fact.label}</span>
-                      <span className="font-semibold text-slate-900">{fact.value}</span>
+                    <div key={fact.label} className="flex items-center justify-between text-sm text-muted-foreground">
+                      <span className="text-muted-foreground">{fact.label}</span>
+                      <span className="font-semibold text-foreground">{fact.value}</span>
                     </div>
                   ))}
                 </div>
@@ -346,11 +347,11 @@ export default function CoursePage({ params }: { params: { id: string } }) {
               {metricCards.map((metric) => (
                 <Card
                   key={metric.label}
-                  className="border-slate-100 bg-white shadow-[0_18px_35px_rgba(15,23,42,0.08)] transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_24px_55px_rgba(15,23,42,0.12)]"
+                  className="border-border bg-card text-foreground shadow-[0_18px_35px_rgba(15,23,42,0.08)] transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_24px_55px_rgba(15,23,42,0.12)]"
                 >
                   <CardContent className="space-y-2 p-4">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-slate-500">{metric.label}</p>
-                    <p className="text-lg font-semibold text-slate-900">{metric.value}</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">{metric.label}</p>
+                    <p className="text-lg font-semibold text-foreground">{metric.value}</p>
                     {metric.label === 'Student Satisfaction (NSS)' ? (
                       <ProgressBar value={course.satisfaction} />
                     ) : metric.label === 'Graduate Employment Rate' ? (
@@ -371,15 +372,15 @@ export default function CoursePage({ params }: { params: { id: string } }) {
               {course.entryRequirements.map((item) => (
                 <Card
                   key={item.label}
-                  className="border-slate-100 bg-white shadow-[0_18px_35px_rgba(15,23,42,0.06)] transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_22px_48px_rgba(15,23,42,0.1)]"
+                  className="border-border bg-card text-foreground shadow-[0_18px_35px_rgba(15,23,42,0.06)] transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_22px_48px_rgba(15,23,42,0.1)]"
                 >
                   <CardContent className="flex items-start gap-4 p-5">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-50 text-slate-700 shadow-[0_10px_22px_rgba(15,23,42,0.06)]">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-muted text-foreground shadow-[0_10px_22px_rgba(15,23,42,0.06)]">
                       <item.icon size={18} />
                     </div>
                     <div className="space-y-1">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-500">{item.label}</p>
-                      <p className="text-sm font-semibold text-slate-900">{item.value}</p>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-muted-foreground">{item.label}</p>
+                      <p className="text-sm font-semibold text-foreground">{item.value}</p>
                     </div>
                   </CardContent>
                 </Card>
@@ -392,11 +393,11 @@ export default function CoursePage({ params }: { params: { id: string } }) {
               {course.cohort.map((item) => (
                 <Card
                   key={item.label}
-                  className="border-slate-100 bg-white shadow-[0_18px_35px_rgba(15,23,42,0.08)] transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_24px_55px_rgba(15,23,42,0.12)]"
+                  className="border-border bg-card text-foreground shadow-[0_18px_35px_rgba(15,23,42,0.08)] transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_24px_55px_rgba(15,23,42,0.12)]"
                 >
                   <CardContent className="space-y-1 p-4">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-slate-500">{item.label}</p>
-                    <p className="text-lg font-semibold text-slate-900">{item.value}</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">{item.label}</p>
+                    <p className="text-lg font-semibold text-foreground">{item.value}</p>
                   </CardContent>
                 </Card>
               ))}
@@ -408,16 +409,16 @@ export default function CoursePage({ params }: { params: { id: string } }) {
               {course.modules.map((module, index) => (
                 <Card
                   key={module.title}
-                  className="border-slate-100 bg-white shadow-[0_18px_35px_rgba(15,23,42,0.08)] transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_24px_55px_rgba(15,23,42,0.12)]"
+                  className="border-border bg-card text-foreground shadow-[0_18px_35px_rgba(15,23,42,0.08)] transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_24px_55px_rgba(15,23,42,0.12)]"
                 >
                   <CardContent className="space-y-3 p-4">
                     <div className="flex items-center gap-2">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 text-slate-700 shadow-[0_10px_24px_rgba(15,23,42,0.06)]">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted text-foreground shadow-[0_10px_24px_rgba(15,23,42,0.06)]">
                         <module.icon size={18} />
                       </div>
-                      <p className="text-sm font-semibold text-slate-900">{module.title}</p>
+                      <p className="text-sm font-semibold text-foreground">{module.title}</p>
                     </div>
-                    <ul className="space-y-2 text-sm text-slate-700">
+                    <ul className="space-y-2 text-sm text-muted-foreground">
                       {module.items.map((item) => (
                         <li key={item} className="flex items-center gap-2">
                           <ModuleIcon label={item} />
@@ -434,10 +435,10 @@ export default function CoursePage({ params }: { params: { id: string } }) {
 
           <Section title="Application information" description="Find out how to apply to this program.">
             <div className="grid gap-6 lg:grid-cols-[1.15fr,1fr]">
-              <Card className="border-slate-100 bg-slate-50/60 shadow-[0_20px_55px_rgba(15,23,42,0.1)]">
-                <CardHeader className="border-b border-slate-200/80">
-                  <CardTitle className="text-2xl text-slate-900">Application Information</CardTitle>
-                  <p className="text-sm text-slate-600">Find out how to apply to this program.</p>
+              <Card className="border-border bg-muted/60 text-foreground shadow-[0_20px_55px_rgba(15,23,42,0.1)]">
+                <CardHeader className="border-b border-border/70">
+                  <CardTitle className="text-2xl text-foreground">Application Information</CardTitle>
+                  <p className="text-sm text-muted-foreground">Find out how to apply to this program.</p>
                 </CardHeader>
                 <CardContent className="flex flex-col gap-3 p-6">
                   <Button
@@ -460,18 +461,18 @@ export default function CoursePage({ params }: { params: { id: string } }) {
                 {course.applicationCards.map((card) => (
                   <Card
                     key={card.title}
-                    className="border-slate-100 bg-white shadow-[0_16px_35px_rgba(15,23,42,0.08)] transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_22px_48px_rgba(15,23,42,0.1)]"
+                    className="border-border bg-card text-foreground shadow-[0_16px_35px_rgba(15,23,42,0.08)] transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_22px_48px_rgba(15,23,42,0.1)]"
                   >
                     <CardContent className="flex items-start justify-between gap-3 p-5">
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
-                          <span className="h-2.5 w-2.5 rounded-full bg-slate-900" />
-                          <p className="text-sm font-semibold text-slate-900">{card.title}</p>
+                          <span className="h-2.5 w-2.5 rounded-full bg-primary" />
+                          <p className="text-sm font-semibold text-foreground">{card.title}</p>
                         </div>
-                        <p className="text-sm text-slate-600">{card.body}</p>
+                        <p className="text-sm text-muted-foreground">{card.body}</p>
                         <Link
                           href={card.href}
-                          className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-900 underline-offset-4 hover:underline"
+                          className="text-xs font-semibold uppercase tracking-[0.28em] text-foreground underline-offset-4 hover:underline"
                         >
                           {card.linkLabel}
                         </Link>
@@ -490,11 +491,11 @@ export default function CoursePage({ params }: { params: { id: string } }) {
 
 const QuickActions = ({ shortlisted, applyUrl, courseUrl }: { shortlisted: boolean; applyUrl?: string; courseUrl?: string }) => {
   return (
-    <Card className="border-slate-100 bg-white shadow-[0_22px_50px_rgba(15,23,42,0.12)]">
+    <Card className="border-border bg-card text-foreground shadow-[0_22px_50px_rgba(15,23,42,0.12)]">
       <CardContent className="space-y-4 p-5">
         <div className="space-y-1">
-          <p className="text-xs font-semibold uppercase tracking-[0.35em] text-slate-500">Quick actions</p>
-          <p className="text-sm text-slate-600">Keep key links and actions in reach while you scan details.</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.35em] text-muted-foreground">Quick actions</p>
+          <p className="text-sm text-muted-foreground">Keep key links and actions in reach while you scan details.</p>
         </div>
         <div className="space-y-3">
           <Button asChild className="w-full">
@@ -584,36 +585,36 @@ const Hero = ({
   backLabel: string;
 }) => {
   return (
-    <Card className="border-slate-100 bg-white shadow-[0_28px_70px_rgba(15,23,42,0.08)]">
+    <Card className="border-border bg-card text-foreground shadow-[0_28px_70px_rgba(15,23,42,0.08)]">
       <CardContent className="space-y-5 p-6 md:p-8">
-        <div className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+        <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
           <Link
             href={backHref}
-            className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs uppercase tracking-[0.28em] text-slate-700 transition hover:border-slate-900 hover:bg-slate-900 hover:text-white"
+            className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1 text-xs uppercase tracking-[0.28em] text-muted-foreground transition hover:border-primary/60 hover:bg-muted hover:text-foreground"
           >
             <Globe2 size={14} />
             {backLabel}
           </Link>
         </div>
         <div className="space-y-3">
-          <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.35em] text-slate-500">
+          <div className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.35em] text-muted-foreground">
             <span>Course</span>
-            <span className="text-slate-900">Overview</span>
+            <span className="text-foreground">Overview</span>
           </div>
-          <h1 className="text-4xl font-semibold text-slate-900 md:text-5xl">{meta.title}</h1>
-          <p className="text-lg text-slate-700">{meta.university}</p>
+          <h1 className="text-4xl font-semibold text-foreground md:text-5xl">{meta.title}</h1>
+          <p className="text-lg text-muted-foreground">{meta.university}</p>
           <div className="flex flex-wrap items-center gap-3">
-            <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm">
-              <Globe2 size={16} className="text-slate-500" />
+            <div className="inline-flex items-center gap-2 rounded-full border border-border bg-muted px-4 py-2 text-sm font-semibold text-foreground shadow-sm">
+              <Globe2 size={16} className="text-muted-foreground" />
               <span>{meta.location}</span>
             </div>
             <div className="flex flex-wrap gap-3">
-              <Button variant="outline" className="border-slate-900 bg-white text-slate-900 hover:bg-slate-900 hover:text-white">
+              <Button variant="outline" className="border-border text-foreground hover:bg-muted/60">
                 Compare
               </Button>
               <Button
                 onClick={onShortlist}
-                className={`bg-slate-900 text-white shadow-[0_20px_55px_rgba(15,23,42,0.16)] hover:bg-black ${
+                className={`bg-primary text-primary-foreground shadow-[0_20px_55px_rgba(99,102,241,0.16)] hover:bg-primary/90 ${
                   shortlisted ? 'opacity-90' : ''
                 }`}
               >
@@ -626,21 +627,21 @@ const Hero = ({
 
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap gap-2">
-            <span className="rounded-full border border-slate-900 bg-slate-900 px-4 py-2 text-sm font-semibold text-white">Course</span>
+            <span className="rounded-full border border-border bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">Course</span>
             <Link
               href={`/university-search/university/${programId}?from=course`}
-              className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-900 hover:bg-slate-900 hover:text-white"
+              className="rounded-full border border-border bg-background px-4 py-2 text-sm font-semibold text-foreground transition hover:border-primary/60 hover:bg-muted hover:text-foreground"
             >
               University
             </Link>
           </div>
-          <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-slate-600">
+          <span className="inline-flex items-center gap-2 rounded-full border border-border bg-muted px-3 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-muted-foreground">
             <span>Fall 2025</span>
-            <span className="text-slate-900">Open</span>
+            <span className="text-foreground">Open</span>
           </span>
         </div>
-        <div className="h-[3px] w-full rounded-full bg-gradient-to-r from-slate-900 via-slate-700 to-slate-900 opacity-80" />
-        <p className="text-sm text-slate-600">
+        <div className="h-[3px] w-full rounded-full bg-gradient-to-r from-primary via-primary/80 to-primary opacity-80" />
+        <p className="text-sm text-muted-foreground">
           Scan every key signal for this course: rankings, requirements, cohort makeup, modules, and how to apply.
         </p>
       </CardContent>
@@ -651,14 +652,14 @@ const Hero = ({
 const Section = ({ title, description, children }: { title: string; description: string; children: React.ReactNode }) => (
   <section className="space-y-6">
     <div className="space-y-2">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.35em] text-slate-400">{title}</p>
+      <p className="text-[11px] font-semibold uppercase tracking-[0.35em] text-muted-foreground">{title}</p>
       <div className="space-y-1">
-        <h2 className="text-3xl font-semibold text-slate-900 md:text-[34px]">{title}</h2>
-        <p className="text-base text-slate-600 md:text-lg">{description}</p>
+        <h2 className="text-3xl font-semibold text-foreground md:text-[34px]">{title}</h2>
+        <p className="text-base text-muted-foreground md:text-lg">{description}</p>
       </div>
     </div>
-    <Card className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-[0_24px_60px_rgba(15,23,42,0.08)] transition-all duration-300 hover:-translate-y-[2px] hover:shadow-[0_30px_80px_rgba(15,23,42,0.1)]">
-      <div className="h-1 w-full bg-gradient-to-r from-slate-100 via-white to-slate-100" />
+    <Card className="overflow-hidden rounded-xl border border-border bg-card text-foreground shadow-[0_24px_60px_rgba(15,23,42,0.08)] transition-all duration-300 hover:-translate-y-[2px] hover:shadow-[0_30px_80px_rgba(15,23,42,0.1)]">
+      <div className="h-1 w-full bg-gradient-to-r from-muted via-background to-muted" />
       <CardContent className="space-y-8 p-6 lg:p-8">{children}</CardContent>
     </Card>
   </section>
