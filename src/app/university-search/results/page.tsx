@@ -128,19 +128,19 @@ export default function UniversitySearchResultsPage() {
                             ))}
                           </div>
                           <div className="mt-auto grid gap-2 pt-5 sm:grid-cols-2 lg:grid-cols-3">
-                            <Button asChild size="sm" variant="soft" className="w-full">
+                            <Button asChild size="sm" variant="default" className="w-full justify-center">
                               <Link href={`/course/${result.id}?from=search`}>Course details</Link>
                             </Button>
                             <Button
                               size="sm"
-                              variant="soft"
-                              className="w-full"
+                              variant="secondary"
+                              className="w-full justify-center"
                               onClick={() => handleAdd(result)}
                               disabled={isShortlisted}
                             >
                               {isShortlisted ? 'Shortlisted' : 'Add to shortlist'}
                             </Button>
-                            <Button asChild size="sm" variant="outline" className="w-full">
+                            <Button asChild size="sm" variant="outline" className="w-full justify-center">
                               <Link href={`/university-search/university/${result.id}?from=search`}>University info</Link>
                             </Button>
                           </div>
