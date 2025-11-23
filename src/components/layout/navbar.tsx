@@ -19,6 +19,7 @@ const links = [
 export const Navbar = () => {
   const pathname = usePathname();
   const { mode } = useThemeMode();
+  const logoSrc = '/Ascenda_Logo-removebg-.png';
 
   return (
     <header className="fixed inset-x-0 top-0 z-50 flex justify-center px-4 py-3">
@@ -26,10 +27,10 @@ export const Navbar = () => {
         <Link href="/dashboard" className="flex items-center gap-3 text-lg font-semibold text-foreground">
           <div className="relative h-12 w-12 shrink-0 scale-125">
             <Image
-              src="/Ascenda Logo.png"
+              src={logoSrc}
               alt="Ascenda logo"
               fill
-              className={cn('rounded-full object-contain transition', mode === 'dark' ? 'invert' : '')}
+              className={cn('rounded-full object-contain transition', mode === 'dark' ? 'brightness-110' : '')}
             />
           </div>
           <div className="flex flex-col leading-tight">
