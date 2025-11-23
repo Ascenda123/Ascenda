@@ -1,10 +1,24 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
+import { Outfit, Inter } from 'next/font/google';
 import '@/app/globals.css';
 import '@radix-ui/themes/styles.css';
-import { Theme } from '@radix-ui/themes';
 import { Providers } from './providers';
 import messages from '@/messages/en.json';
+import { cn } from '@/lib/utils';
+import { ThemeProvider } from '@/components/theme/theme-provider';
+
+const outfit = Outfit({
+  subsets: ['latin'],
+  variable: '--font-outfit',
+  display: 'swap',
+});
+
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: 'Ascenda — Admissions studio for global students',
@@ -17,19 +31,23 @@ export default function RootLayout({
   children: ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body className="bg-white text-slate-900 antialiased">
+    <html lang="en" suppressHydrationWarning>
+      <body className={cn(
+        "min-h-screen bg-background font-sans antialiased",
+        outfit.variable,
+        inter.variable
+      )}>
         <a
           href="#main-content"
-          className="absolute left-4 top-4 -translate-y-16 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-900 shadow focus-visible:translate-y-0"
+          className="absolute left-4 top-4 -translate-y-16 rounded-full border border-border bg-background px-4 py-2 text-sm text-foreground shadow focus-visible:translate-y-0 z-50"
         >
           Skip to content
         </a>
-        <Theme appearance="light" accentColor="cyan" grayColor="slate" scaling="100%">
-          <div className="relative min-h-screen overflow-hidden bg-white">
+        <ThemeProvider>
+          <div className="relative min-h-screen overflow-hidden bg-background text-foreground selection:bg-primary/30 selection:text-primary-foreground">
             <Providers messages={messages}>{children}</Providers>
           </div>
-        </Theme>
+        </ThemeProvider>
       </body>
     </html>
   );

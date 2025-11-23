@@ -9,7 +9,7 @@ import { trackEvent } from '@/lib/analytics';
 
 interface ProvidersProps {
   children: ReactNode;
-  messages?: Record<string, string>;
+  messages?: Record<string, any>;
 }
 
 export const Providers = ({ children, messages }: ProvidersProps) => {
@@ -20,7 +20,7 @@ export const Providers = ({ children, messages }: ProvidersProps) => {
       <QueryClientProvider client={client}>
         {children}
         <AnalyticsBridge />
-        <ReactQueryDevtools initialIsOpen={false} position="bottom-right" />
+        <ReactQueryDevtools initialIsOpen={false} />
       </QueryClientProvider>
     </NextIntlClientProvider>
   );

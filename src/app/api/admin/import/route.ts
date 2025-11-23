@@ -25,8 +25,8 @@ export async function POST(request: Request) {
     }
 
     const sanitizedRows = rows
-      .filter((row): row is Record<string, unknown> => typeof row === 'object' && row !== null)
-      .map((row) => {
+      .filter((row: any): row is Record<string, unknown> => typeof row === 'object' && row !== null)
+      .map((row: Record<string, unknown>) => {
         const normalized: Record<string, unknown> = {};
         Object.entries(row).forEach(([key, value]) => {
           if (value === '' || value === undefined) return;
@@ -34,7 +34,7 @@ export async function POST(request: Request) {
         });
         return normalized;
       })
-      .filter((row) => Object.keys(row).length > 0);
+      .filter((row: Record<string, unknown>) => Object.keys(row).length > 0);
 
     if (sanitizedRows.length === 0) {
       return NextResponse.json({ error: 'Parsed rows were empty after sanitization.' }, { status: 400 });

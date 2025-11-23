@@ -28,12 +28,12 @@ export const ImportPanel = () => {
       Papa.parse(file, {
         header: true,
         skipEmptyLines: true,
-        complete: async (result) => {
+        complete: async (result: any) => {
           setRowCount(result.data.length);
           setRows(result.data as Record<string, unknown>[]);
           setStatus(`Parsed ${result.data.length} rows for ${template}. Review & sync.`);
         },
-        error: (parseError) => {
+        error: (parseError: any) => {
           setStatus('Parsing failed');
           setError(parseError.message);
         }

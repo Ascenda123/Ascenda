@@ -104,7 +104,7 @@ export async function GET() {
           requirement: requirementMap.get(program.id) ?? undefined
         } as MatchInput;
       })
-      .filter((value) => value !== null) as MatchInput[];
+      .filter((value: any) => value !== null) as MatchInput[];
 
     matchResults = rankMatches(inputs).slice(0, 3);
   }

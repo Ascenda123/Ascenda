@@ -36,7 +36,8 @@ const programA = {
   level: 'Undergraduate',
   language: 'English',
   mode: 'On-campus',
-  tuition: 42000
+  tuition: 42000,
+  university_id: 'univ-a'
 };
 
 const universityA = {
@@ -64,7 +65,8 @@ const programB = {
   level: 'Undergraduate',
   language: 'English',
   mode: 'On-campus',
-  tuition: 52000
+  tuition: 52000,
+  university_id: 'univ-b'
 };
 
 const universityB = {

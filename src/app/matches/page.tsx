@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { DashboardShell } from '@/components/layout/shell';
-import { rankMatches, type MatchInput } from '@/lib/matching/engine';
+import { rankMatches, type MatchInput, type Program, type University, type ProgramRequirement } from '@/lib/matching/engine';
 import { MatchList } from '@/components/match/match-list';
 import { PageHero } from '@/components/layout/page-hero';
 import { Button } from '@/components/ui/button';
@@ -22,11 +22,15 @@ export default async function MatchesPage() {
     redirect('/login');
   }
 
-  const [{ data: academics }, { data: preferences }, { data: aspirations }] = await Promise.all([
+  const [{ data: academicsData }, { data: preferencesData }, { data: aspirationsData }] = await Promise.all([
     supabase.from('student_academics').select('*').eq('profile_id', user.id).single(),
     supabase.from('student_preferences').select('*').eq('profile_id', user.id).single(),
     supabase.from('student_aspirations').select('*').eq('profile_id', user.id).single()
   ]);
+
+  const academics = academicsData as unknown as MatchInput['academics'];
+  const preferences = preferencesData as unknown as MatchInput['preferences'];
+  const aspirations = aspirationsData as unknown as MatchInput['aspirations'];
 
   if (!academics || !preferences || !aspirations) {
     return (
@@ -50,11 +54,15 @@ export default async function MatchesPage() {
     );
   }
 
-  const [{ data: programs }, { data: universities }, { data: requirements }] = await Promise.all([
+  const [{ data: programsData }, { data: universitiesData }, { data: requirementsData }] = await Promise.all([
     supabase.from('programs').select('*'),
     supabase.from('universities').select('*'),
     supabase.from('program_requirements').select('*')
   ]);
+
+  const programs = programsData as unknown as Program[];
+  const universities = universitiesData as unknown as University[];
+  const requirements = requirementsData as unknown as ProgramRequirement[];
 
   if (!programs || !universities) {
     return (
@@ -66,7 +74,7 @@ export default async function MatchesPage() {
     );
   }
 
-  const requirementMap = new Map(requirements?.map((item) => [item.program_id, item]));
+  const requirementMap = new Map(requirements?.map((item) => [item.program_id, item]) ?? []);
   const universityMap = new Map(universities.map((item) => [item.id, item]));
 
   const inputs: MatchInput[] = programs
@@ -80,7 +88,7 @@ export default async function MatchesPage() {
         program,
         university,
         requirement: requirementMap.get(program.id) ?? undefined
-      } satisfies MatchInput;
+      } as MatchInput;
     })
     .filter((value): value is MatchInput => value !== null);
 

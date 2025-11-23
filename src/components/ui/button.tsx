@@ -1,50 +1,56 @@
-import type { ComponentProps } from 'react';
-import { Button as RadixButton } from '@radix-ui/themes';
-import { cn } from '@/lib/utils';
+import * as React from "react"
+import { Slot } from "@radix-ui/react-slot"
+import { cva, type VariantProps } from "class-variance-authority"
+import { cn } from "@/lib/utils"
 
-type RadixButtonProps = ComponentProps<typeof RadixButton>;
+const buttonVariants = cva(
+  "inline-flex items-center justify-center whitespace-nowrap rounded-full text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+  {
+    variants: {
+      variant: {
+        default: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/25",
+        destructive:
+          "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+        outline:
+          "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
+        secondary:
+          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        ghost: "hover:bg-accent hover:text-accent-foreground",
+        link: "text-primary underline-offset-4 hover:underline",
+        soft: "bg-accent/10 text-accent hover:bg-accent/20",
+      },
+      size: {
+        default: "h-10 px-4 py-2",
+        sm: "h-9 rounded-full px-3",
+        lg: "h-11 rounded-full px-8",
+        icon: "h-10 w-10",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+      size: "default",
+    },
+  }
+)
 
-type Variant = 'default' | 'outline' | 'ghost' | 'destructive' | 'secondary' | 'soft';
-type Size = 'default' | 'sm' | 'lg' | 'icon';
-
-export interface ButtonProps extends Omit<RadixButtonProps, 'variant' | 'size' | 'color'> {
-  variant?: Variant;
-  size?: Size;
+export interface ButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+  VariantProps<typeof buttonVariants> {
+  asChild?: boolean
 }
 
-const variantClasses: Record<Variant, string> = {
-  default:
-    'bg-gradient-to-r from-[#0b1224] via-[#111c32] to-[#0b1224] text-white shadow-[0_28px_60px_rgba(15,23,42,0.25)] hover:from-[#0d1730] hover:via-[#182540] hover:to-[#0d1730] hover:shadow-[0_38px_80px_rgba(15,23,42,0.3)]',
-  outline: 'border border-[#E0E0E0] text-[#1C1C1C] hover:bg-[#F5F5F5] shadow-none',
-  ghost: 'text-[#666666] hover:bg-[#F5F5F5] shadow-none',
-  destructive: 'bg-[#C53030] text-white hover:bg-[#A52626] shadow-[0_18px_45px_rgba(197,48,48,0.35)]',
-  secondary: 'bg-[#E9F1FA] text-[#1C1C1C] hover:bg-[#d9e7f7] shadow-none',
-  soft: 'bg-[#F6FBFF] text-[#1C1C1C] hover:bg-[#edf5fb] shadow-none'
-};
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ className, variant, size, asChild = false, ...props }, ref) => {
+    const Comp = asChild ? Slot : "button"
+    return (
+      <Comp
+        className={cn(buttonVariants({ variant, size, className }))}
+        ref={ref}
+        {...props}
+      />
+    )
+  }
+)
+Button.displayName = "Button"
 
-const sizeClasses: Record<Size, string> = {
-  sm: 'px-4 py-2 text-sm',
-  default: 'px-6 py-3 text-sm',
-  lg: 'px-7 py-4 text-base',
-  icon: 'px-3 py-3 text-sm'
-};
-
-export const Button = ({ className, variant = 'default', size = 'default', ...props }: ButtonProps) => {
-  const variantClass = variantClasses[variant] ?? variantClasses.default;
-  const sizeClass = sizeClasses[size] ?? sizeClasses.default;
-
-  return (
-    <RadixButton
-      {...props}
-      radius="full"
-      variant="ghost"
-      color="gray"
-      className={cn(
-        'font-semibold tracking-tight transition-all duration-200 hover:scale-[1.02]',
-        variantClass,
-        sizeClass,
-        className
-      )}
-    />
-  );
-};
+export { Button, buttonVariants }

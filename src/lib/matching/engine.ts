@@ -41,6 +41,7 @@ export type Program = {
   tuition?: number | null;
   currency?: string | null;
   url?: string | null;
+  university_id: string;
 };
 
 export type University = {
@@ -72,7 +73,8 @@ export type MatchInput = {
   aspirations: StudentAspirations;
   program: Program;
   university: University;
-  requirement?: ProgramRequirement | null;
+  requirement?: ProgramRequirement;
+  weights?: MatchingWeights;
 };
 
 export type MatchBreakdown = {
@@ -251,7 +253,8 @@ export const combineScore = (breakdown: MatchBreakdown, weights: MatchingWeights
   return Math.round(total / (weights.eligibility + weights.academicFit + weights.preferenceFit + weights.outcomes));
 };
 
-export const scoreMatch = (input: MatchInput, weights: MatchingWeights = defaultWeights): MatchResult => {
+export const scoreMatch = (input: MatchInput, weightsArg: MatchingWeights = defaultWeights): MatchResult => {
+  const weights = input.weights || weightsArg;
   const eligibility = calculateEligibility(input);
   const academicFit = calculateAcademicFit(input);
   const preferenceFit = calculatePreferenceFit(input);

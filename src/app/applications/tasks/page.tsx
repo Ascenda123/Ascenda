@@ -32,7 +32,7 @@ export default async function ChecklistPage() {
       </section>
       <TaskList
         title="Tasks to complete"
-        tasks={(tasks ?? []).map((task) => ({
+        tasks={(tasks ?? []).map((task: any) => ({
           id: task.id,
           name: task.task_name,
           status: task.status,
