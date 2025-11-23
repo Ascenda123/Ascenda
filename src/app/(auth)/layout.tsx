@@ -5,7 +5,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
     <main className="form-page">
       <div className="w-full max-w-md form-flow">
-        <Card className="form-panel form-panel--roomy border-0 bg-white">
+        <Card className="form-panel form-panel--roomy border border-border bg-card text-foreground">
           <CardHeader className="form-stack border-0 bg-transparent px-0 pt-0">
             <CardTitle className="text-center text-2xl font-semibold">Ascenda</CardTitle>
           </CardHeader>

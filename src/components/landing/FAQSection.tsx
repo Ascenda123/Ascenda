@@ -44,7 +44,7 @@ export function FAQSection() {
     const [openFaq, setOpenFaq] = useState(faqs[0].question);
 
     return (
-        <section className="mt-16 space-y-8 rounded-[32px] border border-white/10 bg-card/50 backdrop-blur-sm p-6 shadow-lg">
+        <section className="mt-16 space-y-8 rounded-[32px] border border-border bg-card/50 backdrop-blur-sm p-6 shadow-lg">
             <div className="text-center text-muted-foreground md:text-left">
                 <p className="text-xs uppercase tracking-[0.4em] text-accent">Frequently asked questions</p>
                 <h2 className="mt-2 text-3xl font-heading font-semibold text-foreground">Answers before you even ask.</h2>
@@ -56,7 +56,7 @@ export function FAQSection() {
                 {faqs.map((faq) => (
                     <motion.div
                         key={faq.question}
-                        className="rounded-[24px] border border-white/10 bg-white/5 p-5 hover:bg-white/10 transition-colors"
+                        className="rounded-[24px] border border-border bg-card/70 p-5 hover:bg-muted/60 transition-colors"
                         initial="hidden"
                         whileInView="visible"
                         viewport={{ once: true, amount: 0.3 }}

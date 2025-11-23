@@ -72,10 +72,10 @@ export const ImportPanel = () => {
   };
 
   return (
-    <div className="space-y-4 rounded-[28px] border border-slate-100 bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
+    <div className="space-y-4 rounded-[28px] border border-border bg-card p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)] transition-colors">
       <div className="space-y-2">
         <h2 className="text-2xl font-semibold">Import catalog data</h2>
-        <p className="text-sm text-slate-600">
+        <p className="text-sm text-muted-foreground">
           Upload CSV exports to refresh the universities, programs, requirements, or deadlines catalog.
         </p>
       </div>
@@ -83,7 +83,7 @@ export const ImportPanel = () => {
         <Label htmlFor="template">Dataset</Label>
         <select
           id="template"
-          className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/30"
+          className="form-input w-full text-sm text-foreground"
           value={template}
           disabled={isParsing || isSyncing}
           onChange={(event) => setTemplate(event.target.value as Template)}
@@ -103,10 +103,10 @@ export const ImportPanel = () => {
           accept=".csv"
           disabled={isParsing || isSyncing}
           onChange={handleFile}
-          className="text-sm text-slate-600 file:mr-4 file:rounded-2xl file:border file:border-slate-200 file:bg-slate-50 file:px-4 file:py-2 file:text-slate-900"
+          className="text-sm text-muted-foreground file:mr-4 file:rounded-2xl file:border file:border-border file:bg-muted/60 file:px-4 file:py-2 file:text-foreground"
         />
       </div>
-      <p className="text-sm text-slate-500">Status: {status}</p>
+      <p className="text-sm text-muted-foreground">Status: {status}</p>
       {error ? (
         <p className="text-xs text-red-500" role="alert">
           {error}
@@ -116,7 +116,7 @@ export const ImportPanel = () => {
         {isSyncing ? 'Syncing…' : 'Run data sync'}
       </Button>
       {rowCount > 0 ? (
-        <p className="text-xs text-slate-400">Ready to sync {rowCount} rows. Server-side validation runs before upserts.</p>
+        <p className="text-xs text-muted-foreground">Ready to sync {rowCount} rows. Server-side validation runs before upserts.</p>
       ) : null}
     </div>
   );

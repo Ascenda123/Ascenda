@@ -13,7 +13,7 @@ const fadeIn: Variants = {
 export function DemoSection() {
     return (
         <motion.section
-            className="mt-16 grid gap-8 rounded-[32px] border border-white/10 bg-card/50 backdrop-blur-sm p-6 md:grid-cols-[0.9fr_1.1fr]"
+            className="mt-16 grid gap-8 rounded-[32px] border border-border bg-card/50 backdrop-blur-sm p-6 md:grid-cols-[0.9fr_1.1fr]"
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, amount: 0.3 }}
@@ -44,19 +44,19 @@ export function DemoSection() {
                     <Button asChild size="sm">
                         <Link href="/demo">Watch 45s demo</Link>
                     </Button>
-                    <Button asChild size="sm" variant="ghost" className="border border-white/10 text-foreground hover:bg-white/5">
+                    <Button asChild size="sm" variant="ghost" className="border border-border text-foreground hover:bg-card/70">
                         <Link href="/stories">See student reels</Link>
                     </Button>
                 </div>
             </div>
-            <div className="relative overflow-hidden rounded-[28px] border border-white/10 bg-black/40 p-4">
+            <div className="relative overflow-hidden rounded-[28px] border border-border bg-black/40 p-4">
                 <div className="absolute inset-x-4 top-4 h-12 rounded-full bg-primary/20 blur-3xl" />
                 <Image
                     src="/demo-loop.gif"
                     alt="Ascenda demo loop"
                     width={960}
                     height={540}
-                    className="relative h-auto w-full rounded-[18px] border border-white/10 opacity-90"
+                    className="relative h-auto w-full rounded-[18px] border border-border opacity-90"
                     priority
                 />
             </div>

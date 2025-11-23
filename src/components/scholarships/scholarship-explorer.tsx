@@ -48,10 +48,10 @@ export const ScholarshipExplorer = ({ scholarships }: ScholarshipExplorerProps) 
 
   return (
     <div className="space-y-6">
-      <section className="space-y-4 rounded-[28px] border border-slate-100 bg-slate-50/40 p-5">
+      <section className="space-y-4 rounded-[28px] border border-border bg-card p-5 transition-colors">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <label className="flex flex-col gap-2 text-sm">
-            <span className="font-semibold text-slate-700">Search</span>
+            <span className="font-semibold text-foreground">Search</span>
             <Input
               placeholder="Merit, STEM, regional..."
               value={query}
@@ -101,7 +101,7 @@ export const ScholarshipExplorer = ({ scholarships }: ScholarshipExplorerProps) 
             />
           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500">
+        <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
           <span>{filtered.length} scholarships</span>
           <Button type="button" variant="ghost" size="sm" onClick={resetFilters}>
             Reset filters

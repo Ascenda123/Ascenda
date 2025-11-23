@@ -28,7 +28,7 @@ export function ShortlistSection() {
                 {steps.map((step, index) => (
                     <motion.div
                         key={step.title}
-                        className="flex items-start gap-4 rounded-[26px] border border-white/10 bg-card/50 backdrop-blur-sm p-5 shadow-lg"
+                        className="flex items-start gap-4 rounded-[26px] border border-border bg-card/50 backdrop-blur-sm p-5 shadow-lg"
                         initial="hidden"
                         whileInView="visible"
                         viewport={{ once: true, amount: 0.3 }}
@@ -37,7 +37,7 @@ export function ShortlistSection() {
                             visible: { opacity: 1, y: 0, transition: { duration: 0.6, delay: index * 0.05 } }
                         }}
                     >
-                        <div className="flex h-10 w-10 flex-none items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-sm font-semibold text-foreground">
+                        <div className="flex h-10 w-10 flex-none items-center justify-center rounded-2xl border border-border bg-card/70 text-sm font-semibold text-foreground">
                             {index + 1}
                         </div>
                         <div className="text-sm text-muted-foreground">

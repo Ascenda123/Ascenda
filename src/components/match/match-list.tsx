@@ -200,7 +200,7 @@ export const MatchList = ({ matches }: MatchListProps) => {
 
       <section className="space-y-4">
         {filtered.length === 0 ? (
-          <div className="rounded-[28px] border border-dashed border-slate-200 bg-slate-50/50 p-8 text-center text-slate-500">
+          <div className="rounded-[28px] border border-dashed border-border bg-muted/60 p-8 text-center text-muted-foreground">
             No matches yet. Adjust your filters or update your profile for better suggestions.
           </div>
         ) : (
@@ -208,13 +208,13 @@ export const MatchList = ({ matches }: MatchListProps) => {
             matches.length ? (
               <div
                 key={tier}
-                className="space-y-4 rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_20px_50px_rgba(15,23,42,0.08)]"
+                className="space-y-4 rounded-[28px] border border-border bg-card p-6 shadow-[0_20px_50px_rgba(15,23,42,0.08)] transition-colors"
               >
                 <div className="space-y-2">
-                  <p className="text-xs uppercase tracking-[0.35em] text-slate-400">Tier</p>
+                  <p className="text-xs uppercase tracking-[0.35em] text-muted-foreground">Tier</p>
                   <div className="flex items-center justify-between gap-4">
-                    <h3 className="text-2xl font-semibold text-slate-900">{tier}</h3>
-                    <p className="text-sm text-slate-500">{TIER_DESCRIPTIONS[tier]}</p>
+                    <h3 className="text-2xl font-semibold text-foreground">{tier}</h3>
+                    <p className="text-sm text-muted-foreground">{TIER_DESCRIPTIONS[tier]}</p>
                   </div>
                 </div>
                 <div className="space-y-4">

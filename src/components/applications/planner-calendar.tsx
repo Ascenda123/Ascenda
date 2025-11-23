@@ -250,7 +250,7 @@ export const PlannerCalendar = ({ events }: { events: PlannerEvent[] }) => {
                   </div>
                 );
               })}
-              <p className="text-[11px] text-slate-400">
+              <p className="text-[11px] text-muted-foreground">
                 After adding the feed URL, restart your deployment and refresh this page to pull the new events.
               </p>
             </div>

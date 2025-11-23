@@ -136,7 +136,7 @@ export function HeroSection() {
                                 asChild
                                 size="sm"
                                 variant="outline"
-                                className="bg-background/50 backdrop-blur-md border-white/10 text-foreground hover:bg-white/10"
+                                className="bg-background/50 backdrop-blur-md border-border text-foreground hover:bg-muted/60"
                             >
                                 <Link href={launchHref} className="flex items-center gap-2">
                                     <Laptop className="h-4 w-4" />
@@ -189,7 +189,7 @@ export function HeroSection() {
                                         asChild
                                         size="lg"
                                         variant="outline"
-                                        className="border-white/10 bg-white/5 text-foreground hover:bg-white/10"
+                                        className="border-border bg-card/70 text-foreground hover:bg-muted/60"
                                     >
                                         <Link href="/download">See product tour</Link>
                                     </Button>
@@ -213,7 +213,7 @@ export function HeroSection() {
                                 </ul>
                             </div>
                             <motion.div
-                                className="rounded-[36px] border border-white/10 bg-card/50 p-6 text-card-foreground shadow-2xl backdrop-blur-xl"
+                                className="rounded-[36px] border border-border bg-card/50 p-6 text-card-foreground shadow-2xl backdrop-blur-xl"
                                 initial="hidden"
                                 animate={isTypingDone ? 'visible' : 'hidden'}
                                 variants={heroBoardVariants}
@@ -224,22 +224,22 @@ export function HeroSection() {
                                         Ascenda board
                                     </span>
                                     <div className="flex gap-2">
-                                        <span className="flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-0.5 text-[0.55rem] text-foreground">
+                                        <span className="flex items-center gap-1 rounded-full border border-border bg-card/70 px-3 py-0.5 text-[0.55rem] text-foreground">
                                             <ClipboardList className="h-3.5 w-3.5 text-blue-300" />
                                             Plan
                                         </span>
-                                        <span className="flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-0.5 text-[0.55rem] text-foreground">
+                                        <span className="flex items-center gap-1 rounded-full border border-border bg-card/70 px-3 py-0.5 text-[0.55rem] text-foreground">
                                             <Activity className="h-3.5 w-3.5 text-emerald-300" />
                                             Signals
                                         </span>
-                                        <span className="flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-3 py-0.5 text-[0.55rem] text-foreground">
+                                        <span className="flex items-center gap-1 rounded-full border border-border bg-card/70 px-3 py-0.5 text-[0.55rem] text-foreground">
                                             <NotebookPen className="h-3.5 w-3.5 text-amber-300" />
                                             Notes
                                         </span>
                                     </div>
                                 </div>
                                 <div className="mt-6 space-y-4">
-                                    <div className="rounded-[24px] border border-white/10 bg-white/5 px-5 py-4">
+                                    <div className="rounded-[24px] border border-border bg-card/70 px-5 py-4">
                                         <div className="flex items-center justify-between">
                                             <p className="text-xs uppercase tracking-[0.35em] text-muted-foreground">Fit score</p>
                                             <span className="text-xs uppercase tracking-[0.3em] text-emerald-400">On target</span>
@@ -248,12 +248,12 @@ export function HeroSection() {
                                             <p className="text-4xl font-semibold text-foreground">92%</p>
                                             <p className="text-sm text-muted-foreground">Parsons Paris · Strategic Design</p>
                                         </div>
-                                        <div className="mt-3 h-2 rounded-full bg-white/10">
+                                        <div className="mt-3 h-2 rounded-full bg-muted/60">
                                             <div className="h-full rounded-full bg-gradient-to-r from-blue-600 via-indigo-500 to-emerald-400 shadow-[0_0_15px_rgba(52,211,153,0.5)]" style={{ width: '92%' }} />
                                         </div>
                                     </div>
                                     <div className="grid gap-3 md:grid-cols-2">
-                                        <div className="rounded-[24px] border border-white/10 bg-white/5 px-5 py-4">
+                                        <div className="rounded-[24px] border border-border bg-card/70 px-5 py-4">
                                             <p className="text-xs uppercase tracking-[0.35em] text-muted-foreground">Next actions</p>
                                             <ul className="mt-3 space-y-2 text-sm text-foreground">
                                                 <li className="flex items-center justify-between">
@@ -261,7 +261,7 @@ export function HeroSection() {
                                                         <span className="h-2.5 w-2.5 rounded-full bg-gradient-to-b from-emerald-400 to-cyan-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]" />
                                                         <span className="font-medium">Scholarship essay</span>
                                                     </div>
-                                                    <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[0.6rem] uppercase tracking-[0.35em] text-muted-foreground">
+                                                    <span className="rounded-full border border-border bg-card/70 px-3 py-1 text-[0.6rem] uppercase tracking-[0.35em] text-muted-foreground">
                                                         Due Fri
                                                     </span>
                                                 </li>
@@ -270,13 +270,13 @@ export function HeroSection() {
                                                         <span className="h-2.5 w-2.5 rounded-full bg-gradient-to-b from-amber-300 to-rose-400 shadow-[0_0_8px_rgba(251,191,36,0.6)]" />
                                                         <span className="font-medium">Portfolio upload</span>
                                                     </div>
-                                                    <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[0.6rem] uppercase tracking-[0.35em] text-muted-foreground">
+                                                    <span className="rounded-full border border-border bg-card/70 px-3 py-1 text-[0.6rem] uppercase tracking-[0.35em] text-muted-foreground">
                                                         Review
                                                     </span>
                                                 </li>
                                             </ul>
                                         </div>
-                                        <div className="rounded-[24px] border border-white/10 bg-white/5 px-5 py-4">
+                                        <div className="rounded-[24px] border border-border bg-card/70 px-5 py-4">
                                             <p className="text-xs uppercase tracking-[0.35em] text-muted-foreground">Notes sync</p>
                                             <div className="mt-3 space-y-2 text-sm text-foreground">
                                                 <p className="text-base font-medium leading-relaxed">
@@ -284,13 +284,13 @@ export function HeroSection() {
                                                 </p>
                                                 <div className="flex items-center gap-3 text-[0.65rem] uppercase tracking-[0.35em] text-muted-foreground">
                                                     <span className="font-semibold text-foreground">Claire</span>
-                                                    <span className="h-0.5 w-8 bg-white/10" />
+                                                    <span className="h-0.5 w-8 bg-muted/60" />
                                                     <span className="">2h ago</span>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="rounded-[24px] border border-white/10 px-5 py-4 bg-white/5">
+                                    <div className="rounded-[24px] border border-border px-5 py-4 bg-card/70">
                                         <p className="text-xs uppercase tracking-[0.35em] text-muted-foreground">Active signals</p>
                                         <div className="mt-3 grid gap-3 text-sm text-muted-foreground md:grid-cols-3">
                                             <div>
@@ -310,7 +310,7 @@ export function HeroSection() {
                                 </div>
                                 <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                                     <span>Updated 1 min ago</span>
-                                    <span className="h-px flex-1 bg-white/10"></span>
+                                    <span className="h-px flex-1 bg-muted/60"></span>
                                     <span>View timeline →</span>
                                 </div>
                             </motion.div>

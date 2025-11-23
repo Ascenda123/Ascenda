@@ -12,7 +12,7 @@ const fadeIn: Variants = {
 export function CTASection() {
     return (
         <motion.section
-            className="mt-16 space-y-4 rounded-[36px] border border-white/10 bg-card/50 backdrop-blur-sm px-8 py-10 text-center text-foreground shadow-2xl"
+            className="mt-16 space-y-4 rounded-[36px] border border-border bg-card/50 backdrop-blur-sm px-8 py-10 text-center text-foreground shadow-2xl"
             initial="hidden"
             animate="visible"
             variants={fadeIn}
@@ -30,7 +30,7 @@ export function CTASection() {
                 >
                     <Link href="/signup">Create free account</Link>
                 </Button>
-                <Button asChild size="lg" variant="ghost" className="border border-white/10 text-foreground hover:bg-white/5">
+                <Button asChild size="lg" variant="ghost" className="border border-border text-foreground hover:bg-card/70">
                     <Link href="/demo">Book live demo</Link>
                 </Button>
             </div>

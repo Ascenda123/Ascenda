@@ -61,8 +61,8 @@ export function ComparisonSection() {
                 className={cn(
                     'relative overflow-hidden rounded-[30px] text-foreground transition-colors',
                     mode === 'light'
-                        ? 'border border-border bg-white shadow-[0_18px_45px_rgba(15,23,42,0.08)]'
-                        : 'border border-white/10 bg-card/80 shadow-2xl'
+                        ? 'border border-border bg-card shadow-[0_18px_45px_rgba(15,23,42,0.08)]'
+                        : 'border border-border bg-card/80 shadow-2xl'
                 )}
             >
                 <div className="pointer-events-none absolute inset-0 opacity-20">
@@ -106,7 +106,7 @@ export function ComparisonSection() {
                                         'rounded-[24px] p-5 transition-colors',
                                         mode === 'light'
                                             ? 'border border-border bg-muted/50 shadow-sm'
-                                            : 'border border-white/5 bg-white/5'
+                                            : 'border border-border bg-card/70'
                                     )}
                                 >
                                     <p className="text-xs font-semibold uppercase tracking-[0.4em] text-destructive">
@@ -120,7 +120,7 @@ export function ComparisonSection() {
                                         <span
                                             className={cn(
                                                 'hidden h-8 w-px md:block',
-                                                mode === 'light' ? 'bg-border/80' : 'bg-white/10'
+                                                mode === 'light' ? 'bg-border/80' : 'bg-muted/60'
                                             )}
                                         />
                                     )}
@@ -128,8 +128,8 @@ export function ComparisonSection() {
                                         className={cn(
                                             'flex h-12 w-12 items-center justify-center rounded-full text-[0.65rem] font-semibold uppercase tracking-[0.3em] text-muted-foreground transition-colors',
                                             mode === 'light'
-                                                ? 'border border-border bg-white'
-                                                : 'border border-white/10 bg-white/5'
+                                                ? 'border border-border bg-card'
+                                                : 'border border-border bg-card/70'
                                         )}
                                     >
                                         vs
@@ -138,7 +138,7 @@ export function ComparisonSection() {
                                         <span
                                             className={cn(
                                                 'hidden h-8 w-px md:block',
-                                                mode === 'light' ? 'bg-border/80' : 'bg-white/10'
+                                                mode === 'light' ? 'bg-border/80' : 'bg-muted/60'
                                             )}
                                         />
                                     )}

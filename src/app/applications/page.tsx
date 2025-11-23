@@ -341,7 +341,7 @@ export default async function ApplicationsPage() {
         actions={
           <>
             <Button asChild size="sm" variant="soft">
-              <Link className="text-slate-900" href="/matches">
+              <Link className="text-foreground" href="/matches">
                 Add from matches
               </Link>
             </Button>
@@ -357,10 +357,10 @@ export default async function ApplicationsPage() {
         <PlannerCalendar events={plannerEvents} />
         <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
           <RequirementTracker items={requirementItems} />
-          <div className="space-y-4 rounded-[32px] border border-[#e5e5e7] bg-white p-6 shadow-[0_15px_40px_rgba(15,23,42,0.08)]">
+          <div className="space-y-4 rounded-[32px] border border-border bg-card p-6 shadow-[0_15px_40px_rgba(15,23,42,0.08)] transition-colors">
             <div>
-              <p className="text-sm font-semibold text-slate-900">Today’s focus</p>
-              <p className="mt-2 text-sm text-slate-700 leading-relaxed">
+              <p className="text-sm font-semibold text-foreground">Today’s focus</p>
+              <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
                 {dailySummary.tasks} {dailySummary.tasks === 1 ? 'task' : 'tasks'} • {dailySummary.deadlines}{' '}
                 {dailySummary.deadlines === 1 ? 'deadline' : 'deadlines'} • {dailySummary.interviews}{' '}
                 {dailySummary.interviews === 1 ? 'interview' : 'interviews'}
@@ -371,41 +371,41 @@ export default async function ApplicationsPage() {
         </div>
 
         <div className="grid gap-6 lg:grid-cols-3">
-          <div className="space-y-4 rounded-[28px] border border-slate-100 bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
-            <h2 className="text-2xl font-semibold text-slate-900">Upload documents</h2>
+          <div className="space-y-4 rounded-[28px] border border-border bg-card p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)] transition-colors">
+            <h2 className="text-2xl font-semibold text-foreground">Upload documents</h2>
             <DocumentUploader />
           </div>
           <SignalCenter signals={signalItems} />
-          <div className="space-y-4 rounded-[28px] border border-slate-100 bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
-            <h2 className="text-2xl font-semibold text-slate-900">Upcoming deadlines</h2>
+          <div className="space-y-4 rounded-[28px] border border-border bg-card p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)] transition-colors">
+            <h2 className="text-2xl font-semibold text-foreground">Upcoming deadlines</h2>
             <DeadlineTimeline items={timelineItems} />
           </div>
         </div>
 
-        <section className="space-y-4 rounded-[28px] border border-slate-100 bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
+        <section className="space-y-4 rounded-[28px] border border-border bg-card p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)] transition-colors">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <p className="text-[11px] uppercase tracking-[0.4em] text-slate-400">Just in case</p>
-              <h2 className="text-2xl font-semibold text-slate-900">Resources you can grab</h2>
+              <p className="text-[11px] uppercase tracking-[0.4em] text-muted-foreground">Just in case</p>
+              <h2 className="text-2xl font-semibold text-foreground">Resources you can grab</h2>
             </div>
-            <p className="text-xs uppercase tracking-[0.4em] text-slate-400">Updated weekly</p>
+            <p className="text-xs uppercase tracking-[0.4em] text-muted-foreground">Updated weekly</p>
           </div>
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {resourceHighlights.map((resource) => (
               <article
                 key={resource.id}
-                className="flex min-h-[180px] flex-col justify-between gap-3 rounded-2xl border border-slate-100 bg-slate-50 p-4"
+                className="flex min-h-[180px] flex-col justify-between gap-3 rounded-2xl border border-border bg-muted/60 p-4 transition-colors"
               >
                 <div>
-                  <p className="text-[11px] uppercase tracking-[0.4em] text-slate-400">{resource.tag}</p>
-                  <h3 className="text-base font-semibold text-slate-900">{resource.title}</h3>
-                  <p className="text-sm text-slate-500">{resource.description}</p>
+                  <p className="text-[11px] uppercase tracking-[0.4em] text-muted-foreground">{resource.tag}</p>
+                  <h3 className="text-base font-semibold text-foreground">{resource.title}</h3>
+                  <p className="text-sm text-muted-foreground">{resource.description}</p>
                 </div>
                 <Link
                   href={resource.href}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-[11px] font-semibold uppercase tracking-[0.4em] text-slate-600 underline-offset-4 hover:text-slate-900"
+                  className="text-[11px] font-semibold uppercase tracking-[0.4em] text-muted-foreground underline-offset-4 hover:text-foreground"
                 >
                   Open resource →
                 </Link>
@@ -414,12 +414,12 @@ export default async function ApplicationsPage() {
           </div>
         </section>
 
-        <div className="rounded-[28px] border border-slate-100 bg-white p-6 text-sm text-slate-600 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
+        <div className="rounded-[28px] border border-border bg-card p-6 text-sm text-muted-foreground shadow-[0_18px_50px_rgba(15,23,42,0.08)] transition-colors">
           {appRecords.length > 0 ? (
             <ul className="space-y-2">
               {appRecords.map((app) => (
                 <li key={app.id}>
-                  <p className="font-semibold text-slate-900">Application status</p>
+                  <p className="font-semibold text-foreground">Application status</p>
                   <p>
                     {app.status} • {app.notes ?? 'No notes yet'}
                   </p>

@@ -521,18 +521,18 @@ const QuickActions = ({ shortlisted, applyUrl, courseUrl }: { shortlisted: boole
 
 const ProgressBar = ({ value }: { value: number }) => (
   <div className="space-y-1">
-    <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.2em] text-slate-500">
+    <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
       <span>Score</span>
-      <span className="font-semibold text-slate-800">{value}%</span>
+      <span className="font-semibold text-foreground">{value}%</span>
     </div>
-    <div className="h-2 w-full rounded-full bg-slate-100">
-      <div className="h-full rounded-full bg-slate-900 transition-all duration-300" style={{ width: `${value}%` }} />
+    <div className="h-2 w-full rounded-full bg-muted">
+      <div className="h-full rounded-full bg-primary transition-all duration-300" style={{ width: `${value}%` }} />
     </div>
   </div>
 );
 
 const Pill = ({ label }: { label: string }) => (
-  <span className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.3em] text-white">
+  <span className="inline-flex items-center gap-2 rounded-full bg-primary px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.3em] text-primary-foreground">
     {label}
   </span>
 );
@@ -540,33 +540,33 @@ const Pill = ({ label }: { label: string }) => (
 const ModuleIcon = ({ label }: { label: string }) => {
   const normalized = label.toLowerCase();
   if (normalized.includes('programming') || normalized.includes('web')) {
-    return <Laptop size={14} className="text-slate-700" />;
+    return <Laptop size={14} className="text-muted-foreground" />;
   }
   if (normalized.includes('data structure') || normalized.includes('data ')) {
-    return <Layers size={14} className="text-slate-700" />;
+    return <Layers size={14} className="text-muted-foreground" />;
   }
   if (normalized.includes('algorithm')) {
-    return <Workflow size={14} className="text-slate-700" />;
+    return <Workflow size={14} className="text-muted-foreground" />;
   }
   if (normalized.includes('ml') || normalized.includes('machine learning')) {
-    return <Brain size={14} className="text-slate-700" />;
+    return <Brain size={14} className="text-muted-foreground" />;
   }
   if (normalized.includes('security')) {
-    return <ShieldCheck size={14} className="text-slate-700" />;
+    return <ShieldCheck size={14} className="text-muted-foreground" />;
   }
   if (normalized.includes('system')) {
-    return <Code size={14} className="text-slate-700" />;
+    return <Code size={14} className="text-muted-foreground" />;
   }
   if (normalized.includes('design')) {
-    return <Presentation size={14} className="text-slate-700" />;
+    return <Presentation size={14} className="text-muted-foreground" />;
   }
   if (normalized.includes('econom') || normalized.includes('ethics')) {
-    return <BookOpen size={14} className="text-slate-700" />;
+    return <BookOpen size={14} className="text-muted-foreground" />;
   }
   if (normalized.includes('science')) {
-    return <BarChart3 size={14} className="text-slate-700" />;
+    return <BarChart3 size={14} className="text-muted-foreground" />;
   }
-  return <BookOpen size={14} className="text-slate-700" />;
+  return <BookOpen size={14} className="text-muted-foreground" />;
 };
 
 const Hero = ({

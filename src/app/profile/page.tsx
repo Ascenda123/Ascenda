@@ -68,18 +68,18 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
 
   if (showFullScreenWizard) {
     return (
-      <div className="relative min-h-screen overflow-hidden bg-slate-950 text-white">
+      <div className="relative min-h-screen overflow-hidden bg-background text-foreground">
         <AnimatedBlobBanner className="opacity-60" variant="cool" />
         <div className="relative z-10 mx-auto flex max-w-6xl flex-col gap-8 px-4 pb-16 pt-24">
           <header className="text-center">
-            <p className="text-xs uppercase tracking-[0.6em] text-white/50">Welcome aboard</p>
-            <h1 className="mt-4 text-4xl font-semibold text-white">Let&apos;s build your profile</h1>
-            <p className="mx-auto mt-3 max-w-2xl text-sm text-white/70">
+            <p className="text-xs uppercase tracking-[0.6em] text-muted-foreground">Welcome aboard</p>
+            <h1 className="mt-4 text-4xl font-semibold text-foreground">Let&apos;s build your profile</h1>
+            <p className="mx-auto mt-3 max-w-2xl text-sm text-muted-foreground">
               We’ll use this information to personalize matches, recommendations, and counselor updates. You can always
               tweak the details later.
             </p>
           </header>
-          <div className="rounded-[32px] border border-white/10 bg-white/95 p-6 shadow-[0_35px_120px_rgba(15,23,42,0.55)] backdrop-blur">
+          <div className="rounded-[32px] border border-border bg-card p-6 shadow-[0_35px_120px_rgba(15,23,42,0.55)] backdrop-blur">
             <ProfileWizard
               profile={profile ?? null}
               academics={academics ?? null}
@@ -114,21 +114,21 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
         }
       />
       <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
-        <div className="rounded-[28px] border border-slate-100 bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
+        <div className="rounded-[28px] border border-border bg-card p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)] transition-colors">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-sm font-medium text-slate-500">Profile completion</p>
-              <p className="text-3xl font-semibold text-slate-900">{completionPercent}%</p>
+              <p className="text-sm font-medium text-muted-foreground">Profile completion</p>
+              <p className="text-3xl font-semibold text-foreground">{completionPercent}%</p>
             </div>
-            <p className="text-sm text-slate-500">
+            <p className="text-sm text-muted-foreground">
               {completedCount === PROFILE_STEPS.length
                 ? 'Everything is saved. Update any section anytime.'
                 : `Next step: ${nextStep?.title ?? 'Aspirations'}`}
             </p>
           </div>
-          <div className="mt-4 h-2 rounded-full bg-slate-100">
+          <div className="mt-4 h-2 rounded-full bg-muted">
             <div
-              className="h-2 rounded-full bg-slate-900 transition-all"
+              className="h-2 rounded-full bg-primary transition-all"
               style={{ width: `${completionPercent}%` }}
               aria-hidden
             />
@@ -139,13 +139,13 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
               return (
                 <div
                   key={step.key}
-                  className="rounded-2xl border border-slate-100 bg-slate-50/40 p-4 shadow-[0_12px_25px_rgba(15,23,42,0.04)]"
+                  className="rounded-2xl border border-border bg-muted/60 p-4 shadow-[0_12px_25px_rgba(15,23,42,0.04)] transition-colors"
                 >
-                  <p className="text-sm font-semibold text-slate-900">{step.title}</p>
-                  <p className="text-xs text-slate-500">{step.description}</p>
+                  <p className="text-sm font-semibold text-foreground">{step.title}</p>
+                  <p className="text-xs text-muted-foreground">{step.description}</p>
                   <p
                     className={
-                      complete ? 'mt-3 text-sm font-semibold text-emerald-600' : 'mt-3 text-sm font-semibold text-amber-600'
+                      complete ? 'mt-3 text-sm font-semibold text-emerald-500' : 'mt-3 text-sm font-semibold text-amber-500'
                     }
                   >
                     {complete ? 'Complete' : 'Action needed'}
@@ -155,14 +155,14 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
             })}
           </div>
         </div>
-        <div className="rounded-[28px] border border-dashed border-slate-200 bg-slate-50/70 p-6 text-sm text-slate-600 shadow-[0_12px_30px_rgba(15,23,42,0.06)]">
-          <p className="text-base font-semibold text-slate-900">Why it matters</p>
+        <div className="rounded-[28px] border border-dashed border-border bg-muted/60 p-6 text-sm text-muted-foreground shadow-[0_12px_30px_rgba(15,23,42,0.06)] transition-colors">
+          <p className="text-base font-semibold text-foreground">Why it matters</p>
           <ul className="mt-4 space-y-3">
             <li>Unlock tighter match suggestions as soon as each section is saved.</li>
             <li>Surface prerequisite gaps and testing needs with your academic profile.</li>
             <li>Align application plans with your preferences and long-term goals.</li>
           </ul>
-          <p className="mt-4 text-xs text-slate-500">
+          <p className="mt-4 text-xs text-muted-foreground">
             Need help? Email <a className="underline" href="mailto:hello@ascenda.com">hello@ascenda.com</a> to reach a
             counselor.
           </p>
@@ -178,8 +178,8 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
           stepCompletion={stepCompletion}
         />
       ) : (
-        <div className="mt-6 rounded-[28px] border border-slate-100 bg-white p-6 text-slate-600 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
-          <p className="text-base font-semibold text-slate-900">Profile complete</p>
+        <div className="mt-6 rounded-[28px] border border-border bg-card p-6 text-muted-foreground shadow-[0_18px_50px_rgba(15,23,42,0.08)] transition-colors">
+          <p className="text-base font-semibold text-foreground">Profile complete</p>
           <p className="mt-2 text-sm">
             You&apos;ve already finished onboarding. You can revisit the wizard anytime if you need to update details.
           </p>

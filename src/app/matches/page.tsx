@@ -43,7 +43,7 @@ export default async function MatchesPage() {
             </Button>
           }
         />
-        <div className="rounded-[28px] border border-dashed border-slate-200 bg-slate-50/50 p-8 text-center text-slate-500">
+        <div className="rounded-[28px] border border-dashed border-border bg-muted/60 p-8 text-center text-muted-foreground">
           Complete your profile to receive personalized matches.
         </div>
       </DashboardShell>
@@ -63,7 +63,7 @@ export default async function MatchesPage() {
   if (programsRaw.length === 0 || universitiesRaw.length === 0) {
     return (
       <DashboardShell>
-        <div className="rounded-[28px] border border-dashed border-slate-200 bg-slate-50/50 p-8 text-center text-slate-500">
+        <div className="rounded-[28px] border border-dashed border-border bg-muted/60 p-8 text-center text-muted-foreground">
           We could not load the program catalog yet. Please check back later.
         </div>
       </DashboardShell>

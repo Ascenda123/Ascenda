@@ -26,7 +26,7 @@ export const CountrySelect = ({ value, onChange, id, name }: CountrySelectProps)
       value={value}
       onChange={handleChange}
       aria-describedby={describedBy}
-      className={cn('w-full text-sm text-slate-900', 'form-input', 'form-input--multi')}
+      className={cn('w-full text-sm text-foreground', 'form-input', 'form-input--multi')}
     >
       {DESTINATION_COUNTRIES.map((country) => (
         <option key={country} value={country}>

@@ -63,19 +63,18 @@ function AuthCallbackContent() {
 
   return (
     <div className="space-y-3">
-      <p className="text-lg font-semibold">Finishing sign-in…</p>
-      <p className="text-sm text-slate-500">You will be redirected shortly.</p>
+      <p className="text-lg font-semibold text-foreground">Finishing sign-in…</p>
+      <p className="text-sm text-muted-foreground">You will be redirected shortly.</p>
     </div>
   );
 }
 
 export default function AuthCallbackPage() {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-50 px-4 py-16 text-center text-slate-900">
+    <main className="flex min-h-screen items-center justify-center bg-background px-4 py-16 text-center text-foreground">
       <Suspense fallback={<p>Loading...</p>}>
         <AuthCallbackContent />
       </Suspense>
     </main>
   );
 }
-

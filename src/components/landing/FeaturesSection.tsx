@@ -46,14 +46,14 @@ export function FeaturesSection() {
                 {features.map((feature, index) => (
                     <motion.div
                         key={feature.title}
-                        className="flex flex-col gap-4 rounded-[28px] border border-white/10 bg-card/50 backdrop-blur-sm px-6 py-7 shadow-lg hover:bg-card/80 transition-colors"
+                        className="flex flex-col gap-4 rounded-[28px] border border-border bg-card/50 backdrop-blur-sm px-6 py-7 shadow-lg hover:bg-card/80 transition-colors"
                         initial="hidden"
                         whileInView="visible"
                         viewport={{ once: true, amount: 0.3 }}
                         variants={fadeIn}
                     >
                         <div className="flex items-center gap-3 text-sm uppercase tracking-[0.4em] text-muted-foreground">
-                            <span className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-base font-semibold text-foreground">
+                            <span className="flex h-10 w-10 items-center justify-center rounded-2xl border border-border bg-card/70 text-base font-semibold text-foreground">
                                 {String(index + 1).padStart(2, '0')}
                             </span>
                             Pillar

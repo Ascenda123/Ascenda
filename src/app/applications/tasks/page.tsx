@@ -27,8 +27,8 @@ export default async function ChecklistPage() {
   return (
     <DashboardShell>
       <section className="space-y-2">
-        <h1 className="text-3xl font-semibold text-slate-900">Checklist</h1>
-        <p className="text-sm text-slate-500">Action items grouped across all applications.</p>
+        <h1 className="text-3xl font-semibold text-foreground">Checklist</h1>
+        <p className="text-sm text-muted-foreground">Action items grouped across all applications.</p>
       </section>
       <TaskList
         title="Tasks to complete"

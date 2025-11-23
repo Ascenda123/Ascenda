@@ -14,10 +14,10 @@ const marqueeItems = ['Course breakdown', 'Shortlist sync', 'Module clarity', 'N
 export const ShortlistMarquee = ({ className, label = 'Shortlist flow', tone = 'dark' }: ShortlistMarqueeProps) => {
   const isLight = tone === 'light';
   const containerClasses = isLight
-    ? 'border-slate-200/70 bg-white text-slate-900'
-    : 'border-white/10 bg-white/5 text-white';
-  const labelClasses = isLight ? 'text-slate-400' : 'text-white/60';
-  const textClasses = isLight ? 'text-slate-900' : 'text-white';
+    ? 'border-border bg-card text-foreground'
+    : 'border-border bg-card/70 text-foreground';
+  const labelClasses = 'text-muted-foreground';
+  const textClasses = 'text-foreground';
 
   return (
     <div

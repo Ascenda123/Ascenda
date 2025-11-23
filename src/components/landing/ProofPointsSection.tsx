@@ -8,7 +8,7 @@ const metrics = [
 
 export function ProofPointsSection() {
     return (
-        <section className="mt-16 rounded-[32px] border border-white/10 bg-card/50 backdrop-blur-sm p-6">
+        <section className="mt-16 rounded-[32px] border border-border bg-card/50 backdrop-blur-sm p-6">
             <div className="flex flex-col gap-2 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-xs uppercase tracking-[0.4em] text-accent">Proof points</p>
                 <p>Students and families feel the delta immediately, data shows why.</p>
@@ -17,7 +17,7 @@ export function ProofPointsSection() {
                 {metrics.map((metric) => (
                     <div
                         key={metric.label}
-                        className="rounded-[24px] border border-white/10 bg-white/5 p-5 text-left text-sm text-muted-foreground shadow-sm"
+                        className="rounded-[24px] border border-border bg-card/70 p-5 text-left text-sm text-muted-foreground shadow-sm"
                     >
                         <p className="text-3xl font-semibold text-foreground">{metric.value}</p>
                         <p className="mt-2 font-medium text-muted-foreground">{metric.label}</p>

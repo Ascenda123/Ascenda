@@ -3,7 +3,7 @@ import { Navbar } from '@/components/layout/navbar';
 
 export default function UniversityPageLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-screen bg-[#f5f5f7] text-slate-900">
+    <div className="min-h-screen bg-background text-foreground">
       <Navbar />
       {children}
     </div>
