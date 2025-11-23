@@ -109,7 +109,7 @@ export const UniversityInformation = ({
   const { addItem: addCompare, items: compareItems } = useCompareStore();
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const canRenderContent = !!universityData && !loading && !error;
-  const courseHref = programId ? `/course/${programId}` : undefined;
+  const courseHref = programId ? `/course/${programId}?from=university` : undefined;
   const universityHref = programId ? `/university-search/university/${programId}` : undefined;
   const backHref = contextSource === 'course' ? courseHref : contextSource === 'search' ? '/university-search/search' : '/dashboard';
   const backLabel =

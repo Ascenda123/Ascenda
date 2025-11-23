@@ -129,7 +129,7 @@ export default function UniversitySearchResultsPage() {
                           </div>
                           <div className="mt-auto grid gap-2 pt-5 sm:grid-cols-2 lg:grid-cols-3">
                             <Button asChild size="sm" variant="soft" className="w-full">
-                              <Link href={`/course/${result.id}`}>Course details</Link>
+                              <Link href={`/course/${result.id}?from=search`}>Course details</Link>
                             </Button>
                             <Button
                               size="sm"

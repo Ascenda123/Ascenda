@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import {
   BadgeCheck,
   BarChart3,
@@ -273,6 +274,7 @@ const courseDataset: CourseData[] = [
 ];
 
 export default function CoursePage({ params }: { params: { id: string } }) {
+  const searchParams = useSearchParams();
   const [shortlisted, setShortlisted] = useState(false);
 
   const course = useMemo(() => {
@@ -285,6 +287,15 @@ export default function CoursePage({ params }: { params: { id: string } }) {
     university: course.university,
     location: course.location
   };
+  const contextSource = searchParams.get('from') === 'search' ? 'search' : searchParams.get('from') === 'university' ? 'university' : 'direct';
+  const backHref =
+    contextSource === 'search'
+      ? '/university-search/search'
+      : contextSource === 'university'
+        ? `/university-search/university/${course.id}?from=course`
+        : '/dashboard';
+  const backLabel =
+    contextSource === 'search' ? 'Back to search results' : contextSource === 'university' ? 'Back to university page' : 'Back to dashboard';
 
   const metricCards = [
     { label: 'Acceptance Rate', value: course.acceptanceRate },
@@ -303,7 +314,14 @@ export default function CoursePage({ params }: { params: { id: string } }) {
     <div className="min-h-screen bg-[#f5f5f7] text-slate-900">
       <Navbar />
       <div className="mx-auto max-w-screen-2xl space-y-10 px-4 py-10 md:px-8 lg:px-12">
-        <Hero shortlisted={shortlisted} onShortlist={() => setShortlisted(!shortlisted)} meta={heroMeta} programId={course.id} />
+        <Hero
+          shortlisted={shortlisted}
+          onShortlist={() => setShortlisted(!shortlisted)}
+          meta={heroMeta}
+          programId={course.id}
+          backHref={backHref}
+          backLabel={backLabel}
+        />
 
         <div className="space-y-8">
           <div className="grid gap-4 md:grid-cols-2">
@@ -554,16 +572,29 @@ const Hero = ({
   shortlisted,
   onShortlist,
   meta,
-  programId
+  programId,
+  backHref,
+  backLabel
 }: {
   shortlisted: boolean;
   onShortlist: () => void;
   meta: { title: string; university: string; location: string };
   programId: string;
+  backHref: string;
+  backLabel: string;
 }) => {
   return (
     <Card className="border-slate-100 bg-white shadow-[0_28px_70px_rgba(15,23,42,0.08)]">
       <CardContent className="space-y-5 p-6 md:p-8">
+        <div className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+          <Link
+            href={backHref}
+            className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs uppercase tracking-[0.28em] text-slate-700 transition hover:border-slate-900 hover:bg-slate-900 hover:text-white"
+          >
+            <Globe2 size={14} />
+            {backLabel}
+          </Link>
+        </div>
         <div className="space-y-3">
           <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.35em] text-slate-500">
             <span>Course</span>
