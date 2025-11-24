@@ -21,13 +21,13 @@ export const AnimatedBlobBanner = ({ className, variant = 'cool' }: AnimatedBlob
       className: 'h-[420px] w-[420px]',
       from: { x: -40, y: -20, scale: 0.9 },
       to: { x: 40, y: 30, scale: 1.1 },
-      background: isWarm ? '#f9f1eb' : '#f5f5f7'
+      background: isWarm ? 'hsl(var(--secondary))' : 'hsl(var(--muted))'
     },
     {
       className: 'h-[520px] w-[520px]',
       from: { x: 20, y: 40, scale: 1.05 },
       to: { x: -30, y: -25, scale: 0.95 },
-      background: isWarm ? '#fdf4e8' : '#ffffff'
+      background: isWarm ? 'hsl(var(--accent))' : 'hsl(var(--background))'
     }
   ];
 
