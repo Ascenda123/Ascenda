@@ -19,15 +19,17 @@ const PRIORITY_LABEL: Record<PriorityItem['priority'], string> = {
 };
 
 const PRIORITY_TONE: Record<PriorityItem['priority'], string> = {
-  high: 'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300',
-  medium: 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300',
-  watch: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300'
+  high: 'border-rose-200/80 bg-rose-100/80 text-rose-700 dark:border-rose-500/40 dark:bg-rose-500/15 dark:text-rose-100',
+  medium: 'border-amber-200/80 bg-amber-100/80 text-amber-700 dark:border-amber-500/40 dark:bg-amber-500/15 dark:text-amber-100',
+  watch: 'border-emerald-200/80 bg-emerald-100/80 text-emerald-700 dark:border-emerald-500/40 dark:bg-emerald-500/15 dark:text-emerald-100'
 };
 
 const STATUS_TONE = {
   default: 'border border-border bg-muted text-foreground',
-  progress: 'border border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-500/30 dark:bg-sky-500/15 dark:text-sky-100',
-  done: 'border border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/15 dark:text-emerald-100'
+  progress:
+    'border border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-500/30 dark:bg-sky-500/15 dark:text-sky-100',
+  done:
+    'border border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/15 dark:text-emerald-100'
 };
 
 export const ApplicationPriorityBoard = ({ items }: { items: PriorityItem[] }) => {
@@ -67,7 +69,9 @@ export const ApplicationPriorityBoard = ({ items }: { items: PriorityItem[] }) =
                 <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground truncate">{item.university}</p>
                 <h3 className="text-base font-semibold text-foreground truncate">{item.program}</h3>
               </div>
-              <span className={`whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold ${PRIORITY_TONE[item.priority]}`}>
+              <span
+                className={`whitespace-nowrap rounded-full border px-3 py-1 text-xs font-semibold shadow-[0_4px_12px_rgba(15,23,42,0.06)] ${PRIORITY_TONE[item.priority]}`}
+              >
                 {PRIORITY_LABEL[item.priority]}
               </span>
             </div>
@@ -95,14 +99,18 @@ export const ApplicationPriorityBoard = ({ items }: { items: PriorityItem[] }) =
             </div>
             <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
               <span
-                className={`rounded-full px-3 py-1 font-semibold truncate ${
-                  /done|submitted|complete/i.test(item.status) ? STATUS_TONE.done : /progress|draft|essay/i.test(item.status) ? STATUS_TONE.progress : STATUS_TONE.default
+                className={`rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] truncate ${
+                  /done|submitted|complete/i.test(item.status)
+                    ? STATUS_TONE.done
+                    : /progress|draft|essay/i.test(item.status)
+                      ? STATUS_TONE.progress
+                      : STATUS_TONE.default
                 }`}
               >
                 {item.status}
               </span>
               {item.scholarshipFocus ? (
-                <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-emerald-700 truncate">
+                <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-emerald-700 truncate">
                   {item.scholarshipFocus}
                 </span>
               ) : null}
