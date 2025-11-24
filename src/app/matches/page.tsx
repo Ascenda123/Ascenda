@@ -7,6 +7,15 @@ import { rankMatches, type MatchInput, type Program, type University, type Progr
 import { MatchList } from '@/components/match/match-list';
 import { PageHero } from '@/components/layout/page-hero';
 import { Button } from '@/components/ui/button';
+import {
+  buildMatchInput,
+  mapAcademicsRow,
+  mapAspirationsRow,
+  mapPreferencesRow,
+  mapProgramRow,
+  mapRequirementRow,
+  mapUniversityRow
+} from '@/lib/matching/transform';
 
 export const metadata: Metadata = {
   title: 'Match suggestions | Ascenda'
@@ -71,89 +80,30 @@ export default async function MatchesPage() {
   }
 
   // Transform catalog data to camelCase
-  const programs: Program[] = programsRaw.map((p: any) => ({
-    id: p.id,
-    name: p.name,
-    field: p.field,
-    level: p.level,
-    durationYears: p.duration_years,
-    language: p.language,
-    mode: p.mode,
-    intakeMonths: p.intake_months,
-    tuition: p.tuition,
-    currency: p.currency,
-    url: p.url,
-    universityId: p.university_id
-  }));
-
-  const universities: University[] = universitiesRaw.map((u: any) => ({
-    id: u.id,
-    name: u.name,
-    country: u.country,
-    region: u.region,
-    rankOverall: u.rank_overall,
-    rankSource: u.rank_source,
-    acceptanceRate: u.acceptance_rate,
-    requiresTest: u.requires_test
-  }));
-
-  const requirements: ProgramRequirement[] = requirementsRaw.map((r: any) => ({
-    programId: r.program_id,
-    curriculum: r.curriculum,
-    minGpa: r.min_gpa,
-    minIbTotal: r.min_ib_total,
-    minSat: r.min_sat,
-    minAct: r.min_act,
-    requiredSubjects: r.required_subjects,
-    languageTests: r.language_tests,
-    otherRequirements: r.other_requirements
-  }));
+  const programs: Program[] = programsRaw.map(mapProgramRow);
+  const universities: University[] = universitiesRaw.map(mapUniversityRow);
+  const requirements: ProgramRequirement[] = requirementsRaw.map(mapRequirementRow);
 
   const requirementMap = new Map(requirements.map((item) => [item.programId, item]));
   const universityMap = new Map(universities.map((item) => [item.id, item]));
 
   // Transform user profile data to camelCase
-  const academics = {
-    curriculum: academicsData.curriculum,
-    gpa: academicsData.gpa,
-    ibTotal: academicsData.ib_total,
-    sat: academicsData.sat,
-    act: academicsData.act,
-    toefl: academicsData.toefl,
-    ielts: academicsData.ielts,
-    subjectGrades: academicsData.subject_grades
-  };
-
-  const preferences = {
-    budgetMin: preferencesData.budget_min,
-    budgetMax: preferencesData.budget_max,
-    aidNeeded: preferencesData.aid_needed,
-    countries: preferencesData.countries,
-    languages: preferencesData.languages,
-    campusType: preferencesData.campus_type,
-    setting: preferencesData.setting,
-    size: preferencesData.size,
-    programLevels: preferencesData.program_levels,
-    delivery: preferencesData.delivery
-  };
-
-  const aspirations = {
-    targetFields: aspirationsData.target_fields,
-    jobTitles: aspirationsData.job_titles
-  };
+  const academics = mapAcademicsRow(academicsData);
+  const preferences = mapPreferencesRow(preferencesData);
+  const aspirations = mapAspirationsRow(aspirationsData);
 
   const inputs = programs
     .map((program) => {
       const university = universityMap.get(program.universityId);
       if (!university) return null;
-      return {
+      return buildMatchInput({
         academics,
         preferences,
         aspirations,
         program,
         university,
         requirement: requirementMap.get(program.id)
-      } as MatchInput;
+      });
     })
     .filter((value): value is MatchInput => value !== null);
 

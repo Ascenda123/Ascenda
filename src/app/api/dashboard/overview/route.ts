@@ -3,6 +3,15 @@ import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { PROFILE_STEPS, type StepKey } from '@/lib/profile/steps';
 import { buildStepCompletion } from '@/lib/profile/completion';
 import { rankMatches, type MatchInput } from '@/lib/matching/engine';
+import {
+  buildMatchInput,
+  mapAcademicsRow,
+  mapAspirationsRow,
+  mapPreferencesRow,
+  mapProgramRow,
+  mapRequirementRow,
+  mapUniversityRow
+} from '@/lib/matching/transform';
 import type { EnrichedMatch } from '@/components/match/match-list';
 
 interface ChecklistRow {
@@ -50,6 +59,14 @@ export async function GET() {
 
   const today = new Date().toISOString().slice(0, 10);
 
+  const { data: applications } = await supabase
+    .from('applications')
+    .select('id, program_id')
+    .eq('profile_id', user.id);
+
+  const applicationIds = (applications ?? []).map((app: any) => app.id);
+  const applicationProgramIds = (applications ?? []).map((app: any) => app.program_id);
+
   const [
     checklistResponse,
     deadlinesResponse,
@@ -61,13 +78,18 @@ export async function GET() {
     universitiesResponse,
     requirementsResponse
   ] = await Promise.all([
-    supabase.from('application_checklist').select('*').order('due_date', { ascending: true }).limit(5),
-    supabase
-      .from('deadlines')
-      .select('*')
-      .gte('deadline_date', today)
-      .order('deadline_date', { ascending: true })
-      .limit(5),
+    applicationIds.length
+      ? supabase.from('application_checklist').select('*').in('application_id', applicationIds).order('due_date', { ascending: true }).limit(5)
+      : Promise.resolve({ data: [] }),
+    applicationProgramIds.length
+      ? supabase
+        .from('deadlines')
+        .select('*')
+        .in('program_id', applicationProgramIds)
+        .gte('deadline_date', today)
+        .order('deadline_date', { ascending: true })
+        .limit(5)
+      : Promise.resolve({ data: [] }),
     supabase.from('student_academics').select('*').eq('profile_id', user.id).single(),
     supabase.from('student_preferences').select('*').eq('profile_id', user.id).single(),
     supabase.from('student_aspirations').select('*').eq('profile_id', user.id).single(),
@@ -89,22 +111,24 @@ export async function GET() {
 
   let matchResults = [] as Awaited<ReturnType<typeof rankMatches>>;
   if (academics && preferences && aspirations && programs.length > 0 && universities.length > 0) {
-    const requirementMap = new Map(requirements.map((item: any) => [item.program_id, item]));
-    const universityMap = new Map(universities.map((item: any) => [item.id, item]));
+    const mappedAcademics = mapAcademicsRow(academics);
+    const mappedPreferences = mapPreferencesRow(preferences);
+    const mappedAspirations = mapAspirationsRow(aspirations);
+    const requirementMap = new Map(requirements.map((item: any) => [item.program_id, mapRequirementRow(item)]));
+    const universityMap = new Map(universities.map((item: any) => [item.id, mapUniversityRow(item)]));
     const inputs = programs
       .map((program: any) => {
-        const university = universityMap.get(program.university_id);
-        if (!university) return null;
-        return {
-          academics,
-          preferences,
-          aspirations,
-          program,
-          university,
-          requirement: requirementMap.get(program.id) ?? undefined
-        } as MatchInput;
+        const mappedProgram = mapProgramRow(program);
+        return buildMatchInput({
+          academics: mappedAcademics,
+          preferences: mappedPreferences,
+          aspirations: mappedAspirations,
+          program: mappedProgram,
+          university: universityMap.get(mappedProgram.universityId),
+          requirement: requirementMap.get(mappedProgram.id)
+        });
       })
-      .filter((value: any) => value !== null) as MatchInput[];
+      .filter((value: MatchInput | null): value is MatchInput => value !== null);
 
     matchResults = rankMatches(inputs).slice(0, 3);
   }

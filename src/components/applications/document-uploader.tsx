@@ -7,10 +7,18 @@ import { useSupabase } from '@/hooks/useSupabase';
 import { trackEvent } from '@/lib/analytics';
 
 interface DocumentUploaderProps {
+  applicationId?: string | null;
+  taskId?: string | null;
   onUpload?: (file: File) => Promise<void>;
 }
 
-export const DocumentUploader = ({ onUpload }: DocumentUploaderProps) => {
+const allowedMimeTypes = new Set([
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+]);
+
+export const DocumentUploader = ({ applicationId, taskId, onUpload }: DocumentUploaderProps) => {
   const supabase = useSupabase();
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -30,18 +38,42 @@ export const DocumentUploader = ({ onUpload }: DocumentUploaderProps) => {
       return;
     }
 
+    const extension = file.name.split('.').pop()?.toLowerCase();
+    const isAllowedType =
+      allowedMimeTypes.has(file.type) || (extension && ['pdf', 'doc', 'docx'].includes(extension));
+    if (!isAllowedType) {
+      setStatus(null);
+      setError('Only PDF or Word documents are allowed.');
+      return;
+    }
+
     if (!onUpload) {
       setIsUploading(true);
       setStatus('Uploading…');
 
       try {
-        const path = `documents/${Date.now()}-${file.name.replace(/\s+/g, '-')}`;
+        const scope = applicationId ? `applications/${applicationId}` : 'unassigned';
+        const taskSegment = taskId ? `task-${taskId}/` : '';
+        const path = `${scope}/${taskSegment}${Date.now()}-${file.name.replace(/\s+/g, '-')}`;
         const { error: uploadError } = await supabase.storage.from(bucket).upload(path, file, {
-          upsert: false
+          upsert: false,
+          contentType: file.type || undefined
         });
 
         if (uploadError) {
           throw uploadError;
+        }
+
+        if (applicationId) {
+          const { error: insertError } = await supabase.from('documents').insert({
+            application_id: applicationId,
+            name: file.name,
+            type: file.type || extension,
+            storage_path: path
+          });
+          if (insertError) {
+            throw insertError;
+          }
         }
 
         const { data: signedUrl } = await supabase.storage.from(bucket).createSignedUrl(path, 60 * 60);

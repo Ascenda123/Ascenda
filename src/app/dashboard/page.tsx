@@ -3,15 +3,24 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { DashboardShell } from '@/components/layout/shell';
-import { TaskList } from '@/components/dashboard/task-list';
 import { DeadlineTimeline } from '@/components/dashboard/deadline-timeline';
 import { MatchList } from '@/components/match/match-list';
 import type { EnrichedMatch } from '@/components/match/match-list';
 import { rankMatches, type MatchInput, type Program, type University, type ProgramRequirement } from '@/lib/matching/engine';
+import {
+  buildMatchInput,
+  mapAcademicsRow,
+  mapAspirationsRow,
+  mapPreferencesRow,
+  mapProgramRow,
+  mapRequirementRow,
+  mapUniversityRow
+} from '@/lib/matching/transform';
 import { DashboardOverview } from '@/components/dashboard/overview';
 import { PageHero } from '@/components/layout/page-hero';
 import { Button } from '@/components/ui/button';
 import { StatsCard } from '@/components/dashboard/stats-card';
+import { TaskListPanel } from '@/components/dashboard/task-list-panel';
 
 interface ChecklistRow {
   id: string;
@@ -43,6 +52,14 @@ export default async function DashboardPage() {
 
   const today = new Date().toISOString().slice(0, 10);
 
+  const { data: applications } = await supabase
+    .from('applications')
+    .select('id, program_id')
+    .eq('profile_id', user.id);
+
+  const applicationIds = (applications ?? []).map((app: any) => app.id);
+  const applicationProgramIds = (applications ?? []).map((app: any) => app.program_id);
+
   const [
     checklistResponse,
     deadlinesResponse,
@@ -53,13 +70,18 @@ export default async function DashboardPage() {
     universitiesResponse,
     requirementsResponse
   ] = await Promise.all([
-    supabase.from('application_checklist').select('*').order('due_date', { ascending: true }).limit(5),
-    supabase
-      .from('deadlines')
-      .select('*')
-      .gte('deadline_date', today)
-      .order('deadline_date', { ascending: true })
-      .limit(5),
+    applicationIds.length
+      ? supabase.from('application_checklist').select('*').in('application_id', applicationIds).order('due_date', { ascending: true }).limit(5)
+      : Promise.resolve({ data: [] }),
+    applicationProgramIds.length
+      ? supabase
+        .from('deadlines')
+        .select('*')
+        .in('program_id', applicationProgramIds)
+        .gte('deadline_date', today)
+        .order('deadline_date', { ascending: true })
+        .limit(5)
+      : Promise.resolve({ data: [] }),
     supabase.from('student_academics').select('*').eq('profile_id', user.id).single(),
     supabase.from('student_preferences').select('*').eq('profile_id', user.id).single(),
     supabase.from('student_aspirations').select('*').eq('profile_id', user.id).single(),
@@ -78,43 +100,9 @@ export default async function DashboardPage() {
   const universitiesRaw = universitiesResponse.data ?? [];
   const requirementsRaw = requirementsResponse.data ?? [];
 
-  const programs: Program[] = programsRaw.map((p: any) => ({
-    id: p.id,
-    name: p.name,
-    field: p.field,
-    level: p.level,
-    durationYears: p.duration_years,
-    language: p.language,
-    mode: p.mode,
-    intakeMonths: p.intake_months,
-    tuition: p.tuition,
-    currency: p.currency,
-    url: p.url,
-    universityId: p.university_id
-  }));
-
-  const universities: University[] = universitiesRaw.map((u: any) => ({
-    id: u.id,
-    name: u.name,
-    country: u.country,
-    region: u.region,
-    rankOverall: u.rank_overall,
-    rankSource: u.rank_source,
-    acceptanceRate: u.acceptance_rate,
-    requiresTest: u.requires_test
-  }));
-
-  const requirements: ProgramRequirement[] = requirementsRaw.map((r: any) => ({
-    programId: r.program_id,
-    curriculum: r.curriculum,
-    minGpa: r.min_gpa,
-    minIbTotal: r.min_ib_total,
-    minSat: r.min_sat,
-    minAct: r.min_act,
-    requiredSubjects: r.required_subjects,
-    languageTests: r.language_tests,
-    otherRequirements: r.other_requirements
-  }));
+  const programs: Program[] = programsRaw.map(mapProgramRow);
+  const universities: University[] = universitiesRaw.map(mapUniversityRow);
+  const requirements: ProgramRequirement[] = requirementsRaw.map(mapRequirementRow);
 
   let matches: EnrichedMatch[] = [];
 
@@ -123,48 +111,23 @@ export default async function DashboardPage() {
     const universityMap = new Map(universities.map((item) => [item.id, item]));
 
     // Transform user profile data
-    const academics = {
-      curriculum: academicsData.curriculum,
-      gpa: academicsData.gpa,
-      ibTotal: academicsData.ib_total,
-      sat: academicsData.sat,
-      act: academicsData.act,
-      toefl: academicsData.toefl,
-      ielts: academicsData.ielts,
-      subjectGrades: academicsData.subject_grades
-    };
-
-    const preferences = {
-      budgetMin: preferencesData.budget_min,
-      budgetMax: preferencesData.budget_max,
-      aidNeeded: preferencesData.aid_needed,
-      countries: preferencesData.countries,
-      languages: preferencesData.languages,
-      campusType: preferencesData.campus_type,
-      setting: preferencesData.setting,
-      size: preferencesData.size,
-      programLevels: preferencesData.program_levels,
-      delivery: preferencesData.delivery
-    };
-
-    const aspirations = {
-      targetFields: aspirationsData.target_fields,
-      jobTitles: aspirationsData.job_titles
-    };
+    const academics = mapAcademicsRow(academicsData);
+    const preferences = mapPreferencesRow(preferencesData);
+    const aspirations = mapAspirationsRow(aspirationsData);
 
     const inputs = programs
       .map((program) => {
         const university = universityMap.get(program.universityId);
         if (!university) return null;
 
-        return {
+        return buildMatchInput({
           academics,
           preferences,
           aspirations,
           program,
           university,
           requirement: requirementMap.get(program.id)
-        } as MatchInput;
+        });
       })
       .filter((item): item is MatchInput => item !== null);
 
@@ -236,7 +199,7 @@ export default async function DashboardPage() {
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
-          <TaskList
+          <TaskListPanel
             title="Application checklist"
             tasks={checklist.map((item) => ({
               id: item.id,

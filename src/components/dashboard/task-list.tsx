@@ -12,9 +12,10 @@ interface TaskListProps {
   title: string;
   tasks: TaskItem[];
   onToggle?: (id: string) => void;
+  disabled?: boolean;
 }
 
-export const TaskList = ({ title, tasks, onToggle }: TaskListProps) => {
+export const TaskList = ({ title, tasks, onToggle, disabled }: TaskListProps) => {
   const completed = tasks.filter((task) => task.status === 'done').length;
   const total = tasks.length;
   const progress = total ? Math.round((completed / total) * 100) : 0;
@@ -65,6 +66,7 @@ export const TaskList = ({ title, tasks, onToggle }: TaskListProps) => {
                     size="sm"
                     variant={task.status === 'done' ? 'secondary' : 'outline'}
                     onClick={() => onToggle(task.id)}
+                    disabled={disabled}
                   >
                     {task.status === 'done' ? 'Undo' : 'Mark done'}
                   </Button>

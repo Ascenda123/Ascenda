@@ -28,19 +28,26 @@ export default async function ApplicationsPage() {
   }
 
   const [{ data: applications }] = await Promise.all([
-    supabase.from('applications').select('*, programs(*), universities:programs(university_id)').eq('profile_id', user.id)
+    supabase
+      .from('applications')
+      .select('*, program:programs(*, universities(*))')
+      .eq('profile_id', user.id)
   ]);
 
-  const { data: checklists } = await supabase
-    .from('application_checklist')
-    .select('*')
-    .in('application_id', (applications ?? []).map((app: any) => app.id));
+  const appIds = (applications ?? []).map((app: any) => app.id);
+  const programIds = (applications ?? []).map((app: any) => app.program_id);
 
-  const { data: deadlines } = await supabase
-    .from('deadlines')
-    .select('*')
-    .in('program_id', (applications ?? []).map((app: any) => app.program_id))
-    .order('deadline_date', { ascending: true });
+  const { data: checklists } = appIds.length
+    ? await supabase.from('application_checklist').select('*').in('application_id', appIds)
+    : { data: [] };
+
+  const { data: deadlines } = programIds.length
+    ? await supabase
+      .from('deadlines')
+      .select('*')
+      .in('program_id', programIds)
+      .order('deadline_date', { ascending: true })
+    : { data: [] };
 
   type ApplicationRecord = {
     id: string;
@@ -48,8 +55,7 @@ export default async function ApplicationsPage() {
     notes?: string | null;
     priority_score?: number | null;
     program_id: string;
-    programs?: { name?: string | null; discipline?: string | null };
-    universities?: { name?: string | null };
+    program?: { name?: string | null; discipline?: string | null; universities?: { name?: string | null } | null } | null;
   };
 
   type ChecklistRecord = {
@@ -128,8 +134,8 @@ export default async function ApplicationsPage() {
         const fallbackPriority: PriorityItem['priority'][] = ['high', 'medium', 'watch'];
         return {
           id: app.id,
-          program: app.programs?.name ?? 'Program',
-          university: app.universities?.name ?? 'University partner',
+          program: app.program?.name ?? 'Program',
+          university: app.program?.universities?.name ?? 'University partner',
           priority: fallbackPriority[index % fallbackPriority.length],
           fitScore: Math.round(app.priority_score ?? 75),
           status: app.status ?? 'In progress',
@@ -148,7 +154,7 @@ export default async function ApplicationsPage() {
         return {
           id: task.id,
           requirement: task.task_name,
-          application: appRecords.find((app) => app.id === task.application_id)?.programs?.name ?? 'General',
+          application: appRecords.find((app) => app.id === task.application_id)?.program?.name ?? 'General',
           dueDate: task.due_date ?? undefined,
           owner: task.owner ?? (status === 'requested' ? 'Recommender' : 'You'),
           status
@@ -210,7 +216,7 @@ export default async function ApplicationsPage() {
     interviews: plannerEvents.filter((event) => event.category === 'interview' && isSameDay(event.date)).length
   };
 
-  const disciplineFocus = appRecords[0]?.programs?.discipline ?? 'university';
+  const disciplineFocus = appRecords[0]?.program?.discipline ?? 'university';
   const resourceHighlights = [
     {
       id: 'essay-template',
@@ -250,7 +256,7 @@ export default async function ApplicationsPage() {
           id: task.id,
           name: task.owner ?? `Recommender ${index + 1}`,
           relationship: task.category ?? 'Teacher',
-          school: appRecords.find((app) => app.id === task.application_id)?.universities?.name ?? 'Multiple schools',
+          school: appRecords.find((app) => app.id === task.application_id)?.program?.universities?.name ?? 'Multiple schools',
           dueDate: task.due_date ?? undefined,
           status: task.status === 'done' ? 'received' : 'sent',
           lastNudged: task.status === 'done' ? undefined : '3d ago'
@@ -373,7 +379,7 @@ export default async function ApplicationsPage() {
         <div className="grid gap-6 lg:grid-cols-3">
           <div className="space-y-4 rounded-[28px] border border-border bg-card p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)] transition-colors">
             <h2 className="text-2xl font-semibold text-foreground">Upload documents</h2>
-            <DocumentUploader />
+            <DocumentUploader applicationId={appRecords[0]?.id ?? null} />
           </div>
           <SignalCenter signals={signalItems} />
           <div className="space-y-4 rounded-[28px] border border-border bg-card p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)] transition-colors">
