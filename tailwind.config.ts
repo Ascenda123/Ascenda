@@ -49,6 +49,23 @@ const config: Config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        success: {
+          DEFAULT: "hsl(var(--success))",
+          foreground: "hsl(var(--success-foreground))",
+        },
+        warning: {
+          DEFAULT: "hsl(var(--warning))",
+          foreground: "hsl(var(--warning-foreground))",
+        },
+        info: {
+          DEFAULT: "hsl(var(--info))",
+          foreground: "hsl(var(--info-foreground))",
+        },
+      },
+      boxShadow: {
+        soft: "0 2px 10px rgba(0, 0, 0, 0.05)",
+        floating: "0 10px 30px -10px rgba(0, 0, 0, 0.1)",
+        glow: "0 0 20px rgba(99, 102, 241, 0.15)",
       },
       borderRadius: {
         lg: "var(--radius)",

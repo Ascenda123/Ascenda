@@ -2,7 +2,6 @@
 
 import { motion, type Variants } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { useThemeMode } from '../theme/theme-provider';
 
 const comparisons = [
     {
@@ -47,7 +46,6 @@ const fadeIn: Variants = {
 };
 
 export function ComparisonSection() {
-    const { mode } = useThemeMode();
 
     return (
         <motion.section
@@ -60,18 +58,16 @@ export function ComparisonSection() {
             <div
                 className={cn(
                     'relative overflow-hidden rounded-[30px] text-foreground transition-colors',
-                    mode === 'light'
-                        ? 'border border-border bg-card shadow-[0_18px_45px_rgba(15,23,42,0.08)]'
-                        : 'border border-border bg-card/80 shadow-2xl'
+                    'border border-border bg-card shadow-[0_18px_45px_rgba(15,23,42,0.08)]',
+                    'dark:bg-card/80 dark:shadow-2xl'
                 )}
             >
                 <div className="pointer-events-none absolute inset-0 opacity-20">
                     <div
                         className={cn(
                             'h-full w-full',
-                            mode === 'light'
-                                ? 'bg-[radial-gradient(circle_at_top,_rgba(99,102,241,0.15),_transparent_55%)]'
-                                : 'bg-[radial-gradient(circle_at_top,_var(--accent),_transparent_60%)]'
+                            'bg-[radial-gradient(circle_at_top,_rgba(99,102,241,0.15),_transparent_55%)]',
+                            'dark:bg-[radial-gradient(circle_at_top,_var(--accent),_transparent_60%)]'
                         )}
                     />
                 </div>
@@ -104,9 +100,8 @@ export function ComparisonSection() {
                                 <div
                                     className={cn(
                                         'rounded-[24px] p-5 transition-colors',
-                                        mode === 'light'
-                                            ? 'border border-border bg-muted/50 shadow-sm'
-                                            : 'border border-border bg-card/70'
+                                        'border border-border bg-muted/50 shadow-sm',
+                                        'dark:bg-card/70'
                                     )}
                                 >
                                     <p className="text-xs font-semibold uppercase tracking-[0.4em] text-destructive">
@@ -120,16 +115,15 @@ export function ComparisonSection() {
                                         <span
                                             className={cn(
                                                 'hidden h-8 w-px md:block',
-                                                mode === 'light' ? 'bg-border/80' : 'bg-muted/60'
+                                                'bg-border/80 dark:bg-muted/60'
                                             )}
                                         />
                                     )}
                                     <span
                                         className={cn(
                                             'flex h-12 w-12 items-center justify-center rounded-full text-[0.65rem] font-semibold uppercase tracking-[0.3em] text-muted-foreground transition-colors',
-                                            mode === 'light'
-                                                ? 'border border-border bg-card'
-                                                : 'border border-border bg-card/70'
+                                            'border border-border bg-card',
+                                            'dark:bg-card/70'
                                         )}
                                     >
                                         vs
@@ -138,7 +132,7 @@ export function ComparisonSection() {
                                         <span
                                             className={cn(
                                                 'hidden h-8 w-px md:block',
-                                                mode === 'light' ? 'bg-border/80' : 'bg-muted/60'
+                                                'bg-border/80 dark:bg-muted/60'
                                             )}
                                         />
                                     )}
@@ -146,9 +140,8 @@ export function ComparisonSection() {
                                 <div
                                     className={cn(
                                         'rounded-[24px] p-5 text-foreground transition-colors',
-                                        mode === 'light'
-                                            ? 'border border-emerald-500/25 bg-emerald-50/80 shadow-[0_12px_30px_rgba(16,185,129,0.2)]'
-                                            : 'border border-emerald-500/20 bg-emerald-500/5 shadow-lg'
+                                        'border border-emerald-500/25 bg-emerald-50/80 shadow-[0_12px_30px_rgba(16,185,129,0.2)]',
+                                        'dark:border-emerald-500/20 dark:bg-emerald-500/5 dark:shadow-lg'
                                     )}
                                 >
                                     <p className="text-xs font-semibold uppercase tracking-[0.4em] text-emerald-400">

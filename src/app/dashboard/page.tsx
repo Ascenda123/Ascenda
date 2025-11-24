@@ -11,6 +11,7 @@ import { rankMatches, type MatchInput, type Program, type University, type Progr
 import { DashboardOverview } from '@/components/dashboard/overview';
 import { PageHero } from '@/components/layout/page-hero';
 import { Button } from '@/components/ui/button';
+import { StatsCard } from '@/components/dashboard/stats-card';
 
 interface ChecklistRow {
   id: string;
@@ -184,11 +185,6 @@ export default async function DashboardPage() {
   }
 
   const completedTasks = checklist.filter((task) => task.status === 'done').length;
-  const heroStats = [
-    { label: 'Checklist', value: checklist.length ? `${completedTasks}/${checklist.length}` : '0', detail: 'Completed' },
-    { label: 'Deadlines', value: `${deadlines.length}`, detail: 'On radar' },
-    { label: 'Matches', value: matches.length ? `${matches[0].score}%` : '—', detail: matches.length ? 'Top score' : 'Update profile' }
-  ];
   const heroHighlight = matches.length ? 'Matches refreshed' : 'Complete your profile';
 
   return (
@@ -198,7 +194,7 @@ export default async function DashboardPage() {
         title="Welcome back"
         description="Track every checklist, deadline, and match signal in one calm dashboard. Keep momentum rolling."
         highlight={heroHighlight}
-        stats={heroStats}
+        stats={[]}
         actions={
           <>
             <Button asChild size="sm">
@@ -213,6 +209,28 @@ export default async function DashboardPage() {
           </>
         }
       />
+
+      <div className="grid gap-4 sm:grid-cols-3">
+        <StatsCard
+          label="Checklist"
+          value={checklist.length ? `${completedTasks}/${checklist.length}` : '0'}
+          detail="Tasks completed"
+          icon={<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></svg>}
+        />
+        <StatsCard
+          label="Deadlines"
+          value={`${deadlines.length}`}
+          detail="Upcoming on radar"
+          icon={<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>}
+        />
+        <StatsCard
+          label="Top Match"
+          value={matches.length ? `${matches[0].score}%` : '—'}
+          detail={matches.length ? 'Highest fit score' : 'Update profile'}
+          trend={matches.length ? 'up' : 'neutral'}
+          icon={<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 4 4 0 0 1-5-5" /><path d="M8.5 8.5v.01" /><path d="M16 16v.01" /><path d="M12 12v.01" /></svg>}
+        />
+      </div>
 
       <DashboardOverview />
 

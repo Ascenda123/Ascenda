@@ -19,22 +19,28 @@ const PRIORITY_LABEL: Record<PriorityItem['priority'], string> = {
 };
 
 const PRIORITY_TONE: Record<PriorityItem['priority'], string> = {
-  high: 'bg-rose-100 text-rose-700',
-  medium: 'bg-amber-100 text-amber-700',
-  watch: 'bg-emerald-100 text-emerald-700'
+  high: 'bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300',
+  medium: 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300',
+  watch: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300'
 };
 
 export const ApplicationPriorityBoard = ({ items }: { items: PriorityItem[] }) => {
   if (items.length === 0) {
     return (
-      <div className="rounded-[28px] border border-border bg-card p-6 text-sm text-muted-foreground shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
-        Add programs to see real-time priority scoring based on deadlines, scholarships, and fit.
+      <div className="flex flex-col items-center justify-center gap-4 rounded-[28px] border border-border bg-card p-12 text-center shadow-soft">
+        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-list-plus"><path d="M11 12H3" /><path d="M16 6H3" /><path d="M16 18H3" /><path d="M18 9h6" /><path d="M21 6v6" /></svg>
+        </div>
+        <div className="space-y-1">
+          <h3 className="font-semibold text-foreground">No priorities yet</h3>
+          <p className="text-sm text-muted-foreground">Add programs to see real-time priority scoring.</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-5 rounded-[32px] border border-border bg-card p-6 shadow-[0_18px_60px_rgba(15,23,42,0.08)]">
+    <div className="space-y-5 rounded-[32px] border border-border bg-card p-6 shadow-floating">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-2xl font-semibold text-foreground">Application priorities</h2>
@@ -48,7 +54,7 @@ export const ApplicationPriorityBoard = ({ items }: { items: PriorityItem[] }) =
         {items.map((item) => (
           <article
             key={item.id}
-            className="group flex flex-col gap-4 rounded-[28px] border border-border bg-card p-5 transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_35px_80px_rgba(15,23,42,0.12)]"
+            className="group flex flex-col gap-4 rounded-[28px] border border-border bg-card p-5 transition-all duration-200 hover:-translate-y-1 hover:shadow-floating"
           >
             <div className="flex items-start justify-between gap-3">
               <div className="flex-1 min-w-0">
@@ -62,7 +68,15 @@ export const ApplicationPriorityBoard = ({ items }: { items: PriorityItem[] }) =
             <div className="grid grid-cols-3 gap-3 text-sm text-muted-foreground">
               <div>
                 <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Fit score</p>
-                <p className="text-2xl font-semibold text-foreground">{item.fitScore}%</p>
+                <div className="flex items-center gap-2">
+                  <div className="h-2 w-16 overflow-hidden rounded-full bg-muted">
+                    <div
+                      className="h-full bg-primary transition-all duration-500"
+                      style={{ width: `${item.fitScore}%` }}
+                    />
+                  </div>
+                  <p className="text-sm font-semibold text-foreground">{item.fitScore}%</p>
+                </div>
               </div>
               <div>
                 <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Next deadline</p>

@@ -42,6 +42,15 @@
     --input: 240 5% 90%;
     --ring: 243 75% 59%;
 
+    --success: 142 71% 45%;
+    --success-foreground: 210 40% 98%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 210 40% 98%;
+
+    --info: 217 91% 60%;
+    --info-foreground: 210 40% 98%;
+
     --radius: 1rem;
   }
 
@@ -78,6 +87,15 @@
     --border: 217 33% 17%;
     --input: 217 33% 17%;
     --ring: 243 75% 59%;
+
+    --success: 142 71% 45%;
+    --success-foreground: 210 40% 98%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 210 40% 98%;
+
+    --info: 217 91% 60%;
+    --info-foreground: 210 40% 98%;
   }
 }
 
@@ -102,11 +120,11 @@
 
 @layer utilities {
   .glass {
-    @apply bg-card/80 backdrop-blur-lg border border-border/60 shadow-sm;
+    @apply bg-card/80 backdrop-blur-lg border border-border/60 shadow-soft;
   }
 
   .glass-card {
-    @apply bg-card/70 backdrop-blur-xl border border-border/60 shadow-xl;
+    @apply bg-card/70 backdrop-blur-xl border border-border/60 shadow-floating;
   }
 
   .text-glow {
