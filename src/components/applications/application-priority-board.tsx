@@ -19,17 +19,17 @@ const PRIORITY_LABEL: Record<PriorityItem['priority'], string> = {
 };
 
 const PRIORITY_TONE: Record<PriorityItem['priority'], string> = {
-  high: 'border-rose-300 bg-rose-50 text-rose-800 dark:border-rose-400/40 dark:bg-rose-500/20 dark:text-rose-50',
-  medium: 'border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-400/40 dark:bg-amber-500/20 dark:text-amber-50',
-  watch: 'border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-400/40 dark:bg-emerald-500/20 dark:text-emerald-50'
+  high: 'border-rose-300 text-rose-700 bg-card dark:border-rose-400 dark:text-rose-200',
+  medium: 'border-amber-300 text-amber-700 bg-card dark:border-amber-400 dark:text-amber-200',
+  watch: 'border-emerald-300 text-emerald-700 bg-card dark:border-emerald-400 dark:text-emerald-200'
 };
 
 const STATUS_TONE = {
   default: 'border border-border bg-muted text-foreground',
   progress:
-    'border border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-500/30 dark:bg-sky-500/15 dark:text-sky-100',
+    'border border-sky-200 bg-card text-sky-700 dark:border-sky-400/50 dark:bg-card dark:text-sky-100',
   done:
-    'border border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/15 dark:text-emerald-100'
+    'border border-emerald-200 bg-card text-emerald-700 dark:border-emerald-400/50 dark:bg-card dark:text-emerald-100'
 };
 
 export const ApplicationPriorityBoard = ({ items }: { items: PriorityItem[] }) => {
@@ -70,7 +70,7 @@ export const ApplicationPriorityBoard = ({ items }: { items: PriorityItem[] }) =
                 <h3 className="text-base font-semibold text-foreground truncate">{item.program}</h3>
               </div>
               <span
-                className={`whitespace-nowrap rounded-full border px-3 py-1 text-xs font-semibold shadow-[0_4px_12px_rgba(15,23,42,0.04)] ${PRIORITY_TONE[item.priority]}`}
+                className={`whitespace-nowrap rounded-full border px-3 py-1 text-xs font-semibold shadow-[0_4px_12px_rgba(15,23,42,0.02)] ${PRIORITY_TONE[item.priority]}`}
               >
                 {PRIORITY_LABEL[item.priority]}
               </span>
@@ -110,7 +110,7 @@ export const ApplicationPriorityBoard = ({ items }: { items: PriorityItem[] }) =
                 {item.status}
               </span>
               {item.scholarshipFocus ? (
-                <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-emerald-800 dark:text-emerald-100 truncate">
+                <span className="rounded-full border border-emerald-300 bg-card px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-emerald-700 dark:border-emerald-400 dark:text-emerald-200 truncate">
                   {item.scholarshipFocus}
                 </span>
               ) : null}
