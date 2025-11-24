@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { MatchTier } from '@/lib/matching/engine';
 import { useShortlist } from '@/components/university-search/shortlist-store';
 import { placeholderResults, type PlaceholderResult } from '@/components/university-search/placeholder-results';
-import { ResultCard } from '@/components/university-search/ResultCard';
+import { UniversityCard } from '@/components/university-card';
 import { FilterBar } from '@/components/university-search/FilterBar';
 import { CompareBar } from '@/components/university-search/CompareBar';
 import { ComparisonModal } from '@/components/university-search/ComparisonModal';
@@ -127,13 +127,19 @@ export default function UniversitySearchResultsPage() {
             )}
           >
             {filteredResults.map((result) => (
-              <ResultCard
+              <UniversityCard
                 key={result.id}
-                result={result}
+                id={result.id}
+                name={result.name}
+                program={result.program}
+                location={result.location}
+                fitScore={result.fitScore}
+                tier={result.tier}
+                highlights={result.highlights}
                 isShortlisted={shortlist.some((item) => item.id === result.id)}
                 isSelected={selectedForComparison.some((item) => item.id === result.id)}
-                onToggleShortlist={handleToggleShortlist}
-                onToggleSelect={handleToggleSelect}
+                onToggleShortlist={() => handleToggleShortlist(result)}
+                onToggleSelect={() => handleToggleSelect(result)}
               />
             ))}
           </div>
