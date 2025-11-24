@@ -19,9 +19,9 @@ const PRIORITY_LABEL: Record<PriorityItem['priority'], string> = {
 };
 
 const PRIORITY_TONE: Record<PriorityItem['priority'], string> = {
-  high: 'border-rose-200/80 bg-rose-100/80 text-rose-700 dark:border-rose-500/40 dark:bg-rose-500/15 dark:text-rose-100',
-  medium: 'border-amber-200/80 bg-amber-100/80 text-amber-700 dark:border-amber-500/40 dark:bg-amber-500/15 dark:text-amber-100',
-  watch: 'border-emerald-200/80 bg-emerald-100/80 text-emerald-700 dark:border-emerald-500/40 dark:bg-emerald-500/15 dark:text-emerald-100'
+  high: 'border-rose-300 bg-rose-50 text-rose-800 dark:border-rose-400/40 dark:bg-rose-500/20 dark:text-rose-50',
+  medium: 'border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-400/40 dark:bg-amber-500/20 dark:text-amber-50',
+  watch: 'border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-400/40 dark:bg-emerald-500/20 dark:text-emerald-50'
 };
 
 const STATUS_TONE = {
@@ -70,7 +70,7 @@ export const ApplicationPriorityBoard = ({ items }: { items: PriorityItem[] }) =
                 <h3 className="text-base font-semibold text-foreground truncate">{item.program}</h3>
               </div>
               <span
-                className={`whitespace-nowrap rounded-full border px-3 py-1 text-xs font-semibold shadow-[0_4px_12px_rgba(15,23,42,0.06)] ${PRIORITY_TONE[item.priority]}`}
+                className={`whitespace-nowrap rounded-full border px-3 py-1 text-xs font-semibold shadow-[0_4px_12px_rgba(15,23,42,0.04)] ${PRIORITY_TONE[item.priority]}`}
               >
                 {PRIORITY_LABEL[item.priority]}
               </span>
@@ -110,7 +110,7 @@ export const ApplicationPriorityBoard = ({ items }: { items: PriorityItem[] }) =
                 {item.status}
               </span>
               {item.scholarshipFocus ? (
-                <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-emerald-700 truncate">
+                <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-emerald-800 dark:text-emerald-100 truncate">
                   {item.scholarshipFocus}
                 </span>
               ) : null}
