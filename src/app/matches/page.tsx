@@ -7,6 +7,8 @@ import { rankMatches, type MatchInput, type Program, type University, type Progr
 import { MatchList } from '@/components/match/match-list';
 import { PageHero } from '@/components/layout/page-hero';
 import { Button } from '@/components/ui/button';
+import { SectionNav } from '@/components/layout/section-nav';
+import { EXPLORE_SECTION_ITEMS } from '@/components/layout/navigation';
 import {
   buildMatchInput,
   mapAcademicsRow,
@@ -40,6 +42,7 @@ export default async function MatchesPage() {
   if (!academicsData || !preferencesData || !aspirationsData) {
     return (
       <DashboardShell>
+        <SectionNav items={EXPLORE_SECTION_ITEMS} />
         <PageHero
           eyebrow="Matches"
           title="Dial in your Fit Score"
@@ -131,6 +134,7 @@ export default async function MatchesPage() {
 
   return (
     <DashboardShell>
+      <SectionNav items={EXPLORE_SECTION_ITEMS} />
       <PageHero
         eyebrow="Matches"
         title="Match suggestions"

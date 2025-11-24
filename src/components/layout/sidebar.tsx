@@ -3,39 +3,31 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { GraduationCap, ListChecks, Target, FileText, LayoutDashboard, Settings, Search, Award, BookmarkCheck } from 'lucide-react';
-
-const items = [
-  { href: '/dashboard', label: 'Overview', icon: LayoutDashboard },
-  { href: '/profile', label: 'Profile', icon: Target },
-  { href: '/matches', label: 'Matches', icon: GraduationCap },
-  { href: '/university-search/search', label: 'Search', icon: Search },
-  { href: '/applications', label: 'Applications', icon: FileText },
-  { href: '/applications/tasks', label: 'Checklist', icon: ListChecks },
-  { href: '/shortlist', label: 'Course details', icon: BookmarkCheck },
-  { href: '/scholarships', label: 'Scholarships', icon: Award },
-  { href: '/admin', label: 'Admin', icon: Settings }
-];
+import { filterNavByRole, isNavActive, NAV_ITEMS } from './navigation';
+import { useUserRole } from '@/hooks/use-user-role';
 
 export const Sidebar = () => {
   const pathname = usePathname();
+  const role = useUserRole();
+  const items = filterNavByRole(NAV_ITEMS, role);
 
   return (
     <aside className="sticky top-28 hidden w-60 self-start rounded-[24px] border border-border bg-card p-5 text-foreground shadow-[0_12px_30px_rgba(15,23,42,0.06)] transition-colors md:block">
       <nav className="space-y-1">
-        {items.map(({ href, label, icon: Icon }) => {
-          const active = pathname === href || pathname.startsWith(`${href}/`);
+        {items.map((item) => {
+          const active = isNavActive(item, pathname);
+          const Icon = item.icon;
           return (
             <Link
-              key={href}
-              href={href}
+              key={item.href}
+              href={item.href}
               className={cn(
                 'flex items-center gap-3 rounded-2xl px-3 py-2 text-sm font-medium text-muted-foreground transition hover:bg-muted/40 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
                 active && 'bg-muted/60 text-foreground shadow-inner'
               )}
             >
               <Icon className={cn('h-4 w-4', active ? 'text-foreground' : 'text-muted-foreground')} aria-hidden />
-              <span>{label}</span>
+              <span>{item.label}</span>
             </Link>
           );
         })}

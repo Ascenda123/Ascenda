@@ -6,19 +6,14 @@ import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from '../theme/theme-toggle';
 import { useThemeMode } from '../theme/theme-provider';
-
-const links = [
-  { href: '/dashboard', label: 'Dashboard' },
-  { href: '/profile', label: 'Profile' },
-  { href: '/matches', label: 'Matches' },
-  { href: '/applications', label: 'Applications', exact: true },
-  { href: '/applications/tasks', label: 'Checklist' },
-  { href: '/scholarships', label: 'Scholarships' }
-];
+import { filterNavByRole, isNavActive, NAV_ITEMS } from './navigation';
+import { useUserRole } from '@/hooks/use-user-role';
 
 export const Navbar = () => {
   const pathname = usePathname();
   const { mode } = useThemeMode();
+  const role = useUserRole();
+  const navItems = filterNavByRole(NAV_ITEMS, role);
   const logoSrc = '/Ascenda_Logo-removebg-.png';
 
   return (
@@ -39,8 +34,8 @@ export const Navbar = () => {
           </div>
         </Link>
         <nav className="hidden items-center gap-5 text-xs font-medium text-muted-foreground md:flex">
-          {links.map((link) => {
-            const active = pathname === link.href || (!link.exact && pathname.startsWith(`${link.href}/`));
+          {navItems.map((link) => {
+            const active = isNavActive(link, pathname);
             return (
               <Link
                 key={link.href}

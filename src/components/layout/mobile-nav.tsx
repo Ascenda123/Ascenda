@@ -1,0 +1,37 @@
+'use client';
+
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { cn } from '@/lib/utils';
+import { filterNavByRole, isNavActive, NAV_ITEMS } from './navigation';
+import { useUserRole } from '@/hooks/use-user-role';
+
+export const MobileNav = () => {
+  const pathname = usePathname();
+  const role = useUserRole();
+  const items = filterNavByRole(NAV_ITEMS, role);
+
+  return (
+    <nav className="fixed inset-x-0 bottom-4 z-50 mx-auto w-full max-w-3xl px-4 md:hidden">
+      <div className="flex items-center justify-between gap-2 rounded-full border border-border bg-card/95 px-4 py-3 text-xs font-semibold text-muted-foreground shadow-[0_24px_45px_rgba(15,23,42,0.12)] backdrop-blur">
+        {items.map((item) => {
+          const Icon = item.icon;
+          const active = isNavActive(item, pathname);
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                'flex flex-1 items-center justify-center gap-2 rounded-full px-3 py-2 transition',
+                active ? 'bg-primary text-primary-foreground shadow-[0_10px_25px_rgba(15,23,42,0.22)]' : 'hover:text-foreground'
+              )}
+            >
+              <Icon className="h-4 w-4" aria-hidden />
+              <span>{item.label}</span>
+            </Link>
+          );
+        })}
+      </div>
+    </nav>
+  );
+};

@@ -3,12 +3,14 @@ import { redirect } from 'next/navigation';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { DashboardShell } from '@/components/layout/shell';
 import { TaskList } from '@/components/dashboard/task-list';
+import { SectionNav } from '@/components/layout/section-nav';
+import { PLANNER_SECTION_ITEMS } from '@/components/layout/navigation';
 
 export const metadata: Metadata = {
-  title: 'Checklist | Ascenda'
+  title: 'Tasks | Ascenda'
 };
 
-export default async function ChecklistPage() {
+export default async function TasksPage() {
   const supabase = createServerSupabaseClient();
   const {
     data: { user }
@@ -26,8 +28,9 @@ export default async function ChecklistPage() {
 
   return (
     <DashboardShell>
+      <SectionNav items={PLANNER_SECTION_ITEMS} />
       <section className="space-y-2">
-        <h1 className="text-3xl font-semibold text-foreground">Checklist</h1>
+        <h1 className="text-3xl font-semibold text-foreground">Tasks</h1>
         <p className="text-sm text-muted-foreground">Action items grouped across all applications.</p>
       </section>
       <TaskList

@@ -9,6 +9,8 @@ import { buildStepCompletion, isProfileComplete, type ProfileRecordGroup } from 
 import { PageHero } from '@/components/layout/page-hero';
 import { Button } from '@/components/ui/button';
 import { AnimatedBlobBanner } from '@/components/animated-blob-banner';
+import { SectionNav } from '@/components/layout/section-nav';
+import { PROFILE_SECTION_ITEMS } from '@/components/layout/navigation';
 
 export const metadata: Metadata = {
   title: 'Profile onboarding | Ascenda'
@@ -53,6 +55,10 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
   const completionPercent = Math.round((completedCount / PROFILE_STEPS.length) * 100);
   const nextStep = PROFILE_STEPS.find((step) => !stepCompletion[step.key]);
   const nextStepKey: StepKey = nextStep?.key ?? 'aspirations';
+  const stepParamRaw = searchParams?.step;
+  const stepParam = Array.isArray(stepParamRaw) ? stepParamRaw[0] : stepParamRaw;
+  const requestedStep = PROFILE_STEPS.find((step) => step.key === stepParam);
+  const initialStepKey: StepKey = (requestedStep?.key as StepKey) ?? nextStepKey;
   const heroStats = [
     { label: 'Completion', value: `${completionPercent}%`, detail: 'Profile ready' },
     { label: 'Steps done', value: `${completedCount}/${PROFILE_STEPS.length}`, detail: 'Sections' },
@@ -85,7 +91,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
               academics={academics ?? null}
               preferences={preferences ?? null}
               aspirations={aspirations ?? null}
-              initialStep={nextStepKey}
+              initialStep={initialStepKey}
               stepCompletion={stepCompletion}
             />
           </div>
@@ -96,6 +102,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
 
   return (
     <DashboardShell>
+      <SectionNav items={PROFILE_SECTION_ITEMS} />
       <PageHero
         eyebrow="Profile"
         title="Build your student profile"
@@ -174,7 +181,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
           academics={academics ?? null}
           preferences={preferences ?? null}
           aspirations={aspirations ?? null}
-          initialStep={nextStepKey}
+          initialStep={initialStepKey}
           stepCompletion={stepCompletion}
         />
       ) : (

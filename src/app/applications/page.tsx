@@ -12,6 +12,8 @@ import { ReferenceTracker, type ReferenceItem } from '@/components/applications/
 import { SignalCenter, type SignalItem } from '@/components/applications/signal-center';
 import { PageHero } from '@/components/layout/page-hero';
 import { Button } from '@/components/ui/button';
+import { SectionNav } from '@/components/layout/section-nav';
+import { PLANNER_SECTION_ITEMS } from '@/components/layout/navigation';
 
 export const metadata: Metadata = {
   title: 'Applications | Ascenda'
@@ -338,9 +340,10 @@ export default async function ApplicationsPage() {
 
   return (
     <DashboardShell>
+      <SectionNav items={PLANNER_SECTION_ITEMS} />
       <PageHero
-        eyebrow="Planner"
-        title="Application planner"
+        eyebrow="Applications"
+        title="Application workspace"
         description="Prioritize, schedule, and execute every requirement—documents, references, tasks, and signals in one calm space."
         highlight={`Today • ${dailySummary.tasks} tasks, ${dailySummary.deadlines} deadlines`}
         stats={heroStats}
@@ -352,7 +355,7 @@ export default async function ApplicationsPage() {
               </Link>
             </Button>
             <Button asChild size="sm" variant="outline">
-              <Link href="/applications/tasks">Open checklist</Link>
+              <Link href="/applications/tasks">Open tasks</Link>
             </Button>
           </>
         }

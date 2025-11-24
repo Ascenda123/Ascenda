@@ -7,6 +7,8 @@ import { DashboardShell } from '@/components/layout/shell';
 import { PageHero } from '@/components/layout/page-hero';
 import { Button } from '@/components/ui/button';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { SectionNav } from '@/components/layout/section-nav';
+import { PLANNER_SECTION_ITEMS } from '@/components/layout/navigation';
 import { CalendarDays, CheckCircle2, Clock, LayoutList, Map, Target } from 'lucide-react';
 
 export const metadata: Metadata = {
@@ -188,6 +190,7 @@ export default async function ShortlistPage() {
 
   return (
     <DashboardShell>
+      <SectionNav items={PLANNER_SECTION_ITEMS} />
       <PageHero
         eyebrow="Shortlist control"
         title="Course-by-course breakdown"
