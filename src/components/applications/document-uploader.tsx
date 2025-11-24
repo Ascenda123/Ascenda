@@ -125,9 +125,15 @@ export const DocumentUploader = ({ applicationId, taskId, onUpload }: DocumentUp
       ) : null}
       {uploaded.length ? (
         <ul className="space-y-2 text-xs text-muted-foreground">
-          {uploaded.map((item) => (
-            <li key={`${item.name}-${item.url ?? 'local'}`} className="flex items-center justify-between gap-3 rounded-2xl border border-border px-3 py-2">
-              <span className="truncate font-medium">{item.name}</span>
+          {uploaded.map((item) => {
+            const ext = item.name.split('.').pop()?.toLowerCase() ?? '';
+            const icon = ext === 'pdf' ? '📄' : ext === 'doc' || ext === 'docx' ? '📝' : '📁';
+            return (
+              <li key={`${item.name}-${item.url ?? 'local'}`} className="flex items-center justify-between gap-3 rounded-2xl border border-border px-3 py-2">
+                <span className="flex items-center gap-2 truncate font-medium">
+                  <span aria-hidden>{icon}</span>
+                  <span className="truncate">{item.name}</span>
+                </span>
               {item.url ? (
                 <a
                   href={item.url}
@@ -138,8 +144,9 @@ export const DocumentUploader = ({ applicationId, taskId, onUpload }: DocumentUp
                   View
                 </a>
               ) : null}
-            </li>
-          ))}
+              </li>
+            );
+          })}
         </ul>
       ) : null}
       <div className="flex flex-wrap gap-2">

@@ -24,6 +24,12 @@ const PRIORITY_TONE: Record<PriorityItem['priority'], string> = {
   watch: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300'
 };
 
+const STATUS_TONE = {
+  default: 'border border-border bg-muted text-foreground',
+  progress: 'border border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-500/30 dark:bg-sky-500/15 dark:text-sky-100',
+  done: 'border border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/15 dark:text-emerald-100'
+};
+
 export const ApplicationPriorityBoard = ({ items }: { items: PriorityItem[] }) => {
   if (items.length === 0) {
     return (
@@ -88,7 +94,11 @@ export const ApplicationPriorityBoard = ({ items }: { items: PriorityItem[] }) =
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-              <span className="rounded-full bg-muted px-3 py-1 font-semibold text-foreground truncate">
+              <span
+                className={`rounded-full px-3 py-1 font-semibold truncate ${
+                  /done|submitted|complete/i.test(item.status) ? STATUS_TONE.done : /progress|draft|essay/i.test(item.status) ? STATUS_TONE.progress : STATUS_TONE.default
+                }`}
+              >
                 {item.status}
               </span>
               {item.scholarshipFocus ? (

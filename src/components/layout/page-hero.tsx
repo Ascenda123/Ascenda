@@ -48,7 +48,11 @@ export const PageHero = ({
             <h1 className="text-3xl font-semibold text-foreground md:text-4xl">{title}</h1>
             <p className="max-w-xl text-sm text-muted-foreground">{description}</p>
           </div>
-          {actions ? <div className="flex flex-wrap gap-2">{actions}</div> : null}
+          {actions ? (
+            <div className="flex flex-wrap gap-2">
+              {actions}
+            </div>
+          ) : null}
         </div>
         {stats && stats.length > 0 ? (
           <div className="grid gap-3 sm:grid-cols-3">

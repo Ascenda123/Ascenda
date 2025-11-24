@@ -95,6 +95,8 @@ export default async function DashboardPage() {
   const academicsData = academicsResponse.data;
   const preferencesData = preferencesResponse.data;
   const aspirationsData = aspirationsResponse.data;
+  const profileSectionsComplete = [academicsData, preferencesData, aspirationsData].filter(Boolean).length;
+  const profileCompletionPercent = Math.round((profileSectionsComplete / 3) * 100);
 
   const programsRaw = programsResponse.data ?? [];
   const universitiesRaw = universitiesResponse.data ?? [];
@@ -149,6 +151,11 @@ export default async function DashboardPage() {
 
   const completedTasks = checklist.filter((task) => task.status === 'done').length;
   const heroHighlight = matches.length ? 'Matches refreshed' : 'Complete your profile';
+  const heroStats = [
+    { label: 'Profile', value: `${profileCompletionPercent}%`, detail: 'Ready for matches' },
+    { label: 'Checklist', value: checklist.length ? `${completedTasks}/${checklist.length}` : '0', detail: 'Tasks tracked' },
+    { label: 'Signals', value: matches.length ? `${matches[0].score}%` : '—', detail: matches.length ? 'Top fit' : 'Profile first' }
+  ];
 
   return (
     <DashboardShell>
@@ -157,7 +164,7 @@ export default async function DashboardPage() {
         title="Welcome back"
         description="Track every checklist, deadline, and match signal in one calm dashboard. Keep momentum rolling."
         highlight={heroHighlight}
-        stats={[]}
+        stats={heroStats}
         actions={
           <>
             <Button asChild size="sm">
@@ -212,14 +219,18 @@ export default async function DashboardPage() {
         <aside className="space-y-6">
           <div className="space-y-4 rounded-[28px] border border-border bg-card p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)] transition-colors">
             <h2 className="text-2xl font-semibold text-foreground">Upcoming deadlines</h2>
-            <DeadlineTimeline
-              items={deadlines.map((deadline) => ({
-                id: deadline.id,
-                name: deadline.name,
-                date: deadline.deadline_date ?? 'TBD',
-                context: deadline.intake ?? 'Application period'
-              }))}
-            />
+            {deadlines.length > 0 ? (
+              <DeadlineTimeline
+                items={deadlines.map((deadline) => ({
+                  id: deadline.id,
+                  name: deadline.name,
+                  date: deadline.deadline_date ?? 'TBD',
+                  context: deadline.intake ?? 'Application period'
+                }))}
+              />
+            ) : (
+              <p className="text-sm text-muted-foreground">No upcoming deadlines yet—track a program to surface milestones.</p>
+            )}
           </div>
         </aside>
         <div className="lg:col-span-3">

@@ -126,6 +126,8 @@ export default async function MatchesPage() {
     { label: 'Live matches', value: `${enriched.length}`, detail: 'Ranked for you' },
     { label: 'Top fit', value: enriched[0] ? `${enriched[0].score}%` : '—', detail: 'Highest score' }
   ];
+  const topMatch = enriched[0];
+  const filterChips = ['Budget friendly', 'Urban campus', 'STEM focus', 'Test-optional', 'Scholarship heavy'];
 
   return (
     <DashboardShell>
@@ -146,6 +148,39 @@ export default async function MatchesPage() {
           </>
         }
       />
+      <div className="mb-4 flex flex-wrap items-center gap-2 rounded-full border border-border bg-card p-3 text-sm text-muted-foreground shadow-[0_12px_30px_rgba(15,23,42,0.08)]">
+        <span className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Filters</span>
+        {filterChips.map((chip) => (
+          <button
+            key={chip}
+            type="button"
+            className="rounded-full border border-border bg-background px-3 py-1 text-xs font-semibold text-foreground transition hover:border-foreground/60"
+          >
+            {chip}
+          </button>
+        ))}
+      </div>
+      {topMatch ? (
+        <div className="sticky top-4 z-10 mb-4 rounded-[24px] border border-border bg-card/85 p-4 backdrop-blur shadow-[0_18px_45px_rgba(15,23,42,0.12)]">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-col gap-1">
+              <p className="text-[11px] uppercase tracking-[0.35em] text-muted-foreground">Top fit snapshot</p>
+              <p className="text-sm font-semibold text-foreground">
+                {topMatch.program.name} • {topMatch.university.name}
+              </p>
+              <p className="text-xs text-muted-foreground">Score {topMatch.score}% — {topMatch.tier} tier</p>
+            </div>
+            <div className="flex gap-2">
+              <Button asChild size="sm">
+                <Link href="/applications">Save to planner</Link>
+              </Button>
+              <Button size="sm" variant="outline">
+                Share
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
       <MatchList matches={enriched} />
     </DashboardShell>
   );

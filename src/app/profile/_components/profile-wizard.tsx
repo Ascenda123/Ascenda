@@ -125,6 +125,8 @@ export const ProfileWizard = ({
   const [status, setStatus] = useState<string | null>(null);
   const [targetFieldOther, setTargetFieldOther] = useState('');
   const [jobTitleOther, setJobTitleOther] = useState('');
+  const completedSteps = PROFILE_STEPS.filter((step) => completionState[step.key]).length;
+  const completionPercent = Math.round((completedSteps / PROFILE_STEPS.length) * 100);
 
   const deviceTimeZone = useMemo(() => {
     if (typeof Intl !== 'undefined' && typeof Intl.DateTimeFormat === 'function') {
@@ -349,6 +351,22 @@ export const ProfileWizard = ({
         </div>
       </aside>
       <div className="form-panel form-panel--roomy form-stack">
+        <div className="sticky top-0 z-10 -mx-6 -mt-6 mb-4 flex items-center justify-between gap-3 rounded-t-[28px] border-b border-border bg-card/90 px-6 py-3 backdrop-blur">
+          <div className="space-y-1">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">
+              Profile progress
+            </p>
+            <div className="flex items-center gap-3">
+              <div className="h-2 w-40 rounded-full bg-muted">
+                <div className="h-2 rounded-full bg-primary transition-all" style={{ width: `${completionPercent}%` }} />
+              </div>
+              <span className="text-xs font-semibold text-foreground">{completionPercent}%</span>
+            </div>
+          </div>
+          <div className="rounded-full bg-muted/60 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">
+            {completedSteps}/{PROFILE_STEPS.length} steps
+          </div>
+        </div>
         <div className="flex items-center justify-between text-xs uppercase tracking-[0.2em] text-muted-foreground">
           <span>
             Step {stepIndex + 1} of {PROFILE_STEPS.length}
