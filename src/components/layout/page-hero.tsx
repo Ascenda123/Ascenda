@@ -55,17 +55,19 @@ export const PageHero = ({
           ) : null}
         </div>
         {stats && stats.length > 0 ? (
-          <div className="grid gap-3 sm:grid-cols-[repeat(auto-fit,minmax(180px,1fr))]">
-            {stats.map((stat) => (
-              <div
-                key={stat.label}
-                className="min-w-[180px] rounded-2xl border border-border bg-background px-5 py-3 text-center shadow-sm transition-colors"
-              >
-                <p className="text-2xl font-semibold text-foreground">{stat.value}</p>
-                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground">{stat.label}</p>
-                {stat.detail ? <p className="text-[11px] text-muted-foreground">{stat.detail}</p> : null}
-              </div>
-            ))}
+          <div className="border-t border-border/70 pt-4 sm:border-l sm:border-t-0 sm:pl-4">
+            <div className="grid gap-3 sm:grid-cols-[repeat(auto-fit,minmax(180px,1fr))]">
+              {stats.map((stat) => (
+                <div
+                  key={stat.label}
+                  className="min-w-[180px] rounded-2xl border border-border bg-background px-5 py-3 text-center shadow-sm transition-colors sm:text-left"
+                >
+                  <p className="text-2xl font-semibold text-foreground">{stat.value}</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">{stat.label}</p>
+                  {stat.detail ? <p className="text-[11px] text-muted-foreground">{stat.detail}</p> : null}
+                </div>
+              ))}
+            </div>
           </div>
         ) : null}
       </div>
