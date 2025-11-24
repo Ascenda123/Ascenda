@@ -1,158 +1,158 @@
 'use client';
 
-import Link from 'next/link';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 import { MatchTier } from '@/lib/matching/engine';
 import { useShortlist } from '@/components/university-search/shortlist-store';
-import { placeholderResults, TIER_ORDER, type PlaceholderResult } from '@/components/university-search/placeholder-results';
-
-const TIER_DESCRIPTIONS: Record<MatchTier, string> = {
-  Reach: 'Prestigious programs that stretch your profile.',
-  Match: 'Programs that align closely with your interests and stats.',
-  Safe: 'Options you exceed academically and logistically.'
-};
-const TIER_BADGE_STYLES: Record<MatchTier, string> = {
-  Reach: 'bg-rose-100 text-rose-800 ring-rose-100',
-  Match: 'bg-amber-100 text-amber-800 ring-amber-100',
-  Safe: 'bg-emerald-100 text-emerald-800 ring-emerald-100'
-};
+import { placeholderResults, type PlaceholderResult } from '@/components/university-search/placeholder-results';
+import { ResultCard } from '@/components/university-search/ResultCard';
+import { FilterBar } from '@/components/university-search/FilterBar';
+import { CompareBar } from '@/components/university-search/CompareBar';
+import { ComparisonModal } from '@/components/university-search/ComparisonModal';
+import { cn } from '@/lib/utils';
 
 export default function UniversitySearchResultsPage() {
   const searchParams = useSearchParams();
-  const query = searchParams.get('q')?.trim() ?? '';
-  const normalizedQuery = query.toLowerCase();
-  const { items: shortlist, addItem } = useShortlist();
-  const results = normalizedQuery
-    ? placeholderResults.filter((result) => {
-        const haystack = `${result.name} ${result.program} ${result.location}`.toLowerCase();
-        return haystack.includes(normalizedQuery);
-      })
-    : placeholderResults;
-  const hasNoMatches = normalizedQuery.length > 0 && results.length === 0;
-  const groupedResults = useMemo(
-    () =>
-      TIER_ORDER.map((tier) => ({
-        tier,
-        matches: results.filter((result) => result.tier === tier)
-      })),
-    [results]
-  );
+  const initialQuery = searchParams.get('q')?.trim() ?? '';
 
-  const handleAdd = (result: (typeof placeholderResults)[number]) => {
-    addItem({
-      id: result.id,
-      name: result.name,
-      program: result.program,
-      stage: 'Researching',
-      fitScore: result.fitScore,
-      nextAction: result.nextAction,
-      due: result.due,
-      location: result.location
+  // State
+  const [searchQuery, setSearchQuery] = useState(initialQuery);
+  const [selectedTiers, setSelectedTiers] = useState<MatchTier[]>(['Reach', 'Match', 'Safe']);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [selectedForComparison, setSelectedForComparison] = useState<PlaceholderResult[]>([]);
+  const [isComparisonOpen, setIsComparisonOpen] = useState(false);
+
+  const { items: shortlist, addItem, removeItem } = useShortlist();
+
+  // Filter Results
+  const filteredResults = useMemo(() => {
+    const normalizedQuery = searchQuery.toLowerCase();
+    return placeholderResults.filter((result) => {
+      const matchesSearch =
+        !normalizedQuery ||
+        `${result.name} ${result.program} ${result.location}`.toLowerCase().includes(normalizedQuery);
+      const matchesTier = selectedTiers.includes(result.tier);
+      return matchesSearch && matchesTier;
+    });
+  }, [searchQuery, selectedTiers]);
+
+  // Handlers
+  const handleToggleShortlist = (result: PlaceholderResult) => {
+    const isShortlisted = shortlist.some((item) => item.id === result.id);
+    if (isShortlisted) {
+      removeItem(result.id);
+    } else {
+      addItem({
+        id: result.id,
+        name: result.name,
+        program: result.program,
+        stage: 'Researching',
+        fitScore: result.fitScore,
+        nextAction: result.nextAction,
+        due: result.due,
+        location: result.location
+      });
+    }
+  };
+
+  const handleToggleSelect = (result: PlaceholderResult) => {
+    setSelectedForComparison((prev) => {
+      const isSelected = prev.some((item) => item.id === result.id);
+      if (isSelected) {
+        return prev.filter((item) => item.id !== result.id);
+      } else {
+        if (prev.length >= 3) {
+          // Optional: Show toast notification that max comparison is 3
+          return prev;
+        }
+        return [...prev, result];
+      }
     });
   };
 
-  return (
-    <div className="space-y-8">
-      <section className="rounded-[32px] border border-border bg-card p-6 shadow-[0_24px_50px_rgba(15,23,42,0.08)] transition-colors">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-muted-foreground">Search results</p>
-            <h1 className="text-3xl font-semibold text-foreground">
-              {normalizedQuery ? `Matches for “${query}”` : 'Preview how universities align with your fit signals.'}
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              This grid is populated with placeholders—the final experience will pull from matches and shortlisted choices.
-            </p>
-            <p className="text-xs uppercase tracking-[0.35em] text-muted-foreground">
-              {hasNoMatches ? 'No matches found' : `${results.length} result${results.length === 1 ? '' : 's'}`}
-            </p>
-          </div>
-          <div className="rounded-[24px] border border-border bg-muted/70 px-6 py-4 text-center">
-            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-muted-foreground">Shortlist</p>
-            <p className="text-3xl font-semibold text-foreground">{shortlist.length}</p>
-            <p className="text-xs text-muted-foreground">Universities</p>
-          </div>
-        </div>
-      </section>
+  const handleCompare = () => {
+    setIsComparisonOpen(true);
+  };
 
-      <section className="space-y-6 rounded-[32px] border border-border bg-card p-6 shadow-[0_24px_50px_rgba(15,23,42,0.08)] transition-colors">
-        {hasNoMatches ? (
-          <div className="rounded-[28px] border border-dashed border-border bg-muted/60 p-10 text-center text-muted-foreground">
-            We couldn&apos;t find any placeholder matches for “{query}”. Try another keyword or reset your filters.
+  return (
+    <div className="min-h-screen space-y-8 pb-24">
+      <section className="space-y-6">
+        <div className="flex flex-col gap-2">
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">University Matches</h1>
+          <p className="text-muted-foreground">
+            Explore programs tailored to your profile and preferences.
+          </p>
+        </div>
+
+        <FilterBar
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          selectedTiers={selectedTiers}
+          onTierChange={(tier) => {
+            setSelectedTiers((prev) =>
+              prev.includes(tier) ? prev.filter((t) => t !== tier) : [...prev, tier]
+            );
+          }}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
+          resultCount={filteredResults.length}
+        />
+
+        {filteredResults.length === 0 ? (
+          <div className="flex flex-col items-center justify-center rounded-[32px] border border-dashed border-border bg-muted/30 py-20 text-center">
+            <div className="mb-4 rounded-full bg-muted p-4">
+              <span className="text-4xl">🔍</span>
+            </div>
+            <h3 className="text-lg font-semibold text-foreground">No matches found</h3>
+            <p className="text-muted-foreground">
+              Try adjusting your filters or search query to find more results.
+            </p>
+            <button
+              onClick={() => {
+                setSearchQuery('');
+                setSelectedTiers(['Reach', 'Match', 'Safe']);
+              }}
+              className="mt-4 text-sm font-medium text-primary hover:underline"
+            >
+              Clear all filters
+            </button>
           </div>
         ) : (
-          groupedResults.map(
-            ({ tier, matches }) =>
-              matches.length > 0 && (
-                <div key={tier} className="space-y-5">
-                  <div className="flex flex-col gap-2 border-b border-border pb-3">
-                    <div className="flex items-center justify-between gap-4">
-                      <p className="text-xs uppercase tracking-[0.35em] text-muted-foreground">Tier</p>
-                      <span className={cn('rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em]', TIER_BADGE_STYLES[tier])}>
-                        {tier}
-                      </span>
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <h2 className="text-2xl font-semibold text-foreground">{tier} programs</h2>
-                      <p className="text-sm text-muted-foreground">{TIER_DESCRIPTIONS[tier]}</p>
-                    </div>
-                  </div>
-                  <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-                    {matches.map((result) => {
-                      const isShortlisted = shortlist.some((item) => item.id === result.id);
-                      return (
-                        <article
-                          key={`${result.name}-${result.program}`}
-                          className="flex h-full flex-col rounded-[28px] border border-border bg-card p-5 shadow-[0_18px_45px_rgba(15,23,42,0.07)] transition-colors"
-                        >
-                          <div className="flex items-center justify-between">
-                            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground">fit score</p>
-                            <span className="text-2xl font-semibold text-foreground">{result.fitScore}%</span>
-                          </div>
-                          <div className="mt-4 flex items-center gap-4">
-                            <div className="h-14 w-14 rounded-2xl bg-muted" aria-hidden />
-                            <div>
-                              <p className="text-lg font-semibold text-foreground">{result.name}</p>
-                              <p className="text-sm text-muted-foreground">{result.program}</p>
-                              <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">{result.location}</p>
-                            </div>
-                          </div>
-                          <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                            {result.highlights.map((highlight) => (
-                              <span key={highlight} className="rounded-full border border-border px-3 py-1 text-[11px]">
-                                {highlight}
-                              </span>
-                            ))}
-                          </div>
-                          <div className="mt-auto grid gap-2 pt-5 sm:grid-cols-2 lg:grid-cols-3">
-                            <Button asChild size="sm" variant="default" className="w-full justify-center">
-                              <Link href={`/course/${result.id}?from=search`}>Course details</Link>
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="secondary"
-                              className="w-full justify-center"
-                              onClick={() => handleAdd(result)}
-                              disabled={isShortlisted}
-                            >
-                              {isShortlisted ? 'Shortlisted' : 'Add to shortlist'}
-                            </Button>
-                            <Button asChild size="sm" variant="outline" className="w-full justify-center">
-                              <Link href={`/university-search/university/${result.id}?from=search`}>University info</Link>
-                            </Button>
-                          </div>
-                        </article>
-                      );
-                    })}
-                  </div>
-                </div>
-              )
-          )
+          <div
+            className={cn(
+              'grid gap-6',
+              viewMode === 'grid'
+                ? 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3'
+                : 'grid-cols-1'
+            )}
+          >
+            {filteredResults.map((result) => (
+              <ResultCard
+                key={result.id}
+                result={result}
+                isShortlisted={shortlist.some((item) => item.id === result.id)}
+                isSelected={selectedForComparison.some((item) => item.id === result.id)}
+                onToggleShortlist={handleToggleShortlist}
+                onToggleSelect={handleToggleSelect}
+              />
+            ))}
+          </div>
         )}
       </section>
+
+      <CompareBar
+        selectedItems={selectedForComparison}
+        onClear={() => setSelectedForComparison([])}
+        onRemove={(id) => setSelectedForComparison((prev) => prev.filter((i) => i.id !== id))}
+        onCompare={handleCompare}
+      />
+
+      <ComparisonModal
+        isOpen={isComparisonOpen}
+        onClose={() => setIsComparisonOpen(false)}
+        universities={selectedForComparison}
+        onRemove={(id) => setSelectedForComparison((prev) => prev.filter((i) => i.id !== id))}
+      />
     </div>
   );
 }
