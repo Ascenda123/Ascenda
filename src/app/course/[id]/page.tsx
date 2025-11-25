@@ -289,11 +289,12 @@ export default function CoursePage({ params }: { params: { id: string } }) {
     location: course.location
   };
   const contextSource = searchParams.get('from') === 'search' ? 'search' : searchParams.get('from') === 'university' ? 'university' : 'direct';
+  const universityHref = `/university-search/university/${course.id}${contextSource === 'search' ? '?from=search' : ''}`;
   const backHref =
     contextSource === 'search'
       ? '/university-search/search'
       : contextSource === 'university'
-        ? `/university-search/university/${course.id}?from=course`
+        ? universityHref
         : '/dashboard';
   const backLabel =
     contextSource === 'search' ? 'Back to search results' : contextSource === 'university' ? 'Back to university page' : 'Back to dashboard';
@@ -319,7 +320,7 @@ export default function CoursePage({ params }: { params: { id: string } }) {
           shortlisted={shortlisted}
           onShortlist={() => setShortlisted(!shortlisted)}
           meta={heroMeta}
-          programId={course.id}
+          universityHref={universityHref}
           backHref={backHref}
           backLabel={backLabel}
         />
@@ -573,16 +574,16 @@ const Hero = ({
   shortlisted,
   onShortlist,
   meta,
-  programId,
   backHref,
-  backLabel
+  backLabel,
+  universityHref
 }: {
   shortlisted: boolean;
   onShortlist: () => void;
   meta: { title: string; university: string; location: string };
-  programId: string;
   backHref: string;
   backLabel: string;
+  universityHref: string;
 }) => {
   return (
     <Card className="border-border bg-card text-foreground shadow-[0_28px_70px_rgba(15,23,42,0.08)]">
@@ -629,7 +630,7 @@ const Hero = ({
           <div className="flex flex-wrap gap-2">
             <span className="rounded-full border border-border bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">Course</span>
             <Link
-              href={`/university-search/university/${programId}?from=course`}
+              href={universityHref}
               className="rounded-full border border-border bg-background px-4 py-2 text-sm font-semibold text-foreground transition hover:border-primary/60 hover:bg-muted hover:text-foreground"
             >
               University

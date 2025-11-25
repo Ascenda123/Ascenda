@@ -109,8 +109,8 @@ export const UniversityInformation = ({
   const { addItem: addCompare, items: compareItems } = useCompareStore();
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const canRenderContent = !!universityData && !loading && !error;
-  const courseHref = programId ? `/course/${programId}?from=university` : undefined;
-  const universityHref = programId ? `/university-search/university/${programId}` : undefined;
+  const searchFromParam = contextSource === 'search' ? '?from=search' : '';
+  const courseHref = programId ? `/course/${programId}${searchFromParam}` : undefined;
   const backHref = contextSource === 'course' ? courseHref : contextSource === 'search' ? '/university-search/search' : '/dashboard';
   const backLabel =
     contextSource === 'course' ? 'Back to course' : contextSource === 'search' ? 'Back to search results' : 'Back to dashboard';
@@ -164,7 +164,13 @@ export const UniversityInformation = ({
   };
 
   return (
-    <div className={cn('min-h-screen w-full space-y-10 bg-background px-4 pb-12 pt-28 text-foreground md:px-8 lg:px-12', className)}>
+    <div
+      className={cn(
+        'min-h-screen w-full space-y-10 bg-background px-4 pb-12 pt-28 text-foreground md:px-8 lg:px-12',
+        'mx-auto max-w-screen-2xl',
+        className
+      )}
+    >
       {error ? (
         <Card className="p-6">
           <p className="text-xl font-semibold text-foreground">We hit a snag loading this university.</p>
