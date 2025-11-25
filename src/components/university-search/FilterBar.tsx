@@ -60,7 +60,6 @@ export function FilterBar({
                                         ? 'border-primary bg-primary/10 text-primary'
                                         : 'border-border bg-background text-muted-foreground hover:bg-muted'
                                 )}
-                                aria-pressed={isSelected}
                                 role="switch"
                                 aria-checked={isSelected}
                                 aria-label={`${tier} tier filter ${isSelected ? 'on' : 'off'}`}
