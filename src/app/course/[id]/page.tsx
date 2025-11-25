@@ -28,6 +28,7 @@ import {
 import { Navbar } from '@/components/layout/navbar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 
 type IconType = LucideIcon;
 
@@ -277,6 +278,7 @@ const courseDataset: CourseData[] = [
 export default function CoursePage({ params }: { params: { id: string } }) {
   const searchParams = useSearchParams();
   const [shortlisted, setShortlisted] = useState(false);
+  const [compareSelected, setCompareSelected] = useState(false);
 
   const course = useMemo(() => {
     const match = courseDataset.find((item) => item.id === params.id);
@@ -316,9 +318,19 @@ export default function CoursePage({ params }: { params: { id: string } }) {
     <div className="min-h-screen bg-background text-foreground">
       <Navbar />
       <div className="mx-auto max-w-screen-2xl space-y-10 px-4 pb-12 pt-28 md:px-8 lg:px-12">
+        <Breadcrumbs
+          items={[
+            { label: 'Dashboard', href: '/dashboard' },
+            { label: 'Explore', href: '/university-search/search' },
+            { label: course.title }
+          ]}
+          className="text-xs text-muted-foreground"
+        />
         <Hero
           shortlisted={shortlisted}
           onShortlist={() => setShortlisted(!shortlisted)}
+          compareSelected={compareSelected}
+          onToggleCompare={() => setCompareSelected((prev) => !prev)}
           meta={heroMeta}
           universityHref={universityHref}
           backHref={backHref}
@@ -447,13 +459,27 @@ export default function CoursePage({ params }: { params: { id: string } }) {
                     variant="outline"
                     className="w-full"
                   >
-                    <Link href={course.applyUrl ?? '#'}>Apply Now</Link>
+                    <Link
+                      href={course.applyUrl ?? '#'}
+                      aria-disabled={!course.applyUrl}
+                      tabIndex={course.applyUrl ? 0 : -1}
+                      className={!course.applyUrl ? 'pointer-events-none opacity-70' : undefined}
+                    >
+                      Apply Now
+                    </Link>
                   </Button>
                   <Button
                     asChild
                     className="w-full"
                   >
-                    <Link href={course.courseUrl ?? '#'}>Visit Course Page</Link>
+                    <Link
+                      href={course.courseUrl ?? '#'}
+                      aria-disabled={!course.courseUrl}
+                      tabIndex={course.courseUrl ? 0 : -1}
+                      className={!course.courseUrl ? 'pointer-events-none opacity-70' : undefined}
+                    >
+                      Visit Course Page
+                    </Link>
                   </Button>
                 </CardContent>
               </Card>
@@ -490,7 +516,15 @@ export default function CoursePage({ params }: { params: { id: string } }) {
   );
 }
 
-const QuickActions = ({ shortlisted, applyUrl, courseUrl }: { shortlisted: boolean; applyUrl?: string; courseUrl?: string }) => {
+const QuickActions = ({
+  shortlisted,
+  applyUrl,
+  courseUrl
+}: {
+  shortlisted: boolean;
+  applyUrl?: string;
+  courseUrl?: string;
+}) => {
   return (
     <Card className="border-border bg-card text-foreground shadow-[0_22px_50px_rgba(15,23,42,0.12)]">
       <CardContent className="space-y-4 p-5">
@@ -500,12 +534,30 @@ const QuickActions = ({ shortlisted, applyUrl, courseUrl }: { shortlisted: boole
         </div>
         <div className="space-y-3">
           <Button asChild className="w-full">
-            <Link href={applyUrl ?? '#'}>Apply now</Link>
+            <Link
+              href={applyUrl ?? '#'}
+              aria-disabled={!applyUrl}
+              tabIndex={applyUrl ? 0 : -1}
+              className={!applyUrl ? 'pointer-events-none opacity-70' : undefined}
+            >
+              Apply now
+            </Link>
           </Button>
           <Button asChild variant="outline" className="w-full">
-            <Link href={courseUrl ?? '#'}>Visit course page</Link>
+            <Link
+              href={courseUrl ?? '#'}
+              aria-disabled={!courseUrl}
+              tabIndex={courseUrl ? 0 : -1}
+              className={!courseUrl ? 'pointer-events-none opacity-70' : undefined}
+            >
+              Visit course page
+            </Link>
           </Button>
-          <Button variant="secondary" className="w-full hover:-translate-y-0.5">
+          <Button
+            variant="secondary"
+            className="w-full hover:-translate-y-0.5"
+            aria-pressed={shortlisted}
+          >
             {shortlisted ? 'Shortlisted' : 'Add to shortlist'}
           </Button>
           <Button variant="soft" className="w-full hover:-translate-y-0.5" asChild>
@@ -573,6 +625,8 @@ const ModuleIcon = ({ label }: { label: string }) => {
 const Hero = ({
   shortlisted,
   onShortlist,
+  compareSelected,
+  onToggleCompare,
   meta,
   backHref,
   backLabel,
@@ -580,6 +634,8 @@ const Hero = ({
 }: {
   shortlisted: boolean;
   onShortlist: () => void;
+  compareSelected: boolean;
+  onToggleCompare: () => void;
   meta: { title: string; university: string; location: string };
   backHref: string;
   backLabel: string;
@@ -610,14 +666,22 @@ const Hero = ({
               <span>{meta.location}</span>
             </div>
             <div className="flex flex-wrap gap-3">
-              <Button variant="outline" className="border-border text-foreground hover:bg-muted/60">
-                Compare
+              <Button
+                variant="outline"
+                className="border-border text-foreground hover:bg-muted/60"
+                aria-pressed={compareSelected}
+                aria-label={compareSelected ? 'Remove from compare' : 'Add to compare'}
+                onClick={onToggleCompare}
+              >
+                {compareSelected ? 'In compare' : 'Compare'}
               </Button>
               <Button
                 onClick={onShortlist}
                 className={`bg-primary text-primary-foreground shadow-[0_20px_55px_rgba(99,102,241,0.16)] hover:bg-primary/90 ${
                   shortlisted ? 'opacity-90' : ''
                 }`}
+                aria-pressed={shortlisted}
+                aria-label={shortlisted ? 'Remove from shortlist' : 'Add to shortlist'}
               >
                 <BookmarkPlus size={16} className="mr-2" />
                 {shortlisted ? 'Shortlisted' : 'Add to Shortlist'}

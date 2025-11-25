@@ -55,11 +55,15 @@ export function FilterBar({
                                 key={tier}
                                 onClick={() => onTierChange(tier)}
                                 className={cn(
-                                    'flex h-9 items-center rounded-xl border px-3 text-sm font-medium transition-colors',
+                                    'flex h-9 items-center rounded-xl border px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:ring-offset-2 focus-visible:ring-offset-card',
                                     isSelected
                                         ? 'border-primary bg-primary/10 text-primary'
                                         : 'border-border bg-background text-muted-foreground hover:bg-muted'
                                 )}
+                                aria-pressed={isSelected}
+                                role="switch"
+                                aria-checked={isSelected}
+                                aria-label={`${tier} tier filter ${isSelected ? 'on' : 'off'}`}
                             >
                                 {tier}
                             </button>

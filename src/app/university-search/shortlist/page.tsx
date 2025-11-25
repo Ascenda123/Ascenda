@@ -137,9 +137,13 @@ export default function UniversitySearchShortlistPage() {
                   <div className="flex flex-wrap items-center gap-2">
                     <span
                       className={cn(
-                        'rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em]',
+                        'rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:ring-offset-2',
                         stageTone[item.stage] ?? 'bg-muted text-foreground border-border'
                       )}
+                      role="switch"
+                      aria-checked
+                      tabIndex={0}
+                      aria-label={`Stage ${item.stage}`}
                     >
                       {item.stage}
                     </span>

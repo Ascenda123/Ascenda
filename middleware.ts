@@ -3,7 +3,17 @@ import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
 import type { Database } from '@/lib/types/database';
 import { isProfileComplete } from '@/lib/profile/completion';
 
-const PROTECTED_PREFIXES = ['/dashboard', '/profile', '/matches', '/applications', '/admin'];
+const PROTECTED_PREFIXES = [
+  '/dashboard',
+  '/profile',
+  '/matches',
+  '/applications',
+  '/admin',
+  '/university-search',
+  '/course',
+  '/shortlist',
+  '/scholarships'
+];
 
 export async function middleware(req: NextRequest) {
   const res = NextResponse.next();
@@ -69,5 +79,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/(dashboard|profile|matches|applications|admin)(.*)', '/login', '/signup']
+  matcher: ['/(dashboard|profile|matches|applications|admin|university-search|course|shortlist|scholarships)(.*)', '/login', '/signup']
 };

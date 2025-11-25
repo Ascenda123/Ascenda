@@ -8,6 +8,7 @@ import { ThemeToggle } from '../theme/theme-toggle';
 import { useThemeMode } from '../theme/theme-provider';
 import { filterNavByRole, isNavActive, NAV_ITEMS } from './navigation';
 import { useUserRole } from '@/hooks/use-user-role';
+import { Button } from '@/components/ui/button';
 
 export const Navbar = () => {
   const pathname = usePathname();
@@ -54,6 +55,16 @@ export const Navbar = () => {
           })}
         </nav>
         <div className="flex items-center gap-2">
+          <Button
+            asChild
+            size="sm"
+            variant="outline"
+            className="hidden sm:inline-flex"
+          >
+            <Link href="/university-search/search" aria-label="Open university search">
+              Explore
+            </Link>
+          </Button>
           <ThemeToggle compact />
         </div>
       </div>
