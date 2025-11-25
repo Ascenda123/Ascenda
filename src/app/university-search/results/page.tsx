@@ -11,6 +11,8 @@ import { CompareBar } from '@/components/university-search/CompareBar';
 import { ComparisonModal } from '@/components/university-search/ComparisonModal';
 import { cn } from '@/lib/utils';
 
+import { Breadcrumbs } from '@/components/ui/breadcrumbs';
+
 export default function UniversitySearchResultsPage() {
   const searchParams = useSearchParams();
   const initialQuery = searchParams.get('q')?.trim() ?? '';
@@ -78,6 +80,7 @@ export default function UniversitySearchResultsPage() {
     <div className="min-h-screen space-y-8 pb-24">
       <section className="space-y-6">
         <div className="flex flex-col gap-2">
+          <Breadcrumbs className="mb-2" />
           <h1 className="text-3xl font-bold tracking-tight text-foreground">University Matches</h1>
           <p className="text-muted-foreground">
             Explore programs tailored to your profile and preferences.

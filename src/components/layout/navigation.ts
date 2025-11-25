@@ -37,7 +37,8 @@ export const NAV_ITEMS: NavItem[] = [
     matchers: [
       (pathname) => pathname.startsWith('/university-search'),
       (pathname) => pathname.startsWith('/matches'),
-      (pathname) => pathname.startsWith('/course/')
+      (pathname) => pathname.startsWith('/course/'),
+      (pathname) => pathname.startsWith('/shortlist')
     ]
   },
   {
@@ -45,10 +46,7 @@ export const NAV_ITEMS: NavItem[] = [
     href: '/applications',
     icon: ClipboardCheck,
     segment: 'planner',
-    matchers: [
-      (pathname) => pathname.startsWith('/applications'),
-      (pathname) => pathname.startsWith('/shortlist')
-    ]
+    matchers: [(pathname) => pathname.startsWith('/applications')]
   },
   {
     label: 'Scholarships',
@@ -74,13 +72,12 @@ export const EXPLORE_SECTION_ITEMS: SectionNavItem[] = [
   { label: 'Search', href: '/university-search/search' },
   { label: 'Results', href: '/university-search/results' },
   { label: 'Matches', href: '/matches' },
-  { label: 'Saved courses', href: '/shortlist' }
+  { label: 'Shortlist', href: '/university-search/shortlist' }
 ];
 
 export const PLANNER_SECTION_ITEMS: SectionNavItem[] = [
   { label: 'Applications', href: '/applications' },
-  { label: 'Tasks', href: '/applications/tasks' },
-  { label: 'Shortlist', href: '/shortlist' }
+  { label: 'Tasks', href: '/applications/tasks' }
 ];
 
 export const PROFILE_SECTION_ITEMS: SectionNavItem[] = [

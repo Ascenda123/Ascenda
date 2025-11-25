@@ -12,6 +12,7 @@ import { ReferenceTracker, type ReferenceItem } from '@/components/applications/
 import { SignalCenter, type SignalItem } from '@/components/applications/signal-center';
 import { PageHero } from '@/components/layout/page-hero';
 import { Button } from '@/components/ui/button';
+import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import { SectionNav } from '@/components/layout/section-nav';
 import { PLANNER_SECTION_ITEMS } from '@/components/layout/navigation';
 
@@ -347,6 +348,7 @@ export default async function ApplicationsPage() {
         description="Prioritize, schedule, and execute every requirement—documents, references, tasks, and signals in one calm space."
         highlight={`Today • ${dailySummary.tasks} tasks, ${dailySummary.deadlines} deadlines`}
         stats={heroStats}
+        breadcrumbs={<Breadcrumbs />}
         actions={
           <>
             <Button asChild size="sm" variant="soft">

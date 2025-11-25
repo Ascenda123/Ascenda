@@ -8,6 +8,7 @@ import { PROFILE_STEPS, type StepCompletionMap, type StepKey } from '@/lib/profi
 import { buildStepCompletion, isProfileComplete, type ProfileRecordGroup } from '@/lib/profile/completion';
 import { PageHero } from '@/components/layout/page-hero';
 import { Button } from '@/components/ui/button';
+import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import { AnimatedBlobBanner } from '@/components/animated-blob-banner';
 import { SectionNav } from '@/components/layout/section-nav';
 import { PROFILE_SECTION_ITEMS } from '@/components/layout/navigation';
@@ -109,6 +110,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
         description="We use this information to personalize match suggestions, academic guidance, and your application plan."
         highlight={nextStep ? `Next • ${nextStep.title}` : 'All set'}
         stats={heroStats}
+        breadcrumbs={<Breadcrumbs />}
         actions={
           <>
             <Button asChild size="sm" variant="soft">

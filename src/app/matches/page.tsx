@@ -7,6 +7,7 @@ import { rankMatches, type MatchInput, type Program, type University, type Progr
 import { MatchList } from '@/components/match/match-list';
 import { PageHero } from '@/components/layout/page-hero';
 import { Button } from '@/components/ui/button';
+import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import { SectionNav } from '@/components/layout/section-nav';
 import { EXPLORE_SECTION_ITEMS } from '@/components/layout/navigation';
 import {
@@ -141,6 +142,7 @@ export default async function MatchesPage() {
         description="Ranked by eligibility, academic alignment, preferences, and outcome indicators."
         highlight="Signals watchlist"
         stats={heroStats}
+        breadcrumbs={<Breadcrumbs />}
         actions={
           <>
             <Button asChild size="sm">

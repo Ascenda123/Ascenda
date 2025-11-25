@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { DashboardShell } from '@/components/layout/shell';
 import { PageHero } from '@/components/layout/page-hero';
+import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import { ScholarshipExplorer } from '@/components/scholarships/scholarship-explorer';
 import type { Scholarship } from '@/components/scholarships/types';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
@@ -55,30 +56,29 @@ export default async function ScholarshipsPage() {
   const scholarships: Scholarship[] =
     data && data.length > 0
       ? data.map((item: Record<string, any>, index: number) => ({
-          id: item.id ?? item.slug ?? `scholarship-${index}`,
-          name: item.name ?? 'Scholarship',
-          country: item.country ?? item.region ?? 'Global',
-          region: item.region,
-          level: item.level ?? item.eligibility_level ?? 'Any level',
-          category: item.category ?? item.type ?? 'General',
-          amount: typeof item.amount === 'number' ? item.amount : Number(item.amount) || null,
-          currency: item.currency ?? 'USD',
-          deadline: item.deadline ?? item.deadline_date ?? null,
-          url: item.url ?? item.website ?? null
-        }))
+        id: item.id ?? item.slug ?? `scholarship-${index}`,
+        name: item.name ?? 'Scholarship',
+        country: item.country ?? item.region ?? 'Global',
+        region: item.region,
+        level: item.level ?? item.eligibility_level ?? 'Any level',
+        category: item.category ?? item.type ?? 'General',
+        amount: typeof item.amount === 'number' ? item.amount : Number(item.amount) || null,
+        currency: item.currency ?? 'USD',
+        deadline: item.deadline ?? item.deadline_date ?? null,
+        url: item.url ?? item.website ?? null
+      }))
       : fallbackScholarships;
 
   const heroStats = [
     { label: 'Tracked scholarships', value: `${scholarships.length}`, detail: 'Active' },
     {
       label: 'Avg award',
-      value: `${
-        scholarships.length
-          ? `USD ${Math.round(
-              scholarships.reduce((sum, item) => sum + (item.amount ?? 0), 0) / scholarships.length
-            ).toLocaleString()}`
-          : '—'
-      }`,
+      value: `${scholarships.length
+        ? `USD ${Math.round(
+          scholarships.reduce((sum, item) => sum + (item.amount ?? 0), 0) / scholarships.length
+        ).toLocaleString()}`
+        : '—'
+        }`,
       detail: 'Per program'
     },
     { label: 'Regions', value: `${new Set(scholarships.map((item) => item.country ?? 'Global')).size}`, detail: 'Covered' }
@@ -92,6 +92,7 @@ export default async function ScholarshipsPage() {
         description="Filter by country, level, and award size. Save the grants that matter and push them to your planner."
         highlight="Updated hourly"
         stats={heroStats}
+        breadcrumbs={<Breadcrumbs />}
       />
       <ScholarshipExplorer scholarships={scholarships} />
     </DashboardShell>
