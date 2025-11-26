@@ -72,16 +72,6 @@ export const Navbar = () => {
           })}
         </nav>
         <div className="flex items-center gap-2">
-          <Button
-            asChild
-            size="sm"
-            variant="outline"
-            className="hidden sm:inline-flex"
-          >
-            <Link href="/university-search/search" aria-label="Open university search">
-              Explore
-            </Link>
-          </Button>
           <ThemeToggle compact />
         </div>
       </div>
