@@ -157,13 +157,13 @@ export default async function MatchesPage() {
       <div className="mb-4 flex flex-wrap items-center gap-2 rounded-full border border-border bg-card p-3 text-sm text-muted-foreground shadow-[0_12px_30px_rgba(15,23,42,0.08)]">
         <span className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Filters</span>
         {filterChips.map((chip) => (
-          <button
+          <span
             key={chip}
-            type="button"
-            className="rounded-full border border-border bg-background px-3 py-1 text-xs font-semibold text-foreground transition hover:border-foreground/60"
+            className="rounded-full border border-border bg-background px-3 py-1 text-xs font-semibold text-foreground"
+            aria-hidden
           >
             {chip}
-          </button>
+          </span>
         ))}
       </div>
       {topMatch ? (

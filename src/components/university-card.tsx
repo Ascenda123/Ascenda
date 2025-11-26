@@ -61,7 +61,7 @@ export function UniversityCard({
                         'absolute right-4 top-4 z-10 flex h-8 w-8 items-center justify-center rounded-full border transition-all',
                         isSelected
                             ? 'border-primary bg-primary text-primary-foreground'
-                            : 'border-border bg-background text-transparent opacity-0 group-hover:opacity-100 hover:border-primary/50'
+                            : 'border-border/70 bg-background/60 text-muted-foreground/70 opacity-0 backdrop-blur-sm group-hover:opacity-100 hover:border-primary/50'
                     )}
                     aria-label={isSelected ? 'Deselect' : 'Select for comparison'}
                 >

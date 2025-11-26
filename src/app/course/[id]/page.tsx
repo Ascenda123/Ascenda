@@ -307,18 +307,12 @@ export default function CoursePage({ params }: { params: { id: string } }) {
   const [activeSection, setActiveSection] = useState('overview');
   const [showActionBar, setShowActionBar] = useState(false);
 
+  const contextSource = searchParams.get('from') === 'search' ? 'search' : searchParams.get('from') === 'university' ? 'university' : 'direct';
   const course = useMemo(() => {
-    const match = courseDataset.find((item) => item.id === params.id);
-    return match ?? courseDataset[0];
+    return courseDataset.find((item) => item.id === params.id);
   }, [params.id]);
 
-  const heroMeta = {
-    title: course.title,
-    university: course.university,
-    location: course.location
-  };
-  const contextSource = searchParams.get('from') === 'search' ? 'search' : searchParams.get('from') === 'university' ? 'university' : 'direct';
-  const universityHref = `/university-search/university/${course.id}${contextSource === 'search' ? '?from=search' : ''}`;
+  const universityHref = course ? `/university-search/university/${course.id}${contextSource === 'search' ? '?from=search' : ''}` : '/university-search/search';
   const backHref =
     contextSource === 'search'
       ? '/university-search/search'
@@ -327,6 +321,16 @@ export default function CoursePage({ params }: { params: { id: string } }) {
         : '/dashboard';
   const backLabel =
     contextSource === 'search' ? 'Back to search results' : contextSource === 'university' ? 'Back to university page' : 'Back to dashboard';
+
+  if (!course) {
+    return <MissingCourse backHref={backHref} backLabel={backLabel} />;
+  }
+
+  const heroMeta = {
+    title: course.title,
+    university: course.university,
+    location: course.location
+  };
 
   const sectionNav = useMemo(
     () => [
@@ -415,7 +419,7 @@ export default function CoursePage({ params }: { params: { id: string } }) {
 
         <div className="space-y-8">
           <div className="grid gap-4 md:grid-cols-2">
-            <QuickActions shortlisted={shortlisted} applyUrl={course.applyUrl} courseUrl={course.courseUrl} />
+            <QuickActions shortlisted={shortlisted} applyUrl={course.applyUrl} courseUrl={course.courseUrl} onShortlist={() => setShortlisted(!shortlisted)} />
             <Card className="border-border bg-card shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
               <CardContent className="space-y-3 p-5">
                 <p className="text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground">Key facts</p>
@@ -605,11 +609,13 @@ export default function CoursePage({ params }: { params: { id: string } }) {
 const QuickActions = ({
   shortlisted,
   applyUrl,
-  courseUrl
+  courseUrl,
+  onShortlist
 }: {
   shortlisted: boolean;
   applyUrl?: string;
   courseUrl?: string;
+  onShortlist: () => void;
 }) => {
   return (
     <Card className="border-border bg-card text-foreground shadow-[0_22px_50px_rgba(15,23,42,0.12)]">
@@ -642,6 +648,7 @@ const QuickActions = ({
           <Button
             variant="secondary"
             className="w-full hover:-translate-y-0.5"
+            onClick={onShortlist}
             aria-pressed={shortlisted}
           >
             {shortlisted ? 'Shortlisted' : 'Add to shortlist'}
@@ -786,6 +793,43 @@ const ContextChip = ({ contextSource }: { contextSource: string }) => {
     <div className="inline-flex items-center gap-2 rounded-full border border-border bg-muted px-3 py-1 text-xs font-semibold uppercase tracking-[0.28em] text-muted-foreground">
       <Globe2 size={14} className="text-muted-foreground" />
       <span>{label}</span>
+    </div>
+  );
+};
+
+const MissingCourse = ({ backHref, backLabel }: { backHref: string; backLabel: string }) => {
+  return (
+    <div className="min-h-screen bg-background text-foreground">
+      <Navbar />
+      <div className="mx-auto max-w-screen-md space-y-6 px-4 pb-16 pt-28 md:px-8">
+        <Breadcrumbs
+          items={[
+            { label: 'Dashboard', href: '/dashboard' },
+            { label: 'Explore', href: '/university-search/search' },
+            { label: 'Course not found' }
+          ]}
+          className="text-xs text-muted-foreground"
+        />
+        <Card className="border-border bg-card text-foreground shadow-[0_22px_55px_rgba(15,23,42,0.12)]">
+          <CardContent className="space-y-4 p-8 text-center">
+            <div className="inline-flex items-center justify-center rounded-full bg-muted px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">
+              Missing course
+            </div>
+            <h1 className="text-3xl font-semibold text-foreground">We couldn't find that course</h1>
+            <p className="text-sm text-muted-foreground">
+              The program link may be outdated. Head back to explore other universities or return to your dashboard.
+            </p>
+            <div className="flex flex-wrap justify-center gap-3">
+              <Button asChild size="sm">
+                <Link href={backHref}>{backLabel}</Link>
+              </Button>
+              <Button asChild size="sm" variant="outline">
+                <Link href="/university-search/search">Browse universities</Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };

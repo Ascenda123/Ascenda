@@ -54,6 +54,23 @@ export const Navbar = () => {
             );
           })}
         </nav>
+        <nav className="flex items-center gap-2 overflow-x-auto text-xs font-medium text-muted-foreground md:hidden">
+          {navItems.map((link) => {
+            const active = isNavActive(link, pathname);
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={cn(
+                  'inline-flex items-center gap-1 rounded-full px-3 py-1 transition',
+                  active ? 'bg-primary text-primary-foreground shadow-[0_6px_16px_rgba(15,23,42,0.18)]' : 'hover:text-foreground'
+                )}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
+        </nav>
         <div className="flex items-center gap-2">
           <Button
             asChild

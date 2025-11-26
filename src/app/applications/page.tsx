@@ -84,6 +84,50 @@ export default async function ApplicationsPage() {
   const checklistRecords = ((checklists ?? []) as ChecklistRecord[]) ?? [];
   const deadlineRecords = ((deadlines ?? []) as DeadlineRecord[]) ?? [];
 
+  if (appRecords.length === 0) {
+    return (
+      <DashboardShell>
+        <SectionNav items={PLANNER_SECTION_ITEMS} />
+        <PageHero
+          eyebrow="Applications"
+          title="Application workspace"
+          description="Track applications, requirements, and signals in one place once you add programs."
+          highlight="No applications yet"
+          stats={[
+            { label: 'Applications', value: '0', detail: 'Tracked' },
+            { label: 'Deadlines', value: '—', detail: 'Awaiting programs' },
+            { label: 'Signals', value: '—', detail: 'Add programs first' }
+          ]}
+          breadcrumbs={<Breadcrumbs />}
+          actions={
+            <>
+              <Button asChild size="sm">
+                <Link href="/matches">Add from matches</Link>
+              </Button>
+              <Button asChild size="sm" variant="outline">
+                <Link href="/university-search/search">Browse universities</Link>
+              </Button>
+            </>
+          }
+        />
+        <div className="rounded-[28px] border border-dashed border-border bg-muted/40 p-10 text-center text-muted-foreground">
+          <p className="text-base font-semibold text-foreground">Nothing here yet</p>
+          <p className="mt-2 text-sm">
+            Save a program from matches or search to start planning tasks, deadlines, and documents.
+          </p>
+          <div className="mt-4 flex justify-center gap-3">
+            <Button asChild size="sm">
+              <Link href="/matches">Find matches</Link>
+            </Button>
+            <Button asChild size="sm" variant="outline">
+              <Link href="/university-search/search">Open search</Link>
+            </Button>
+          </div>
+        </div>
+      </DashboardShell>
+    );
+  }
+
   const fallbackPriorities: PriorityItem[] = [
     {
       id: 'demo-oxford',
