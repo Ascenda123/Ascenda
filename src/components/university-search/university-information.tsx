@@ -2,11 +2,12 @@
 
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
-import { ArrowLeft, BookmarkPlus, Globe2 } from 'lucide-react';
+import { BookmarkPlus, Globe2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { useShortlist } from './shortlist-store';
+import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 
 type UniversityData = {
   program: { title?: string | null; level?: string | null; duration?: string | number | null; size?: string | null };
@@ -112,6 +113,11 @@ export const UniversityInformation = ({
   const backHref = contextSource === 'course' ? courseHref : contextSource === 'search' ? '/university-search/search' : '/dashboard';
   const backLabel =
     contextSource === 'course' ? 'Back to course' : contextSource === 'search' ? 'Back to search results' : 'Back to dashboard';
+  const breadcrumbsItems = [
+    { label: 'Dashboard', href: '/dashboard' },
+    { label: 'Explore', href: '/university-search/search' },
+    { label: safeText(universityData?.university?.name ?? 'University overview') }
+  ];
 
   const headerSubtitle = useMemo(() => {
     if (!universityData) return '';
@@ -149,6 +155,9 @@ export const UniversityInformation = ({
         className
       )}
     >
+      <Breadcrumbs items={breadcrumbsItems} className="text-xs text-muted-foreground" />
+      <ContextChip contextSource={contextSource} />
+
       {error ? (
         <Card className="p-6">
           <p className="text-xl font-semibold text-foreground">We hit a snag loading this university.</p>
@@ -184,7 +193,7 @@ export const UniversityInformation = ({
                   href={backHref}
                   className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1 text-xs uppercase tracking-[0.28em] text-muted-foreground transition hover:border-primary/60 hover:bg-muted hover:text-foreground"
                 >
-                  <ArrowLeft size={14} />
+                  <Globe2 size={14} />
                   {backLabel}
                 </Link>
               ) : null}
@@ -318,5 +327,19 @@ const Section = ({ title, description, children }: { title: string; description:
     </Card>
   </section>
 );
+
+const ContextChip = ({ contextSource }: { contextSource?: UniversityInformationProps['contextSource'] }) => {
+  if (!contextSource || contextSource === 'direct') return null;
+  const label =
+    contextSource === 'search'
+      ? 'Back to search — your filters are saved'
+      : 'Back to course — your context is saved';
+  return (
+    <div className="inline-flex items-center gap-2 rounded-full border border-border bg-muted px-3 py-1 text-xs font-semibold uppercase tracking-[0.28em] text-muted-foreground">
+      <Globe2 size={14} className="text-muted-foreground" />
+      <span>{label}</span>
+    </div>
+  );
+};
 
 export type { UniversityData, UniversityInformationProps };
