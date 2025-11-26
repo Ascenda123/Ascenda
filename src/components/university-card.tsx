@@ -61,11 +61,11 @@ export function UniversityCard({
                         'absolute right-4 top-4 z-10 flex h-8 w-8 items-center justify-center rounded-full border transition-all',
                         isSelected
                             ? 'border-primary bg-primary text-primary-foreground'
-                            : 'border-border/70 bg-background/60 text-transparent opacity-0 backdrop-blur-sm group-hover:opacity-100 group-hover:text-muted-foreground/80 hover:border-primary/50'
+                            : 'border-border/60 bg-background/30 text-transparent opacity-0 backdrop-blur-[2px] group-hover:opacity-100 hover:border-primary/50'
                     )}
                     aria-label={isSelected ? 'Deselect' : 'Select for comparison'}
                 >
-                    <Check className={cn('h-4 w-4', !isSelected && 'text-transparent group-hover:text-muted-foreground/90')} />
+                    {isSelected ? <Check className="h-4 w-4" /> : null}
                 </button>
             )}
 
