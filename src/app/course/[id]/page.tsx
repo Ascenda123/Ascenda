@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import {
@@ -37,6 +37,7 @@ type CohortFact = { label: string; value: string };
 type ModuleGroup = { title: string; items: string[]; icon: IconType };
 type QuickFact = { label: string; value: string };
 type ApplicationCard = { title: string; body: string; linkLabel: string; href: string };
+type ApplicationStep = { label: string; status: 'not_started' | 'in_progress' | 'done'; due?: string; href?: string };
 
 type CourseData = {
   id: string;
@@ -58,6 +59,7 @@ type CourseData = {
   modules: ModuleGroup[];
   quickFacts: QuickFact[];
   applicationCards: ApplicationCard[];
+  applicationChecklist: ApplicationStep[];
   courseUrl?: string;
   applyUrl?: string;
 };
@@ -106,6 +108,14 @@ const courseDataset: CourseData[] = [
       { label: 'Placement year', value: 'Available' },
       { label: 'Start', value: 'September' }
     ],
+    applicationChecklist: [
+      { label: 'Review course webpage', status: 'done', href: '#', due: 'Ongoing' },
+      { label: 'Prepare ESAT + portfolio', status: 'in_progress', due: 'Dec 15' },
+      { label: 'Submit UCAS application', status: 'not_started', due: 'Jan 15' },
+      { label: 'Book interview slot', status: 'not_started', due: 'Jan 30' }
+    ],
+    applyUrl: '#',
+    courseUrl: '#',
     applicationCards: [
       {
         title: 'Official Course Webpage',
@@ -176,6 +186,14 @@ const courseDataset: CourseData[] = [
       { label: 'Placement year', value: 'Available' },
       { label: 'Start', value: 'September' }
     ],
+    applicationChecklist: [
+      { label: 'Check program guidance', status: 'done', href: '#', due: 'Ongoing' },
+      { label: 'Draft personal statement', status: 'in_progress', due: 'Dec 10' },
+      { label: 'Upload ESAT results', status: 'not_started', due: 'Dec 22' },
+      { label: 'Submit UCAS application', status: 'not_started', due: 'Jan 15' }
+    ],
+    applyUrl: '#',
+    courseUrl: '#',
     applicationCards: [
       {
         title: 'Official Course Webpage',
@@ -246,6 +264,14 @@ const courseDataset: CourseData[] = [
       { label: 'Placement year', value: 'No' },
       { label: 'Start', value: 'October' }
     ],
+    applicationChecklist: [
+      { label: 'Read course handbook', status: 'done', href: '#', due: 'Ongoing' },
+      { label: 'Collect written work samples', status: 'in_progress', due: 'Dec 5' },
+      { label: 'Schedule ESAT', status: 'not_started', due: 'Nov 28' },
+      { label: 'Submit UCAS application', status: 'not_started', due: 'Jan 15' }
+    ],
+    applyUrl: '#',
+    courseUrl: '#',
     applicationCards: [
       {
         title: 'Official Course Webpage',
@@ -278,7 +304,8 @@ const courseDataset: CourseData[] = [
 export default function CoursePage({ params }: { params: { id: string } }) {
   const searchParams = useSearchParams();
   const [shortlisted, setShortlisted] = useState(false);
-  const [compareSelected, setCompareSelected] = useState(false);
+  const [activeSection, setActiveSection] = useState('overview');
+  const [showActionBar, setShowActionBar] = useState(false);
 
   const course = useMemo(() => {
     const match = courseDataset.find((item) => item.id === params.id);
@@ -301,23 +328,69 @@ export default function CoursePage({ params }: { params: { id: string } }) {
   const backLabel =
     contextSource === 'search' ? 'Back to search results' : contextSource === 'university' ? 'Back to university page' : 'Back to dashboard';
 
+  const sectionNav = useMemo(
+    () => [
+      { id: 'overview', label: 'Overview' },
+      { id: 'metrics', label: 'Metrics' },
+      { id: 'requirements', label: 'Requirements' },
+      { id: 'cohort', label: 'Cohort' },
+      { id: 'modules', label: 'Modules' },
+      { id: 'apply', label: 'Apply' }
+    ],
+    []
+  );
+
   const metricCards = [
-    { label: 'Acceptance Rate', value: course.acceptanceRate },
-    { label: 'Guardian Rank', value: course.guardianRank },
-    { label: 'QS Rank', value: course.qsRank },
-    { label: 'Times Rank', value: course.timesRank },
-    { label: 'Student Satisfaction (NSS)', value: `${course.satisfaction}%` },
-    { label: 'Graduate Employment Rate', value: `${course.employment}%` },
-    { label: 'Average Starting Salary', value: course.startingSalary },
-    { label: 'Study Abroad Option', value: course.studyAbroad ? 'Yes' : 'No' },
-    { label: 'Top Industries Graduates Enter', value: course.topIndustries },
-    { label: 'Placement Year Available?', value: course.placementYear ? 'Yes' : 'No' }
+    { label: 'Acceptance Rate', value: course.acceptanceRate, hint: 'Estimated admissions rate for this cohort.' },
+    { label: 'Guardian Rank', value: course.guardianRank, hint: 'Guardian University Guide rank.' },
+    { label: 'QS Rank', value: course.qsRank, hint: 'QS World University ranking.' },
+    { label: 'Times Rank', value: course.timesRank, hint: 'Times Higher Education ranking.' },
+    { label: 'Student Satisfaction (NSS)', value: `${course.satisfaction}%`, hint: 'National Student Survey satisfaction.' },
+    { label: 'Graduate Employment Rate', value: `${course.employment}%`, hint: 'Employment within 6 months of graduation.' },
+    { label: 'Average Starting Salary', value: course.startingSalary, hint: 'Median starting salary for recent graduates.' },
+    { label: 'Study Abroad Option', value: course.studyAbroad ? 'Yes' : 'No', hint: 'Whether a study abroad term is available.' },
+    { label: 'Top Industries Graduates Enter', value: course.topIndustries, hint: 'Most common industries for alumni.' },
+    { label: 'Placement Year Available?', value: course.placementYear ? 'Yes' : 'No', hint: 'Optional placement/sandwich year.' }
   ];
+
+  useEffect(() => {
+    const observedSections = sectionNav.map((item) => document.getElementById(item.id)).filter(Boolean);
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setActiveSection(entry.target.id);
+          }
+        });
+      },
+      { threshold: 0.35, rootMargin: '-80px 0px -40% 0px' }
+    );
+    observedSections.forEach((section) => observer.observe(section!));
+    return () => observer.disconnect();
+  }, [sectionNav]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowActionBar(window.scrollY > 320);
+    };
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const handleNavigate = (id: string) => {
+    const el = document.getElementById(id);
+    if (el) {
+      const offset = 88;
+      const top = el.getBoundingClientRect().top + window.scrollY - offset;
+      window.scrollTo({ top, behavior: 'smooth' });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Navbar />
-      <div className="mx-auto max-w-screen-2xl space-y-10 px-4 pb-12 pt-28 md:px-8 lg:px-12">
+      <div className="mx-auto max-w-screen-2xl space-y-10 px-4 pb-16 pt-28 md:px-8 lg:px-12">
         <Breadcrumbs
           items={[
             { label: 'Dashboard', href: '/dashboard' },
@@ -326,16 +399,19 @@ export default function CoursePage({ params }: { params: { id: string } }) {
           ]}
           className="text-xs text-muted-foreground"
         />
-        <Hero
-          shortlisted={shortlisted}
-          onShortlist={() => setShortlisted(!shortlisted)}
-          compareSelected={compareSelected}
-          onToggleCompare={() => setCompareSelected((prev) => !prev)}
-          meta={heroMeta}
-          universityHref={universityHref}
-          backHref={backHref}
-          backLabel={backLabel}
-        />
+        <ContextChip contextSource={contextSource} />
+        <div id="overview" className="scroll-mt-24">
+          <Hero
+            shortlisted={shortlisted}
+            onShortlist={() => setShortlisted(!shortlisted)}
+            meta={heroMeta}
+            universityHref={universityHref}
+            backHref={backHref}
+            backLabel={backLabel}
+          />
+        </div>
+
+        <InPageNav items={sectionNav} activeId={activeSection} onNavigate={handleNavigate} />
 
         <div className="space-y-8">
           <div className="grid gap-4 md:grid-cols-2">
@@ -355,7 +431,7 @@ export default function CoursePage({ params }: { params: { id: string } }) {
             </Card>
           </div>
 
-          <Section title="Course key metrics" description="A quick snapshot of outcomes and rankings.">
+          <Section id="metrics" title="Course key metrics" description="A quick snapshot of outcomes and rankings.">
             <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-4">
               {metricCards.map((metric) => (
                 <Card
@@ -363,7 +439,9 @@ export default function CoursePage({ params }: { params: { id: string } }) {
                   className="border-border bg-card text-foreground shadow-[0_18px_35px_rgba(15,23,42,0.08)] transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_24px_55px_rgba(15,23,42,0.12)]"
                 >
                   <CardContent className="space-y-2 p-4">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">{metric.label}</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground" title={metric.hint}>
+                      {metric.label}
+                    </p>
                     <p className="text-lg font-semibold text-foreground">{metric.value}</p>
                     {metric.label === 'Student Satisfaction (NSS)' ? (
                       <ProgressBar value={course.satisfaction} />
@@ -380,7 +458,7 @@ export default function CoursePage({ params }: { params: { id: string } }) {
             </div>
           </Section>
 
-          <Section title="Entry requirements" description="Understand what you need to apply.">
+          <Section id="requirements" title="Entry requirements" description="Understand what you need to apply.">
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {course.entryRequirements.map((item) => (
                 <Card
@@ -401,7 +479,7 @@ export default function CoursePage({ params }: { params: { id: string } }) {
             </div>
           </Section>
 
-          <Section title="Cohort information" description="Who you will study with.">
+          <Section id="cohort" title="Cohort information" description="Who you will study with.">
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               {course.cohort.map((item) => (
                 <Card
@@ -417,7 +495,7 @@ export default function CoursePage({ params }: { params: { id: string } }) {
             </div>
           </Section>
 
-          <Section title="Modules" description="View the curriculum across all years.">
+          <Section id="modules" title="Modules" description="View the curriculum across all years.">
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               {course.modules.map((module, index) => (
                 <Card
@@ -446,7 +524,7 @@ export default function CoursePage({ params }: { params: { id: string } }) {
             </div>
           </Section>
 
-          <Section title="Application information" description="Find out how to apply to this program.">
+          <Section id="apply" title="Application information" description="Find out how to apply to this program.">
             <div className="grid gap-6 lg:grid-cols-[1.15fr,1fr]">
               <Card className="border-border bg-muted/60 text-foreground shadow-[0_20px_55px_rgba(15,23,42,0.1)]">
                 <CardHeader className="border-b border-border/70">
@@ -497,21 +575,29 @@ export default function CoursePage({ params }: { params: { id: string } }) {
                           <p className="text-sm font-semibold text-foreground">{card.title}</p>
                         </div>
                         <p className="text-sm text-muted-foreground">{card.body}</p>
-                        <Link
-                          href={card.href}
-                          className="text-xs font-semibold uppercase tracking-[0.28em] text-foreground underline-offset-4 hover:underline"
-                        >
-                          {card.linkLabel}
-                        </Link>
-                      </div>
-                  </CardContent>
-                </Card>
+                      <Link
+                        href={card.href}
+                        className="text-xs font-semibold uppercase tracking-[0.28em] text-foreground underline-offset-4 hover:underline"
+                      >
+                        {card.linkLabel}
+                      </Link>
+                    </div>
+                    </CardContent>
+                  </Card>
                 ))}
               </div>
+              <ApplicationChecklist steps={course.applicationChecklist} />
             </div>
           </Section>
         </div>
       </div>
+      <StickyActionBar
+        show={showActionBar}
+        shortlisted={shortlisted}
+        onShortlist={() => setShortlisted(!shortlisted)}
+        applyUrl={course.applyUrl}
+        courseUrl={course.courseUrl}
+      />
     </div>
   );
 }
@@ -572,6 +658,138 @@ const QuickActions = ({
   );
 };
 
+const ApplicationChecklist = ({ steps }: { steps: ApplicationStep[] }) => {
+  return (
+    <Card className="border-border bg-card text-foreground shadow-[0_18px_35px_rgba(15,23,42,0.08)]">
+      <CardHeader className="border-b border-border/70">
+        <CardTitle className="text-xl text-foreground">Application checklist</CardTitle>
+        <p className="text-sm text-muted-foreground">Track progress and key deadlines.</p>
+      </CardHeader>
+      <CardContent className="space-y-3 p-5">
+        {steps.map((step) => (
+          <div key={step.label} className="flex items-start justify-between gap-3 rounded-lg border border-border/70 bg-muted/50 p-3">
+            <div className="space-y-1">
+              <p className="text-sm font-semibold text-foreground">{step.label}</p>
+              {step.due ? <p className="text-xs text-muted-foreground">Due: {step.due}</p> : null}
+              {step.href ? (
+                <Link href={step.href} className="text-xs font-semibold uppercase tracking-[0.25em] text-foreground underline-offset-4 hover:underline">
+                  View guidance
+                </Link>
+              ) : null}
+            </div>
+            <StatusPill status={step.status} />
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  );
+};
+
+const StatusPill = ({ status }: { status: ApplicationStep['status'] }) => {
+  const labelMap: Record<ApplicationStep['status'], string> = {
+    done: 'Done',
+    in_progress: 'In progress',
+    not_started: 'Not started'
+  };
+  const colorMap: Record<ApplicationStep['status'], string> = {
+    done: 'bg-green-100 text-green-800 border-green-200',
+    in_progress: 'bg-amber-100 text-amber-800 border-amber-200',
+    not_started: 'bg-muted text-foreground border-border'
+  };
+  return (
+    <span className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-semibold ${colorMap[status]}`}>
+      {labelMap[status]}
+    </span>
+  );
+};
+
+const InPageNav = ({ items, activeId, onNavigate }: { items: { id: string; label: string }[]; activeId: string; onNavigate: (id: string) => void }) => {
+  return (
+    <nav className="sticky top-20 z-20 -mb-4 overflow-hidden rounded-xl border border-border bg-background/80 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/70">
+      <div className="flex flex-wrap items-center gap-2 px-3 py-2">
+        {items.map((item) => {
+          const isActive = item.id === activeId;
+          return (
+            <button
+              key={item.id}
+              onClick={() => onNavigate(item.id)}
+              className={`rounded-full px-3 py-1 text-sm font-semibold transition ${
+                isActive ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:bg-muted'
+              }`}
+              aria-current={isActive ? 'true' : 'false'}
+            >
+              {item.label}
+            </button>
+          );
+        })}
+      </div>
+    </nav>
+  );
+};
+
+const StickyActionBar = ({
+  show,
+  shortlisted,
+  onShortlist,
+  applyUrl,
+  courseUrl
+}: {
+  show: boolean;
+  shortlisted: boolean;
+  onShortlist: () => void;
+  applyUrl?: string;
+  courseUrl?: string;
+}) => {
+  if (!show) return null;
+  return (
+    <div className="fixed bottom-5 left-1/2 z-30 w-[min(960px,calc(100%-2rem))] -translate-x-1/2 rounded-2xl border border-border bg-background/95 p-3 shadow-[0_20px_60px_rgba(15,23,42,0.2)] backdrop-blur supports-[backdrop-filter]:bg-background/85">
+      <div className="flex flex-wrap items-center gap-3">
+        <Button asChild className="min-w-[160px] flex-1">
+          <Link
+            href={applyUrl ?? '#'}
+            aria-disabled={!applyUrl}
+            tabIndex={applyUrl ? 0 : -1}
+            className={!applyUrl ? 'pointer-events-none opacity-70' : undefined}
+          >
+            Apply now
+          </Link>
+        </Button>
+        <Button asChild variant="outline" className="min-w-[160px] flex-1">
+          <Link
+            href={courseUrl ?? '#'}
+            aria-disabled={!courseUrl}
+            tabIndex={courseUrl ? 0 : -1}
+            className={!courseUrl ? 'pointer-events-none opacity-70' : undefined}
+          >
+            Visit course page
+          </Link>
+        </Button>
+        <Button
+          aria-pressed={shortlisted}
+          onClick={onShortlist}
+          className={`min-w-[130px] ${shortlisted ? 'opacity-90' : ''}`}
+        >
+          {shortlisted ? 'Shortlisted' : 'Add to shortlist'}
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+const ContextChip = ({ contextSource }: { contextSource: string }) => {
+  if (contextSource === 'direct') return null;
+  const label =
+    contextSource === 'search'
+      ? 'Back to search — your filters are saved'
+      : 'Back to university page — your context is saved';
+  return (
+    <div className="inline-flex items-center gap-2 rounded-full border border-border bg-muted px-3 py-1 text-xs font-semibold uppercase tracking-[0.28em] text-muted-foreground">
+      <Globe2 size={14} className="text-muted-foreground" />
+      <span>{label}</span>
+    </div>
+  );
+};
+
 const ProgressBar = ({ value }: { value: number }) => (
   <div className="space-y-1">
     <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
@@ -625,8 +843,6 @@ const ModuleIcon = ({ label }: { label: string }) => {
 const Hero = ({
   shortlisted,
   onShortlist,
-  compareSelected,
-  onToggleCompare,
   meta,
   backHref,
   backLabel,
@@ -634,8 +850,6 @@ const Hero = ({
 }: {
   shortlisted: boolean;
   onShortlist: () => void;
-  compareSelected: boolean;
-  onToggleCompare: () => void;
   meta: { title: string; university: string; location: string };
   backHref: string;
   backLabel: string;
@@ -666,15 +880,6 @@ const Hero = ({
               <span>{meta.location}</span>
             </div>
             <div className="flex flex-wrap gap-3">
-              <Button
-                variant="outline"
-                className="border-border text-foreground hover:bg-muted/60"
-                aria-pressed={compareSelected}
-                aria-label={compareSelected ? 'Remove from compare' : 'Add to compare'}
-                onClick={onToggleCompare}
-              >
-                {compareSelected ? 'In compare' : 'Compare'}
-              </Button>
               <Button
                 onClick={onShortlist}
                 className={`bg-primary text-primary-foreground shadow-[0_20px_55px_rgba(99,102,241,0.16)] hover:bg-primary/90 ${
@@ -714,8 +919,8 @@ const Hero = ({
   );
 };
 
-const Section = ({ title, description, children }: { title: string; description: string; children: React.ReactNode }) => (
-  <section className="space-y-6">
+const Section = ({ id, title, description, children }: { id?: string; title: string; description: string; children: React.ReactNode }) => (
+  <section id={id} className="scroll-mt-24 space-y-6">
     <div className="space-y-2">
       <p className="text-[11px] font-semibold uppercase tracking-[0.35em] text-muted-foreground">{title}</p>
       <div className="space-y-1">

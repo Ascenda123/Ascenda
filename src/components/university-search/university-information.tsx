@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { useShortlist } from './shortlist-store';
-import { useCompareStore } from './compare-store';
 
 type UniversityData = {
   program: { title?: string | null; level?: string | null; duration?: string | number | null; size?: string | null };
@@ -106,7 +105,6 @@ export const UniversityInformation = ({
   contextSource = 'direct'
 }: UniversityInformationProps) => {
   const { addItem: addShortlist, items: shortlistItems } = useShortlist();
-  const { addItem: addCompare, items: compareItems } = useCompareStore();
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const canRenderContent = !!universityData && !loading && !error;
   const searchFromParam = contextSource === 'search' ? '?from=search' : '';
@@ -141,26 +139,6 @@ export const UniversityInformation = ({
       location: universityData.university?.location ?? undefined
     });
     setStatusMessage('Added to shortlist.');
-  };
-
-  const handleCompare = () => {
-    if (!universityData) return;
-    const id = `${universityData.program?.title ?? universityData.university?.name ?? 'university'}-compare`;
-    const already = compareItems.some((item) => item.id === id);
-    if (already) {
-      setStatusMessage('Already in your compare tray.');
-      return;
-    }
-    addCompare({
-      id,
-      program: universityData.program?.title ?? 'Program',
-      university: universityData.university?.name ?? 'University',
-      location: universityData.university?.location ?? undefined,
-      guardianRank: universityData.rankings?.guardian ?? null,
-      qsRank: universityData.rankings?.qs ?? null,
-      timesRank: universityData.rankings?.times ?? null
-    });
-    setStatusMessage('Added to compare.');
   };
 
   return (
@@ -225,9 +203,6 @@ export const UniversityInformation = ({
                     <span>{headerSubtitle || 'Location unavailable'}</span>
                   </div>
                   <div className="flex flex-wrap gap-3">
-                    <Button variant="outline" className="border-border text-foreground hover:bg-muted/60" onClick={handleCompare}>
-                      Compare
-                    </Button>
                     <Button
                       onClick={handleShortlist}
                       className="bg-primary text-primary-foreground shadow-[0_20px_55px_rgba(99,102,241,0.16)] hover:bg-primary/90"
