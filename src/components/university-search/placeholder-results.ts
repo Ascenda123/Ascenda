@@ -10,6 +10,13 @@ export type PlaceholderResult = {
   nextAction: string;
   due: string;
   tier: MatchTier;
+  acceptanceRate: number;
+  durationYears: number;
+  placementYear: boolean;
+  studyAbroad: boolean;
+  domesticTuition: string;
+  internationalTuition: string;
+  applicationStatus: 'Not started' | 'In progress' | 'Submitted';
 };
 
 const TIER_ORDER: MatchTier[] = ['Reach', 'Match', 'Safe'];
@@ -31,7 +38,14 @@ export const placeholderResults: PlaceholderResult[] = [
     highlights: ['Studio-based learning', 'Research mentorship', 'Portfolio review'],
     nextAction: 'Flag portfolio pieces for counselor review.',
     due: 'Outline by May 20',
-    tier: tierForFitScore(92)
+    tier: tierForFitScore(92),
+    acceptanceRate: 8,
+    durationYears: 4,
+    placementYear: true,
+    studyAbroad: true,
+    domesticTuition: '$58,000',
+    internationalTuition: '$58,000',
+    applicationStatus: 'In progress'
   },
   {
     id: 'stanford-engineering-society',
@@ -42,7 +56,14 @@ export const placeholderResults: PlaceholderResult[] = [
     highlights: ['Silicon Valley immersion', 'Entrepreneurship minor', 'Campus incubator'],
     nextAction: 'Draft note on why social impact matters to you.',
     due: 'Journal entry by May 18',
-    tier: tierForFitScore(88)
+    tier: tierForFitScore(88),
+    acceptanceRate: 9,
+    durationYears: 4,
+    placementYear: true,
+    studyAbroad: true,
+    domesticTuition: '$56,000',
+    internationalTuition: '$56,000',
+    applicationStatus: 'In progress'
   },
   {
     id: 'oxford-phil-politics',
@@ -53,7 +74,14 @@ export const placeholderResults: PlaceholderResult[] = [
     highlights: ['Tutorial model', 'Collegiate community', 'Essay-focused'],
     nextAction: 'Collect writing samples for tutorial preview.',
     due: 'Samples ready by May 25',
-    tier: tierForFitScore(85)
+    tier: tierForFitScore(85),
+    acceptanceRate: 15,
+    durationYears: 3,
+    placementYear: false,
+    studyAbroad: false,
+    domesticTuition: '£9,250',
+    internationalTuition: '£37,200',
+    applicationStatus: 'Not started'
   },
   {
     id: 'eth-robotics-ai',
@@ -64,7 +92,14 @@ export const placeholderResults: PlaceholderResult[] = [
     highlights: ['Lab rotations', 'Co-op terms', 'German immersion'],
     nextAction: 'Review language course options with counselor.',
     due: 'Plan session by May 30',
-    tier: tierForFitScore(83)
+    tier: tierForFitScore(83),
+    acceptanceRate: 27,
+    durationYears: 3,
+    placementYear: true,
+    studyAbroad: true,
+    domesticTuition: 'CHF 1,500',
+    internationalTuition: 'CHF 1,500',
+    applicationStatus: 'Not started'
   },
   {
     id: 'nus-global-business',
@@ -75,7 +110,14 @@ export const placeholderResults: PlaceholderResult[] = [
     highlights: ['Southeast Asia markets', 'Dual degree pathways', 'City campus'],
     nextAction: 'Research internships in Singapore to cite interest.',
     due: 'Talking points by June 3',
-    tier: tierForFitScore(80)
+    tier: tierForFitScore(80),
+    acceptanceRate: 18,
+    durationYears: 4,
+    placementYear: true,
+    studyAbroad: true,
+    domesticTuition: 'S$8,250',
+    internationalTuition: 'S$31,100',
+    applicationStatus: 'In progress'
   },
   {
     id: 'utoronto-data-science',
@@ -86,7 +128,14 @@ export const placeholderResults: PlaceholderResult[] = [
     highlights: ['Co-op placements', 'Urban campus', 'AI research hub'],
     nextAction: 'List tech clubs to explore if admitted.',
     due: 'Club shortlist by June 8',
-    tier: tierForFitScore(78)
+    tier: tierForFitScore(78),
+    acceptanceRate: 43,
+    durationYears: 4,
+    placementYear: true,
+    studyAbroad: true,
+    domesticTuition: 'CA$6,590',
+    internationalTuition: 'CA$58,680',
+    applicationStatus: 'Submitted'
   }
 ];
 

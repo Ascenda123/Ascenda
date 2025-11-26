@@ -1,8 +1,19 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { type ReactNode, useMemo, useState } from 'react';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { PlaceholderResult } from './placeholder-results';
-import { X } from 'lucide-react';
+import { CheckCircle2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+
+type MetricRow = {
+    id: string;
+    label: string;
+    hint?: string;
+    valueForCompare: (uni: PlaceholderResult) => string | number;
+    render: (uni: PlaceholderResult) => ReactNode;
+    numeric?: (uni: PlaceholderResult) => number;
+    direction?: 'higher' | 'lower';
+};
 
 interface ComparisonModalProps {
     isOpen: boolean;
@@ -15,33 +26,224 @@ interface ComparisonModalProps {
 export function ComparisonModal({ isOpen, onClose, universities, onRemove, maxItems = 3 }: ComparisonModalProps) {
     if (!isOpen) return null;
 
-    const columnsStyle = {
-        gridTemplateColumns: `200px repeat(${Math.max(1, universities.length)}, minmax(240px, 1fr))`
+    const [highlightDiffs, setHighlightDiffs] = useState(true);
+    const [hideMatches, setHideMatches] = useState(false);
+
+    const columnsStyle = useMemo(
+        () => ({
+            gridTemplateColumns: `240px repeat(${Math.max(1, universities.length)}, minmax(240px, 1fr))`
+        }),
+        [universities.length]
+    );
+
+    const metricRows: MetricRow[] = [
+        {
+            id: 'fitScore',
+            label: 'Fit Score',
+            hint: 'How well this program maps to your signals.',
+            valueForCompare: (uni) => `${uni.fitScore}%`,
+            render: (uni) => (
+                <div className="flex flex-col items-center gap-1 text-center">
+                    <span className="text-lg font-semibold">{uni.fitScore}%</span>
+                    <span className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">{uni.tier}</span>
+                </div>
+            ),
+            numeric: (uni) => uni.fitScore,
+            direction: 'higher'
+        },
+        {
+            id: 'acceptanceRate',
+            label: 'Acceptance Rate',
+            hint: 'Lower means more competitive.',
+            valueForCompare: (uni) => `${uni.acceptanceRate}%`,
+            render: (uni) => <span className="text-sm font-semibold text-foreground">{uni.acceptanceRate}%</span>,
+            numeric: (uni) => uni.acceptanceRate,
+            direction: 'lower'
+        },
+        {
+            id: 'duration',
+            label: 'Duration',
+            valueForCompare: (uni) => `${uni.durationYears} years`,
+            render: (uni) => <span className="text-sm text-foreground">{uni.durationYears} years</span>,
+            numeric: (uni) => uni.durationYears,
+            direction: 'lower'
+        },
+        {
+            id: 'tuition',
+            label: 'Tuition (annual)',
+            hint: 'Rounded annual tuition; housing not included.',
+            valueForCompare: (uni) => `${uni.domesticTuition} | ${uni.internationalTuition}`,
+            render: (uni) => (
+                <div className="flex flex-col gap-1 text-xs font-semibold text-foreground">
+                    <span className="rounded-full bg-muted px-3 py-1">Intl: {uni.internationalTuition}</span>
+                    <span className="rounded-full bg-muted px-3 py-1">Domestic: {uni.domesticTuition}</span>
+                </div>
+            )
+        },
+        {
+            id: 'placementYear',
+            label: 'Placement Year',
+            valueForCompare: (uni) => (uni.placementYear ? 'Yes' : 'No'),
+            render: (uni) => (
+                <span
+                    className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                        uni.placementYear ? 'bg-emerald-100 text-emerald-800' : 'bg-muted text-muted-foreground'
+                    }`}
+                >
+                    {uni.placementYear ? 'Available' : 'No'}
+                </span>
+            )
+        },
+        {
+            id: 'studyAbroad',
+            label: 'Study Abroad',
+            valueForCompare: (uni) => (uni.studyAbroad ? 'Yes' : 'No'),
+            render: (uni) => (
+                <span
+                    className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                        uni.studyAbroad ? 'bg-blue-100 text-blue-800' : 'bg-muted text-muted-foreground'
+                    }`}
+                >
+                    {uni.studyAbroad ? 'Yes' : 'No'}
+                </span>
+            )
+        },
+        {
+            id: 'location',
+            label: 'Location',
+            valueForCompare: (uni) => uni.location,
+            render: (uni) => <span className="text-sm text-foreground">{uni.location}</span>
+        },
+        {
+            id: 'program',
+            label: 'Program',
+            valueForCompare: (uni) => uni.program,
+            render: (uni) => <span className="text-sm font-medium text-foreground">{uni.program}</span>
+        },
+        {
+            id: 'highlights',
+            label: 'Highlights',
+            valueForCompare: (uni) => uni.highlights.join('|'),
+            render: (uni) => (
+                <div className="flex flex-wrap justify-center gap-1">
+                    {uni.highlights.slice(0, 3).map((h) => (
+                        <span
+                            key={h}
+                            className="rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground"
+                        >
+                            {h}
+                        </span>
+                    ))}
+                </div>
+            )
+        },
+        {
+            id: 'nextAction',
+            label: 'Next Action',
+            valueForCompare: (uni) => uni.nextAction,
+            render: (uni) => <p className="text-xs text-muted-foreground">{uni.nextAction}</p>
+        },
+        {
+            id: 'due',
+            label: 'Due Date',
+            valueForCompare: (uni) => uni.due,
+            render: (uni) => <span className="text-sm font-medium text-foreground">{uni.due}</span>
+        },
+        {
+            id: 'applicationStatus',
+            label: 'Status',
+            valueForCompare: (uni) => uni.applicationStatus,
+            render: (uni) => (
+                <span className="inline-flex items-center gap-2 rounded-full bg-card px-3 py-1 text-xs font-semibold text-foreground ring-1 ring-border">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
+                    {uni.applicationStatus}
+                </span>
+            )
+        }
+    ];
+
+    const shouldHideRow = (row: MetricRow) => {
+        if (!hideMatches || universities.length <= 1) return false;
+        const values = universities.map((uni) => row.valueForCompare(uni));
+        return values.every((val) => val === values[0]);
     };
 
-    const metricLabels = ['Fit Score', 'Location', 'Program', 'Highlights', 'Next Action', 'Due Date'];
-    const rowTemplate = '180px repeat(6, minmax(0, 1fr))';
+    const visibleRows = metricRows.filter((row) => !shouldHideRow(row));
+
+    const rowTemplate = useMemo(
+        () => `220px repeat(${visibleRows.length}, minmax(0, 1fr))`,
+        [visibleRows.length]
+    );
     const isEmpty = universities.length === 0;
+
+    const metricStats = useMemo(() => {
+        return visibleRows.reduce<Record<string, { min: number; max: number }>>((acc, row) => {
+            if (!row.numeric) return acc;
+            const values = universities.map((u) => row.numeric?.(u)).filter((v): v is number => typeof v === 'number');
+            if (values.length === 0) return acc;
+            acc[row.id] = { min: Math.min(...values), max: Math.max(...values) };
+            return acc;
+        }, {});
+    }, [visibleRows, universities]);
+
+    const getDiffBadge = (row: MetricRow, uni: PlaceholderResult) => {
+        if (!highlightDiffs || !row.numeric) return null;
+        const stats = metricStats[row.id];
+        if (!stats) return null;
+        const value = row.numeric(uni);
+        const isBest = row.direction === 'lower' ? value === stats.min : value === stats.max;
+        const isBottom = row.direction === 'lower' ? value === stats.max : value === stats.min;
+        if (!isBest && !isBottom) return null;
+        const label = isBest ? 'Best' : 'Weakest';
+        const color = isBest ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800';
+        return <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${color}`}>{label}</span>;
+    };
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="max-w-5xl overflow-hidden p-0 sm:rounded-[32px]">
                 <div className="flex h-[80vh] flex-col">
                     {/* Header */}
-                    <div className="flex items-center justify-between border-b border-border bg-card px-8 py-6">
-                        <div>
-                            <DialogTitle className="text-2xl font-bold">Compare Universities</DialogTitle>
-                            <p className="text-muted-foreground">
-                                {isEmpty
-                                    ? 'Select programs from results to compare side-by-side'
-                                    : `Comparing ${universities.length} program${universities.length > 1 ? 's' : ''} side-by-side${universities.length >= maxItems ? ' · remove one to add another' : ''}`}
-                            </p>
+                    <div className="flex flex-col gap-4 border-b border-border bg-card px-8 py-6">
+                        <div className="flex items-center justify-between gap-3">
+                            <div>
+                                <DialogTitle className="text-2xl font-bold">Compare Universities</DialogTitle>
+                                <p className="text-muted-foreground">
+                                    {isEmpty
+                                        ? 'Select programs from results to compare side-by-side'
+                                        : `Comparing ${universities.length} program${universities.length > 1 ? 's' : ''} side-by-side${universities.length >= maxItems ? ' · remove one to add another' : ''}`}
+                                </p>
+                            </div>
+                            <div className="flex gap-2">
+                                <Button variant="outline" onClick={onClose}>
+                                    Close
+                                </Button>
+                            </div>
                         </div>
-                        <div className="flex gap-2">
-                            <Button variant="outline" onClick={onClose}>
-                                Close
-                            </Button>
-                        </div>
+                        {!isEmpty && (
+                            <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-muted/60 p-3">
+                                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.25em] text-muted-foreground">
+                                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-background text-sm font-bold text-foreground ring-1 ring-border">
+                                        {universities.length}
+                                    </span>
+                                    <span>Active comparisons</span>
+                                </div>
+                                <div className="flex flex-wrap items-center gap-2 text-sm font-medium">
+                                    <button
+                                        onClick={() => setHighlightDiffs((v) => !v)}
+                                        className={`rounded-full px-3 py-1 transition ${highlightDiffs ? 'bg-foreground text-background' : 'bg-background text-foreground ring-1 ring-border'}`}
+                                    >
+                                        {highlightDiffs ? 'Diffs on' : 'Highlight differences'}
+                                    </button>
+                                    <button
+                                        onClick={() => setHideMatches((v) => !v)}
+                                        className={`rounded-full px-3 py-1 transition ${hideMatches ? 'bg-foreground text-background' : 'bg-background text-foreground ring-1 ring-border'}`}
+                                    >
+                                        {hideMatches ? 'Showing only differences' : 'Hide matching rows'}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* Body */}
@@ -56,85 +258,83 @@ export function ComparisonModal({ isOpen, onClose, universities, onRemove, maxIt
                             </div>
                         ) : (
                             <div className="grid gap-6" style={columnsStyle}>
-                            {/* Labels Column */}
-                            <div
-                                className="sticky left-0 grid gap-6 self-start bg-muted/30 text-sm font-semibold text-muted-foreground"
-                                style={{ gridTemplateRows: rowTemplate }}
-                            >
-                                <div aria-hidden />
-                                {metricLabels.map((label) => (
-                                    <div key={label} className="flex min-h-[2.5rem] items-center">
-                                        {label}
+                                {/* Labels Column */}
+                                <div
+                                    className="sticky left-0 grid gap-6 self-start bg-muted/30 text-sm font-semibold text-muted-foreground"
+                                    style={{ gridTemplateRows: rowTemplate }}
+                                >
+                                    <div className="flex min-h-[2.5rem] items-center px-2">
+                                        Comparison focus
+                                    </div>
+                                    {visibleRows.map((row) => {
+                                        return (
+                                            <div key={row.id} className="flex min-h-[2.5rem] flex-col justify-center px-2">
+                                                <span>{row.label}</span>
+                                                {row.hint ? <span className="text-xs font-normal text-muted-foreground">{row.hint}</span> : null}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+
+                                {/* University Columns */}
+                                {universities.map((uni) => (
+                                    <div
+                                        key={uni.id}
+                                        className="grid gap-6 rounded-2xl bg-card p-6 shadow-sm ring-1 ring-border transition hover:-translate-y-1 hover:shadow-lg"
+                                        style={{ gridTemplateRows: rowTemplate }}
+                                    >
+                                        {/* Header Card */}
+                                        <div className="relative flex flex-col items-center gap-2 rounded-xl border border-border/60 bg-muted/60 p-4 text-center">
+                                            <button
+                                                onClick={() => onRemove(uni.id)}
+                                                className="absolute -right-2 -top-2 flex items-center gap-1 rounded-full bg-background px-3 py-1 text-xs font-semibold text-muted-foreground shadow-sm ring-1 ring-border transition hover:bg-destructive hover:text-destructive-foreground"
+                                            >
+                                                <X className="h-3 w-3" />
+                                                Remove
+                                            </button>
+                                            <div className="h-16 w-16 rounded-2xl bg-card ring-1 ring-border" />
+                                            <h3 className="text-lg font-bold text-foreground">{uni.name}</h3>
+                                            <p className="text-sm text-muted-foreground">{uni.program}</p>
+                                            <Button asChild size="sm" className="mt-1 w-full rounded-lg" variant="secondary">
+                                                <Link href={`/course/${uni.id}`}>Open course page</Link>
+                                            </Button>
+                                        </div>
+
+                                        {/* Data Points */}
+                                        {visibleRows.map((row) => {
+                                            const badge = getDiffBadge(row, uni);
+                                            return (
+                                                <div
+                                                    key={`${uni.id}-${row.id}`}
+                                                    className="flex min-h-[2.5rem] flex-col items-center justify-center gap-2 rounded-xl bg-muted/40 p-3 text-center text-foreground"
+                                                >
+                                                    {row.render(uni)}
+                                                    {badge}
+                                                </div>
+                                            );
+                                        })}
                                     </div>
                                 ))}
                             </div>
-
-                            {/* University Columns */}
-                            {universities.map((uni) => (
-                                <div
-                                    key={uni.id}
-                                    className="grid gap-6 rounded-2xl bg-card p-6 shadow-sm ring-1 ring-border"
-                                    style={{ gridTemplateRows: rowTemplate }}
-                                >
-                                    {/* Header Card */}
-                                    <div className="relative flex flex-col items-center text-center">
-                                        <button
-                                            onClick={() => onRemove(uni.id)}
-                                            className="absolute -right-2 -top-2 flex items-center gap-1 rounded-full bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground shadow-sm ring-1 ring-border hover:bg-destructive hover:text-destructive-foreground"
-                                        >
-                                            <X className="h-3 w-3" />
-                                            Remove
-                                        </button>
-                                        <div className="mb-4 h-16 w-16 rounded-2xl bg-muted" />
-                                        <h3 className="font-bold text-foreground">{uni.name}</h3>
-                                        <p className="text-sm text-muted-foreground">{uni.program}</p>
-                                        <Button asChild size="sm" className="mt-4 w-full" variant="secondary">
-                                            <Link href={`/course/${uni.id}`}>Open course page</Link>
-                                        </Button>
-                                    </div>
-
-                                    {/* Data Points */}
-                                    <div className="flex min-h-[2.5rem] flex-col items-center justify-center text-center text-foreground">
-                                        <span
-                                            className={
-                                                uni.fitScore >= 88
-                                                    ? 'text-emerald-600'
-                                                    : uni.fitScore >= 80
-                                                    ? 'text-amber-600'
-                                                    : 'text-rose-600'
-                                            }
-                                        >
-                                            {uni.fitScore}%
-                                        </span>
-                                        <span className="text-xs text-muted-foreground">{uni.tier}</span>
-                                    </div>
-                                    <div className="flex min-h-[2.5rem] items-center justify-center text-sm text-foreground">
-                                        {uni.location}
-                                    </div>
-                                    <div className="flex min-h-[2.5rem] items-center justify-center text-sm text-foreground">
-                                        {uni.program}
-                                    </div>
-                                    <div className="flex min-h-[2.5rem] flex-wrap justify-center gap-1">
-                                        {uni.highlights.slice(0, 2).map((h) => (
-                                            <span
-                                                key={h}
-                                                className="rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground"
-                                            >
-                                                {h}
-                                            </span>
-                                        ))}
-                                    </div>
-                                    <div className="flex min-h-[2.5rem] items-center justify-center text-center text-xs text-muted-foreground">
-                                        {uni.nextAction}
-                                    </div>
-                                    <div className="flex min-h-[2.5rem] items-center justify-center text-sm font-medium text-foreground">
-                                        {uni.due}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
                         )}
                     </div>
+                    {!isEmpty && (
+                        <div className="border-t border-border bg-card/90 px-8 py-4 backdrop-blur">
+                            <div className="flex flex-wrap items-center justify-between gap-3">
+                                <div className="text-sm text-muted-foreground">
+                                    Keep momentum: take the strongest fit forward or schedule a counselor review.
+                                </div>
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <Button variant="outline" asChild size="sm">
+                                        <Link href={`/course/${universities[0].id}`}>Open best fit</Link>
+                                    </Button>
+                                    <Button size="sm" onClick={onClose}>
+                                        Close & continue browsing
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </DialogContent>
         </Dialog>
