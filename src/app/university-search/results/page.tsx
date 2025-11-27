@@ -7,9 +7,9 @@ import { useShortlist } from '@/components/university-search/shortlist-store';
 import { placeholderResults, type PlaceholderResult } from '@/components/university-search/placeholder-results';
 import { UniversityCard } from '@/components/university-card';
 import { FilterBar } from '@/components/university-search/FilterBar';
+import { CompareBar } from '@/components/university-search/CompareBar';
 import { ComparisonModal } from '@/components/university-search/ComparisonModal';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
 
 import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 
@@ -101,18 +101,6 @@ export default function UniversitySearchResultsPage() {
           resultCount={filteredResults.length}
         />
 
-        <div className="flex justify-end">
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={handleCompare}
-            disabled={selectedForComparison.length === 0}
-            className="rounded-full"
-          >
-            Compare {selectedForComparison.length > 0 ? `(${selectedForComparison.length})` : ''}
-          </Button>
-        </div>
-
         {filteredResults.length === 0 ? (
           <div className="flex flex-col items-center justify-center rounded-[32px] border border-dashed border-border bg-muted/30 py-20 text-center">
             <div className="mb-4 rounded-full bg-muted p-4">
@@ -160,6 +148,13 @@ export default function UniversitySearchResultsPage() {
           </div>
         )}
       </section>
+
+      <CompareBar
+        selectedItems={selectedForComparison}
+        onClear={() => setSelectedForComparison([])}
+        onRemove={(id) => setSelectedForComparison((prev) => prev.filter((item) => item.id !== id))}
+        onCompare={handleCompare}
+      />
 
       <ComparisonModal
         isOpen={isComparisonOpen}
