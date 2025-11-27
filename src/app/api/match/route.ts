@@ -76,9 +76,9 @@ export async function GET(request: NextRequest) {
 
   const requirements = (requirementsData || []).map(mapRequirementRow);
 
-  const requirementMap = new Map(requirements.map((item: ProgramRequirement) => [item.programId, item]));
+  const requirementMap = new Map<string, any>(requirements.map((item: ProgramRequirement) => [item.programId, item]));
 
-  const universityMap = new Map(universitiesData.map((u: any): [string, University] => [u.id, mapUniversityRow(u)]));
+  const universityMap = new Map<string, any>(universitiesData.map((u: any): [string, University] => [u.id, mapUniversityRow(u)]));
 
   const inputs: MatchInput[] = programsData
     .map((p: any) => {
@@ -93,8 +93,8 @@ export async function GET(request: NextRequest) {
         requirement: requirementMap.get(program.id)
       });
     })
-    .filter((value): value is MatchInput => value !== null)
-    .map((input) => ({
+    .filter((value: MatchInput | null): value is MatchInput => value !== null)
+    .map((input: MatchInput) => ({
       ...input,
       weights: safeWeights
     }));

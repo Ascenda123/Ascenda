@@ -66,6 +66,7 @@ const config: Config = {
         soft: "0 2px 10px rgba(0, 0, 0, 0.05)",
         floating: "0 10px 30px -10px rgba(0, 0, 0, 0.1)",
         glow: "0 0 20px rgba(99, 102, 241, 0.15)",
+        nav: "0 30px 80px rgba(15, 23, 42, 0.08)",
       },
       borderRadius: {
         lg: "var(--radius)",

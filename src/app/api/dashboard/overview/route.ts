@@ -114,8 +114,8 @@ export async function GET() {
     const mappedAcademics = mapAcademicsRow(academics);
     const mappedPreferences = mapPreferencesRow(preferences);
     const mappedAspirations = mapAspirationsRow(aspirations);
-    const requirementMap = new Map(requirements.map((item: any) => [item.program_id, mapRequirementRow(item)]));
-    const universityMap = new Map(universities.map((item: any) => [item.id, mapUniversityRow(item)]));
+    const requirementMap = new Map<string, any>(requirements.map((item: any) => [item.program_id, mapRequirementRow(item)]));
+    const universityMap = new Map<string, any>(universities.map((item: any) => [item.id, mapUniversityRow(item)]));
     const inputs = programs
       .map((program: any) => {
         const mappedProgram = mapProgramRow(program);

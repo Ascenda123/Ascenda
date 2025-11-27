@@ -21,13 +21,15 @@ export const SectionNav = ({ items, getIsActive }: SectionNavProps) => {
           ? getIsActive(item, pathname, searchParams)
           : item.matchParam
             ? (() => {
-                const value = searchParams.get(item.matchParam.key);
-                if (!value && item.matchParam.value === 'personal') {
-                  return pathname.startsWith('/profile');
-                }
-                return value === item.matchParam.value;
-              })()
-            : pathname === item.href || pathname.startsWith(`${item.href}/`);
+              const value = searchParams.get(item.matchParam.key);
+              if (!value && item.matchParam.value === 'personal') {
+                return pathname.startsWith('/profile');
+              }
+              return value === item.matchParam.value;
+            })()
+            : item.exact
+              ? pathname === item.href
+              : pathname === item.href || pathname.startsWith(`${item.href}/`);
 
         return (
           <Link

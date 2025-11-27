@@ -5,27 +5,27 @@ const baseStudent = {
   academics: {
     curriculum: 'IB',
     gpa: 3.8,
-    ib_total: 38,
+    ibTotal: 38,
     sat: 1420,
     act: 30,
     toefl: 105,
     ielts: 7,
-    subject_grades: [
+    subjectGrades: [
       { subject: 'Mathematics HL', level: 'HL', score: '6' },
       { subject: 'Physics HL', level: 'HL', score: '6' }
     ]
   },
   preferences: {
-    budget_min: 20000,
-    budget_max: 45000,
+    budgetMin: 20000,
+    budgetMax: 45000,
     countries: ['United States', 'Canada'],
     languages: ['English'],
-    program_levels: ['Undergraduate'],
+    programLevels: ['Undergraduate'],
     delivery: 'On-campus'
   },
   aspirations: {
-    target_fields: ['Computer Science'],
-    job_titles: ['Software Engineer']
+    targetFields: ['Computer Science'],
+    jobTitles: ['Software Engineer']
   }
 };
 
@@ -37,25 +37,25 @@ const programA = {
   language: 'English',
   mode: 'On-campus',
   tuition: 42000,
-  university_id: 'univ-a'
+  universityId: 'univ-a'
 };
 
 const universityA = {
   id: 'univ-a',
   name: 'Global Tech University',
   country: 'United States',
-  rank_overall: 50,
-  acceptance_rate: 0.25,
-  requires_test: true
+  rankOverall: 50,
+  acceptanceRate: 0.25,
+  requiresTest: true
 };
 
 const requirementA = {
-  program_id: 'program-a',
+  programId: 'program-a',
   curriculum: 'IB',
-  min_gpa: 3.4,
-  min_sat: 1350,
-  required_subjects: ['Mathematics HL'],
-  language_tests: { toefl: 90 }
+  minGpa: 3.4,
+  minSat: 1350,
+  requiredSubjects: ['Mathematics HL'],
+  languageTests: { toefl: 90 }
 };
 
 const programB = {
@@ -66,25 +66,25 @@ const programB = {
   language: 'English',
   mode: 'On-campus',
   tuition: 52000,
-  university_id: 'univ-b'
+  universityId: 'univ-b'
 };
 
 const universityB = {
   id: 'univ-b',
   name: 'Northern Analytics College',
   country: 'Canada',
-  rank_overall: 120,
-  acceptance_rate: 0.5,
-  requires_test: false
+  rankOverall: 120,
+  acceptanceRate: 0.5,
+  requiresTest: false
 };
 
 const requirementB = {
-  program_id: 'program-b',
+  programId: 'program-b',
   curriculum: 'IB',
-  min_gpa: 3.7,
-  min_sat: 1400,
-  required_subjects: ['Mathematics HL', 'Statistics HL'],
-  language_tests: { toefl: 95 }
+  minGpa: 3.7,
+  minSat: 1400,
+  requiredSubjects: ['Mathematics HL', 'Statistics HL'],
+  languageTests: { toefl: 95 }
 };
 
 describe('matching engine', () => {

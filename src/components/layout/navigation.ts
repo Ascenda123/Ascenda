@@ -20,6 +20,7 @@ export type SectionNavItem = {
   label: string;
   href: string;
   matchParam?: { key: string; value: string };
+  exact?: boolean;
 };
 
 export const NAV_ITEMS: NavItem[] = [
@@ -76,7 +77,7 @@ export const EXPLORE_SECTION_ITEMS: SectionNavItem[] = [
 ];
 
 export const PLANNER_SECTION_ITEMS: SectionNavItem[] = [
-  { label: 'Applications', href: '/applications' },
+  { label: 'Applications', href: '/applications', exact: true },
   { label: 'Tasks', href: '/applications/tasks' }
 ];
 

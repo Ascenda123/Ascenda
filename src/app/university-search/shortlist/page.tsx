@@ -138,7 +138,7 @@ export default function UniversitySearchShortlistPage() {
                     <span
                       className={cn(
                         'rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:ring-offset-2',
-                        stageTone[item.stage] ?? 'bg-muted text-foreground border-border'
+                        stageTone[item.stage as keyof typeof stageTone] ?? 'bg-muted text-foreground border-border'
                       )}
                       role="switch"
                       aria-checked

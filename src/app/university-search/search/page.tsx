@@ -1,7 +1,11 @@
+'use client';
+
+import { useState } from 'react';
 import { Search } from 'lucide-react';
 import { AnimatedBlobBanner } from '@/components/animated-blob-banner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
 
 const filterGroups = [
   {
@@ -27,6 +31,22 @@ const filterGroups = [
 ];
 
 export default function UniversitySearchPage() {
+  const [selectedFilters, setSelectedFilters] = useState<Set<string>>(new Set());
+
+  const toggleFilter = (option: string) => {
+    const next = new Set(selectedFilters);
+    if (next.has(option)) {
+      next.delete(option);
+    } else {
+      next.add(option);
+    }
+    setSelectedFilters(next);
+  };
+
+  const resetFilters = () => {
+    setSelectedFilters(new Set());
+  };
+
   return (
     <div className="space-y-8">
       <section className="relative overflow-hidden rounded-[32px] border border-border bg-gradient-to-br from-background to-muted/70 p-8 shadow-[0_30px_60px_rgba(15,23,42,0.08)]">
@@ -116,15 +136,24 @@ export default function UniversitySearchPage() {
                 <p className="text-sm text-muted-foreground">{group.description}</p>
               </div>
               <div className="flex flex-wrap gap-2">
-                {group.options.map((option) => (
-                  <button
-                    key={option}
-                    type="button"
-                    className="rounded-full border border-border bg-background px-4 py-1 text-sm font-semibold text-foreground transition hover:border-foreground/60 hover:text-foreground"
-                  >
-                    {option}
-                  </button>
-                ))}
+                {group.options.map((option) => {
+                  const isSelected = selectedFilters.has(option);
+                  return (
+                    <button
+                      key={option}
+                      type="button"
+                      onClick={() => toggleFilter(option)}
+                      className={cn(
+                        'rounded-full border px-4 py-1 text-sm font-semibold transition',
+                        isSelected
+                          ? 'border-primary bg-primary text-primary-foreground shadow-sm'
+                          : 'border-border bg-background text-foreground hover:border-foreground/60 hover:text-foreground'
+                      )}
+                    >
+                      {option}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           ))}
@@ -134,7 +163,11 @@ export default function UniversitySearchPage() {
             These filters don’t run a live query yet—they help counselors understand what to curate next for you.
           </p>
           <div className="flex gap-3">
-            <button type="button" className="text-sm font-semibold uppercase tracking-[0.25em] text-muted-foreground">
+            <button
+              type="button"
+              onClick={resetFilters}
+              className="text-sm font-semibold uppercase tracking-[0.25em] text-muted-foreground hover:text-foreground transition-colors"
+            >
               Reset filters
             </button>
             <Button size="sm">Apply filters</Button>
