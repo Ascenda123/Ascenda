@@ -25,12 +25,12 @@ export const Navbar = () => {
               src={logoSrc}
               alt="Ascenda logo"
               fill
-              className={cn('rounded-full object-contain transition', mode === 'dark' ? 'invert' : '')}
+              className={cn('rounded-full object-contain transition')}
             />
           </div>
           <div className="flex flex-col leading-tight">
-            <span>Ascenda</span>
-            <span className="text-[11px] font-medium uppercase tracking-[0.4em] text-muted-foreground">workspace</span>
+            <span className="dark:text-white">Ascenda</span>
+            <span className="text-[11px] font-medium uppercase tracking-[0.4em] text-muted-foreground dark:text-gray-300">workspace</span>
           </div>
         </Link>
         <nav className="hidden items-center gap-5 text-xs font-medium text-muted-foreground md:flex">

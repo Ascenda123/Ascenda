@@ -86,9 +86,8 @@ export function ComparisonModal({ isOpen, onClose, universities, onRemove, maxIt
             valueForCompare: (uni) => (uni.placementYear ? 'Yes' : 'No'),
             render: (uni) => (
                 <span
-                    className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                        uni.placementYear ? 'bg-emerald-100 text-emerald-800' : 'bg-muted text-muted-foreground'
-                    }`}
+                    className={`rounded-full px-3 py-1 text-xs font-semibold ${uni.placementYear ? 'bg-emerald-100 text-emerald-800' : 'bg-muted text-muted-foreground'
+                        }`}
                 >
                     {uni.placementYear ? 'Available' : 'No'}
                 </span>
@@ -100,9 +99,8 @@ export function ComparisonModal({ isOpen, onClose, universities, onRemove, maxIt
             valueForCompare: (uni) => (uni.studyAbroad ? 'Yes' : 'No'),
             render: (uni) => (
                 <span
-                    className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                        uni.studyAbroad ? 'bg-blue-100 text-blue-800' : 'bg-muted text-muted-foreground'
-                    }`}
+                    className={`rounded-full px-3 py-1 text-xs font-semibold ${uni.studyAbroad ? 'bg-blue-100 text-blue-800' : 'bg-muted text-muted-foreground'
+                        }`}
                 >
                     {uni.studyAbroad ? 'Yes' : 'No'}
                 </span>
@@ -211,7 +209,11 @@ export function ComparisonModal({ isOpen, onClose, universities, onRemove, maxIt
                                 <p className="text-muted-foreground">
                                     {isEmpty
                                         ? 'Select programs from results to compare side-by-side'
-                                        : `Comparing ${universities.length} program${universities.length > 1 ? 's' : ''} side-by-side${universities.length >= maxItems ? ' · remove one to add another' : ''}`}
+                                        : hideMatches
+                                            ? `Showing only differences between ${universities.length} program${universities.length > 1 ? 's' : ''}`
+                                            : highlightDiffs
+                                                ? `Highlighting differences across ${universities.length} program${universities.length > 1 ? 's' : ''}`
+                                                : `Comparing ${universities.length} program${universities.length > 1 ? 's' : ''} side-by-side${universities.length >= maxItems ? ' · remove one to add another' : ''}`}
                                 </p>
                             </div>
                             <div className="flex gap-2">
@@ -257,34 +259,36 @@ export function ComparisonModal({ isOpen, onClose, universities, onRemove, maxIt
                                 </p>
                             </div>
                         ) : (
-                            <div className="grid gap-6" style={columnsStyle}>
-                                {/* Labels Column */}
-                                <div
-                                    className="sticky left-0 grid gap-6 self-start bg-muted/30 text-sm font-semibold text-muted-foreground"
-                                    style={{ gridTemplateRows: rowTemplate }}
-                                >
-                                    <div className="flex min-h-[2.5rem] items-center px-2">
-                                        Comparison focus
-                                    </div>
-                                    {visibleRows.map((row) => {
-                                        return (
-                                            <div key={row.id} className="flex min-h-[2.5rem] flex-col justify-center px-2">
-                                                <span>{row.label}</span>
-                                                {row.hint ? <span className="text-xs font-normal text-muted-foreground">{row.hint}</span> : null}
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-
-                                {/* University Columns */}
-                                {universities.map((uni) => (
+                            <div
+                                className="grid gap-x-6 gap-y-0"
+                                style={{
+                                    gridTemplateColumns: `240px repeat(${universities.length}, minmax(240px, 1fr))`
+                                }}
+                            >
+                                {/* University Background Cards */}
+                                {universities.map((uni, index) => (
                                     <div
-                                        key={uni.id}
-                                        className="grid gap-6 rounded-2xl bg-card p-6 shadow-sm ring-1 ring-border transition hover:-translate-y-1 hover:shadow-lg"
-                                        style={{ gridTemplateRows: rowTemplate }}
+                                        key={`bg-${uni.id}`}
+                                        className="rounded-2xl bg-card shadow-sm ring-1 ring-border transition hover:shadow-lg"
+                                        style={{
+                                            gridColumn: index + 2,
+                                            gridRow: `1 / span ${visibleRows.length + 1}`,
+                                            zIndex: 0
+                                        }}
+                                    />
+                                ))}
+
+                                {/* Header Row */}
+                                <div className="sticky left-0 top-0 z-20 flex items-center bg-muted/30 px-2 py-4 font-semibold text-muted-foreground backdrop-blur-sm">
+                                    Comparison focus
+                                </div>
+                                {universities.map((uni, index) => (
+                                    <div
+                                        key={`header-${uni.id}`}
+                                        className="relative z-10 p-6"
+                                        style={{ gridColumn: index + 2, gridRow: 1 }}
                                     >
-                                        {/* Header Card */}
-                                        <div className="relative flex flex-col items-center gap-2 rounded-xl border border-border/60 bg-muted/60 p-4 text-center">
+                                        <div className="flex flex-col items-center gap-2 text-center">
                                             <button
                                                 onClick={() => onRemove(uni.id)}
                                                 className="absolute -right-2 -top-2 flex items-center gap-1 rounded-full bg-background px-3 py-1 text-xs font-semibold text-muted-foreground shadow-sm ring-1 ring-border transition hover:bg-destructive hover:text-destructive-foreground"
@@ -292,24 +296,41 @@ export function ComparisonModal({ isOpen, onClose, universities, onRemove, maxIt
                                                 <X className="h-3 w-3" />
                                                 Remove
                                             </button>
-                                            <div className="h-16 w-16 rounded-2xl bg-card ring-1 ring-border" />
+                                            <div className="h-16 w-16 rounded-2xl bg-muted ring-1 ring-border" />
                                             <h3 className="text-lg font-bold text-foreground">{uni.name}</h3>
                                             <p className="text-sm text-muted-foreground">{uni.program}</p>
                                             <Button asChild size="sm" className="mt-1 w-full rounded-lg" variant="secondary">
                                                 <Link href={`/course/${uni.id}`}>Open course page</Link>
                                             </Button>
                                         </div>
+                                    </div>
+                                ))}
 
-                                        {/* Data Points */}
-                                        {visibleRows.map((row) => {
+                                {/* Data Rows */}
+                                {visibleRows.map((row, rowIndex) => (
+                                    <div key={`row-${row.id}`} style={{ display: 'contents' }}>
+                                        {/* Label */}
+                                        <div
+                                            className="sticky left-0 z-10 flex flex-col justify-center bg-muted/30 px-2 py-4 backdrop-blur-sm"
+                                            style={{ gridColumn: 1, gridRow: rowIndex + 2 }}
+                                        >
+                                            <span className="text-sm font-semibold text-muted-foreground">{row.label}</span>
+                                            {row.hint && <span className="text-xs font-normal text-muted-foreground/70">{row.hint}</span>}
+                                        </div>
+
+                                        {/* Data Cells */}
+                                        {universities.map((uni, uniIndex) => {
                                             const badge = getDiffBadge(row, uni);
                                             return (
                                                 <div
                                                     key={`${uni.id}-${row.id}`}
-                                                    className="flex min-h-[2.5rem] flex-col items-center justify-center gap-2 rounded-xl bg-muted/40 p-3 text-center text-foreground"
+                                                    className="relative z-10 flex flex-col items-center justify-center gap-2 p-4 text-center"
+                                                    style={{ gridColumn: uniIndex + 2, gridRow: rowIndex + 2 }}
                                                 >
-                                                    {row.render(uni)}
-                                                    {badge}
+                                                    <div className="flex w-full flex-col items-center justify-center gap-2 rounded-xl bg-muted/40 p-3">
+                                                        {row.render(uni)}
+                                                        {badge}
+                                                    </div>
                                                 </div>
                                             );
                                         })}
