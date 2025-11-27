@@ -18,39 +18,39 @@ export function CompareBar({ selectedItems, onClear, onRemove, onCompare }: Comp
 
     return (
         <div className="fixed bottom-6 left-1/2 z-50 w-full max-w-4xl -translate-x-1/2 px-4">
-            <div className="flex flex-col gap-3 rounded-3xl border border-border bg-gradient-to-r from-foreground via-foreground to-foreground/95 p-4 text-background shadow-2xl">
-                <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-col gap-2 rounded-3xl border border-border bg-card/90 p-3 text-foreground shadow-xl backdrop-blur">
+                <div className="flex items-center justify-between gap-3 text-sm font-semibold text-muted-foreground">
                     <div className="flex items-center gap-3">
-                        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-background/15 text-lg font-bold">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-muted/60 text-base font-bold text-foreground">
                             {selectedItems.length}/{maxItems}
                         </div>
-                        <div>
-                            <p className="text-sm font-semibold">Comparison tray</p>
-                            <p className="text-xs text-background/80">{readyState}</p>
+                        <div className="text-xs font-semibold leading-tight">
+                            <p>Comparison tray</p>
+                            <p className="text-muted-foreground/80">{readyState}</p>
                         </div>
                     </div>
-                    <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-background/80">
+                    <div className="flex items-center gap-1 text-[10px] uppercase tracking-[0.3em] text-muted-foreground/80">
                         <Sparkles className="h-3.5 w-3.5" />
-                        <span>Diff mode</span>
+                        <span>Diffs</span>
                     </div>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2 rounded-2xl bg-background/10 p-2">
+                <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-border/50 bg-muted/30 px-3 py-2 text-xs font-semibold shadow-inner">
                     {selectedItems.map((item) => (
                         <div
                             key={item.id}
-                            className="group flex items-center gap-2 rounded-xl border border-background/20 bg-background/5 px-3 py-2 text-sm font-semibold shadow-sm"
+                            className="group flex items-center gap-2 rounded-xl border border-border/30 bg-background/50 px-3 py-1 text-foreground transition hover:border-foreground/40"
                         >
-                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-background/20 text-xs font-bold text-background">
+                            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-muted/60 text-xs font-bold text-foreground">
                                 {item.name.charAt(0)}
                             </div>
                             <div className="flex flex-col leading-tight">
-                                <span className="text-background">{item.name}</span>
-                                <span className="text-[11px] text-background/70">{item.program}</span>
+                                <span>{item.name}</span>
+                                <span className="text-[10px] text-muted-foreground/70">{item.program}</span>
                             </div>
                             <button
                                 onClick={() => onRemove(item.id)}
-                                className="ml-1 rounded-full p-1 text-background/70 transition hover:bg-background/15 hover:text-background"
+                                className="ml-1 rounded-full p-1 text-muted-foreground transition hover:bg-muted/60 hover:text-foreground"
                                 aria-label={`Remove ${item.name} from comparison`}
                             >
                                 <X className="h-3 w-3" />
@@ -59,26 +59,26 @@ export function CompareBar({ selectedItems, onClear, onRemove, onCompare }: Comp
                     ))}
                 </div>
 
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div className="flex items-center gap-3 text-xs font-semibold text-background/80">
-                        <button onClick={onClear} className="rounded-full bg-background/10 px-3 py-1 transition hover:bg-background/20">
-                            Clear all
-                        </button>
-                        <span className="hidden sm:inline">Selections persist while you browse.</span>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-2">
+                <div className="flex items-center justify-between gap-2 text-xs font-semibold text-muted-foreground">
+                    <button
+                        onClick={onClear}
+                        className="rounded-full border border-border/60 bg-background/10 px-3 py-1 transition hover:border-foreground/50"
+                    >
+                        Clear
+                    </button>
+                    <div className="flex items-center gap-2">
                         <Button
                             type="button"
-                            variant="secondary"
-                            className="gap-2 rounded-xl bg-background text-foreground hover:bg-background/90"
+                            variant="ghost"
+                            className="gap-2 rounded-xl px-3 py-1 text-xs font-semibold text-muted-foreground hover:text-foreground"
                         >
                             <Share2 className="h-4 w-4" />
-                            Share snapshot
+                            Share
                         </Button>
                         <Button
                             onClick={onCompare}
                             size="sm"
-                            className="gap-2 rounded-xl bg-background text-foreground hover:bg-background/90"
+                            className="gap-2 rounded-xl bg-foreground/90 px-3 py-1 text-xs font-semibold text-background transition hover:bg-foreground"
                         >
                             Compare <ArrowRight className="h-4 w-4" />
                         </Button>
