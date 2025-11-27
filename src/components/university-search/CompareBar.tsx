@@ -46,11 +46,16 @@ export function CompareBar({ selectedItems, onClear, onRemove, onCompare }: Comp
                     </div>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-border/50 bg-muted/20 px-3 py-1.5 text-[12px] font-semibold shadow-inner">
+                <div
+                    className="grid w-full gap-2 rounded-2xl border border-border/50 bg-muted/20 px-3 py-1.5 text-[12px] font-semibold shadow-inner"
+                    style={{
+                        gridTemplateColumns: `repeat(${selectedItems.length}, minmax(0, 1fr))`
+                    }}
+                >
                     {selectedItems.map((item) => (
                         <div
                             key={item.id}
-                            className="group flex items-center gap-2 rounded-xl border border-border/30 bg-background/50 px-2.5 py-1 text-foreground transition hover:border-foreground/40"
+                            className="group flex w-full items-center gap-2 rounded-xl border border-border/30 bg-background/50 px-2.5 py-1 text-foreground transition hover:border-foreground/40"
                         >
                             <div className="flex h-7 w-7 items-center justify-center rounded-full bg-muted/60 text-xs font-bold text-foreground">
                                 {item.name.charAt(0)}
