@@ -279,7 +279,7 @@ export function ComparisonModal({ isOpen, onClose, universities, onRemove, maxIt
                                 ))}
 
                                 {/* Header Row */}
-                                <div className="sticky left-0 top-0 z-20 flex items-center bg-muted/30 px-2 py-4 font-semibold text-muted-foreground backdrop-blur-sm">
+                                <div className="flex items-center bg-muted/30 px-2 py-4 font-semibold text-muted-foreground backdrop-blur-sm">
                                     Comparison focus
                                 </div>
                                 {universities.map((uni, index) => (
