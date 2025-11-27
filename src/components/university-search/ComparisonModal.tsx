@@ -311,7 +311,7 @@ export function ComparisonModal({ isOpen, onClose, universities, onRemove, maxIt
                                     <div key={`row-${row.id}`} style={{ display: 'contents' }}>
                                         {/* Label */}
                                         <div
-                                            className="sticky left-0 z-10 flex flex-col justify-center bg-muted/30 px-2 py-4 backdrop-blur-sm"
+                                            className="sticky left-0 top-0 z-10 flex flex-col justify-center bg-muted/30 px-2 py-4 backdrop-blur-sm"
                                             style={{ gridColumn: 1, gridRow: rowIndex + 2 }}
                                         >
                                             <span className="text-sm font-semibold text-muted-foreground">{row.label}</span>
