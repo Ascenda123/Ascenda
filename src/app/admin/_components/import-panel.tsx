@@ -5,6 +5,7 @@ import Papa from 'papaparse';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { trackEvent } from '@/lib/analytics';
+import { useToast } from '@/components/ui/toast';
 
 const templates = ['universities', 'programs', 'requirements', 'deadlines'] as const;
 type Template = (typeof templates)[number];
@@ -17,6 +18,7 @@ export const ImportPanel = () => {
   const [error, setError] = useState<string | null>(null);
   const [isParsing, startParsing] = useTransition();
   const [isSyncing, setIsSyncing] = useState(false);
+  const { showToast } = useToast();
 
   const handleFile = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -32,10 +34,12 @@ export const ImportPanel = () => {
           setRowCount(result.data.length);
           setRows(result.data as Record<string, unknown>[]);
           setStatus(`Parsed ${result.data.length} rows for ${template}. Review & sync.`);
+          showToast({ title: 'CSV parsed', description: `Parsed ${result.data.length} rows for ${template}.`, variant: 'success' });
         },
         error: (parseError: any) => {
           setStatus('Parsing failed');
           setError(parseError.message);
+          showToast({ title: 'Parse failed', description: parseError.message, variant: 'error' });
         }
       });
     });
@@ -61,11 +65,13 @@ export const ImportPanel = () => {
       }
 
       setStatus(`Synced ${payload.count ?? rows.length} ${template} rows.`);
+      showToast({ title: 'Import synced', description: `Uploaded ${payload.count ?? rows.length} ${template} rows.`, variant: 'success' });
       trackEvent('admin_import_synced', { template, count: payload.count ?? rows.length });
     } catch (syncError) {
       const message = syncError instanceof Error ? syncError.message : 'Sync failed.';
       setError(message);
       setStatus('Sync failed');
+      showToast({ title: 'Import failed', description: message, variant: 'error' });
     } finally {
       setIsSyncing(false);
     }
@@ -106,7 +112,16 @@ export const ImportPanel = () => {
           className="text-sm text-muted-foreground file:mr-4 file:rounded-2xl file:border file:border-border file:bg-muted/60 file:px-4 file:py-2 file:text-foreground"
         />
       </div>
-      <p className="text-sm text-muted-foreground">Status: {status}</p>
+      <p className="text-sm text-muted-foreground" aria-busy={isParsing || isSyncing}>
+        Status: {status}
+      </p>
+      {(isParsing || isSyncing) && (
+        <div className="flex items-center gap-2 text-xs text-muted-foreground" aria-hidden>
+          <span className="h-2 w-2 animate-pulse rounded-full bg-primary" />
+          <span className="h-2 w-2 animate-pulse rounded-full bg-primary/70" />
+          <span className="h-2 w-2 animate-pulse rounded-full bg-primary/50" />
+        </div>
+      )}
       {error ? (
         <p className="text-xs text-red-500" role="alert">
           {error}

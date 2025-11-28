@@ -38,6 +38,7 @@ import { CountrySelect } from '@/components/inputs/country-select';
 import { HomeCountrySelect } from '@/components/inputs/home-country-select';
 import { SubjectGradeTable } from '@/components/inputs/subject-grade-table';
 import { Check } from 'lucide-react';
+import { useToast } from '@/components/ui/toast';
 
 const DESTINATION_COUNTRY_SET = new Set<string>(DESTINATION_COUNTRIES);
 const PROGRAM_LEVEL_SET = new Set<string>(PROGRAM_LEVEL_OPTIONS);
@@ -127,6 +128,7 @@ export const ProfileWizard = ({
   const [jobTitleOther, setJobTitleOther] = useState('');
   const completedSteps = PROFILE_STEPS.filter((step) => completionState[step.key]).length;
   const completionPercent = Math.round((completedSteps / PROFILE_STEPS.length) * 100);
+  const { showToast } = useToast();
 
   const deviceTimeZone = useMemo(() => {
     if (typeof Intl !== 'undefined' && typeof Intl.DateTimeFormat === 'function') {
@@ -225,38 +227,62 @@ export const ProfileWizard = ({
 
   const handlePersonalSubmit = (values: ProfilePersonalValues) => {
     startTransition(async () => {
-      await savePersonalStep(values);
-      setStatus('Personal information saved');
-      markStepComplete('personal');
-      goToNext('personal');
+      try {
+        await savePersonalStep(values);
+        setStatus('Personal information saved');
+        markStepComplete('personal');
+        goToNext('personal');
+        showToast({ title: 'Personal info saved', description: 'We updated your profile details.', variant: 'success' });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Save failed';
+        showToast({ title: 'Could not save personal info', description: message, variant: 'error' });
+      }
     });
   };
 
   const handleAcademicsSubmit = (values: ProfileAcademicsValues) => {
     startTransition(async () => {
-      await saveAcademicsStep(values);
-      setStatus('Academic profile saved');
-      markStepComplete('academics');
-      goToNext('academics');
+      try {
+        await saveAcademicsStep(values);
+        setStatus('Academic profile saved');
+        markStepComplete('academics');
+        goToNext('academics');
+        showToast({ title: 'Academics saved', description: 'Scores and subjects updated.', variant: 'success' });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Save failed';
+        showToast({ title: 'Could not save academics', description: message, variant: 'error' });
+      }
     });
   };
 
   const handlePreferencesSubmit = (values: ProfilePreferencesValues) => {
     startTransition(async () => {
-      await savePreferencesStep(values);
-      setStatus('Preferences saved');
-      markStepComplete('preferences');
-      goToNext('preferences');
+      try {
+        await savePreferencesStep(values);
+        setStatus('Preferences saved');
+        markStepComplete('preferences');
+        goToNext('preferences');
+        showToast({ title: 'Preferences saved', description: 'We refreshed your match filters.', variant: 'success' });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Save failed';
+        showToast({ title: 'Could not save preferences', description: message, variant: 'error' });
+      }
     });
   };
 
   const handleAspirationsSubmit = (values: ProfileAspirationsValues) => {
     startTransition(async () => {
-      await saveAspirationsStep(values);
-      setStatus('Aspirations saved. You are all set!');
-      markStepComplete('aspirations');
-      router.push('/dashboard');
-      router.refresh();
+      try {
+        await saveAspirationsStep(values);
+        setStatus('Aspirations saved. You are all set!');
+        markStepComplete('aspirations');
+        showToast({ title: 'Profile complete', description: 'Jump into your dashboard or matches.', variant: 'success' });
+        router.push('/dashboard');
+        router.refresh();
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Save failed';
+        showToast({ title: 'Could not save aspirations', description: message, variant: 'error' });
+      }
     });
   };
 
@@ -472,24 +498,25 @@ export const ProfileWizard = ({
                 ) : null}
               </div>
               <div className="grid form-grid sm:grid-cols-2">
-                <div className="form-field">
-                  <Label className="form-label" htmlFor="gpa">
-                    GPA
-                  </Label>
-                  <Input
-                    id="gpa"
-                    type="number"
-                    step="0.01"
-                    min={0}
-                    max={4}
-                    className="form-input"
-                    {...academicsForm.register('gpa', { valueAsNumber: true })}
-                  />
-                </div>
-                <div className="form-field">
-                  <Label className="form-label" htmlFor="ibTotal">
-                    IB Total
-                  </Label>
+            <div className="form-field">
+              <Label className="form-label" htmlFor="gpa">
+                GPA
+              </Label>
+              <Input
+                id="gpa"
+                type="number"
+                step="0.01"
+                min={0}
+                max={4}
+                className="form-input"
+                {...academicsForm.register('gpa', { valueAsNumber: true })}
+              />
+              <p className="form-hint">Enter on a 4.0 scale. We convert as needed for matching.</p>
+            </div>
+            <div className="form-field">
+              <Label className="form-label" htmlFor="ibTotal">
+                IB Total
+              </Label>
                   <Input
                     id="ibTotal"
                     type="number"
@@ -505,17 +532,18 @@ export const ProfileWizard = ({
                   </Label>
                   <Input
                     id="sat"
-                    type="number"
-                    min={400}
-                    max={1600}
-                    className="form-input"
-                    {...academicsForm.register('sat', { valueAsNumber: true })}
-                  />
-                </div>
-                <div className="form-field">
-                  <Label className="form-label" htmlFor="act">
-                    ACT
-                  </Label>
+                type="number"
+                min={400}
+                max={1600}
+                className="form-input"
+                {...academicsForm.register('sat', { valueAsNumber: true })}
+              />
+              <p className="form-hint">Superscore if applicable; leave blank if you did not test.</p>
+            </div>
+            <div className="form-field">
+              <Label className="form-label" htmlFor="act">
+                ACT
+              </Label>
                   <Input
                     id="act"
                     type="number"
@@ -531,17 +559,18 @@ export const ProfileWizard = ({
                   </Label>
                   <Input
                     id="toefl"
-                    type="number"
-                    min={0}
-                    max={120}
-                    className="form-input"
-                    {...academicsForm.register('toefl', { valueAsNumber: true })}
-                  />
-                </div>
-                <div className="form-field">
-                  <Label className="form-label" htmlFor="ielts">
-                    IELTS
-                  </Label>
+                type="number"
+                min={0}
+                max={120}
+                className="form-input"
+                {...academicsForm.register('toefl', { valueAsNumber: true })}
+              />
+              <p className="form-hint">Used to flag language requirements. We keep the highest score.</p>
+            </div>
+            <div className="form-field">
+              <Label className="form-label" htmlFor="ielts">
+                IELTS
+              </Label>
                   <Input
                     id="ielts"
                     type="number"
@@ -583,30 +612,32 @@ export const ProfileWizard = ({
               animate="animate"
               exit="exit"
             >
-              <div className="grid form-grid sm:grid-cols-2">
-                <div className="form-field">
-                  <Label className="form-label" htmlFor="budgetMin">
-                    Budget minimum (USD)
-                  </Label>
-                  <Input
-                    id="budgetMin"
-                    type="number"
-                    className="form-input"
-                    {...preferencesForm.register('budgetMin', { valueAsNumber: true })}
-                  />
-                </div>
-                <div className="form-field">
-                  <Label className="form-label" htmlFor="budgetMax">
-                    Budget maximum (USD)
-                  </Label>
-                  <Input
-                    id="budgetMax"
-                    type="number"
-                    className="form-input"
-                    {...preferencesForm.register('budgetMax', { valueAsNumber: true })}
-                  />
-                </div>
+            <div className="grid form-grid sm:grid-cols-2">
+              <div className="form-field">
+                <Label className="form-label" htmlFor="budgetMin">
+                  Budget minimum (USD)
+                </Label>
+                <Input
+                  id="budgetMin"
+                  type="number"
+                  className="form-input"
+                  {...preferencesForm.register('budgetMin', { valueAsNumber: true })}
+                />
+                <p className="form-hint">Tuition + living per year; you can update later.</p>
               </div>
+              <div className="form-field">
+                <Label className="form-label" htmlFor="budgetMax">
+                  Budget maximum (USD)
+                </Label>
+                <Input
+                  id="budgetMax"
+                  type="number"
+                  className="form-input"
+                  {...preferencesForm.register('budgetMax', { valueAsNumber: true })}
+                />
+                <p className="form-hint">We prioritize programs within this range first.</p>
+              </div>
+            </div>
               <div className="form-field">
                 <Label className="form-label" id="countries-label">
                   Preferred countries

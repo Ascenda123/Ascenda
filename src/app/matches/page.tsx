@@ -117,7 +117,10 @@ export default async function MatchesPage() {
     const university = universityMap.get(result.universityId)!;
     return {
       program,
-      university,
+      university: {
+        ...university,
+        requiresTest: university.requiresTest
+      },
       score: result.score,
       breakdown: result.breakdown,
       blockingReasons: result.blockingReasons,
@@ -187,7 +190,24 @@ export default async function MatchesPage() {
           </div>
         </div>
       ) : null}
-      <MatchList matches={enriched} />
+      {enriched.length ? (
+        <MatchList matches={enriched} />
+      ) : (
+        <div className="rounded-[28px] border border-dashed border-border bg-muted/60 p-8 text-center text-muted-foreground">
+          <p className="text-base font-semibold text-foreground">No matches yet</p>
+          <p className="mt-2 text-sm">
+            Try widening your budget, adding more destinations, or updating test scores to unlock suggestions.
+          </p>
+          <div className="mt-4 flex flex-wrap justify-center gap-2">
+            <Button asChild size="sm">
+              <Link href="/profile?step=preferences">Adjust preferences</Link>
+            </Button>
+            <Button asChild size="sm" variant="outline">
+              <Link href="/profile?step=academics">Update academics</Link>
+            </Button>
+          </div>
+        </div>
+      )}
     </DashboardShell>
   );
 }

@@ -1,8 +1,5 @@
 'use client';
 
-import { Select } from '@radix-ui/themes';
-import { cn } from '@/lib/utils';
-
 type CountryOption = {
   code: string;
   label: string;
@@ -51,25 +48,19 @@ interface HomeCountrySelectProps {
 
 export const HomeCountrySelect = ({ value, onChange, id, name }: HomeCountrySelectProps) => {
   return (
-    <Select.Root value={value || undefined} onValueChange={onChange} name={name} size="3">
-      <Select.Trigger
-        id={id}
-        className={cn(
-          'w-full rounded-full border border-input bg-background px-4 py-3 text-sm text-foreground shadow-sm hover:bg-accent hover:text-accent-foreground'
-        )}
-        radius="full"
-        placeholder="Select a country"
-      />
-      <Select.Content>
-        <Select.Group>
-          <Select.Label>Countries</Select.Label>
-          {COUNTRY_OPTIONS.map((country) => (
-            <Select.Item key={country.code} value={country.label}>
-              {country.label}
-            </Select.Item>
-          ))}
-        </Select.Group>
-      </Select.Content>
-    </Select.Root>
+    <select
+      id={id}
+      name={name}
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+      className="form-input"
+    >
+      <option value="">Select a country</option>
+      {COUNTRY_OPTIONS.map((country) => (
+        <option key={country.code} value={country.label}>
+          {country.label}
+        </option>
+      ))}
+    </select>
   );
 };

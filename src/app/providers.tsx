@@ -6,6 +6,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { NextIntlClientProvider } from 'next-intl';
 import { usePathname } from 'next/navigation';
 import { trackEvent } from '@/lib/analytics';
+import { ToastProvider } from '@/components/ui/toast';
 
 interface ProvidersProps {
   children: ReactNode;
@@ -18,9 +19,11 @@ export const Providers = ({ children, messages }: ProvidersProps) => {
   return (
     <NextIntlClientProvider locale="en" messages={messages}>
       <QueryClientProvider client={client}>
-        {children}
-        <AnalyticsBridge />
-        <ReactQueryDevtools initialIsOpen={false} />
+        <ToastProvider>
+          {children}
+          <AnalyticsBridge />
+          <ReactQueryDevtools initialIsOpen={false} />
+        </ToastProvider>
       </QueryClientProvider>
     </NextIntlClientProvider>
   );

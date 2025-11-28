@@ -25,6 +25,7 @@ export interface EnrichedMatch {
     country: string;
     rank_overall?: number | null;
     rank_source?: string | null;
+    requiresTest?: boolean | null;
   };
   score: number;
   breakdown: {
@@ -52,6 +53,11 @@ export const MatchList = ({ matches }: MatchListProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTiers, setSelectedTiers] = useState<MatchTier[]>(['Reach', 'Match', 'Safe']);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [quickFilters, setQuickFilters] = useState({
+    budgetFriendly: false,
+    englishOnly: false,
+    testOptional: false
+  });
 
   const { items: shortlist, addItem, removeItem } = useShortlist();
 
@@ -62,9 +68,12 @@ export const MatchList = ({ matches }: MatchListProps) => {
         !normalizedQuery ||
         `${match.program.name} ${match.university.name} ${match.university.country}`.toLowerCase().includes(normalizedQuery);
       const matchesTier = selectedTiers.includes(match.tier);
-      return matchesSearch && matchesTier;
+      const meetsBudget = !quickFilters.budgetFriendly || (match.program.tuition ?? Infinity) <= 40000;
+      const meetsLanguage = !quickFilters.englishOnly || (match.program.language ?? '').toLowerCase().includes('english');
+      const meetsTesting = !quickFilters.testOptional || match.university.requiresTest === false;
+      return matchesSearch && matchesTier && meetsBudget && meetsLanguage && meetsTesting;
     });
-  }, [matches, searchQuery, selectedTiers]);
+  }, [matches, searchQuery, selectedTiers, quickFilters]);
 
   const tierGroups = useMemo(() => {
     const accumulator: Record<MatchTier, EnrichedMatch[]> = {
@@ -110,6 +119,13 @@ export const MatchList = ({ matches }: MatchListProps) => {
         viewMode={viewMode}
         onViewModeChange={setViewMode}
         resultCount={filtered.length}
+        quickFilters={quickFilters}
+        onQuickFilterChange={(key) =>
+          setQuickFilters((prev) => ({
+            ...prev,
+            [key]: !prev[key]
+          }))
+        }
       />
 
       <section className="space-y-6">

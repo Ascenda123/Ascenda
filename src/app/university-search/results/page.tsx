@@ -23,6 +23,11 @@ export default function UniversitySearchResultsPage() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [selectedForComparison, setSelectedForComparison] = useState<PlaceholderResult[]>([]);
   const [isComparisonOpen, setIsComparisonOpen] = useState(false);
+  const [quickFilters, setQuickFilters] = useState({
+    budgetFriendly: false,
+    englishOnly: false,
+    testOptional: false
+  });
 
   const { items: shortlist, addItem, removeItem } = useShortlist();
 
@@ -99,6 +104,13 @@ export default function UniversitySearchResultsPage() {
           viewMode={viewMode}
           onViewModeChange={setViewMode}
           resultCount={filteredResults.length}
+          quickFilters={quickFilters}
+          onQuickFilterChange={(key) =>
+            setQuickFilters((prev) => ({
+              ...prev,
+              [key]: !prev[key]
+            }))
+          }
         />
 
         {filteredResults.length === 0 ? (

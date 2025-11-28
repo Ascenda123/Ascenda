@@ -140,7 +140,7 @@ export default async function DashboardPage() {
         const university = universityMap.get(result.universityId)!;
         return {
           program,
-          university,
+          university: { ...university, requiresTest: university.requiresTest },
           score: result.score,
           breakdown: result.breakdown,
           blockingReasons: result.blockingReasons,
@@ -239,7 +239,18 @@ export default async function DashboardPage() {
             {matches.length > 0 ? (
               <MatchList matches={matches} />
             ) : (
-              <p className="text-sm text-muted-foreground">Update your profile to receive tailored suggestions.</p>
+              <div className="space-y-3 text-sm text-muted-foreground">
+                <p className="text-base font-semibold text-foreground">No recommendations yet</p>
+                <p>Complete your profile and add preferred destinations to see personalized matches.</p>
+                <div className="flex flex-wrap gap-2">
+                  <Button asChild size="sm">
+                    <Link href="/profile">Finish profile</Link>
+                  </Button>
+                  <Button asChild size="sm" variant="outline">
+                    <Link href="/matches">See all matches</Link>
+                  </Button>
+                </div>
+              </div>
             )}
           </div>
         </div>

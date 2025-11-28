@@ -12,6 +12,12 @@ interface FilterBarProps {
     viewMode: 'grid' | 'list';
     onViewModeChange: (mode: 'grid' | 'list') => void;
     resultCount: number;
+    quickFilters: {
+        budgetFriendly: boolean;
+        englishOnly: boolean;
+        testOptional: boolean;
+    };
+    onQuickFilterChange: (key: keyof FilterBarProps['quickFilters']) => void;
 }
 
 const TIERS: MatchTier[] = ['Reach', 'Match', 'Safe'];
@@ -23,7 +29,9 @@ export function FilterBar({
     onTierChange,
     viewMode,
     onViewModeChange,
-    resultCount
+    resultCount,
+    quickFilters,
+    onQuickFilterChange
 }: FilterBarProps) {
     return (
         <div className="sticky top-4 z-20 mb-6 flex flex-col gap-4 rounded-[24px] border border-border bg-card/80 p-4 shadow-sm backdrop-blur-xl md:flex-row md:items-center md:justify-between">
@@ -68,6 +76,31 @@ export function FilterBar({
                             </button>
                         );
                     })}
+                    <div className="ml-2 flex items-center gap-2">
+                        {([
+                            { key: 'budgetFriendly', label: 'Budget' },
+                            { key: 'englishOnly', label: 'English' },
+                            { key: 'testOptional', label: 'Test-optional' }
+                        ] as const).map((filter) => {
+                            const active = quickFilters[filter.key];
+                            return (
+                                <button
+                                    key={filter.key}
+                                    onClick={() => onQuickFilterChange(filter.key)}
+                                    className={cn(
+                                        'flex h-9 items-center rounded-xl border px-3 text-xs font-semibold uppercase tracking-[0.2em] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:ring-offset-2 focus-visible:ring-offset-card',
+                                        active
+                                            ? 'border-primary bg-primary/10 text-primary'
+                                            : 'border-border bg-background text-muted-foreground hover:bg-muted'
+                                    )}
+                                    role="switch"
+                                    aria-checked={active}
+                                >
+                                    {filter.label}
+                                </button>
+                            );
+                        })}
+                    </div>
                 </div>
             </div>
 
