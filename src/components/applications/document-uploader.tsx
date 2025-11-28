@@ -49,12 +49,24 @@ export const DocumentUploader = ({ applicationId, taskId, onUpload }: DocumentUp
 
     if (!onUpload) {
       setIsUploading(true);
-      setStatus('Uploading…');
+    setStatus('Uploading…');
 
-      try {
-        const scope = applicationId ? `applications/${applicationId}` : 'unassigned';
-        const taskSegment = taskId ? `task-${taskId}/` : '';
-        const path = `${scope}/${taskSegment}${Date.now()}-${file.name.replace(/\s+/g, '-')}`;
+    try {
+      const {
+        data: { user },
+        error: userError
+      } = await supabase.auth.getUser();
+
+      if (userError || !user) {
+        setError('You need to be signed in to upload a document.');
+        setStatus(null);
+        return;
+      }
+
+      const scope = applicationId ? `applications/${applicationId}` : 'unassigned';
+      const taskSegment = taskId ? `task-${taskId}/` : '';
+      const ownerSegment = applicationId ? '' : `${user.id}/`;
+      const path = `${scope}/${ownerSegment}${taskSegment}${Date.now()}-${file.name.replace(/\s+/g, '-')}`;
         const { error: uploadError } = await supabase.storage.from(bucket).upload(path, file, {
           upsert: false,
           contentType: file.type || undefined

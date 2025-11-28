@@ -50,6 +50,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET=application-documents
+SUPABASE_PROJECT_ID=your-project-ref   # used by npm run supabase:types
 ```
 
 > ⚠️ Never expose the service role key to browsers. It is read in server-only contexts.
@@ -58,9 +59,13 @@ NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET=application-documents
 
 Run the schema and seed files using the Supabase SQL editor or CLI:
 
-1. Open `supabase/schema.sql` in the SQL editor and execute it to create tables, enums, and policies.
+1. Open `supabase/schema.sql` in the SQL editor and execute it to create tables, enums, policies, and the `application-documents` storage bucket with RLS.
 2. Run `supabase/seed.sql` to insert sample records.
-3. Optional edge function scaffolding is located in `supabase/functions/update_deadlines`.
+3. (Recommended) Regenerate types after applying schema updates:
+   ```bash
+   npx supabase gen types typescript --project-id <your-project-ref> --schema public,storage > src/lib/types/database.ts
+   ```
+4. Optional edge function scaffolding is located in `supabase/functions/update_deadlines`.
 
 ### Development
 
@@ -107,9 +112,11 @@ The admin console (`/admin`) includes a CSV import panel for `universities`, `pr
 | `npm run typecheck` | Static type checking |
 | `npm test` | Run Jest unit tests |
 | `npm run seed` | Helper placeholder reminding how to run SQL seed |
+| `npm run supabase:types` | Regenerate Supabase types (requires `SUPABASE_PROJECT_ID` and Supabase CLI) |
 
 ## Plan & Assumptions
 
 - The matching engine works with normalized Supabase records; additional indexes and materialized views may improve performance in production.
-- Storage bucket policies for document uploads must be configured directly within Supabase.
+- Storage bucket `application-documents` is created via `supabase/schema.sql` with RLS policies aligned to application ownership; keep `NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET` in sync if you rename it.
+- Regenerate `src/lib/types/database.ts` whenever the Supabase schema changes to maintain typed queries.
 - Edge function deployment (`update_deadlines`) requires the Supabase CLI and service-role key.

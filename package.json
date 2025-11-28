@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test": "jest",
     "test:watch": "jest --watch",
-    "seed": "echo 'Run supabase/schema.sql and supabase/seed.sql via Supabase SQL editor'"
+    "seed": "echo 'Run supabase/schema.sql and supabase/seed.sql via Supabase SQL editor'",
+    "supabase:types": "supabase gen types typescript --project-id $SUPABASE_PROJECT_ID --schema public,storage > src/lib/types/database.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "3.3.4",

@@ -339,3 +339,123 @@ create policy documents_self on documents
     )
   );
 create policy documents_admin on documents using (auth_role() = 'admin');
+
+-- Storage bucket and policies for application documents
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values (
+  'application-documents',
+  'application-documents',
+  false,
+  20971520, -- 20 MB
+  array['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
+)
+on conflict (id) do update
+set public = excluded.public,
+    file_size_limit = excluded.file_size_limit,
+    allowed_mime_types = excluded.allowed_mime_types;
+
+alter table storage.objects enable row level security;
+
+drop policy if exists application_documents_read on storage.objects;
+drop policy if exists application_documents_insert on storage.objects;
+drop policy if exists application_documents_update on storage.objects;
+drop policy if exists application_documents_delete on storage.objects;
+drop policy if exists application_documents_admin on storage.objects;
+
+create policy application_documents_read on storage.objects
+  for select using (
+    bucket_id = 'application-documents'
+    and (
+      (
+        split_part(name, '/', 1) = 'applications'
+        and exists (
+          select 1 from applications a
+          where a.id::text = split_part(name, '/', 2)
+            and a.profile_id = auth.uid()
+        )
+      )
+      or (
+        split_part(name, '/', 1) = 'unassigned'
+        and split_part(name, '/', 2) = auth.uid()::text
+      )
+    )
+  );
+
+create policy application_documents_insert on storage.objects
+  for insert with check (
+    bucket_id = 'application-documents'
+    and (
+      (
+        split_part(name, '/', 1) = 'applications'
+        and exists (
+          select 1 from applications a
+          where a.id::text = split_part(name, '/', 2)
+            and a.profile_id = auth.uid()
+        )
+      )
+      or (
+        split_part(name, '/', 1) = 'unassigned'
+        and split_part(name, '/', 2) = auth.uid()::text
+      )
+    )
+  );
+
+create policy application_documents_update on storage.objects
+  for update using (
+    bucket_id = 'application-documents'
+    and (
+      (
+        split_part(name, '/', 1) = 'applications'
+        and exists (
+          select 1 from applications a
+          where a.id::text = split_part(name, '/', 2)
+            and a.profile_id = auth.uid()
+        )
+      )
+      or (
+        split_part(name, '/', 1) = 'unassigned'
+        and split_part(name, '/', 2) = auth.uid()::text
+      )
+    )
+  ) with check (
+    bucket_id = 'application-documents'
+    and (
+      (
+        split_part(name, '/', 1) = 'applications'
+        and exists (
+          select 1 from applications a
+          where a.id::text = split_part(name, '/', 2)
+            and a.profile_id = auth.uid()
+        )
+      )
+      or (
+        split_part(name, '/', 1) = 'unassigned'
+        and split_part(name, '/', 2) = auth.uid()::text
+      )
+    )
+  );
+
+create policy application_documents_delete on storage.objects
+  for delete using (
+    bucket_id = 'application-documents'
+    and (
+      (
+        split_part(name, '/', 1) = 'applications'
+        and exists (
+          select 1 from applications a
+          where a.id = split_part(name, '/', 2)
+            and a.profile_id = auth.uid()
+        )
+      )
+      or (
+        split_part(name, '/', 1) = 'unassigned'
+        and split_part(name, '/', 2) = auth.uid()::text
+      )
+    )
+  );
+
+create policy application_documents_admin on storage.objects
+  using (
+    bucket_id = 'application-documents'
+    and public.auth_role() = 'admin'
+  );
