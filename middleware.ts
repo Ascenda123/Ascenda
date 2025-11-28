@@ -30,6 +30,12 @@ export async function middleware(req: NextRequest) {
     if (!session) {
       return false;
     }
+
+    const cachedUserId = req.cookies.get('onboarding_complete')?.value;
+    if (cachedUserId === session.user.id) {
+      return false;
+    }
+
     const [profileResponse, academicsResponse, preferencesResponse, aspirationsResponse] = await Promise.all([
       supabase.from('profiles').select('full_name,country,time_zone').eq('id', session.user.id).maybeSingle(),
       supabase.from('student_academics').select('curriculum').eq('profile_id', session.user.id).maybeSingle(),
@@ -44,7 +50,16 @@ export async function middleware(req: NextRequest) {
       aspirations: aspirationsResponse.data ?? null
     };
 
-    return !isProfileComplete(completionRecords);
+    const needsOnboarding = !isProfileComplete(completionRecords);
+
+    if (!needsOnboarding) {
+      res.cookies.set('onboarding_complete', session.user.id, {
+        path: '/',
+        maxAge: 60 * 60 * 24 * 7
+      });
+    }
+
+    return needsOnboarding;
   };
 
   if (!session && isProtected) {

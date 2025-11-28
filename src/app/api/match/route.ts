@@ -49,11 +49,20 @@ export async function GET(request: NextRequest) {
   const weightTotal = weights.eligibility + weights.academicFit + weights.preferenceFit + weights.outcomes;
   const safeWeights = weightTotal > 0 ? weights : defaultWeights;
 
-  const [{ data: academicsData }, { data: preferencesData }, { data: aspirationsData }] = await Promise.all([
+  const [
+    { data: academicsData, error: academicsError },
+    { data: preferencesData, error: preferencesError },
+    { data: aspirationsData, error: aspirationsError }
+  ] = await Promise.all([
     supabase.from('student_academics').select('*').eq('profile_id', user.id).single(),
     supabase.from('student_preferences').select('*').eq('profile_id', user.id).single(),
     supabase.from('student_aspirations').select('*').eq('profile_id', user.id).single()
   ]);
+
+  if (academicsError || preferencesError || aspirationsError) {
+    const message = academicsError?.message ?? preferencesError?.message ?? aspirationsError?.message ?? 'Failed to load profile data';
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 
   if (!academicsData || !preferencesData || !aspirationsData) {
     return NextResponse.json({ matches: [] });
@@ -64,11 +73,30 @@ export async function GET(request: NextRequest) {
   const preferences: StudentPreferences = mapPreferencesRow(preferencesData);
   const aspirations: StudentAspirations = mapAspirationsRow(aspirationsData);
 
-  const [{ data: programsData }, { data: universitiesData }, { data: requirementsData }] = await Promise.all([
-    supabase.from('programs').select('*'),
-    supabase.from('universities').select('*'),
-    supabase.from('program_requirements').select('*')
+  const [
+    { data: programsData, error: programsError },
+    { data: universitiesData, error: universitiesError },
+    { data: requirementsData, error: requirementsError }
+  ] = await Promise.all([
+    supabase
+      .from('programs')
+      .select(
+        'id,name,field,level,duration_years,language,mode,intake_months,tuition,currency,url,university_id'
+      ),
+    supabase
+      .from('universities')
+      .select('id,name,country,region,rank_overall,rank_source,acceptance_rate,requires_test'),
+    supabase
+      .from('program_requirements')
+      .select(
+        'program_id,curriculum,min_gpa,min_ib_total,min_sat,min_act,required_subjects,language_tests,other_requirements'
+      )
   ]);
+
+  if (programsError || universitiesError || requirementsError) {
+    const message = programsError?.message ?? universitiesError?.message ?? requirementsError?.message ?? 'Failed to load catalog data';
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 
   if (!programsData || !universitiesData) {
     return NextResponse.json({ matches: [] });

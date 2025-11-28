@@ -28,13 +28,17 @@ export const savePersonalStep = async (values: ProfilePersonalValues) => {
   const parsed = profilePersonalSchema.parse(values);
   const { supabase, userId } = await ensureUser();
 
-  await supabase.from('profiles').upsert({
+  const { error } = await supabase.from('profiles').upsert({
     id: userId,
     full_name: parsed.fullName,
     country: parsed.country,
     locale: parsed.locale,
     time_zone: parsed.timeZone
   });
+
+  if (error) {
+    throw new Error(error.message);
+  }
 
   revalidatePath('/profile');
   return { success: true };
@@ -44,7 +48,7 @@ export const saveAcademicsStep = async (values: ProfileAcademicsValues) => {
   const parsed = profileAcademicsSchema.parse(values);
   const { supabase, userId } = await ensureUser();
 
-  await supabase.from('student_academics').upsert({
+  const { error } = await supabase.from('student_academics').upsert({
     profile_id: userId,
     curriculum: parsed.curriculum,
     gpa: parsed.gpa,
@@ -56,6 +60,10 @@ export const saveAcademicsStep = async (values: ProfileAcademicsValues) => {
     subject_grades: parsed.subjectGrades
   });
 
+  if (error) {
+    throw new Error(error.message);
+  }
+
   revalidatePath('/profile');
   return { success: true };
 };
@@ -64,7 +72,7 @@ export const savePreferencesStep = async (values: ProfilePreferencesValues) => {
   const parsed = profilePreferencesSchema.parse(values);
   const { supabase, userId } = await ensureUser();
 
-  await supabase.from('student_preferences').upsert({
+  const { error } = await supabase.from('student_preferences').upsert({
     profile_id: userId,
     budget_min: parsed.budgetMin,
     budget_max: parsed.budgetMax,
@@ -77,6 +85,10 @@ export const savePreferencesStep = async (values: ProfilePreferencesValues) => {
     delivery: parsed.delivery
   });
 
+  if (error) {
+    throw new Error(error.message);
+  }
+
   revalidatePath('/profile');
   return { success: true };
 };
@@ -85,12 +97,16 @@ export const saveAspirationsStep = async (values: ProfileAspirationsValues) => {
   const parsed = profileAspirationsSchema.parse(values);
   const { supabase, userId } = await ensureUser();
 
-  await supabase.from('student_aspirations').upsert({
+  const { error } = await supabase.from('student_aspirations').upsert({
     profile_id: userId,
     target_fields: parsed.targetFields,
     job_titles: parsed.jobTitles,
     notes: parsed.notes
   });
+
+  if (error) {
+    throw new Error(error.message);
+  }
 
   revalidatePath('/profile');
   return { success: true };
