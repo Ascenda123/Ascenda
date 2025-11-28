@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { cookies } from 'next/headers';
 import { createServerActionSupabaseClient } from '@/lib/supabase/server';
 import {
   profilePersonalSchema,
@@ -24,6 +25,15 @@ const ensureUser = async () => {
   return { supabase, userId: user.id };
 };
 
+const clearOnboardingCache = () => {
+  cookies().set('onboarding_complete', '', {
+    path: '/',
+    maxAge: 0,
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production'
+  });
+};
+
 export const savePersonalStep = async (values: ProfilePersonalValues) => {
   const parsed = profilePersonalSchema.parse(values);
   const { supabase, userId } = await ensureUser();
@@ -40,6 +50,7 @@ export const savePersonalStep = async (values: ProfilePersonalValues) => {
     throw new Error(error.message);
   }
 
+  clearOnboardingCache();
   revalidatePath('/profile');
   return { success: true };
 };
@@ -64,6 +75,7 @@ export const saveAcademicsStep = async (values: ProfileAcademicsValues) => {
     throw new Error(error.message);
   }
 
+  clearOnboardingCache();
   revalidatePath('/profile');
   return { success: true };
 };
@@ -89,6 +101,7 @@ export const savePreferencesStep = async (values: ProfilePreferencesValues) => {
     throw new Error(error.message);
   }
 
+  clearOnboardingCache();
   revalidatePath('/profile');
   return { success: true };
 };
@@ -108,6 +121,7 @@ export const saveAspirationsStep = async (values: ProfileAspirationsValues) => {
     throw new Error(error.message);
   }
 
+  clearOnboardingCache();
   revalidatePath('/profile');
   return { success: true };
 };

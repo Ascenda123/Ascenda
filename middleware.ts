@@ -55,7 +55,9 @@ export async function middleware(req: NextRequest) {
     if (!needsOnboarding) {
       res.cookies.set('onboarding_complete', session.user.id, {
         path: '/',
-        maxAge: 60 * 60 * 24 * 7
+        maxAge: 60 * 60 * 24 * 7,
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production'
       });
     }
 
