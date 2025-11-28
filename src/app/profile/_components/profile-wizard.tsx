@@ -319,14 +319,6 @@ export const ProfileWizard = ({
   return (
     <div className="grid form-grid form-flow text-foreground lg:grid-cols-[320px,1fr]">
       <aside className="form-stack">
-        <Button
-          asChild
-          size="sm"
-          variant="secondary"
-          className="w-full border border-border bg-background text-foreground shadow-[0_10px_30px_rgba(15,23,42,0.12)] hover:shadow-[0_14px_34px_rgba(15,23,42,0.18)] uppercase tracking-[0.2em]"
-        >
-          <Link href="/profile?onboarding=true">Start profile wizard</Link>
-        </Button>
         <div className="form-panel form-panel--quiet form-stack">
           <h2 className="text-xl font-semibold">Onboarding progress</h2>
           <ol className="form-stack">
@@ -377,19 +369,19 @@ export const ProfileWizard = ({
         </div>
       </aside>
       <div className="form-panel form-panel--roomy form-stack">
-        <div className="sticky top-0 z-10 -mx-6 -mt-6 mb-4 flex items-center justify-between gap-3 rounded-t-[28px] border-b border-border bg-card/90 px-6 py-3 backdrop-blur">
-          <div className="space-y-1">
+        <div className="sticky top-0 z-10 -mx-6 -mt-6 mb-4 grid grid-cols-[1fr,auto] items-center gap-4 rounded-t-[28px] border-b border-border bg-card/90 px-6 py-3 backdrop-blur">
+          <div className="space-y-1 min-w-0">
             <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">
               Profile progress
             </p>
             <div className="flex items-center gap-3">
-              <div className="h-2 w-40 rounded-full bg-muted">
+              <div className="h-2 w-full rounded-full bg-muted">
                 <div className="h-2 rounded-full bg-primary transition-all" style={{ width: `${completionPercent}%` }} />
               </div>
               <span className="text-xs font-semibold text-foreground">{completionPercent}%</span>
             </div>
           </div>
-          <div className="rounded-full bg-muted/60 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">
+          <div className="flex-shrink-0 rounded-full bg-muted/60 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">
             {completedSteps}/{PROFILE_STEPS.length} steps
           </div>
         </div>
