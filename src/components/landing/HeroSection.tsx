@@ -3,7 +3,8 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { motion, type Variants } from 'framer-motion';
+import type React from 'react';
+import { motion, type Variants, useMotionValue, useTransform } from 'framer-motion';
 import {
     Activity,
     ClipboardList,
@@ -25,14 +26,19 @@ const fadeIn: Variants = {
     visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: 'easeOut' } }
 };
 
-const heroBoardVariants: Variants = {
-    hidden: { opacity: 0, scale: 0.9, y: 20 },
+const dashboardContainerVariants: Variants = {
+    hidden: { opacity: 0, y: 20, scale: 0.98 },
     visible: {
         opacity: 1,
-        scale: 1,
         y: 0,
-        transition: { duration: 0.9, ease: [0.16, 1, 0.3, 1], delay: 0.15 }
+        scale: 1,
+        transition: { duration: 0.8, ease: 'easeOut', staggerChildren: 0.12, delayChildren: 0.25 }
     }
+};
+
+const dashboardItemVariants: Variants = {
+    hidden: { opacity: 0, y: 10 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.55, ease: 'easeOut' } }
 };
 
 export function HeroSection() {
@@ -41,6 +47,23 @@ export function HeroSection() {
     const [launchHref, setLaunchHref] = useState('/signup');
     const supabase = useSupabase();
     const { mode } = useThemeMode();
+    const x = useMotionValue(0);
+    const y = useMotionValue(0);
+    const rotateX = useTransform(y, [-80, 80], [10, -10]);
+    const rotateY = useTransform(x, [-120, 120], [-12, 12]);
+
+    function handleMouseMove(event: React.MouseEvent<HTMLDivElement>) {
+        const { left, top, width, height } = event.currentTarget.getBoundingClientRect();
+        const centerX = left + width / 2;
+        const centerY = top + height / 2;
+        x.set(event.clientX - centerX);
+        y.set(event.clientY - centerY);
+    }
+
+    function handleMouseLeave() {
+        x.set(0);
+        y.set(0);
+    }
 
     useEffect(() => {
         let index = 0;
@@ -51,11 +74,9 @@ export function HeroSection() {
                 setIsTypingDone(true);
                 window.clearInterval(timer);
             }
-        }, 30);
+        }, 28);
 
-        return () => {
-            window.clearInterval(timer);
-        };
+        return () => window.clearInterval(timer);
     }, []);
 
     useEffect(() => {
@@ -86,12 +107,19 @@ export function HeroSection() {
         };
     }, [supabase]);
 
-    const heroRevealClass = isTypingDone ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2';
-    const displayedHeadline = typedHeadline || ' ';
-
     return (
         <section className="relative min-h-[75vh] overflow-hidden">
             <div className="absolute inset-0">
+                <motion.div
+                    className="absolute -left-24 top-[-15%] h-[55vw] w-[55vw] rounded-full bg-indigo-500/25 blur-3xl"
+                    animate={{ x: [0, 50, -40, 0], y: [0, 30, 10, 0], opacity: [0.22, 0.32, 0.22] }}
+                    transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut' }}
+                />
+                <motion.div
+                    className="absolute -right-24 bottom-[-20%] h-[45vw] w-[45vw] rounded-full bg-emerald-400/20 blur-3xl"
+                    animate={{ x: [0, -60, 40, 0], y: [0, -20, 30, 0], rotate: [0, 5, -5, 0], opacity: [0.18, 0.28, 0.18] }}
+                    transition={{ duration: 24, repeat: Infinity, ease: 'easeInOut' }}
+                />
                 <Image
                     src="/Ascenda Banner.png"
                     alt="Ascenda hero banner"
@@ -157,26 +185,43 @@ export function HeroSection() {
                         >
                             <div className="space-y-6">
                                 <p className="text-xs uppercase tracking-[0.5em] text-accent">Admissions OS</p>
-                                <h1
-                                    className="text-5xl font-heading font-semibold leading-tight tracking-tight text-foreground sm:text-[3.6rem]"
-                                    aria-label={heroHeadline}
+                                <motion.div
+                                    initial={{ opacity: 0.7, scale: 0.98, y: 10 }}
+                                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                                    transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
                                 >
-                                    <span className="text-foreground">{displayedHeadline}</span>
-                                    <span
-                                        aria-hidden
-                                        className={`ml-2 inline-block h-[1.1em] w-px bg-accent align-middle transition-opacity duration-300 ${isTypingDone ? 'opacity-0' : 'opacity-100 animate-pulse'
-                                            }`}
-                                    />
-                                </h1>
-                                <p
-                                    className={`text-lg text-muted-foreground sm:text-xl transition-all duration-500 ease-out ${heroRevealClass}`}
-                                    style={{ transitionDelay: isTypingDone ? '120ms' : '0ms' }}
-                                >
-                                    Get matched to the right universities and courses, unlock real campus insights, and receive a tailored application plan in one modern workspace.
-                                </p>
-                                <div
-                                    className={`flex flex-wrap gap-3 transition-all duration-500 ease-out ${heroRevealClass}`}
-                                    style={{ transitionDelay: isTypingDone ? '200ms' : '0ms' }}
+                                    <motion.h1
+                                        className="text-5xl font-heading font-semibold leading-tight tracking-tight text-foreground sm:text-[3.6rem]"
+                                        aria-label={heroHeadline}
+                                        initial="hidden"
+                                        animate="visible"
+                                        variants={fadeIn}
+                                    >
+                                        <span className="inline-block">
+                                            {typedHeadline || ' '}
+                                            <span
+                                                aria-hidden
+                                                className={`ml-1 inline-block h-[1.1em] w-px bg-accent align-middle ${isTypingDone ? 'animate-pulse' : 'animate-pulse'
+                                                    }`}
+                                            />
+                                        </span>
+                                    </motion.h1>
+                                    <motion.p
+                                        className="mt-4 text-lg text-muted-foreground sm:text-xl"
+                                        variants={fadeIn}
+                                        initial="hidden"
+                                        animate={isTypingDone ? 'visible' : 'hidden'}
+                                        transition={{ delay: 0.55 }}
+                                    >
+                                        Get matched to the right universities and courses, unlock real campus insights, and receive a tailored application plan in one modern workspace.
+                                    </motion.p>
+                                </motion.div>
+                                <motion.div
+                                    className="flex flex-wrap gap-3"
+                                    variants={fadeIn}
+                                    initial="hidden"
+                                    animate={isTypingDone ? 'visible' : 'hidden'}
+                                    transition={{ delay: 0.9 }}
                                 >
                                     <Button
                                         asChild
@@ -193,10 +238,13 @@ export function HeroSection() {
                                     >
                                         <Link href="/download">See product tour</Link>
                                     </Button>
-                                </div>
-                                <ul
-                                    className={`flex flex-wrap gap-4 text-sm text-muted-foreground transition-all duration-500 ease-out ${heroRevealClass}`}
-                                    style={{ transitionDelay: isTypingDone ? '260ms' : '0ms' }}
+                                </motion.div>
+                                <motion.ul
+                                    className="flex flex-wrap gap-4 text-sm text-muted-foreground"
+                                    variants={fadeIn}
+                                    initial="hidden"
+                                    animate={isTypingDone ? 'visible' : 'hidden'}
+                                    transition={{ delay: 0.7 }}
                                 >
                                     <li className="flex items-center gap-2">
                                         <span className="h-1.5 w-1.5 rounded-full bg-accent" />
@@ -210,15 +258,22 @@ export function HeroSection() {
                                         <span className="h-1.5 w-1.5 rounded-full bg-accent" />
                                         Timeline nudges prevent deadline drift.
                                     </li>
-                                </ul>
+                                </motion.ul>
                             </div>
                             <motion.div
                                 className="rounded-[36px] border border-border bg-card/50 p-6 text-card-foreground shadow-2xl backdrop-blur-xl"
                                 initial="hidden"
                                 animate={isTypingDone ? 'visible' : 'hidden'}
-                                variants={heroBoardVariants}
+                                variants={dashboardContainerVariants}
+                                onMouseMove={handleMouseMove}
+                                onMouseLeave={handleMouseLeave}
+                                transition={{ delay: 1.05, staggerChildren: 0.1, delayChildren: 0.15 }}
+                                style={{ rotateX, rotateY, transformStyle: 'preserve-3d', transformPerspective: 1200 }}
                             >
-                                <div className="flex items-center justify-between gap-4 text-[0.7rem] uppercase tracking-[0.4em] text-muted-foreground">
+                                <motion.div
+                                    className="flex items-center justify-between gap-4 text-[0.7rem] uppercase tracking-[0.4em] text-muted-foreground"
+                                    variants={dashboardItemVariants}
+                                >
                                     <span className="flex items-center gap-2 text-foreground">
                                         <LayoutDashboard className="h-4 w-4 text-accent" />
                                         Ascenda board
@@ -237,9 +292,12 @@ export function HeroSection() {
                                             Notes
                                         </span>
                                     </div>
-                                </div>
+                                </motion.div>
                                 <div className="mt-6 space-y-4">
-                                    <div className="rounded-[24px] border border-border bg-card/70 px-5 py-4">
+                                    <motion.div
+                                        className="rounded-[24px] border border-border bg-card/70 px-5 py-4"
+                                        variants={dashboardItemVariants}
+                                    >
                                         <div className="flex items-center justify-between">
                                             <p className="text-xs uppercase tracking-[0.35em] text-muted-foreground">Fit score</p>
                                             <span className="text-xs uppercase tracking-[0.3em] text-emerald-400">On target</span>
@@ -249,11 +307,19 @@ export function HeroSection() {
                                             <p className="text-sm text-muted-foreground">Parsons Paris · Strategic Design</p>
                                         </div>
                                         <div className="mt-3 h-2 rounded-full bg-muted/60">
-                                            <div className="h-full rounded-full bg-gradient-to-r from-blue-600 via-indigo-500 to-emerald-400 shadow-[0_0_15px_rgba(52,211,153,0.5)]" style={{ width: '92%' }} />
+                                            <motion.div
+                                                className="h-full rounded-full bg-gradient-to-r from-blue-600 via-indigo-500 to-emerald-400 shadow-[0_0_15px_rgba(52,211,153,0.5)]"
+                                                initial={{ width: 0 }}
+                                                animate={{ width: '92%' }}
+                                                transition={{ delay: 1.35, duration: 1.1, ease: 'easeOut' }}
+                                            />
                                         </div>
-                                    </div>
+                                    </motion.div>
                                     <div className="grid gap-3 md:grid-cols-2">
-                                        <div className="rounded-[24px] border border-border bg-card/70 px-5 py-4">
+                                        <motion.div
+                                            className="rounded-[24px] border border-border bg-card/70 px-5 py-4"
+                                            variants={dashboardItemVariants}
+                                        >
                                             <p className="text-xs uppercase tracking-[0.35em] text-muted-foreground">Next actions</p>
                                             <ul className="mt-3 space-y-2 text-sm text-foreground">
                                                 <li className="flex items-center justify-between">
@@ -275,8 +341,11 @@ export function HeroSection() {
                                                     </span>
                                                 </li>
                                             </ul>
-                                        </div>
-                                        <div className="rounded-[24px] border border-border bg-card/70 px-5 py-4">
+                                        </motion.div>
+                                        <motion.div
+                                            className="rounded-[24px] border border-border bg-card/70 px-5 py-4"
+                                            variants={dashboardItemVariants}
+                                        >
                                             <p className="text-xs uppercase tracking-[0.35em] text-muted-foreground">Notes sync</p>
                                             <div className="mt-3 space-y-2 text-sm text-foreground">
                                                 <p className="text-base font-medium leading-relaxed">
@@ -288,9 +357,12 @@ export function HeroSection() {
                                                     <span className="">2h ago</span>
                                                 </div>
                                             </div>
-                                        </div>
+                                        </motion.div>
                                     </div>
-                                    <div className="rounded-[24px] border border-border px-5 py-4 bg-card/70">
+                                    <motion.div
+                                        className="rounded-[24px] border border-border px-5 py-4 bg-card/70"
+                                        variants={dashboardItemVariants}
+                                    >
                                         <p className="text-xs uppercase tracking-[0.35em] text-muted-foreground">Active signals</p>
                                         <div className="mt-3 grid gap-3 text-sm text-muted-foreground md:grid-cols-3">
                                             <div>
@@ -306,13 +378,16 @@ export function HeroSection() {
                                                 <p className="text-xs uppercase tracking-[0.3em]">Scholarship</p>
                                             </div>
                                         </div>
-                                    </div>
+                                    </motion.div>
                                 </div>
-                                <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                                <motion.div
+                                    className="mt-4 flex flex-wrap items-center gap-3 text-xs text-muted-foreground"
+                                    variants={dashboardItemVariants}
+                                >
                                     <span>Updated 1 min ago</span>
                                     <span className="h-px flex-1 bg-muted/60"></span>
                                     <span>View timeline →</span>
-                                </div>
+                                </motion.div>
                             </motion.div>
                         </motion.div>
                     </section>
