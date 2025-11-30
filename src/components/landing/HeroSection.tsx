@@ -7,6 +7,7 @@ import type React from 'react';
 import { motion, type Variants, useMotionValue, useTransform } from 'framer-motion';
 import {
     Activity,
+    ChevronDown,
     ClipboardList,
     Laptop,
     LayoutDashboard,
@@ -184,7 +185,17 @@ export function HeroSection() {
                             variants={fadeIn}
                         >
                             <div className="space-y-6">
-                                <p className="text-xs uppercase tracking-[0.5em] text-accent">Admissions OS</p>
+                                <div className="space-y-2">
+                                    <p className="text-xs uppercase tracking-[0.5em] text-accent">Admissions OS</p>
+                                    <motion.p
+                                        className="text-sm font-medium text-foreground/80"
+                                        initial={{ opacity: 0, y: 8 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ duration: 0.6, delay: 0.1 }}
+                                    >
+                                        You are closer than you think—let&apos;s finish your applications.
+                                    </motion.p>
+                                </div>
                                 <motion.div
                                     initial={{ opacity: 0.7, scale: 0.98, y: 10 }}
                                     animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -279,18 +290,30 @@ export function HeroSection() {
                                         Ascenda board
                                     </span>
                                     <div className="flex gap-2">
-                                        <span className="flex items-center gap-1 rounded-full border border-border bg-card/70 px-3 py-0.5 text-[0.55rem] text-foreground">
+                                        <motion.span
+                                            className="flex items-center gap-1 rounded-full border border-border bg-card/70 px-3 py-0.5 text-[0.55rem] text-foreground"
+                                            animate={isTypingDone ? { scale: [1, 1.06, 1], opacity: [0.8, 1, 0.8] } : undefined}
+                                            transition={{ duration: 1.2, delay: 1.4, repeat: 1 }}
+                                        >
                                             <ClipboardList className="h-3.5 w-3.5 text-blue-300" />
                                             Plan
-                                        </span>
-                                        <span className="flex items-center gap-1 rounded-full border border-border bg-card/70 px-3 py-0.5 text-[0.55rem] text-foreground">
+                                        </motion.span>
+                                        <motion.span
+                                            className="flex items-center gap-1 rounded-full border border-border bg-card/70 px-3 py-0.5 text-[0.55rem] text-foreground"
+                                            animate={isTypingDone ? { scale: [1, 1.06, 1], opacity: [0.8, 1, 0.8] } : undefined}
+                                            transition={{ duration: 1.2, delay: 1.6, repeat: 1 }}
+                                        >
                                             <Activity className="h-3.5 w-3.5 text-emerald-300" />
                                             Signals
-                                        </span>
-                                        <span className="flex items-center gap-1 rounded-full border border-border bg-card/70 px-3 py-0.5 text-[0.55rem] text-foreground">
+                                        </motion.span>
+                                        <motion.span
+                                            className="flex items-center gap-1 rounded-full border border-border bg-card/70 px-3 py-0.5 text-[0.55rem] text-foreground"
+                                            animate={isTypingDone ? { scale: [1, 1.06, 1], opacity: [0.8, 1, 0.8] } : undefined}
+                                            transition={{ duration: 1.2, delay: 1.8, repeat: 1 }}
+                                        >
                                             <NotebookPen className="h-3.5 w-3.5 text-amber-300" />
                                             Notes
-                                        </span>
+                                        </motion.span>
                                     </div>
                                 </motion.div>
                                 <div className="mt-6 space-y-4">
@@ -313,6 +336,19 @@ export function HeroSection() {
                                                 animate={{ width: '92%' }}
                                                 transition={{ delay: 1.35, duration: 1.1, ease: 'easeOut' }}
                                             />
+                                            <motion.div
+                                                className="absolute inset-0 overflow-hidden rounded-full"
+                                                initial={false}
+                                                animate={isTypingDone ? { opacity: [0, 1, 0] } : { opacity: 0 }}
+                                                transition={{ delay: 2.6, duration: 1.2 }}
+                                            >
+                                                <motion.div
+                                                    className="h-full w-1/3 bg-white/50 blur-sm"
+                                                    initial={{ x: '-120%' }}
+                                                    animate={{ x: '160%' }}
+                                                    transition={{ duration: 1.2, ease: 'easeInOut', delay: 2.6 }}
+                                                />
+                                            </motion.div>
                                         </div>
                                     </motion.div>
                                     <div className="grid gap-3 md:grid-cols-2">
@@ -388,6 +424,19 @@ export function HeroSection() {
                                     <span className="h-px flex-1 bg-muted/60"></span>
                                     <span>View timeline →</span>
                                 </motion.div>
+                            </motion.div>
+                        </motion.div>
+                        <motion.div
+                            className="flex justify-center pt-2 text-muted-foreground"
+                            initial={{ opacity: 0, y: -4 }}
+                            animate={isTypingDone ? { opacity: 0.9, y: 0 } : { opacity: 0, y: -4 }}
+                            transition={{ delay: 1.3, duration: 0.6, ease: 'easeOut' }}
+                        >
+                            <motion.div
+                                animate={{ y: [0, 6, 0], opacity: [0.9, 0.5, 0.9] }}
+                                transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                            >
+                                <ChevronDown className="h-5 w-5" />
                             </motion.div>
                         </motion.div>
                     </section>
