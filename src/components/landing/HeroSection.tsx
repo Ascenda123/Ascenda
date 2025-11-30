@@ -67,6 +67,7 @@ export function HeroSection() {
     const [typedHeadline, setTypedHeadline] = useState('');
     const [isTypingDone, setIsTypingDone] = useState(false);
     const [storyReady, setStoryReady] = useState(false);
+    const [fitScore, setFitScore] = useState(0);
     const [launchHref, setLaunchHref] = useState('/signup');
     const supabase = useSupabase();
     const { mode } = useThemeMode();
@@ -93,6 +94,38 @@ export function HeroSection() {
         const timer = window.setTimeout(() => setStoryReady(true), 560);
         return () => window.clearTimeout(timer);
     }, []);
+
+    useEffect(() => {
+        let frameId: number;
+        let timeoutId: number;
+        const target = 92;
+        const duration = 1500;
+
+        if (!isTypingDone) {
+            setFitScore(0);
+            return;
+        }
+
+        const animateCount = (startTime: number) => {
+            frameId = window.requestAnimationFrame((timestamp) => {
+                const progress = Math.min(1, (timestamp - startTime) / duration);
+                setFitScore(Math.round(progress * target));
+                if (progress < 1) {
+                    animateCount(startTime);
+                }
+            });
+        };
+
+        timeoutId = window.setTimeout(() => {
+            const start = performance.now();
+            animateCount(start);
+        }, 250);
+
+        return () => {
+            if (timeoutId) window.clearTimeout(timeoutId);
+            if (frameId) window.cancelAnimationFrame(frameId);
+        };
+    }, [isTypingDone]);
 
     useEffect(() => {
         let isActive = true;
@@ -337,27 +370,27 @@ export function HeroSection() {
                                             <span className="text-xs uppercase tracking-[0.3em] text-emerald-400">On target</span>
                                         </div>
                                         <div className="mt-2 flex items-end justify-between">
-                                            <p className="text-4xl font-semibold text-foreground">92%</p>
+                                            <p className="text-4xl font-semibold text-foreground">{fitScore}%</p>
                                             <p className="text-sm text-muted-foreground">Parsons Paris · Strategic Design</p>
                                         </div>
                                         <div className="mt-3 h-2 rounded-full bg-muted/60">
                                             <motion.div
                                                 className="h-full rounded-full bg-gradient-to-r from-blue-600 via-indigo-500 to-emerald-400 shadow-[0_0_15px_rgba(52,211,153,0.5)]"
                                                 initial={{ width: 0 }}
-                                                animate={{ width: '92%' }}
-                                                transition={{ delay: 1.45, duration: 1.15, ease: 'easeOut' }}
+                                                animate={{ width: isTypingDone ? '92%' : 0 }}
+                                                transition={{ delay: isTypingDone ? 0.25 : 0, duration: 1.5, ease: 'easeOut' }}
                                             />
                                             <motion.div
                                                 className="absolute inset-0 overflow-hidden rounded-full"
                                                 initial={false}
                                                 animate={isTypingDone ? { opacity: [0, 1, 0] } : { opacity: 0 }}
-                                                transition={{ delay: 2.75, duration: 1.1 }}
+                                                transition={{ delay: 2.0, duration: 1.05 }}
                                             >
                                                 <motion.div
                                                     className="h-full w-1/3 bg-white/50 blur-sm"
                                                     initial={{ x: '-120%' }}
                                                     animate={{ x: '160%' }}
-                                                    transition={{ duration: 1.1, ease: 'easeInOut', delay: 2.75 }}
+                                                    transition={{ duration: 1.05, ease: 'easeInOut', delay: 2.0 }}
                                                 />
                                             </motion.div>
                                         </div>
