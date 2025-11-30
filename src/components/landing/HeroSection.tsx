@@ -99,7 +99,8 @@ export function HeroSection() {
         let frameId: number;
         let timeoutId: number;
         const target = 92;
-        const duration = 1500;
+        const duration = 2400;
+        const easeInOutCubic = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 
         if (!isTypingDone) {
             setFitScore(0);
@@ -109,7 +110,8 @@ export function HeroSection() {
         const animateCount = (startTime: number) => {
             frameId = window.requestAnimationFrame((timestamp) => {
                 const progress = Math.min(1, (timestamp - startTime) / duration);
-                setFitScore(Math.round(progress * target));
+                const eased = easeInOutCubic(progress);
+                setFitScore(Math.round(eased * target));
                 if (progress < 1) {
                     animateCount(startTime);
                 }
@@ -119,7 +121,7 @@ export function HeroSection() {
         timeoutId = window.setTimeout(() => {
             const start = performance.now();
             animateCount(start);
-        }, 250);
+        }, 120);
 
         return () => {
             if (timeoutId) window.clearTimeout(timeoutId);
@@ -378,19 +380,19 @@ export function HeroSection() {
                                                 className="h-full rounded-full bg-gradient-to-r from-blue-600 via-indigo-500 to-emerald-400 shadow-[0_0_15px_rgba(52,211,153,0.5)]"
                                                 initial={{ width: 0 }}
                                                 animate={{ width: isTypingDone ? '92%' : 0 }}
-                                                transition={{ delay: isTypingDone ? 0.25 : 0, duration: 1.5, ease: 'easeOut' }}
+                                                transition={{ delay: isTypingDone ? 0.12 : 0, duration: 2.6, ease: [0.25, 0.1, 0.25, 1] }}
                                             />
                                             <motion.div
                                                 className="absolute inset-0 overflow-hidden rounded-full"
                                                 initial={false}
                                                 animate={isTypingDone ? { opacity: [0, 1, 0] } : { opacity: 0 }}
-                                                transition={{ delay: 2.0, duration: 1.05 }}
+                                                transition={{ delay: 2.7, duration: 1.1 }}
                                             >
                                                 <motion.div
                                                     className="h-full w-1/3 bg-white/50 blur-sm"
                                                     initial={{ x: '-120%' }}
                                                     animate={{ x: '160%' }}
-                                                    transition={{ duration: 1.05, ease: 'easeInOut', delay: 2.0 }}
+                                                    transition={{ duration: 1.1, ease: 'easeInOut', delay: 2.7 }}
                                                 />
                                             </motion.div>
                                         </div>
