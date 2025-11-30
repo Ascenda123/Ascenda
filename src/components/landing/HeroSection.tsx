@@ -89,6 +89,10 @@ export function HeroSection() {
     }
 
     useEffect(() => {
+        if (!storyReady) return;
+        setTypedHeadline('');
+        setIsTypingDone(false);
+
         let index = 0;
         const timer = window.setInterval(() => {
             index += 1;
@@ -97,10 +101,10 @@ export function HeroSection() {
                 setIsTypingDone(true);
                 window.clearInterval(timer);
             }
-        }, 28);
+        }, 34);
 
         return () => window.clearInterval(timer);
-    }, []);
+    }, [storyReady]);
 
     useEffect(() => {
         const timer = window.setTimeout(() => setStoryReady(true), 560);
