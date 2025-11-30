@@ -6,6 +6,7 @@ import { FilterBar } from '@/components/university-search/FilterBar';
 import type { MatchTier } from '@/lib/matching/engine';
 import { cn } from '@/lib/utils';
 import { useShortlist } from '@/components/university-search/shortlist-store';
+import { Grid, LayoutList } from 'lucide-react';
 
 export interface EnrichedMatch {
   program: {
@@ -40,6 +41,7 @@ export interface EnrichedMatch {
 
 interface MatchListProps {
   matches: EnrichedMatch[];
+  filtersSticky?: boolean;
 }
 
 const TIER_ORDER: MatchTier[] = ['Reach', 'Match', 'Safe'];
@@ -49,7 +51,7 @@ const TIER_DESCRIPTIONS: Record<MatchTier, string> = {
   Safe: 'Comfortable options where you exceed the entry expectations.'
 };
 
-export const MatchList = ({ matches }: MatchListProps) => {
+export const MatchList = ({ matches, filtersSticky = true }: MatchListProps) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTiers, setSelectedTiers] = useState<MatchTier[]>(['Reach', 'Match', 'Safe']);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -126,9 +128,36 @@ export const MatchList = ({ matches }: MatchListProps) => {
             [key]: !prev[key]
           }))
         }
+        isSticky={filtersSticky}
+        showViewToggle={false}
       />
 
       <section className="space-y-6">
+        <div className="flex justify-end">
+          <div className="flex items-center gap-2 rounded-xl border border-border bg-background p-1 shadow-sm">
+            <button
+              onClick={() => setViewMode('grid')}
+              className={cn(
+                'flex h-8 w-8 items-center justify-center rounded-lg transition-all',
+                viewMode === 'grid' ? 'bg-muted text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+              )}
+              aria-label="Grid view"
+            >
+              <Grid className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              className={cn(
+                'flex h-8 w-8 items-center justify-center rounded-lg transition-all',
+                viewMode === 'list' ? 'bg-muted text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+              )}
+              aria-label="List view"
+            >
+              <LayoutList className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+
         {filtered.length === 0 ? (
           <div className="rounded-[28px] border border-dashed border-border bg-muted/60 p-10 text-center text-muted-foreground">
             No matches found. Try adjusting your filters.

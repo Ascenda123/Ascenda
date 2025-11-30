@@ -234,10 +234,10 @@ export default async function DashboardPage() {
           </div>
         </aside>
         <div className="lg:col-span-3">
-          <div className="space-y-4 rounded-[28px] border border-border bg-card p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)] transition-colors">
+          <div className="space-y-4 overflow-hidden rounded-[28px] border border-border bg-card p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)] transition-colors">
             <h2 className="text-2xl font-semibold text-foreground">Recommended programs</h2>
             {matches.length > 0 ? (
-              <MatchList matches={matches} />
+              <MatchList matches={matches} filtersSticky={false} />
             ) : (
               <div className="space-y-3 text-sm text-muted-foreground">
                 <p className="text-base font-semibold text-foreground">No recommendations yet</p>
