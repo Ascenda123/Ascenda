@@ -4,7 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import type React from 'react';
-import { motion, type Variants, useMotionValue, useTransform } from 'framer-motion';
+import { motion, type Variants } from 'framer-motion';
 import {
     Activity,
     ChevronDown,
@@ -70,23 +70,6 @@ export function HeroSection() {
     const [launchHref, setLaunchHref] = useState('/signup');
     const supabase = useSupabase();
     const { mode } = useThemeMode();
-    const x = useMotionValue(0);
-    const y = useMotionValue(0);
-    const rotateX = useTransform(y, [-80, 80], [10, -10]);
-    const rotateY = useTransform(x, [-120, 120], [-12, 12]);
-
-    function handleMouseMove(event: React.MouseEvent<HTMLDivElement>) {
-        const { left, top, width, height } = event.currentTarget.getBoundingClientRect();
-        const centerX = left + width / 2;
-        const centerY = top + height / 2;
-        x.set(event.clientX - centerX);
-        y.set(event.clientY - centerY);
-    }
-
-    function handleMouseLeave() {
-        x.set(0);
-        y.set(0);
-    }
 
     useEffect(() => {
         if (!storyReady) return;
@@ -307,10 +290,7 @@ export function HeroSection() {
                                 initial="hidden"
                                 animate={isTypingDone ? 'visible' : 'hidden'}
                                 variants={dashboardContainerVariants}
-                                onMouseMove={handleMouseMove}
-                                onMouseLeave={handleMouseLeave}
                                 transition={{ delay: 1.15, staggerChildren: 0.11, delayChildren: 0.2 }}
-                                style={{ rotateX, rotateY, transformStyle: 'preserve-3d', transformPerspective: 1200 }}
                             >
                                 <motion.div
                                     className="flex items-center justify-between gap-4 text-[0.7rem] uppercase tracking-[0.4em] text-muted-foreground"
