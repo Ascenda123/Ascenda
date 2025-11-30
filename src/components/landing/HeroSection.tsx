@@ -27,6 +27,17 @@ const fadeIn: Variants = {
     visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: 'easeOut' } }
 };
 
+const topBarVariants: Variants = {
+    hidden: { opacity: 0, y: -18, scale: 0.96, filter: 'blur(4px)' },
+    visible: {
+        opacity: 1,
+        y: 0,
+        scale: 1,
+        filter: 'blur(0px)',
+        transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] }
+    }
+};
+
 const dashboardContainerVariants: Variants = {
     hidden: { opacity: 0, y: 20, scale: 0.98 },
     visible: {
@@ -42,9 +53,20 @@ const dashboardItemVariants: Variants = {
     visible: { opacity: 1, y: 0, transition: { duration: 0.55, ease: 'easeOut' } }
 };
 
+const storyPartVariants: Variants = {
+    hidden: { opacity: 0, y: 24, filter: 'blur(6px)' },
+    visible: {
+        opacity: 1,
+        y: 0,
+        filter: 'blur(0px)',
+        transition: { duration: 0.75, ease: [0.16, 1, 0.3, 1], staggerChildren: 0.12, delayChildren: 0.2 }
+    }
+};
+
 export function HeroSection() {
     const [typedHeadline, setTypedHeadline] = useState('');
     const [isTypingDone, setIsTypingDone] = useState(false);
+    const [storyReady, setStoryReady] = useState(false);
     const [launchHref, setLaunchHref] = useState('/signup');
     const supabase = useSupabase();
     const { mode } = useThemeMode();
@@ -78,6 +100,11 @@ export function HeroSection() {
         }, 28);
 
         return () => window.clearInterval(timer);
+    }, []);
+
+    useEffect(() => {
+        const timer = window.setTimeout(() => setStoryReady(true), 420);
+        return () => window.clearTimeout(timer);
     }, []);
 
     useEffect(() => {
@@ -146,7 +173,7 @@ export function HeroSection() {
                     className="sticky top-0 z-30 w-full mb-8 bg-transparent px-4 py-4 sm:px-6"
                     initial="hidden"
                     animate="visible"
-                    variants={fadeIn}
+                    variants={topBarVariants}
                 >
                     <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 text-foreground">
                         <Link href="/" className="flex items-center gap-3 text-lg font-semibold tracking-tight text-foreground">
@@ -181,8 +208,8 @@ export function HeroSection() {
                         <motion.div
                             className="grid items-center gap-10 lg:grid-cols-[0.9fr,1.1fr]"
                             initial="hidden"
-                            animate="visible"
-                            variants={fadeIn}
+                            animate={storyReady ? 'visible' : 'hidden'}
+                            variants={storyPartVariants}
                         >
                             <div className="space-y-6">
                                 <div className="space-y-2">
