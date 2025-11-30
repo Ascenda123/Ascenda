@@ -34,7 +34,7 @@ const topBarVariants: Variants = {
         y: 0,
         scale: 1,
         filter: 'blur(0px)',
-        transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] }
+        transition: { duration: 0.65, ease: [0.22, 1, 0.36, 1] }
     }
 };
 
@@ -59,7 +59,7 @@ const storyPartVariants: Variants = {
         opacity: 1,
         y: 0,
         filter: 'blur(0px)',
-        transition: { duration: 0.75, ease: [0.16, 1, 0.3, 1], staggerChildren: 0.12, delayChildren: 0.2 }
+        transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1], staggerChildren: 0.14, delayChildren: 0.24 }
     }
 };
 
@@ -103,7 +103,7 @@ export function HeroSection() {
     }, []);
 
     useEffect(() => {
-        const timer = window.setTimeout(() => setStoryReady(true), 420);
+        const timer = window.setTimeout(() => setStoryReady(true), 560);
         return () => window.clearTimeout(timer);
     }, []);
 
@@ -218,7 +218,7 @@ export function HeroSection() {
                                         className="text-sm font-medium text-foreground/80"
                                         initial={{ opacity: 0, y: 8 }}
                                         animate={{ opacity: 1, y: 0 }}
-                                        transition={{ duration: 0.6, delay: 0.1 }}
+                                        transition={{ duration: 0.6, delay: 0.22 }}
                                     >
                                         You are closer than you think—let&apos;s finish your applications.
                                     </motion.p>
@@ -226,7 +226,7 @@ export function HeroSection() {
                                 <motion.div
                                     initial={{ opacity: 0.7, scale: 0.98, y: 10 }}
                                     animate={{ opacity: 1, scale: 1, y: 0 }}
-                                    transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                                    transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
                                 >
                                     <motion.h1
                                         className="text-5xl font-heading font-semibold leading-tight tracking-tight text-foreground sm:text-[3.6rem]"
@@ -259,7 +259,7 @@ export function HeroSection() {
                                     variants={fadeIn}
                                     initial="hidden"
                                     animate={isTypingDone ? 'visible' : 'hidden'}
-                                    transition={{ delay: 0.9 }}
+                                    transition={{ delay: 0.95 }}
                                 >
                                     <Button
                                         asChild
@@ -282,7 +282,7 @@ export function HeroSection() {
                                     variants={fadeIn}
                                     initial="hidden"
                                     animate={isTypingDone ? 'visible' : 'hidden'}
-                                    transition={{ delay: 0.7 }}
+                                    transition={{ delay: 0.85 }}
                                 >
                                     <li className="flex items-center gap-2">
                                         <span className="h-1.5 w-1.5 rounded-full bg-accent" />
@@ -305,7 +305,7 @@ export function HeroSection() {
                                 variants={dashboardContainerVariants}
                                 onMouseMove={handleMouseMove}
                                 onMouseLeave={handleMouseLeave}
-                                transition={{ delay: 1.05, staggerChildren: 0.1, delayChildren: 0.15 }}
+                                transition={{ delay: 1.15, staggerChildren: 0.11, delayChildren: 0.2 }}
                                 style={{ rotateX, rotateY, transformStyle: 'preserve-3d', transformPerspective: 1200 }}
                             >
                                 <motion.div
@@ -361,19 +361,19 @@ export function HeroSection() {
                                                 className="h-full rounded-full bg-gradient-to-r from-blue-600 via-indigo-500 to-emerald-400 shadow-[0_0_15px_rgba(52,211,153,0.5)]"
                                                 initial={{ width: 0 }}
                                                 animate={{ width: '92%' }}
-                                                transition={{ delay: 1.35, duration: 1.1, ease: 'easeOut' }}
+                                                transition={{ delay: 1.45, duration: 1.15, ease: 'easeOut' }}
                                             />
                                             <motion.div
                                                 className="absolute inset-0 overflow-hidden rounded-full"
                                                 initial={false}
                                                 animate={isTypingDone ? { opacity: [0, 1, 0] } : { opacity: 0 }}
-                                                transition={{ delay: 2.6, duration: 1.2 }}
+                                                transition={{ delay: 2.75, duration: 1.1 }}
                                             >
                                                 <motion.div
                                                     className="h-full w-1/3 bg-white/50 blur-sm"
                                                     initial={{ x: '-120%' }}
                                                     animate={{ x: '160%' }}
-                                                    transition={{ duration: 1.2, ease: 'easeInOut', delay: 2.6 }}
+                                                    transition={{ duration: 1.1, ease: 'easeInOut', delay: 2.75 }}
                                                 />
                                             </motion.div>
                                         </div>
@@ -457,7 +457,7 @@ export function HeroSection() {
                             className="flex justify-center pt-2 text-muted-foreground"
                             initial={{ opacity: 0, y: -4 }}
                             animate={isTypingDone ? { opacity: 0.9, y: 0 } : { opacity: 0, y: -4 }}
-                            transition={{ delay: 1.3, duration: 0.6, ease: 'easeOut' }}
+                            transition={{ delay: 1.55, duration: 0.6, ease: 'easeOut' }}
                         >
                             <motion.div
                                 animate={{ y: [0, 6, 0], opacity: [0.9, 0.5, 0.9] }}
