@@ -63,6 +63,8 @@ const storyPartVariants: Variants = {
     }
 };
 
+const FIT_SCORE_TARGET = 92;
+
 export function HeroSection() {
     const [typedHeadline, setTypedHeadline] = useState('');
     const [isTypingDone, setIsTypingDone] = useState(false);
@@ -98,7 +100,6 @@ export function HeroSection() {
     useEffect(() => {
         let frameId: number;
         let timeoutId: number;
-        const target = 92;
         const duration = 1600;
         const easeInOutCubic = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 
@@ -111,7 +112,7 @@ export function HeroSection() {
             frameId = window.requestAnimationFrame((timestamp) => {
                 const progress = Math.min(1, (timestamp - startTime) / duration);
                 const eased = easeInOutCubic(progress);
-                setFitScore(Math.round(eased * target));
+                setFitScore(eased * FIT_SCORE_TARGET);
                 if (progress < 1) {
                     animateCount(startTime);
                 }
@@ -372,15 +373,13 @@ export function HeroSection() {
                                             <span className="text-xs uppercase tracking-[0.3em] text-emerald-400">On target</span>
                                         </div>
                                         <div className="mt-2 flex items-end justify-between">
-                                            <p className="text-4xl font-semibold text-foreground">{fitScore}%</p>
+                                            <p className="text-4xl font-semibold text-foreground">{Math.round(fitScore)}%</p>
                                             <p className="text-sm text-muted-foreground">Parsons Paris · Strategic Design</p>
                                         </div>
                                         <div className="relative mt-3 h-2 rounded-full bg-muted/60">
-                                            <motion.div
+                                            <div
                                                 className="h-full rounded-full bg-gradient-to-r from-blue-600 via-indigo-500 to-emerald-400 shadow-[0_0_15px_rgba(52,211,153,0.5)]"
-                                                initial={{ width: 0 }}
-                                                animate={{ width: isTypingDone ? '92%' : 0 }}
-                                                transition={{ delay: isTypingDone ? 0.12 : 0, duration: 2.6, ease: [0.25, 0.1, 0.25, 1] }}
+                                                style={{ width: `${isTypingDone ? fitScore : 0}%` }}
                                             />
                                             <motion.div
                                                 className="absolute inset-0 overflow-hidden rounded-full"
