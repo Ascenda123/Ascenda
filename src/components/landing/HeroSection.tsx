@@ -24,7 +24,7 @@ const heroHeadline = 'The #1 University Application Companion.';
 
 const fadeIn: Variants = {
     hidden: { opacity: 0, y: 16 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: 'easeOut' } }
+    visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease: 'easeOut' } }
 };
 
 const topBarVariants: Variants = {
@@ -34,7 +34,7 @@ const topBarVariants: Variants = {
         y: 0,
         scale: 1,
         filter: 'blur(0px)',
-        transition: { duration: 0.65, ease: [0.22, 1, 0.36, 1] }
+        transition: { duration: 0.45, ease: [0.22, 1, 0.36, 1] }
     }
 };
 
@@ -44,13 +44,13 @@ const dashboardContainerVariants: Variants = {
         opacity: 1,
         y: 0,
         scale: 1,
-        transition: { duration: 0.8, ease: 'easeOut', staggerChildren: 0.12, delayChildren: 0.25 }
+        transition: { duration: 0.55, ease: 'easeOut', staggerChildren: 0.08, delayChildren: 0.15 }
     }
 };
 
 const dashboardItemVariants: Variants = {
     hidden: { opacity: 0, y: 10 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.55, ease: 'easeOut' } }
+    visible: { opacity: 1, y: 0, transition: { duration: 0.38, ease: 'easeOut' } }
 };
 
 const storyPartVariants: Variants = {
@@ -59,7 +59,7 @@ const storyPartVariants: Variants = {
         opacity: 1,
         y: 0,
         filter: 'blur(0px)',
-        transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1], staggerChildren: 0.14, delayChildren: 0.24 }
+        transition: { duration: 0.55, ease: [0.16, 1, 0.3, 1], staggerChildren: 0.1, delayChildren: 0.14 }
     }
 };
 
@@ -85,13 +85,13 @@ export function HeroSection() {
                 setIsTypingDone(true);
                 window.clearInterval(timer);
             }
-        }, 34);
+        }, 20);
 
         return () => window.clearInterval(timer);
     }, [storyReady]);
 
     useEffect(() => {
-        const timer = window.setTimeout(() => setStoryReady(true), 560);
+        const timer = window.setTimeout(() => setStoryReady(true), 320);
         return () => window.clearTimeout(timer);
     }, []);
 
@@ -99,7 +99,7 @@ export function HeroSection() {
         let frameId: number;
         let timeoutId: number;
         const target = 92;
-        const duration = 2400;
+        const duration = 1600;
         const easeInOutCubic = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 
         if (!isTypingDone) {
@@ -121,7 +121,7 @@ export function HeroSection() {
         timeoutId = window.setTimeout(() => {
             const start = performance.now();
             animateCount(start);
-        }, 120);
+        }, 80);
 
         return () => {
             if (timeoutId) window.clearTimeout(timeoutId);
@@ -163,12 +163,12 @@ export function HeroSection() {
                 <motion.div
                     className="absolute -left-24 top-[-15%] h-[55vw] w-[55vw] rounded-full bg-indigo-500/25 blur-3xl"
                     animate={{ x: [0, 50, -40, 0], y: [0, 30, 10, 0], opacity: [0.22, 0.32, 0.22] }}
-                    transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut' }}
+                    transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }}
                 />
                 <motion.div
                     className="absolute -right-24 bottom-[-20%] h-[45vw] w-[45vw] rounded-full bg-emerald-400/20 blur-3xl"
                     animate={{ x: [0, -60, 40, 0], y: [0, -20, 30, 0], rotate: [0, 5, -5, 0], opacity: [0.18, 0.28, 0.18] }}
-                    transition={{ duration: 24, repeat: Infinity, ease: 'easeInOut' }}
+                    transition={{ duration: 16, repeat: Infinity, ease: 'easeInOut' }}
                 />
                 <Image
                     src="/Ascenda Banner.png"
@@ -240,7 +240,7 @@ export function HeroSection() {
                                         className="text-sm font-medium text-foreground/80"
                                         initial={{ opacity: 0, y: 8 }}
                                         animate={{ opacity: 1, y: 0 }}
-                                        transition={{ duration: 0.6, delay: 0.22 }}
+                                    transition={{ duration: 0.4, delay: 0.14 }}
                                     >
                                         You are closer than you think—let&apos;s finish your applications.
                                     </motion.p>
@@ -248,7 +248,7 @@ export function HeroSection() {
                                 <motion.div
                                     initial={{ opacity: 0.7, scale: 0.98, y: 10 }}
                                     animate={{ opacity: 1, scale: 1, y: 0 }}
-                                    transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+                                    transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
                                 >
                                     <motion.h1
                                         className="text-5xl font-heading font-semibold leading-tight tracking-tight text-foreground sm:text-[3.6rem]"
@@ -375,7 +375,7 @@ export function HeroSection() {
                                             <p className="text-4xl font-semibold text-foreground">{fitScore}%</p>
                                             <p className="text-sm text-muted-foreground">Parsons Paris · Strategic Design</p>
                                         </div>
-                                        <div className="mt-3 h-2 rounded-full bg-muted/60">
+                                        <div className="relative mt-3 h-2 rounded-full bg-muted/60">
                                             <motion.div
                                                 className="h-full rounded-full bg-gradient-to-r from-blue-600 via-indigo-500 to-emerald-400 shadow-[0_0_15px_rgba(52,211,153,0.5)]"
                                                 initial={{ width: 0 }}
