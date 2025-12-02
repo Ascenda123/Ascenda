@@ -19,12 +19,12 @@ interface FilterBarProps {
         testOptional: boolean;
     };
     onQuickFilterChange: (key: keyof FilterBarProps['quickFilters']) => void;
-    selectedUniversities: string[];
-    selectedPrograms: string[];
-    availableUniversities: string[];
-    availablePrograms: string[];
-    onUniversityToggle: (name: string) => void;
-    onProgramToggle: (name: string) => void;
+    selectedUniversities?: string[];
+    selectedPrograms?: string[];
+    availableUniversities?: string[];
+    availablePrograms?: string[];
+    onUniversityToggle?: (name: string) => void;
+    onProgramToggle?: (name: string) => void;
     onClearFilters?: () => void;
     isSticky?: boolean;
     showViewToggle?: boolean;
@@ -133,18 +133,23 @@ export function FilterBar({
     resultCount,
     quickFilters,
     onQuickFilterChange,
-    selectedUniversities,
-    selectedPrograms,
-    availableUniversities,
-    availablePrograms,
-    onUniversityToggle,
-    onProgramToggle,
+    selectedUniversities = [],
+    selectedPrograms = [],
+    availableUniversities = [],
+    availablePrograms = [],
+    onUniversityToggle = () => {},
+    onProgramToggle = () => {},
     onClearFilters,
     isSticky = true,
     showViewToggle = true
 }: FilterBarProps) {
     const [openDropdown, setOpenDropdown] = useState<DropdownKind>(null);
     const containerRef = useRef<HTMLDivElement | null>(null);
+    const hasSelectionFilters =
+        availableUniversities.length > 0 ||
+        availablePrograms.length > 0 ||
+        selectedUniversities.length > 0 ||
+        selectedPrograms.length > 0;
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -280,47 +285,49 @@ export function FilterBar({
                     </div>
                 </div>
 
-                <div className="flex flex-col gap-2">
-                    <div className="flex flex-wrap items-center gap-2">
-                        <SelectionDropdown
-                            id="university"
-                            label="University"
-                            options={availableUniversities}
-                            selected={selectedUniversities}
-                            onToggle={onUniversityToggle}
-                            isOpen={openDropdown === 'university'}
-                            onOpenChange={setOpenDropdown}
-                        />
-                        <SelectionDropdown
-                            id="program"
-                            label="Course"
-                            options={availablePrograms}
-                            selected={selectedPrograms}
-                            onToggle={onProgramToggle}
-                            isOpen={openDropdown === 'program'}
-                            onOpenChange={setOpenDropdown}
-                        />
-                    </div>
-
-                    {(selectedUniversities.length > 0 || selectedPrograms.length > 0) && (
+                {hasSelectionFilters ? (
+                    <div className="flex flex-col gap-2">
                         <div className="flex flex-wrap items-center gap-2">
-                            {[...selectedUniversities, ...selectedPrograms].map((value) => (
-                                <button
-                                    key={value}
-                                    onClick={() =>
-                                        selectedUniversities.includes(value)
-                                            ? onUniversityToggle(value)
-                                            : onProgramToggle(value)
-                                    }
-                                    className="flex items-center gap-2 rounded-full bg-muted px-3 py-1 text-xs font-medium text-foreground transition-colors hover:bg-muted/80"
-                                >
-                                    <span className="line-clamp-1 max-w-[180px]">{value}</span>
-                                    <X className="h-3 w-3" />
-                                </button>
-                            ))}
+                            <SelectionDropdown
+                                id="university"
+                                label="University"
+                                options={availableUniversities}
+                                selected={selectedUniversities}
+                                onToggle={onUniversityToggle}
+                                isOpen={openDropdown === 'university'}
+                                onOpenChange={setOpenDropdown}
+                            />
+                            <SelectionDropdown
+                                id="program"
+                                label="Course"
+                                options={availablePrograms}
+                                selected={selectedPrograms}
+                                onToggle={onProgramToggle}
+                                isOpen={openDropdown === 'program'}
+                                onOpenChange={setOpenDropdown}
+                            />
                         </div>
-                    )}
-                </div>
+
+                        {(selectedUniversities.length > 0 || selectedPrograms.length > 0) && (
+                            <div className="flex flex-wrap items-center gap-2">
+                                {[...selectedUniversities, ...selectedPrograms].map((value) => (
+                                    <button
+                                        key={value}
+                                        onClick={() =>
+                                            selectedUniversities.includes(value)
+                                                ? onUniversityToggle(value)
+                                                : onProgramToggle(value)
+                                        }
+                                        className="flex items-center gap-2 rounded-full bg-muted px-3 py-1 text-xs font-medium text-foreground transition-colors hover:bg-muted/80"
+                                    >
+                                        <span className="line-clamp-1 max-w-[180px]">{value}</span>
+                                        <X className="h-3 w-3" />
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                ) : null}
             </div>
         </div>
     );
