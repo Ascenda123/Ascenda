@@ -69,7 +69,8 @@ export default async function MatchesPage() {
     supabase.from('program_requirements').select('*')
   ]);
 
-  const programsRaw = programsData ?? [];
+  const DEMO_PROGRAM_IDS = new Set(['44444444-4444-4444-4444-444444444444']);
+  const programsRaw = (programsData ?? []).filter((program) => !DEMO_PROGRAM_IDS.has(program.id));
   const universitiesRaw = universitiesData ?? [];
   const requirementsRaw = requirementsData ?? [];
 

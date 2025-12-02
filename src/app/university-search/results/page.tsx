@@ -10,17 +10,30 @@ import { CompareBar } from '@/components/university-search/CompareBar';
 import { ComparisonModal } from '@/components/university-search/ComparisonModal';
 import { cn } from '@/lib/utils';
 import { getBrowserSupabaseClient } from '@/lib/supabase/client';
+import { ProgramSearchResult, tierFromScore } from '@/components/university-search/types';
 
 import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 
-type SearchResult = {
+const DEMO_PROGRAM_IDS = new Set(['44444444-4444-4444-4444-444444444444']);
+
+type ProgramRow = {
   id: string;
   name: string;
-  program: string;
-  location: string;
-  fitScore: number;
-  tier: MatchTier;
-  highlights: string[];
+  field?: string | null;
+  level?: string | null;
+  duration_years?: number | null;
+  tuition?: number | null;
+  currency?: string | null;
+  universities?: {
+    name?: string | null;
+    country?: string | null;
+    city?: string | null;
+    region?: string | null;
+    acceptance_rate?: number | null;
+    intl_tuition_low?: number | null;
+    intl_tuition_high?: number | null;
+    currency?: string | null;
+  } | null;
 };
 
 export default function UniversitySearchResultsPage() {
@@ -31,7 +44,7 @@ export default function UniversitySearchResultsPage() {
   const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [selectedTiers, setSelectedTiers] = useState<MatchTier[]>(['Reach', 'Match', 'Safe']);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [selectedForComparison, setSelectedForComparison] = useState<SearchResult[]>([]);
+  const [selectedForComparison, setSelectedForComparison] = useState<ProgramSearchResult[]>([]);
   const [isComparisonOpen, setIsComparisonOpen] = useState(false);
   const [selectedUniversities, setSelectedUniversities] = useState<string[]>([]);
   const [selectedPrograms, setSelectedPrograms] = useState<string[]>([]);
@@ -40,7 +53,7 @@ export default function UniversitySearchResultsPage() {
     englishOnly: false,
     testOptional: false
   });
-  const [results, setResults] = useState<SearchResult[]>([]);
+  const [results, setResults] = useState<ProgramSearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -53,44 +66,87 @@ export default function UniversitySearchResultsPage() {
       setError(null);
       try {
         const supabase = getBrowserSupabaseClient();
-        const { data, error: supabaseError } = await supabase
-          .from('programs')
-          .select(
-            `
+        const [{ data: sessionData }, { data, error: supabaseError }] = await Promise.all([
+          supabase.auth.getSession(),
+          supabase
+            .from('programs')
+            .select(
+              `
             id,
             name,
             field,
+            level,
+            duration_years,
+            tuition,
+            currency,
             universities (
               name,
               country,
               city,
-              region
+              region,
+              acceptance_rate,
+              intl_tuition_low,
+              intl_tuition_high,
+              currency
             )
           `
-          )
-          .limit(200);
+            )
+            .limit(200)
+        ]);
 
         if (supabaseError) throw supabaseError;
 
+        const userId = sessionData?.session?.user?.id;
+        let matchScores: Record<string, number> = {};
+
+        if (userId) {
+          const { data: matches, error: matchError } = await supabase
+            .from('student_matches')
+            .select('program_id, score')
+            .eq('profile_id', userId);
+          if (matchError) {
+            console.error('Failed to load match scores', matchError);
+          } else {
+            matchScores =
+              matches?.reduce<Record<string, number>>((acc, entry) => {
+                const numericScore =
+                  typeof entry.score === 'string'
+                    ? Number.parseFloat(entry.score)
+                    : typeof entry.score === 'number'
+                      ? entry.score
+                      : null;
+                if (numericScore !== null && Number.isFinite(numericScore)) {
+                  acc[entry.program_id] = numericScore;
+                }
+                return acc;
+              }, {}) ?? {};
+          }
+        }
+
         const mapped =
-          data?.map((program) => {
-            const uni = (program as any).universities as {
-              name?: string | null;
-              country?: string | null;
-              city?: string | null;
-              region?: string | null;
-            } | null;
-            const location = [uni?.city, uni?.region, uni?.country].filter(Boolean).join(', ');
-            return {
-              id: program.id,
-              name: uni?.name ?? 'University',
-              program: program.name,
-              location: location || 'Location unavailable',
-              fitScore: 78,
-              tier: 'Match' as MatchTier,
-              highlights: [program.field].filter(Boolean) as string[]
-            };
-          }) ?? [];
+          data
+            ?.filter((program: ProgramRow) => !DEMO_PROGRAM_IDS.has(program.id))
+            .map((program: ProgramRow) => {
+              const uni = program.universities;
+              const location = [uni?.city, uni?.region, uni?.country].filter(Boolean).join(', ');
+              const score = matchScores[program.id];
+              const tier = tierFromScore(score);
+              return {
+                id: program.id,
+                universityName: uni?.name ?? 'University',
+                programName: program.name,
+                location: location || 'Location unavailable',
+                fitScore: score ?? null,
+                tier: tier ?? null,
+                highlights: [program.field, program.level].filter(Boolean) as string[],
+                acceptanceRate: uni?.acceptance_rate ?? null,
+                durationYears: program.duration_years ?? null,
+                tuition: program.tuition ?? null,
+                currency: program.currency ?? uni?.currency ?? null,
+                intlTuitionLow: uni?.intl_tuition_low ?? null,
+                intlTuitionHigh: uni?.intl_tuition_high ?? null
+              };
+            }) ?? [];
 
         setResults(mapped);
       } catch (fetchError) {
@@ -107,11 +163,11 @@ export default function UniversitySearchResultsPage() {
   const availableUniversities = useMemo(() => {
     const source =
       selectedPrograms.length > 0
-        ? results.filter((result) => selectedPrograms.includes(result.program))
+        ? results.filter((result) => selectedPrograms.includes(result.programName))
         : results;
 
     const names = new Set<string>();
-    source.forEach((result) => names.add(result.name));
+    source.forEach((result) => names.add(result.universityName));
     selectedUniversities.forEach((name) => names.add(name));
     return Array.from(names).sort((a, b) => a.localeCompare(b));
   }, [results, selectedPrograms, selectedUniversities]);
@@ -119,11 +175,11 @@ export default function UniversitySearchResultsPage() {
   const availablePrograms = useMemo(() => {
     const source =
       selectedUniversities.length > 0
-        ? results.filter((result) => selectedUniversities.includes(result.name))
+        ? results.filter((result) => selectedUniversities.includes(result.universityName))
         : results;
 
     const programs = new Set<string>();
-    source.forEach((result) => programs.add(result.program));
+    source.forEach((result) => programs.add(result.programName));
     selectedPrograms.forEach((program) => programs.add(program));
     return Array.from(programs).sort((a, b) => a.localeCompare(b));
   }, [results, selectedPrograms, selectedUniversities]);
@@ -134,12 +190,12 @@ export default function UniversitySearchResultsPage() {
     return results.filter((result) => {
       const matchesSearch =
         !normalizedQuery ||
-        `${result.name} ${result.program} ${result.location}`.toLowerCase().includes(normalizedQuery);
-      const matchesTier = selectedTiers.includes(result.tier);
+        `${result.universityName} ${result.programName} ${result.location}`.toLowerCase().includes(normalizedQuery);
+      const matchesTier = result.tier ? selectedTiers.includes(result.tier) : true;
       const matchesUniversity =
-        selectedUniversities.length === 0 || selectedUniversities.includes(result.name);
+        selectedUniversities.length === 0 || selectedUniversities.includes(result.universityName);
       const matchesProgram =
-        selectedPrograms.length === 0 || selectedPrograms.includes(result.program);
+        selectedPrograms.length === 0 || selectedPrograms.includes(result.programName);
       return matchesSearch && matchesTier && matchesUniversity && matchesProgram;
     });
   }, [results, searchQuery, selectedTiers, selectedPrograms, selectedUniversities]);
@@ -169,25 +225,22 @@ export default function UniversitySearchResultsPage() {
   };
 
   // Handlers
-  const handleToggleShortlist = (result: SearchResult) => {
+  const handleToggleShortlist = (result: ProgramSearchResult) => {
     const isShortlisted = shortlist.some((item) => item.id === result.id);
     if (isShortlisted) {
       removeItem(result.id);
     } else {
       addItem({
         id: result.id,
-        name: result.name,
-        program: result.program,
-        stage: 'Researching',
+        name: result.universityName,
+        program: result.programName,
         fitScore: result.fitScore,
-        nextAction: result.nextAction,
-        due: result.due,
         location: result.location
       });
     }
   };
 
-  const handleToggleSelect = (result: SearchResult) => {
+  const handleToggleSelect = (result: ProgramSearchResult) => {
     setSelectedForComparison((prev) => {
       const isSelected = prev.some((item) => item.id === result.id);
       if (isSelected) {
@@ -282,11 +335,11 @@ export default function UniversitySearchResultsPage() {
               <UniversityCard
                 key={result.id}
                 id={result.id}
-                name={result.name}
-                program={result.program}
+                name={result.universityName}
+                program={result.programName}
                 location={result.location}
                 fitScore={result.fitScore}
-                tier={result.tier}
+                tier={result.tier ?? undefined}
                 highlights={result.highlights}
                 isShortlisted={shortlist.some((item) => item.id === result.id)}
                 isSelected={selectedForComparison.some((item) => item.id === result.id)}

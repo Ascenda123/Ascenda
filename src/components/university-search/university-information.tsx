@@ -139,7 +139,7 @@ export const UniversityInformation = ({
       name: universityData.university?.name ?? 'University',
       program: universityData.program?.title ?? 'Program',
       stage: 'Researching',
-      fitScore: typeof universityData.statistics?.employmentRate === 'number' ? Math.round(universityData.statistics.employmentRate) : 0,
+      fitScore: typeof universityData.statistics?.employmentRate === 'number' ? Math.round(universityData.statistics.employmentRate) : null,
       nextAction: 'Review university fit and decide next steps.',
       due: 'TBD',
       location: universityData.university?.location ?? undefined

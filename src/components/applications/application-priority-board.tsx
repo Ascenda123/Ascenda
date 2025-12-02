@@ -5,7 +5,7 @@ export interface PriorityItem {
   program: string;
   university: string;
   priority: 'high' | 'medium' | 'watch';
-  fitScore: number;
+  fitScore?: number | null;
   status: string;
   nextDeadline?: string;
   tasksRemaining: number;
@@ -79,15 +79,17 @@ export const ApplicationPriorityBoard = ({ items }: { items: PriorityItem[] }) =
             <div className="grid grid-cols-3 gap-3 text-sm text-muted-foreground">
               <div>
                 <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Fit score</p>
-                <div className="flex items-center gap-2">
-                  <div className="h-2 w-16 overflow-hidden rounded-full bg-muted">
-                    <div
-                      className="h-full bg-primary transition-all duration-500"
-                      style={{ width: `${item.fitScore}%` }}
-                    />
-                  </div>
-                  <p className="text-sm font-semibold text-foreground">{item.fitScore}%</p>
+              <div className="flex items-center gap-2">
+                <div className="h-2 w-16 overflow-hidden rounded-full bg-muted">
+                  <div
+                    className="h-full bg-primary transition-all duration-500"
+                    style={{ width: `${Math.min(100, Math.max(0, item.fitScore ?? 0))}%` }}
+                  />
                 </div>
+                <p className="text-sm font-semibold text-foreground">
+                  {typeof item.fitScore === 'number' ? `${Math.round(item.fitScore)}%` : 'N/A'}
+                </p>
+              </div>
               </div>
               <div>
                 <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Next deadline</p>

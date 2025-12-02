@@ -20,7 +20,8 @@ export default function UniversitySearchShortlistPage() {
 
   const metrics = useMemo(() => {
     const count = items.length;
-    const avgFit = count ? Math.round(items.reduce((sum, item) => sum + item.fitScore, 0) / count) : 0;
+    const scored = items.filter((item) => typeof item.fitScore === 'number') as { fitScore: number }[];
+    const avgFit = scored.length ? Math.round(scored.reduce((sum, item) => sum + item.fitScore, 0) / scored.length) : null;
     return { count, avgFit };
   }, [items]);
 
@@ -71,7 +72,7 @@ export default function UniversitySearchShortlistPage() {
               <Target className="h-5 w-5 text-emerald-500" aria-hidden />
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-semibold text-foreground">{metrics.avgFit}%</p>
+              <p className="text-3xl font-semibold text-foreground">{metrics.avgFit !== null ? `${metrics.avgFit}%` : 'N/A'}</p>
               <p className="text-xs text-muted-foreground">Across shortlisted programs</p>
             </CardContent>
           </Card>
@@ -131,7 +132,7 @@ export default function UniversitySearchShortlistPage() {
                       <p className="text-sm text-muted-foreground">{item.program}</p>
                     </div>
                     <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-900">
-                      {item.fitScore}% fit
+                      {typeof item.fitScore === 'number' ? `${Math.round(item.fitScore)}% fit` : 'Fit TBD'}
                     </span>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
@@ -145,11 +146,11 @@ export default function UniversitySearchShortlistPage() {
                       tabIndex={0}
                       aria-label={`Stage ${item.stage}`}
                     >
-                      {item.stage}
+                      {item.stage ?? 'Researching'}
                     </span>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <Clock className="h-4 w-4 text-muted-foreground" aria-hidden />
-                      <span>{item.due}</span>
+                      <span>{item.due ?? 'Set a date'}</span>
                     </div>
                   </div>
                 </CardHeader>
@@ -157,7 +158,7 @@ export default function UniversitySearchShortlistPage() {
                 <CardContent className="space-y-3 pt-0">
                   <div className="rounded-2xl bg-muted/60 p-4">
                     <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Next action</p>
-                    <p className="mt-1 text-sm text-foreground">{item.nextAction}</p>
+                    <p className="mt-1 text-sm text-foreground">{item.nextAction ?? 'Add a next action to keep momentum.'}</p>
                   </div>
                 </CardContent>
 

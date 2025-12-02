@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Check } from 'lucide-react';
 import { MatchTier } from '@/lib/matching/engine';
@@ -10,8 +10,8 @@ export interface UniversityCardProps {
     name: string;
     program: string;
     location: string;
-    fitScore: number;
-    tier: MatchTier;
+    fitScore?: number | null;
+    tier?: MatchTier | null;
     highlights?: string[]; // Optional, as EnrichedMatch might not have this exact field yet
     isShortlisted?: boolean;
     isSelected?: boolean;
@@ -43,7 +43,9 @@ export function UniversityCard({
         return 'text-rose-600 ring-rose-100 bg-rose-50';
     };
 
-    const scoreColorClass = getScoreColor(fitScore);
+    const scoreValue = typeof fitScore === 'number' ? Math.round(fitScore) : null;
+    const scoreColorClass = scoreValue !== null ? getScoreColor(scoreValue) : 'text-muted-foreground ring-border bg-muted';
+    const courseHref = id ? `/course/${encodeURIComponent(id)}?from=search` : null;
 
     return (
         <article
@@ -72,7 +74,9 @@ export function UniversityCard({
             {/* Header: Score & Location */}
             <div className="flex items-start justify-between">
                 <div className={cn('flex items-center justify-center rounded-full ring-4', scoreColorClass, variant === 'compact' ? 'h-10 w-10' : 'h-12 w-12')}>
-                    <span className={cn('font-bold', variant === 'compact' ? 'text-xs' : 'text-sm')}>{fitScore}%</span>
+                    <span className={cn('font-bold', variant === 'compact' ? 'text-xs' : 'text-sm')}>
+                        {scoreValue !== null ? `${scoreValue}%` : 'N/A'}
+                    </span>
                 </div>
                 <div className="text-right">
                     <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{location}</p>
@@ -114,9 +118,21 @@ export function UniversityCard({
                     actions
                 ) : (
                     <>
-                        <Button asChild size="sm" className="w-full rounded-xl font-semibold shadow-sm">
-                            <Link href={`/course/${id}?from=search`}>View Course</Link>
-                        </Button>
+                        {courseHref ? (
+                            <Link
+                                href={courseHref}
+                                className={cn(
+                                    buttonVariants({ size: 'sm', className: 'w-full rounded-xl font-semibold shadow-sm' })
+                                )}
+                                prefetch
+                            >
+                                View Course
+                            </Link>
+                        ) : (
+                            <Button size="sm" className="w-full rounded-xl font-semibold shadow-sm" disabled>
+                                View Course
+                            </Button>
+                        )}
                         {onToggleShortlist && (
                             <Button
                                 size="sm"

@@ -6,62 +6,45 @@ export interface ShortlistItem {
   id: string;
   name: string;
   program: string;
-  stage: string;
-  fitScore: number;
-  nextAction: string;
-  due: string;
+  stage?: string;
+  fitScore?: number | null;
+  nextAction?: string | null;
+  due?: string | null;
   location?: string;
 }
 
-const STORAGE_KEY = 'ascenda-university-shortlist';
-
-const seedShortlist: ShortlistItem[] = [
-  {
-    id: 'yale-epe',
-    name: 'Yale University',
-    program: 'Ethics, Politics & Economics',
-    stage: 'Researching',
-    fitScore: 88,
-    nextAction: 'Schedule counselor debrief to prioritize essays.',
-    due: 'Plan by May 12',
-    location: 'New Haven, USA'
-  },
-  {
-    id: 'melbourne-design',
-    name: 'University of Melbourne',
-    program: 'Design + Innovation',
-    stage: 'Shortlisted',
-    fitScore: 84,
-    nextAction: 'Confirm portfolio pieces and prep storytelling video.',
-    due: 'Upload draft by May 24',
-    location: 'Melbourne, Australia'
-  },
-  {
-    id: 'hkust-gbus',
-    name: 'HKUST',
-    program: 'Global Business',
-    stage: 'Active',
-    fitScore: 81,
-    nextAction: 'Line up teacher recommendations and test scores.',
-    due: 'Locker synced by June 02',
-    location: 'Hong Kong'
-  }
-];
+const STORAGE_KEY = 'ascenda-university-shortlist-v2';
+const OLD_STORAGE_KEY = 'ascenda-university-shortlist';
+const DEMO_IDS = new Set(['yale-epe', 'melbourne-design', 'hkust-gbus']);
 
 export const useShortlist = () => {
-  const [items, setItems] = useState<ShortlistItem[]>(seedShortlist);
+  const [items, setItems] = useState<ShortlistItem[]>([]);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
     const stored = typeof window !== 'undefined' ? window.localStorage.getItem(STORAGE_KEY) : null;
-    if (stored) {
+    const legacy = typeof window !== 'undefined' ? window.localStorage.getItem(OLD_STORAGE_KEY) : null;
+    const parseItems = (value: string | null) => {
+      if (!value) return null;
       try {
-        setItems(JSON.parse(stored));
+        return JSON.parse(value) as ShortlistItem[];
       } catch {
-        setItems(seedShortlist);
+        return null;
       }
-    } else if (typeof window !== 'undefined') {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(seedShortlist));
+    };
+
+    const migrated = parseItems(stored) ?? parseItems(legacy);
+    const cleaned = migrated?.filter((item) => !DEMO_IDS.has(item.id)) ?? [];
+    if (cleaned.length > 0) {
+      setItems(cleaned);
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(cleaned));
+      }
+    } else {
+      setItems([]);
+    }
+    if (typeof window !== 'undefined') {
+      window.localStorage.removeItem(OLD_STORAGE_KEY);
     }
     setReady(true);
   }, []);
@@ -77,7 +60,15 @@ export const useShortlist = () => {
       if (prev.some((existing) => existing.id === item.id)) {
         return prev;
       }
-      return [...prev, item];
+      return [
+        ...prev,
+        {
+          stage: 'Researching',
+          due: null,
+          nextAction: null,
+          ...item
+        }
+      ];
     });
   }, []);
 

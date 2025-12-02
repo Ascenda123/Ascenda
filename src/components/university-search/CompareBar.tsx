@@ -1,9 +1,9 @@
 import { Button } from '@/components/ui/button';
-import { PlaceholderResult } from './placeholder-results';
-import { X, ArrowRight, Share2, Sparkles } from 'lucide-react';
+import { ProgramSearchResult } from './types';
+import { X, ArrowRight } from 'lucide-react';
 
 interface CompareBarProps {
-    selectedItems: PlaceholderResult[];
+    selectedItems: ProgramSearchResult[];
     onClear: () => void;
     onRemove: (id: string) => void;
     onCompare: () => void;
@@ -58,11 +58,11 @@ export function CompareBar({ selectedItems, onClear, onRemove, onCompare }: Comp
                             className="group flex w-full items-center gap-2 rounded-xl border border-border/30 bg-background/50 px-2.5 py-1 text-foreground transition hover:border-foreground/40"
                         >
                             <div className="flex h-7 w-7 items-center justify-center rounded-full bg-muted/60 text-xs font-bold text-foreground">
-                                {item.name.charAt(0)}
+                                {item.universityName.charAt(0)}
                             </div>
                             <div className="flex flex-col leading-tight">
-                                <span>{item.name}</span>
-                                <span className="text-[10px] text-muted-foreground/70">{item.program}</span>
+                                <span>{item.universityName}</span>
+                                <span className="text-[10px] text-muted-foreground/70">{item.programName}</span>
                             </div>
                             <button
                                 onClick={() => onRemove(item.id)}

@@ -1,51 +1,64 @@
 import { type ReactNode, useMemo, useState } from 'react';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
-import { PlaceholderResult } from './placeholder-results';
-import { CheckCircle2, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { ProgramSearchResult } from './types';
 
 type MetricRow = {
     id: string;
     label: string;
     hint?: string;
-    valueForCompare: (uni: PlaceholderResult) => string | number;
-    render: (uni: PlaceholderResult) => ReactNode;
-    numeric?: (uni: PlaceholderResult) => number;
+    valueForCompare: (uni: ProgramSearchResult) => string | number | null | undefined;
+    render: (uni: ProgramSearchResult) => ReactNode;
+    numeric?: (uni: ProgramSearchResult) => number | null | undefined;
     direction?: 'higher' | 'lower';
 };
 
 interface ComparisonModalProps {
     isOpen: boolean;
     onClose: () => void;
-    universities: PlaceholderResult[];
+    universities: ProgramSearchResult[];
     onRemove: (id: string) => void;
     maxItems?: number;
 }
 
-export function ComparisonModal({ isOpen, onClose, universities, onRemove, maxItems = 3 }: ComparisonModalProps) {
-    if (!isOpen) return null;
+const formatScore = (score?: number | null) => (typeof score === 'number' ? `${Math.round(score)}%` : 'N/A');
+const formatPercentage = (value?: number | null) => {
+    if (value === null || value === undefined) return 'N/A';
+    const normalized = value > 1 ? value : value * 100;
+    return `${Math.round(normalized)}%`;
+};
+const formatCurrencyRange = (value?: { low?: number | null; high?: number | null; fallback?: number | null; currency?: string | null }) => {
+    if (!value) return 'N/A';
+    const formatter = new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: value.currency ?? 'USD',
+        maximumFractionDigits: 0
+    });
+    if (value.low !== null && value.low !== undefined && value.high !== null && value.high !== undefined) {
+        return `${formatter.format(value.low)} - ${formatter.format(value.high)}`;
+    }
+    if (value.fallback !== null && value.fallback !== undefined) {
+        return formatter.format(value.fallback);
+    }
+    return 'N/A';
+};
 
+export function ComparisonModal({ isOpen, onClose, universities, onRemove, maxItems = 3 }: ComparisonModalProps) {
     const [highlightDiffs, setHighlightDiffs] = useState(true);
     const [hideMatches, setHideMatches] = useState(false);
-
-    const columnsStyle = useMemo(
-        () => ({
-            gridTemplateColumns: `240px repeat(${Math.max(1, universities.length)}, minmax(240px, 1fr))`
-        }),
-        [universities.length]
-    );
 
     const metricRows: MetricRow[] = [
         {
             id: 'fitScore',
             label: 'Fit Score',
             hint: 'How well this program maps to your signals.',
-            valueForCompare: (uni) => `${uni.fitScore}%`,
+            valueForCompare: (uni) => formatScore(uni.fitScore),
             render: (uni) => (
                 <div className="flex flex-col items-center gap-1 text-center">
-                    <span className="text-lg font-semibold">{uni.fitScore}%</span>
-                    <span className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">{uni.tier}</span>
+                    <span className="text-lg font-semibold">{formatScore(uni.fitScore)}</span>
+                    <span className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">{uni.tier ?? 'N/A'}</span>
                 </div>
             ),
             numeric: (uni) => uni.fitScore,
@@ -55,55 +68,41 @@ export function ComparisonModal({ isOpen, onClose, universities, onRemove, maxIt
             id: 'acceptanceRate',
             label: 'Acceptance Rate',
             hint: 'Lower means more competitive.',
-            valueForCompare: (uni) => `${uni.acceptanceRate}%`,
-            render: (uni) => <span className="text-sm font-semibold text-foreground">{uni.acceptanceRate}%</span>,
+            valueForCompare: (uni) => formatPercentage(uni.acceptanceRate),
+            render: (uni) => <span className="text-sm font-semibold text-foreground">{formatPercentage(uni.acceptanceRate)}</span>,
             numeric: (uni) => uni.acceptanceRate,
             direction: 'lower'
         },
         {
             id: 'duration',
             label: 'Duration',
-            valueForCompare: (uni) => `${uni.durationYears} years`,
-            render: (uni) => <span className="text-sm text-foreground">{uni.durationYears} years</span>,
-            numeric: (uni) => uni.durationYears,
+            valueForCompare: (uni) => (uni.durationYears ? `${uni.durationYears} years` : 'N/A'),
+            render: (uni) => <span className="text-sm text-foreground">{uni.durationYears ? `${uni.durationYears} years` : 'N/A'}</span>,
+            numeric: (uni) => uni.durationYears ?? null,
             direction: 'lower'
         },
         {
             id: 'tuition',
             label: 'Tuition (annual)',
             hint: 'Rounded annual tuition; housing not included.',
-            valueForCompare: (uni) => `${uni.domesticTuition} | ${uni.internationalTuition}`,
+            valueForCompare: (uni) =>
+                formatCurrencyRange({
+                    low: uni.intlTuitionLow,
+                    high: uni.intlTuitionHigh,
+                    fallback: uni.tuition,
+                    currency: uni.currency
+                }),
             render: (uni) => (
                 <div className="flex flex-col gap-1 text-xs font-semibold text-foreground">
-                    <span className="rounded-full bg-muted px-3 py-1">Intl: {uni.internationalTuition}</span>
-                    <span className="rounded-full bg-muted px-3 py-1">Domestic: {uni.domesticTuition}</span>
+                    <span className="rounded-full bg-muted px-3 py-1">
+                        {formatCurrencyRange({
+                            low: uni.intlTuitionLow,
+                            high: uni.intlTuitionHigh,
+                            fallback: uni.tuition,
+                            currency: uni.currency
+                        })}
+                    </span>
                 </div>
-            )
-        },
-        {
-            id: 'placementYear',
-            label: 'Placement Year',
-            valueForCompare: (uni) => (uni.placementYear ? 'Yes' : 'No'),
-            render: (uni) => (
-                <span
-                    className={`rounded-full px-3 py-1 text-xs font-semibold ${uni.placementYear ? 'bg-emerald-100 text-emerald-800' : 'bg-muted text-muted-foreground'
-                        }`}
-                >
-                    {uni.placementYear ? 'Available' : 'No'}
-                </span>
-            )
-        },
-        {
-            id: 'studyAbroad',
-            label: 'Study Abroad',
-            valueForCompare: (uni) => (uni.studyAbroad ? 'Yes' : 'No'),
-            render: (uni) => (
-                <span
-                    className={`rounded-full px-3 py-1 text-xs font-semibold ${uni.studyAbroad ? 'bg-blue-100 text-blue-800' : 'bg-muted text-muted-foreground'
-                        }`}
-                >
-                    {uni.studyAbroad ? 'Yes' : 'No'}
-                </span>
             )
         },
         {
@@ -115,8 +114,8 @@ export function ComparisonModal({ isOpen, onClose, universities, onRemove, maxIt
         {
             id: 'program',
             label: 'Program',
-            valueForCompare: (uni) => uni.program,
-            render: (uni) => <span className="text-sm font-medium text-foreground">{uni.program}</span>
+            valueForCompare: (uni) => uni.programName,
+            render: (uni) => <span className="text-sm font-medium text-foreground">{uni.programName}</span>
         },
         {
             id: 'highlights',
@@ -133,29 +132,6 @@ export function ComparisonModal({ isOpen, onClose, universities, onRemove, maxIt
                         </span>
                     ))}
                 </div>
-            )
-        },
-        {
-            id: 'nextAction',
-            label: 'Next Action',
-            valueForCompare: (uni) => uni.nextAction,
-            render: (uni) => <p className="text-xs text-muted-foreground">{uni.nextAction}</p>
-        },
-        {
-            id: 'due',
-            label: 'Due Date',
-            valueForCompare: (uni) => uni.due,
-            render: (uni) => <span className="text-sm font-medium text-foreground">{uni.due}</span>
-        },
-        {
-            id: 'applicationStatus',
-            label: 'Status',
-            valueForCompare: (uni) => uni.applicationStatus,
-            render: (uni) => (
-                <span className="inline-flex items-center gap-2 rounded-full bg-card px-3 py-1 text-xs font-semibold text-foreground ring-1 ring-border">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
-                    {uni.applicationStatus}
-                </span>
             )
         }
     ];
@@ -196,6 +172,8 @@ export function ComparisonModal({ isOpen, onClose, universities, onRemove, maxIt
         const color = isBest ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800';
         return <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${color}`}>{label}</span>;
     };
+
+    if (!isOpen) return null;
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
@@ -297,8 +275,8 @@ export function ComparisonModal({ isOpen, onClose, universities, onRemove, maxIt
                                                 Remove
                                             </button>
                                             <div className="h-16 w-16 rounded-2xl bg-muted ring-1 ring-border" />
-                                            <h3 className="text-lg font-bold text-foreground">{uni.name}</h3>
-                                            <p className="text-sm text-muted-foreground">{uni.program}</p>
+                                            <h3 className="text-lg font-bold text-foreground">{uni.universityName}</h3>
+                                            <p className="text-sm text-muted-foreground">{uni.programName}</p>
                                             <Button asChild size="sm" className="mt-1 w-full rounded-lg" variant="secondary">
                                                 <Link href={`/course/${uni.id}`}>Open course page</Link>
                                             </Button>

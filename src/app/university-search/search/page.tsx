@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Search } from 'lucide-react';
 import { AnimatedBlobBanner } from '@/components/animated-blob-banner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
+import { getBrowserSupabaseClient } from '@/lib/supabase/client';
 
 const filterGroups = [
   {
@@ -32,6 +33,54 @@ const filterGroups = [
 
 export default function UniversitySearchPage() {
   const [selectedFilters, setSelectedFilters] = useState<Set<string>>(new Set());
+  const [featuredProgram, setFeaturedProgram] = useState<{
+    university: string;
+    program: string;
+    location: string;
+  } | null>(null);
+
+  useEffect(() => {
+    const loadFeatured = async () => {
+      try {
+        const supabase = getBrowserSupabaseClient();
+        const { data, error } = await supabase
+          .from('programs')
+          .select(
+            `
+          name,
+          universities (
+            name,
+            country,
+            city,
+            region
+          )
+        `
+          )
+          .not('id', 'eq', '44444444-4444-4444-4444-444444444444')
+          .limit(1)
+          .maybeSingle();
+
+        if (error) throw error;
+
+        if (data) {
+          const uni = (data as any).universities as { name?: string | null; country?: string | null; city?: string | null; region?: string | null } | null;
+          const location = [uni?.city, uni?.region, uni?.country].filter(Boolean).join(', ');
+          setFeaturedProgram({
+            university: uni?.name ?? 'University catalog',
+            program: data.name,
+            location: location || 'Location unavailable'
+          });
+        } else {
+          setFeaturedProgram(null);
+        }
+      } catch (loadError) {
+        console.error('Failed to load featured program', loadError);
+        setFeaturedProgram(null);
+      }
+    };
+
+    loadFeatured();
+  }, []);
 
   const toggleFilter = (option: string) => {
     const next = new Set(selectedFilters);
@@ -87,30 +136,39 @@ export default function UniversitySearchPage() {
           <div className="rounded-[32px] border border-border bg-card p-6 shadow-[0_18px_45px_rgba(15,23,42,0.1)] transition-colors lg:flex lg:items-center lg:gap-8">
             <div className="flex-1 space-y-3">
               <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-[0.35em] text-muted-foreground">
-                <span>Preview match</span>
-                <span>Beta</span>
+                <span>Live catalog</span>
+                <span>Supabase</span>
               </div>
               <div className="flex items-center gap-4">
                 <div className="h-16 w-16 rounded-2xl bg-muted" aria-hidden />
                 <div>
-                  <p className="text-lg font-semibold text-foreground">Harvard University</p>
-                  <p className="text-sm text-muted-foreground">Computational Design</p>
+                  <p className="text-lg font-semibold text-foreground">
+                    {featuredProgram?.university ?? 'Catalog is syncing'}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {featuredProgram?.program ?? 'Add programs in Supabase to see them here'}
+                  </p>
+                  {featuredProgram?.location ? (
+                    <p className="text-xs text-muted-foreground">{featuredProgram.location}</p>
+                  ) : null}
                 </div>
               </div>
               <div className="rounded-2xl border border-border bg-muted/60 p-4">
                 <div className="flex items-center justify-between">
-                  <p className="text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground">fit score</p>
-                  <p className="text-2xl font-semibold text-foreground">92%</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground">Catalog status</p>
+                  <p className="text-2xl font-semibold text-foreground">
+                    {featuredProgram ? 'Live data' : 'No catalog records yet'}
+                  </p>
                 </div>
-                <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
-                  <li>• Portfolio ready; aligns with your design internship history.</li>
-                  <li>• Entry requirements match your predicted IB scores.</li>
-                  <li>• Flagged interview prep window in mid-November.</li>
-                </ul>
+                <p className="mt-4 text-sm text-muted-foreground">
+                  {featuredProgram
+                    ? 'Preview pulled directly from Supabase. Start a search to see the full catalog.'
+                    : 'Connect Supabase and add programs to surface them here.'}
+                </p>
               </div>
             </div>
             <div className="mt-6 flex flex-1 flex-wrap gap-3 lg:mt-0 lg:justify-end">
-              {['Studio vibe', 'Scholarship friendly', 'Urban campus'].map((tag) => (
+              {(featuredProgram ? [featuredProgram.location] : ['Supabase connected', 'Add programs']).filter(Boolean).map((tag) => (
                 <span key={tag} className="rounded-full border border-border px-3 py-1 text-xs font-semibold text-foreground">
                   {tag}
                 </span>

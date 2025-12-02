@@ -2,7 +2,6 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { UniversityInformation, type UniversityData } from '@/components/university-search/university-information';
-import { placeholderResults } from '@/components/university-search/placeholder-results';
 
 export const metadata: Metadata = {
   title: 'University Information | Ascenda'
@@ -116,41 +115,6 @@ const mapToUniversityData = (program?: ProgramRecord | null, university?: Univer
   };
 };
 
-const buildFallbackFromPlaceholder = (id: string): UniversityData | null => {
-  const result = placeholderResults.find((item) => item.id === id);
-  if (!result) return null;
-
-  return {
-    program: { title: result.program, level: 'Undergraduate', duration: '4 years', size: 'Medium cohort' },
-    university: {
-      name: result.name,
-      location: result.location,
-      totalStudents: '22,500',
-      genderRatio: '52:48',
-      internationalStudentRatio: '28%',
-      studentStaffRatio: '12:1',
-      type: 'Research-intensive',
-      studyAbroadAvailable: true
-    },
-    rankings: { guardian: 12, qs: 5, times: 7 },
-    statistics: { acceptanceRate: '14%', nssScore: '91%', employmentRate: '93%' },
-    costs: { annualTuition: '$38,000', dormitoryCost: '$12,000', averageRent: '$1,600/mo', livingIndex: '112' },
-    experience: {
-      culturalEnvironment: 'Global campus with collaborative studios.',
-      socialLife: 'Residential colleges with vibrant societies.',
-      climate: 'Mild with warm summers.',
-      safetyIndex: '82/100',
-      airportDistance: '35 mins',
-      trainStationDistance: '10 mins',
-      cityCharacteristics: 'Innovation hub with museums, parks, and foodie districts.'
-    },
-    fitFactors: {
-      insights: 'Insights gathered from interviews.',
-      cityDescription: 'Students praised the startup culture, mentorship access, and compact campus that keeps everything walkable.'
-    }
-  };
-};
-
 export default async function UniversityDetailPage({ params, searchParams }: PageProps & { searchParams: { from?: string } }) {
   const supabase = createServerSupabaseClient();
   const { data: programRecord, error } = await supabase.from('programs').select('*, universities(*)').eq('id', params.id).single();
@@ -159,11 +123,6 @@ export default async function UniversityDetailPage({ params, searchParams }: Pag
   if (programRecord) {
     const universityData = mapToUniversityData(programRecord as ProgramRecord, (programRecord as ProgramRecord).universities ?? null);
     return <UniversityInformation universityData={universityData} programId={params.id} contextSource={contextSource} />;
-  }
-
-  const fallbackData = buildFallbackFromPlaceholder(params.id);
-  if (fallbackData) {
-    return <UniversityInformation universityData={fallbackData} programId={params.id} contextSource={contextSource} />;
   }
 
   if (error) {

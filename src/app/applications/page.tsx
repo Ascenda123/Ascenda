@@ -84,6 +84,22 @@ export default async function ApplicationsPage() {
   const checklistRecords = ((checklists ?? []) as ChecklistRecord[]) ?? [];
   const deadlineRecords = ((deadlines ?? []) as DeadlineRecord[]) ?? [];
 
+  const parsePriorityScore = (score?: number | string | null) => {
+    if (typeof score === 'number') return score;
+    if (typeof score === 'string') {
+      const parsed = Number.parseFloat(score);
+      return Number.isNaN(parsed) ? null : parsed;
+    }
+    return null;
+  };
+
+  const derivePriority = (score: number | null): PriorityItem['priority'] => {
+    if (score === null) return 'watch';
+    if (score >= 80) return 'high';
+    if (score >= 60) return 'medium';
+    return 'watch';
+  };
+
   if (appRecords.length === 0) {
     return (
       <DashboardShell>
@@ -128,70 +144,24 @@ export default async function ApplicationsPage() {
     );
   }
 
-  const fallbackPriorities: PriorityItem[] = [
-    {
-      id: 'demo-oxford',
-      program: 'PPE (Hons)',
-      university: 'University of Oxford',
-      priority: 'high',
-      fitScore: 91,
-      status: 'Essay polishing',
-      nextDeadline: 'Oct 15',
-      tasksRemaining: 3,
-      scholarshipFocus: 'Rhodes shortlist'
-    },
-    {
-      id: 'demo-stanford',
-      program: 'Symbolic Systems BS',
-      university: 'Stanford University',
-      priority: 'medium',
-      fitScore: 87,
-      status: 'Testing plan',
-      nextDeadline: 'Nov 1',
-      tasksRemaining: 5,
-      scholarshipFocus: 'Need-based aid'
-    },
-    {
-      id: 'demo-nus',
-      program: 'Engineering & Design BEng',
-      university: 'NUS',
-      priority: 'watch',
-      fitScore: 80,
-      status: 'Portfolio draft',
-      nextDeadline: 'Dec 1',
-      tasksRemaining: 2
-    },
-    {
-      id: 'demo-utoronto',
-      program: 'Rotman Commerce',
-      university: 'University of Toronto',
-      priority: 'medium',
-      fitScore: 83,
-      status: 'Reference waiting',
-      nextDeadline: 'Jan 15',
-      tasksRemaining: 4,
-      scholarshipFocus: 'Lester B. Pearson'
-    }
-  ];
-
   const priorityItems: PriorityItem[] =
     appRecords.length > 0
-      ? appRecords.map((app, index) => {
+      ? appRecords.map((app) => {
+        const score = parsePriorityScore(app.priority_score);
         const firstDeadline = deadlineRecords.find((deadline) => deadline.program_id === app.program_id);
-        const fallbackPriority: PriorityItem['priority'][] = ['high', 'medium', 'watch'];
         return {
           id: app.id,
           program: app.program?.name ?? 'Program',
           university: app.program?.universities?.name ?? 'University partner',
-          priority: fallbackPriority[index % fallbackPriority.length],
-          fitScore: Math.round(app.priority_score ?? 75),
+          priority: derivePriority(score),
+          fitScore: score,
           status: app.status ?? 'In progress',
           nextDeadline: firstDeadline?.deadline_date ?? undefined,
-          tasksRemaining: checklistRecords.filter((task) => task.status !== 'done' && task.application_id === app.id).length || 1,
+          tasksRemaining: checklistRecords.filter((task) => task.status !== 'done' && task.application_id === app.id).length,
           scholarshipFocus: app.notes ?? undefined
         };
       })
-      : fallbackPriorities;
+      : [];
 
   const requirementItems: RequirementItem[] =
     checklistRecords.length > 0
@@ -207,48 +177,20 @@ export default async function ApplicationsPage() {
           status
         };
       })
-      : [
-        {
-          id: 'req-1',
-          requirement: 'Common App essay',
-          application: 'US Common App',
-          dueDate: 'Sept 15',
-          owner: 'You',
-          status: 'pending'
-        },
-        {
-          id: 'req-2',
-          requirement: 'Counselor reference',
-          application: 'LSE Law LLB',
-          dueDate: 'Oct 1',
-          owner: 'Ms. Kapur',
-          status: 'requested'
-        },
-        {
-          id: 'req-3',
-          requirement: 'Portfolio PDF',
-          application: 'Parsons Design BFA',
-          dueDate: 'Nov 5',
-          owner: 'You',
-          status: 'submitted'
-        }
-      ];
+      : [];
 
   const plannerEvents: PlannerEvent[] =
     deadlineRecords.length > 0
-      ? deadlineRecords.map((deadline) => ({
-        id: deadline.id,
-        title: deadline.name,
-        date: deadline.deadline_date ?? 'TBD',
-        category: 'deadline',
-        detail: deadline.intake ?? 'Application'
-      }))
-      : [
-        { id: 'event-1', title: 'Oxford UCAS deadline', date: '2024-10-15', category: 'deadline', detail: 'Submit UCAS + tests' },
-        { id: 'event-2', title: 'Recommender reminder', date: '2024-09-01', category: 'reference', detail: 'Nudge Mr. Tan' },
-        { id: 'event-3', title: 'Portfolio review', date: '2024-09-10', category: 'task', detail: 'Upload for Parsons' },
-        { id: 'event-4', title: 'Wharton interview prep', date: '2024-11-02', category: 'interview', detail: 'Mock interview' }
-      ];
+      ? deadlineRecords
+        .map((deadline) => ({
+          id: deadline.id,
+          title: deadline.name,
+          date: deadline.deadline_date ?? '',
+          category: 'deadline',
+          detail: deadline.intake ?? 'Application'
+        }))
+        .filter((event) => event.date && !Number.isNaN(new Date(event.date).getTime()))
+      : [];
 
   const today = new Date();
   const isSameDay = (value?: string | null) => {
@@ -306,36 +248,9 @@ export default async function ApplicationsPage() {
           school: appRecords.find((app) => app.id === task.application_id)?.program?.universities?.name ?? 'Multiple schools',
           dueDate: task.due_date ?? undefined,
           status: task.status === 'done' ? 'received' : 'sent',
-          lastNudged: task.status === 'done' ? undefined : '3d ago'
+          lastNudged: undefined
         }))
-      : [
-        {
-          id: 'ref-1',
-          name: 'Mrs. Kapoor',
-          relationship: 'IB Coordinator',
-          school: 'Oxford + LSE',
-          dueDate: 'Sep 30',
-          status: 'sent',
-          lastNudged: '2d ago'
-        },
-        {
-          id: 'ref-2',
-          name: 'Coach Alvarez',
-          relationship: 'Extracurricular mentor',
-          school: 'Stanford',
-          dueDate: 'Oct 5',
-          status: 'drafted'
-        },
-        {
-          id: 'ref-3',
-          name: 'Mr. Tan',
-          relationship: 'Physics teacher',
-          school: 'NUS',
-          dueDate: 'Oct 12',
-          status: 'received',
-          lastNudged: '5d ago'
-        }
-      ];
+      : [];
 
   const signalItems: SignalItem[] =
     deadlineRecords.length > 0
@@ -346,29 +261,7 @@ export default async function ApplicationsPage() {
         timeAgo: 'Just now',
         type: 'deadline'
       }))
-      : [
-        {
-          id: 'signal-1',
-          title: 'MIT advanced action window opens next week',
-          detail: 'Portal invites released Aug 28. Prep your interview availability.',
-          timeAgo: '1h ago',
-          type: 'portal'
-        },
-        {
-          id: 'signal-2',
-          title: 'New Singapore Global Citizen scholarship',
-          detail: 'S$80k total award for STEM majors—deadline Oct 1.',
-          timeAgo: '4h ago',
-          type: 'scholarship'
-        },
-        {
-          id: 'signal-3',
-          title: 'Parsons portfolio requirement clarified',
-          detail: 'Add 2 fabrications or motion studies before submitting.',
-          timeAgo: '1d ago',
-          type: 'task'
-        }
-      ];
+      : [];
 
   const timelineItems = deadlineRecords.map((deadline) => ({
     id: deadline.id,
@@ -378,8 +271,8 @@ export default async function ApplicationsPage() {
   }));
 
   const heroStats = [
-    { label: 'Applications', value: `${appRecords.length || fallbackPriorities.length}`, detail: 'Tracked' },
-    { label: 'Deadlines', value: `${deadlineRecords.length || plannerEvents.length}`, detail: 'Synced' },
+    { label: 'Applications', value: `${appRecords.length}`, detail: 'Tracked' },
+    { label: 'Deadlines', value: `${deadlineRecords.length}`, detail: 'Synced' },
     { label: 'Signals', value: `${signalItems.length}`, detail: 'Latest updates' }
   ];
 
