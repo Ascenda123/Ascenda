@@ -33,6 +33,8 @@ export default function UniversitySearchResultsPage() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [selectedForComparison, setSelectedForComparison] = useState<SearchResult[]>([]);
   const [isComparisonOpen, setIsComparisonOpen] = useState(false);
+  const [selectedUniversities, setSelectedUniversities] = useState<string[]>([]);
+  const [selectedPrograms, setSelectedPrograms] = useState<string[]>([]);
   const [quickFilters, setQuickFilters] = useState({
     budgetFriendly: false,
     englishOnly: false,
@@ -102,6 +104,30 @@ export default function UniversitySearchResultsPage() {
     fetchResults();
   }, []);
 
+  const availableUniversities = useMemo(() => {
+    const source =
+      selectedPrograms.length > 0
+        ? results.filter((result) => selectedPrograms.includes(result.program))
+        : results;
+
+    const names = new Set<string>();
+    source.forEach((result) => names.add(result.name));
+    selectedUniversities.forEach((name) => names.add(name));
+    return Array.from(names).sort((a, b) => a.localeCompare(b));
+  }, [results, selectedPrograms, selectedUniversities]);
+
+  const availablePrograms = useMemo(() => {
+    const source =
+      selectedUniversities.length > 0
+        ? results.filter((result) => selectedUniversities.includes(result.name))
+        : results;
+
+    const programs = new Set<string>();
+    source.forEach((result) => programs.add(result.program));
+    selectedPrograms.forEach((program) => programs.add(program));
+    return Array.from(programs).sort((a, b) => a.localeCompare(b));
+  }, [results, selectedPrograms, selectedUniversities]);
+
   // Filter Results
   const filteredResults = useMemo(() => {
     const normalizedQuery = searchQuery.toLowerCase();
@@ -110,9 +136,37 @@ export default function UniversitySearchResultsPage() {
         !normalizedQuery ||
         `${result.name} ${result.program} ${result.location}`.toLowerCase().includes(normalizedQuery);
       const matchesTier = selectedTiers.includes(result.tier);
-      return matchesSearch && matchesTier;
+      const matchesUniversity =
+        selectedUniversities.length === 0 || selectedUniversities.includes(result.name);
+      const matchesProgram =
+        selectedPrograms.length === 0 || selectedPrograms.includes(result.program);
+      return matchesSearch && matchesTier && matchesUniversity && matchesProgram;
     });
-  }, [results, searchQuery, selectedTiers]);
+  }, [results, searchQuery, selectedTiers, selectedPrograms, selectedUniversities]);
+
+  const handleToggleUniversity = (name: string) => {
+    setSelectedUniversities((prev) =>
+      prev.includes(name) ? prev.filter((item) => item !== name) : [...prev, name]
+    );
+  };
+
+  const handleToggleProgram = (program: string) => {
+    setSelectedPrograms((prev) =>
+      prev.includes(program) ? prev.filter((item) => item !== program) : [...prev, program]
+    );
+  };
+
+  const handleResetFilters = () => {
+    setSearchQuery('');
+    setSelectedTiers(['Reach', 'Match', 'Safe']);
+    setSelectedUniversities([]);
+    setSelectedPrograms([]);
+    setQuickFilters({
+      budgetFriendly: false,
+      englishOnly: false,
+      testOptional: false
+    });
+  };
 
   // Handlers
   const handleToggleShortlist = (result: SearchResult) => {
@@ -182,6 +236,13 @@ export default function UniversitySearchResultsPage() {
               [key]: !prev[key]
             }))
           }
+          selectedUniversities={selectedUniversities}
+          selectedPrograms={selectedPrograms}
+          availableUniversities={availableUniversities}
+          availablePrograms={availablePrograms}
+          onUniversityToggle={handleToggleUniversity}
+          onProgramToggle={handleToggleProgram}
+          onClearFilters={handleResetFilters}
         />
 
         {isLoading ? (
@@ -202,10 +263,7 @@ export default function UniversitySearchResultsPage() {
               Try adjusting your filters or search query to find more results.
             </p>
             <button
-              onClick={() => {
-                setSearchQuery('');
-                setSelectedTiers(['Reach', 'Match', 'Safe']);
-              }}
+              onClick={handleResetFilters}
               className="mt-4 text-sm font-medium text-primary hover:underline"
             >
               Clear all filters

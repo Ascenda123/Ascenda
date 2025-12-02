@@ -2,7 +2,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { MatchTier } from '@/lib/matching/engine';
 import { cn } from '@/lib/utils';
-import { Grid, LayoutList, Search, X } from 'lucide-react';
+import { Check, ChevronDown, Grid, LayoutList, Search, X } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 interface FilterBarProps {
     searchQuery: string;
@@ -18,11 +19,109 @@ interface FilterBarProps {
         testOptional: boolean;
     };
     onQuickFilterChange: (key: keyof FilterBarProps['quickFilters']) => void;
+    selectedUniversities: string[];
+    selectedPrograms: string[];
+    availableUniversities: string[];
+    availablePrograms: string[];
+    onUniversityToggle: (name: string) => void;
+    onProgramToggle: (name: string) => void;
+    onClearFilters?: () => void;
     isSticky?: boolean;
     showViewToggle?: boolean;
 }
 
 const TIERS: MatchTier[] = ['Reach', 'Match', 'Safe'];
+
+type DropdownKind = 'university' | 'program' | null;
+
+function SelectionDropdown({
+    id,
+    label,
+    options,
+    selected,
+    onToggle,
+    isOpen,
+    onOpenChange
+}: {
+    id: DropdownKind;
+    label: string;
+    options: string[];
+    selected: string[];
+    onToggle: (value: string) => void;
+    isOpen: boolean;
+    onOpenChange: (open: DropdownKind) => void;
+}) {
+    const [localQuery, setLocalQuery] = useState('');
+
+    const filtered = useMemo(() => {
+        const normalized = localQuery.toLowerCase();
+        return options.filter((option) => option.toLowerCase().includes(normalized));
+    }, [options, localQuery]);
+
+    return (
+        <div className="relative">
+            <button
+                onClick={() => onOpenChange(isOpen ? null : id)}
+                className={cn(
+                    'flex h-10 items-center gap-2 rounded-xl border border-border bg-background px-3 text-sm font-medium text-foreground shadow-sm transition-colors',
+                    isOpen ? 'ring-2 ring-primary/70 ring-offset-2 ring-offset-card' : 'hover:bg-muted'
+                )}
+            >
+                <span>{label}</span>
+                {selected.length > 0 ? (
+                    <span className="flex h-6 items-center justify-center rounded-lg bg-primary/10 px-2 text-xs font-semibold text-primary">
+                        {selected.length}
+                    </span>
+                ) : null}
+                <ChevronDown className={cn('h-4 w-4 text-muted-foreground transition-transform', isOpen && 'rotate-180')} />
+            </button>
+
+            {isOpen ? (
+                <div className="absolute right-0 z-30 mt-2 w-72 rounded-2xl border border-border bg-popover p-3 shadow-xl">
+                    <div className="mb-2 flex items-center justify-between gap-2">
+                        <Input
+                            value={localQuery}
+                            onChange={(e) => setLocalQuery(e.target.value)}
+                            placeholder={`Search ${label.toLowerCase()}...`}
+                            className="h-9 rounded-lg bg-background"
+                        />
+                        {localQuery ? (
+                            <button
+                                onClick={() => setLocalQuery('')}
+                                className="rounded-md p-1 text-muted-foreground hover:bg-muted"
+                                aria-label={`Clear ${label} search`}
+                            >
+                                <X className="h-4 w-4" />
+                            </button>
+                        ) : null}
+                    </div>
+                    <div className="max-h-56 space-y-1 overflow-y-auto pr-1">
+                        {filtered.length === 0 ? (
+                            <p className="py-6 text-center text-xs text-muted-foreground">No matches</p>
+                        ) : (
+                            filtered.map((option) => {
+                                const active = selected.includes(option);
+                                return (
+                                    <button
+                                        key={option}
+                                        onClick={() => onToggle(option)}
+                                        className={cn(
+                                            'flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition-colors',
+                                            active ? 'bg-primary/10 text-primary' : 'text-foreground hover:bg-muted'
+                                        )}
+                                    >
+                                        <span className="line-clamp-1">{option}</span>
+                                        {active ? <Check className="h-4 w-4" /> : null}
+                                    </button>
+                                );
+                            })
+                        )}
+                    </div>
+                </div>
+            ) : null}
+        </div>
+    );
+}
 
 export function FilterBar({
     searchQuery,
@@ -34,11 +133,33 @@ export function FilterBar({
     resultCount,
     quickFilters,
     onQuickFilterChange,
+    selectedUniversities,
+    selectedPrograms,
+    availableUniversities,
+    availablePrograms,
+    onUniversityToggle,
+    onProgramToggle,
+    onClearFilters,
     isSticky = true,
     showViewToggle = true
 }: FilterBarProps) {
+    const [openDropdown, setOpenDropdown] = useState<DropdownKind>(null);
+    const containerRef = useRef<HTMLDivElement | null>(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+                setOpenDropdown(null);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
     return (
         <div
+            ref={containerRef}
             className={cn(
                 'mb-6 flex flex-col gap-4 rounded-[24px] border border-border bg-card/80 p-4 shadow-sm backdrop-blur-xl',
                 {
@@ -146,7 +267,59 @@ export function FilterBar({
                                 </button>
                             );
                         })}
+                        {onClearFilters ? (
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground"
+                                onClick={onClearFilters}
+                            >
+                                Reset
+                            </Button>
+                        ) : null}
                     </div>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                        <SelectionDropdown
+                            id="university"
+                            label="University"
+                            options={availableUniversities}
+                            selected={selectedUniversities}
+                            onToggle={onUniversityToggle}
+                            isOpen={openDropdown === 'university'}
+                            onOpenChange={setOpenDropdown}
+                        />
+                        <SelectionDropdown
+                            id="program"
+                            label="Course"
+                            options={availablePrograms}
+                            selected={selectedPrograms}
+                            onToggle={onProgramToggle}
+                            isOpen={openDropdown === 'program'}
+                            onOpenChange={setOpenDropdown}
+                        />
+                    </div>
+
+                    {(selectedUniversities.length > 0 || selectedPrograms.length > 0) && (
+                        <div className="flex flex-wrap items-center gap-2">
+                            {[...selectedUniversities, ...selectedPrograms].map((value) => (
+                                <button
+                                    key={value}
+                                    onClick={() =>
+                                        selectedUniversities.includes(value)
+                                            ? onUniversityToggle(value)
+                                            : onProgramToggle(value)
+                                    }
+                                    className="flex items-center gap-2 rounded-full bg-muted px-3 py-1 text-xs font-medium text-foreground transition-colors hover:bg-muted/80"
+                                >
+                                    <span className="line-clamp-1 max-w-[180px]">{value}</span>
+                                    <X className="h-3 w-3" />
+                                </button>
+                            ))}
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
