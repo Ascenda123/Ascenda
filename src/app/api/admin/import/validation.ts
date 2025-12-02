@@ -93,7 +93,25 @@ export const sanitizeRows = (rows: unknown[]): Record<string, unknown>[] =>
       const normalized: Record<string, unknown> = {};
       Object.entries(row).forEach(([key, value]) => {
         if (value === '' || value === undefined) return;
-        normalized[key] = typeof value === 'string' ? value.trim() : value;
+        if (typeof value === 'string') {
+          const trimmed = value.trim();
+          const first = trimmed[0];
+          const last = trimmed[trimmed.length - 1];
+          if (
+            trimmed.length > 1 &&
+            ((first === '{' && last === '}') || (first === '[' && last === ']'))
+          ) {
+            try {
+              normalized[key] = JSON.parse(trimmed);
+              return;
+            } catch {
+              // Fall through to saving trimmed string if JSON.parse fails.
+            }
+          }
+          normalized[key] = trimmed;
+          return;
+        }
+        normalized[key] = value;
       });
       return normalized;
     })

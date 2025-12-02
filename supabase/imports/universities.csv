@@ -1,0 +1,11 @@
+id,name,country,region,city,rank_overall,rank_source,website,intl_tuition_low,intl_tuition_high,currency,acceptance_rate,requires_test,metadata
+75b1eecb-3b5d-5728-89ab-823c71efc1da,"Goldsmiths, University of London",United Kingdom,,,,,,,,,,,"{""source"":""ucas""}"
+a8ebc1cc-4d06-5cd6-ab1e-e78116bcf9a0,"London School of Economics and Political Science, University of London",United Kingdom,,,,,,,,,,,"{""source"":""ucas""}"
+87e6046b-d9a0-501a-ba93-a90f64c9d4d0,SOAS University of London,United Kingdom,,,,,,,,,,,"{""source"":""ucas""}"
+50c4523b-1987-55e5-a437-2abeb94ee3d3,University of Manchester,United Kingdom,,,,,,,,,,,"{""source"":""ucas""}"
+575e8d5c-b877-549e-9e43-cf78b299d84c,University of Leicester,United Kingdom,,,,,,,,,,,"{""source"":""ucas""}"
+4575f1d3-a8ce-5a5f-9629-2d28b0157f72,University of Leeds,United Kingdom,,,,,,,,,,,"{""source"":""ucas""}"
+7387e1d8-34df-51ca-bf60-dd874e543032,"University of Westminster, London",United Kingdom,,,,,,,,,,,"{""source"":""ucas""}"
+25549b9f-06a5-523d-83e1-9045a5759ade,University of East London,United Kingdom,,,,,,,,,,,"{""source"":""ucas""}"
+48d6e43c-1f89-5286-85a3-e335bbee9cdb,Loughborough University,United Kingdom,,,,,,,,,,,"{""source"":""ucas""}"
+e64da10f-6b9a-5177-829e-a6725ff177d3,Queen's University Belfast,United Kingdom,,,,,,,,,,,"{""source"":""ucas""}"

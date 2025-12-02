@@ -33,7 +33,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ count: sanitizedRows.length });
+    return NextResponse.json({ count: validation.rows!.length });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unexpected server error.';
     return NextResponse.json({ error: message }, { status: 500 });
