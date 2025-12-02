@@ -196,6 +196,23 @@
   .form-action {
     @apply w-full sm:w-auto;
   }
+
+  /* Navbar brand colors follow theme data attribute so they stay legible on both modes */
+  .navbar-brand {
+    color: #0f172a;
+  }
+
+  [data-theme='dark'] .navbar-brand {
+    color: #ffffff;
+  }
+
+  .navbar-subtitle {
+    color: #334155;
+  }
+
+  [data-theme='dark'] .navbar-subtitle {
+    color: #d1d5db;
+  }
 }
 
 /* React Big Calendar Dark Mode Overrides */

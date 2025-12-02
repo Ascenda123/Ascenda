@@ -2,16 +2,13 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from '../theme/theme-toggle';
-import { useThemeMode } from '../theme/theme-provider';
 import { filterNavByRole, NAV_ITEMS } from './navigation';
 import { useUserRole } from '@/hooks/use-user-role';
 import { NavLink } from './nav-link';
 
 export const Navbar = () => {
-  const { mode } = useThemeMode();
   const role = useUserRole();
   const navItems = filterNavByRole(NAV_ITEMS, role);
   const logoSrc = '/Ascenda_Logo-removebg-.png';
@@ -29,8 +26,10 @@ export const Navbar = () => {
             />
           </div>
           <div className="flex flex-col leading-tight">
-            <span className="dark:text-white">Ascenda</span>
-            <span className="text-[11px] font-medium uppercase tracking-[0.4em] text-muted-foreground dark:text-gray-300">workspace</span>
+            <span className="navbar-brand transition-colors">Ascenda</span>
+            <span className="navbar-subtitle text-[11px] font-medium uppercase tracking-[0.4em] transition-colors">
+              workspace
+            </span>
           </div>
         </Link>
         <nav className="hidden items-center gap-5 text-xs font-medium text-muted-foreground md:flex">

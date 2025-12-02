@@ -41,11 +41,6 @@ export const NavLink = ({ item, mobile = false }: NavLinkProps) => {
             )}
         >
             <span>{item.label}</span>
-            {active ? (
-                <span className="text-[10px] uppercase tracking-[0.4em] text-primary-foreground/70">
-                    Live
-                </span>
-            ) : null}
         </Link>
     );
 };
