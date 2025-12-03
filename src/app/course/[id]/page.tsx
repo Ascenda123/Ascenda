@@ -61,9 +61,11 @@ const buildQuickFacts = (course: CourseView): QuickFact[] => {
   const tuitionDisplay = course.tuition && course.tuition.trim().length > 0 ? course.tuition : 'Contact university';
   const startRaw = course.startDate?.trim() ?? '';
   const intakeRaw = course.intake?.trim() ?? '';
+  const intakeDisplay = intakeRaw.length > 0 ? intakeRaw : 'TBD';
   const showStart = startRaw.length > 0 && startRaw.toLowerCase() !== intakeRaw.toLowerCase();
   const startDisplay = showStart ? startRaw : '';
   facts.push({ label: 'Tuition', value: tuitionDisplay, icon: Wallet });
+  facts.push({ label: 'Intake', value: intakeDisplay, icon: CalendarDays });
   if (showStart) {
     facts.push({ label: 'Start date', value: startDisplay, icon: CalendarDays });
   }
