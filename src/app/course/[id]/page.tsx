@@ -170,7 +170,8 @@ export default function CoursePage({ params }: { params: { id: string } }) {
   const [course, setCourse] = useState<CourseView | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showAllModules, setShowAllModules] = useState(false);
+  const [showAllFlatModules, setShowAllFlatModules] = useState(false);
+  const [expandedYears, setExpandedYears] = useState<Record<string, boolean>>({});
 
   const backHref = useMemo(() => {
     const from = searchParams.get('from');
@@ -181,7 +182,7 @@ export default function CoursePage({ params }: { params: { id: string } }) {
 
   const moduleItems = useMemo(() => extractBulletItems(course?.modules), [course?.modules]);
   const moduleYearSections = useMemo(() => extractYearSections(course?.modules), [course?.modules]);
-  const visibleModules = showAllModules ? moduleItems : moduleItems.slice(0, 8);
+  const visibleModules = showAllFlatModules ? moduleItems : moduleItems.slice(0, 8);
 
   useEffect(() => {
     const fetchCourse = async () => {
@@ -374,7 +375,9 @@ export default function CoursePage({ params }: { params: { id: string } }) {
                         <div className="relative space-y-4">
                           <div className="absolute left-2 top-1 bottom-4 w-px bg-border/80" aria-hidden />
                           {moduleYearSections.map((section, idx) => {
-                            const items = section.items.slice(0, showAllModules ? section.items.length : 4);
+                            const expanded = expandedYears[section.title] ?? false;
+                            const items = expanded ? section.items : section.items.slice(0, 4);
+                            const canExpand = section.items.length > 4;
                             return (
                               <div key={`yr-${idx}`} className="relative flex gap-4">
                                 <div className="mt-1.5 h-3 w-3 shrink-0 rounded-full border-2 border-primary bg-background shadow-sm" aria-hidden />
@@ -389,19 +392,29 @@ export default function CoursePage({ params }: { params: { id: string } }) {
                                         <span className="leading-relaxed">{emphasize(item)}</span>
                                       </li>
                                     ))}
-                                    {section.items.length > items.length ? (
+                                    {canExpand && section.items.length > items.length ? (
                                       <li className="text-xs text-muted-foreground">+ {section.items.length - items.length} more</li>
                                     ) : null}
                                   </ul>
+                                  {canExpand ? (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() =>
+                                        setExpandedYears((prev) => ({
+                                          ...prev,
+                                          [section.title]: !expanded
+                                        }))
+                                      }
+                                      className="mt-3 px-0 text-primary"
+                                    >
+                                      {expanded ? 'Show fewer' : 'Show all'}
+                                    </Button>
+                                  ) : null}
                                 </div>
                               </div>
                             );
                           })}
-                          {moduleYearSections.some((s) => s.items.length > 4) ? (
-                            <Button variant="ghost" size="sm" onClick={() => setShowAllModules((v) => !v)} className="px-0 text-primary">
-                              {showAllModules ? 'Show fewer' : 'Show all modules'}
-                            </Button>
-                          ) : null}
                         </div>
                       ) : moduleItems.length ? (
                         <div className="space-y-3">
@@ -417,11 +430,21 @@ export default function CoursePage({ params }: { params: { id: string } }) {
                             ))}
                           </ul>
                           {moduleItems.length > visibleModules.length ? (
-                            <Button variant="ghost" size="sm" onClick={() => setShowAllModules(true)} className="px-0 text-primary">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setShowAllFlatModules(true)}
+                              className="px-0 text-primary"
+                            >
                               Show all modules ({moduleItems.length})
                             </Button>
                           ) : moduleItems.length > 8 ? (
-                            <Button variant="ghost" size="sm" onClick={() => setShowAllModules(false)} className="px-0 text-primary">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setShowAllFlatModules(false)}
+                              className="px-0 text-primary"
+                            >
                               Show fewer
                             </Button>
                           ) : null}
