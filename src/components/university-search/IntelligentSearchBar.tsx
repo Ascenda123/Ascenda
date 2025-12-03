@@ -59,8 +59,8 @@ export function IntelligentSearchBar({
                 const [programsRes, universitiesRes] = await Promise.all([
                     supabase
                         .from('programs')
-                        .select('id,name,field,universities!inner(name,country,city,region)')
-                        .ilike('name', `%${trimmed}%`)
+                        .select('id,course_name,study_level,universities!inner(name,country,city,region)')
+                        .ilike('course_name', `%${trimmed}%`)
                         .limit(5),
                     supabase
                         .from('universities')
@@ -87,14 +87,14 @@ export function IntelligentSearchBar({
                 const programSuggestions = (programsRes.data || []).map((program: any) => {
                     const uni = program.universities as { name?: string | null; city?: string | null; region?: string | null; country?: string | null } | null;
                     const location = [uni?.city, uni?.region, uni?.country].filter(Boolean).join(', ') || null;
-                    const nameScore = scoreText(program.name);
-                    const fieldScore = scoreText(program.field);
+                    const nameScore = scoreText(program.course_name);
+                    const levelScore = scoreText(program.study_level);
                     const uniScore = scoreText(uni?.name) * 0.5;
-                    const score = Math.max(nameScore, fieldScore) + uniScore;
+                    const score = Math.max(nameScore, levelScore) + uniScore;
 
                     return {
                         id: program.id,
-                        name: program.name,
+                        name: program.course_name,
                         university: uni?.name ?? null,
                         location,
                         score

@@ -19,13 +19,10 @@ const DEMO_PROGRAM_IDS = new Set(['44444444-4444-4444-4444-444444444444']);
 
 type ProgramRow = {
   id: string;
-  name: string;
-  field?: string | null;
-  level?: string | null;
-  duration_years?: number | null;
-  language?: string | null;
-  tuition?: number | null;
-  currency?: string | null;
+  course_name: string;
+  study_level?: string | null;
+  duration?: string | null;
+  start_date?: string | null;
   universities?: {
     name?: string | null;
     country?: string | null;
@@ -74,13 +71,10 @@ export default function UniversitySearchResultsPage() {
           .select(
             `
             id,
-            name,
-            field,
-            level,
-            duration_years,
-            language,
-            tuition,
-            currency,
+            course_name,
+            study_level,
+            duration,
+            start_date,
             universities!inner (
               id,
               name,
@@ -155,18 +149,15 @@ export default function UniversitySearchResultsPage() {
                 id: program.id,
                 universityId: (uni as any)?.id,
                 universityName: uni?.name ?? 'University',
-                programName: program.name,
+                programName: program.course_name,
                 location: location || 'Location unavailable',
                 fitScore: score ?? null,
                 tier: tier ?? null,
-                highlights: [program.field, program.level].filter(Boolean) as string[],
+                highlights: [program.study_level, program.duration].filter(Boolean) as string[],
                 acceptanceRate: uni?.acceptance_rate ?? null,
-                durationYears: program.duration_years ?? null,
-                tuition: program.tuition ?? null,
-                currency: program.currency ?? uni?.currency ?? null,
+                duration: program.duration ?? null,
                 intlTuitionLow: uni?.intl_tuition_low ?? null,
                 intlTuitionHigh: uni?.intl_tuition_high ?? null,
-                language: program.language ?? null,
                 requiresTest: uni?.requires_test ?? null
               };
             }) ?? [];

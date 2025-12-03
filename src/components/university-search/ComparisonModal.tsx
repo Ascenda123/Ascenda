@@ -76,8 +76,8 @@ export function ComparisonModal({ isOpen, onClose, universities, onRemove, maxIt
         {
             id: 'duration',
             label: 'Duration',
-            valueForCompare: (uni) => (uni.durationYears ? `${uni.durationYears} years` : 'N/A'),
-            render: (uni) => <span className="text-sm text-foreground">{uni.durationYears ? `${uni.durationYears} years` : 'N/A'}</span>,
+            valueForCompare: (uni) => uni.duration ?? (uni.durationYears ? `${uni.durationYears} years` : 'N/A'),
+            render: (uni) => <span className="text-sm text-foreground">{uni.duration ?? (uni.durationYears ? `${uni.durationYears} years` : 'N/A')}</span>,
             numeric: (uni) => uni.durationYears ?? null,
             direction: 'lower'
         },

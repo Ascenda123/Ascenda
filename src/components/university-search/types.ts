@@ -9,6 +9,7 @@ export type ProgramSearchResult = {
   tier?: MatchTier | null;
   highlights: string[];
   acceptanceRate?: number | null;
+  duration?: string | null;
   durationYears?: number | null;
   tuition?: number | null;
   currency?: string | null;

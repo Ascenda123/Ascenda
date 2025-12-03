@@ -13,15 +13,14 @@ type PageProps = {
 
 type ProgramRecord = {
   id: string;
-  name: string;
-  field?: string | null;
-  level?: string | null;
-  duration_years?: number | null;
-  language?: string | null;
-  mode?: string | null;
-  tuition?: number | null;
-  currency?: string | null;
-  metadata?: Record<string, any> | null;
+  course_name: string;
+  study_level?: string | null;
+  duration?: string | null;
+  start_date?: string | null;
+  campus?: string | null;
+  course_summary?: string | null;
+  tuition_fees_international?: string | null;
+  tuition_fees_home?: string | null;
   universities?: UniversityRecord;
 };
 
@@ -49,10 +48,7 @@ const normalizeLocation = (university?: UniversityRecord | null) => {
 
 const normalizeDuration = (program?: ProgramRecord | null) => {
   if (!program) return null;
-  const metaDuration = program.metadata?.duration ?? program.metadata?.durationYears;
-  if (metaDuration) return metaDuration;
-  if (program.duration_years) return `${program.duration_years} years`;
-  return null;
+  return program.duration ?? null;
 };
 
 const normalizePercent = (value?: number | null) => {
@@ -62,16 +58,15 @@ const normalizePercent = (value?: number | null) => {
 
 const mapToUniversityData = (program?: ProgramRecord | null, university?: UniversityRecord | null): UniversityData => {
   const uniMeta = (university?.metadata ?? {}) as Record<string, any>;
-  const programMeta = (program?.metadata ?? {}) as Record<string, any>;
   const rankingsMeta = (uniMeta.rankings ?? {}) as Record<string, any>;
   const fitFactorsMeta = (uniMeta.fitFactors ?? {}) as Record<string, any>;
 
   return {
     program: {
-      title: program?.name ?? null,
-      level: program?.level ?? programMeta.level ?? null,
+      title: program?.course_name ?? null,
+      level: program?.study_level ?? null,
       duration: normalizeDuration(program),
-      size: programMeta.size ?? null
+      size: null
     },
     university: {
       name: university?.name ?? null,
@@ -81,7 +76,7 @@ const mapToUniversityData = (program?: ProgramRecord | null, university?: Univer
       internationalStudentRatio: uniMeta.internationalStudentRatio ?? uniMeta.international_student_ratio ?? null,
       studentStaffRatio: uniMeta.studentStaffRatio ?? uniMeta.student_staff_ratio ?? null,
       type: uniMeta.type ?? uniMeta.category ?? null,
-      studyAbroadAvailable: programMeta.studyAbroadAvailable ?? uniMeta.studyAbroadAvailable ?? null
+      studyAbroadAvailable: uniMeta.studyAbroadAvailable ?? null
     },
     rankings: {
       guardian: rankingsMeta.guardian ?? uniMeta.guardian ?? university?.rank_overall ?? null,
@@ -94,7 +89,7 @@ const mapToUniversityData = (program?: ProgramRecord | null, university?: Univer
       employmentRate: normalizePercent(uniMeta.employmentRate ?? null)
     },
     costs: {
-      annualTuition: program?.tuition ?? university?.intl_tuition_low ?? programMeta.annualTuition ?? null,
+      annualTuition: program?.tuition_fees_international ?? university?.intl_tuition_low ?? null,
       dormitoryCost: uniMeta.dormitoryCost ?? null,
       averageRent: uniMeta.averageRent ?? null,
       livingIndex: uniMeta.livingIndex ?? null

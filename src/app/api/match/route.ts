@@ -81,7 +81,7 @@ export async function GET(request: NextRequest) {
     supabase
       .from('programs')
       .select(
-        'id,name,field,level,duration_years,language,mode,intake_months,tuition,currency,url,university_id'
+        'id,course_name,study_level,duration,start_date,campus,tuition_fees_international,tuition_fees_home,provider_course_url,university_id'
       ),
     supabase
       .from('universities')

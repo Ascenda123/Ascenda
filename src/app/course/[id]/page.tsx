@@ -26,15 +26,13 @@ type CourseView = {
   tuition?: string | null;
   ucasCode?: string | null;
   startDate?: string | null;
+  summary?: string | null;
+  modules?: string | null;
+  assessment?: string | null;
   requirements: Requirement[];
   quickFacts: QuickFact[];
   courseUrl?: string | null;
-};
-
-const formatCurrency = (amount?: number | null, currency?: string | null) => {
-  if (amount === null || amount === undefined) return null;
-  if (!currency) return `${amount}`;
-  return new Intl.NumberFormat('en-GB', { style: 'currency', currency }).format(amount);
+  applyUrl?: string | null;
 };
 
 const normalizeLocation = (city?: string | null, region?: string | null, country?: string | null) =>
@@ -43,18 +41,14 @@ const normalizeLocation = (city?: string | null, region?: string | null, country
 const buildRequirements = (raw: any): Requirement[] => {
   if (!raw) return [];
   const reqs: Requirement[] = [];
-  if (raw.min_ib_total) reqs.push({ label: 'IB minimum', value: `${raw.min_ib_total}` });
-  if (raw.language_tests && typeof raw.language_tests === 'object') {
-    const ielts = (raw.language_tests as any).ielts;
-    if (ielts) reqs.push({ label: 'IELTS', value: `${ielts}` });
-  }
-  if (raw.other_requirements) {
-    const parts = String(raw.other_requirements)
-      .split('|')
-      .map((p) => p.trim())
-      .filter(Boolean);
-    parts.forEach((p, index) => reqs.push({ label: index === 0 ? 'Requirements' : '•', value: p }));
-  }
+  if (raw.min_ib) reqs.push({ label: 'IB minimum', value: `${raw.min_ib}` });
+  if (raw.min_alevel) reqs.push({ label: 'A-Levels', value: raw.min_alevel });
+  if (raw.ucas_points) reqs.push({ label: 'UCAS points', value: raw.ucas_points });
+  if (raw.subject_requirements) reqs.push({ label: 'Subjects', value: raw.subject_requirements });
+  if (raw.entry_requirements_overview) reqs.push({ label: 'Overview', value: raw.entry_requirements_overview });
+  if (raw.additional_entry_requirements) reqs.push({ label: 'Additional', value: raw.additional_entry_requirements });
+  if (raw.english_requirements) reqs.push({ label: 'English', value: raw.english_requirements });
+  if (raw.contextual_admissions) reqs.push({ label: 'Contextual admissions', value: raw.contextual_admissions });
   return reqs;
 };
 
@@ -90,7 +84,17 @@ export default function CoursePage({ params }: { params: { id: string } }) {
         const supabase = getBrowserSupabaseClient();
         const { data, error: supabaseError } = await supabase
           .from('programs')
-          .select('*, universities(*), program_requirements(*)')
+          .select(
+            `
+            *,
+            universities (
+              name,
+              city,
+              region,
+              country
+            )
+          `
+          )
           .eq('id', params.id)
           .maybeSingle();
 
@@ -101,32 +105,30 @@ export default function CoursePage({ params }: { params: { id: string } }) {
         }
 
         const uni = (data as any).universities ?? {};
-        const req = (data as any).program_requirements ?? {};
-        const meta = (data as any).metadata ?? {};
         const location = normalizeLocation(uni.city, uni.region, uni.country);
-        const duration =
-          data.duration_years && Number.isFinite(data.duration_years) ? `${data.duration_years} years` : meta.duration || null;
-        const intake = Array.isArray(data.intake_months) && data.intake_months.length ? data.intake_months[0] : meta.start_date || null;
-        const tuition =
-          formatCurrency(data.tuition as any, data.currency) ||
-          meta.tuition_fees_international_raw ||
-          meta.tuition_fees_home_raw ||
-          null;
+        const duration = data.duration || null;
+        const intake = data.start_date || null;
+        const tuition = data.tuition_fees_international || data.tuition_fees_home || null;
 
         const mapped: CourseView = {
           id: data.id,
-          title: data.name,
+          title: (data as any).course_name,
           university: uni.name ?? 'University',
           location,
-          level: data.level ?? meta.level ?? null,
+          level: data.study_level ?? null,
           duration,
           intake,
-          campus: meta.campus ?? null,
+          campus: data.campus ?? null,
           tuition,
-          ucasCode: meta.ucas_code ?? null,
-          startDate: meta.start_date ?? null,
-          requirements: buildRequirements(req),
-          quickFacts: []
+          ucasCode: data.ucas_code ?? null,
+          startDate: data.start_date ?? null,
+          summary: data.course_summary ?? null,
+          modules: data.modules ?? null,
+          assessment: data.assessment_methods ?? null,
+          requirements: buildRequirements(data),
+          quickFacts: [],
+          courseUrl: data.provider_course_url ?? null,
+          applyUrl: data.provider_apply_url ?? null
         };
 
         mapped.quickFacts = buildQuickFacts(mapped);
@@ -179,6 +181,13 @@ export default function CoursePage({ params }: { params: { id: string } }) {
                 </p>
               </div>
               <div className="flex gap-3">
+                {course.applyUrl ? (
+                  <Button asChild variant="default">
+                    <Link href={course.applyUrl} target="_blank" rel="noreferrer">
+                      Apply
+                    </Link>
+                  </Button>
+                ) : null}
                 {course.courseUrl ? (
                   <Button asChild variant="outline">
                     <Link href={course.courseUrl} target="_blank" rel="noreferrer">
@@ -236,6 +245,55 @@ export default function CoursePage({ params }: { params: { id: string } }) {
                       ))}
                     </ul>
                   )}
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+              <Card className="lg:col-span-2">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <BookOpen className="h-5 w-5 text-primary" />
+                    Course Overview
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {course.summary ? (
+                    <p className="whitespace-pre-line text-sm leading-relaxed text-foreground/80">{course.summary}</p>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No overview available.</p>
+                  )}
+                  {course.modules ? (
+                    <div className="space-y-2">
+                      <p className="text-sm font-semibold text-foreground">Modules</p>
+                      <p className="whitespace-pre-line text-sm leading-relaxed text-foreground/80">{course.modules}</p>
+                    </div>
+                  ) : null}
+                  {course.assessment ? (
+                    <div className="space-y-2">
+                      <p className="text-sm font-semibold text-foreground">Assessment</p>
+                      <p className="whitespace-pre-line text-sm leading-relaxed text-foreground/80">{course.assessment}</p>
+                    </div>
+                  ) : null}
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <Wallet className="h-5 w-5 text-primary" />
+                    Fees & Dates
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3 text-sm text-foreground/80">
+                  <div className="space-y-1">
+                    <p className="text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground">Start date</p>
+                    <p>{course.startDate ?? 'TBD'}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground">Tuition (international)</p>
+                    <p>{course.tuition ?? 'Contact university'}</p>
+                  </div>
                 </CardContent>
               </Card>
             </div>

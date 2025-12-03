@@ -11,16 +11,14 @@ import type {
 
 const ProgramRowSchema = z.object({
   id: z.string(),
-  name: z.string(),
-  field: z.string().nullable().optional(),
-  level: z.string().nullable().optional(),
-  duration_years: z.coerce.number().nullable().optional(),
-  language: z.string().nullable().optional(),
-  mode: z.string().nullable().optional(),
-  intake_months: z.array(z.string()).nullable().optional(),
-  tuition: z.coerce.number().nullable().optional(),
-  currency: z.string().nullable().optional(),
-  url: z.string().nullable().optional(),
+  course_name: z.string(),
+  study_level: z.string().nullable().optional(),
+  duration: z.string().nullable().optional(),
+  start_date: z.string().nullable().optional(),
+  campus: z.string().nullable().optional(),
+  tuition_fees_international: z.string().nullable().optional(),
+  tuition_fees_home: z.string().nullable().optional(),
+  provider_course_url: z.string().nullable().optional(),
   university_id: z.string()
 });
 
@@ -84,16 +82,16 @@ export const mapProgramRow = (input: unknown): Program => {
   const row = ProgramRowSchema.parse(input);
   return {
     id: row.id,
-    name: row.name,
-    field: row.field,
-    level: row.level,
-    durationYears: row.duration_years,
-    language: row.language,
-    mode: row.mode,
-    intakeMonths: row.intake_months,
-    tuition: row.tuition,
-    currency: row.currency,
-    url: row.url,
+    name: row.course_name,
+    field: null,
+    level: row.study_level,
+    durationYears: null,
+    language: null,
+    mode: null,
+    intakeMonths: row.start_date ? [row.start_date] : null,
+    tuition: null,
+    currency: null,
+    url: row.provider_course_url,
     universityId: row.university_id
   };
 };

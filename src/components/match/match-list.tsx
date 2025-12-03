@@ -52,7 +52,7 @@ const TIER_DESCRIPTIONS: Record<MatchTier, string> = {
 
 const tierCardVariants = {
   hidden: { opacity: 0, y: 16 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: 'easeOut' } }
+  show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: 'easeOut' as any } }
 };
 
 const staggeredGrid = {
@@ -62,7 +62,7 @@ const staggeredGrid = {
 
 const cardVariants = {
   hidden: { opacity: 0, y: 18, scale: 0.98 },
-  show: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.4, ease: 'easeOut' } }
+  show: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.4, ease: 'easeOut' as any } }
 };
 
 export const MatchList = ({ matches }: MatchListProps) => {
