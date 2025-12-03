@@ -14,6 +14,8 @@ export type ProgramSearchResult = {
   currency?: string | null;
   intlTuitionLow?: number | null;
   intlTuitionHigh?: number | null;
+  language?: string | null;
+  requiresTest?: boolean | null;
 };
 
 export const tierFromScore = (score?: number | null): MatchTier | null => {

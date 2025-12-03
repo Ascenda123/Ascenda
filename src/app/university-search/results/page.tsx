@@ -22,6 +22,7 @@ type ProgramRow = {
   field?: string | null;
   level?: string | null;
   duration_years?: number | null;
+  language?: string | null;
   tuition?: number | null;
   currency?: string | null;
   universities?: {
@@ -30,6 +31,7 @@ type ProgramRow = {
     city?: string | null;
     region?: string | null;
     acceptance_rate?: number | null;
+    requires_test?: boolean | null;
     intl_tuition_low?: number | null;
     intl_tuition_high?: number | null;
     currency?: string | null;
@@ -77,6 +79,7 @@ export default function UniversitySearchResultsPage() {
             field,
             level,
             duration_years,
+            language,
             tuition,
             currency,
             universities (
@@ -85,6 +88,7 @@ export default function UniversitySearchResultsPage() {
               city,
               region,
               acceptance_rate,
+              requires_test,
               intl_tuition_low,
               intl_tuition_high,
               currency
@@ -138,15 +142,17 @@ export default function UniversitySearchResultsPage() {
                 location: location || 'Location unavailable',
                 fitScore: score ?? null,
                 tier: tier ?? null,
-                highlights: [program.field, program.level].filter(Boolean) as string[],
-                acceptanceRate: uni?.acceptance_rate ?? null,
-                durationYears: program.duration_years ?? null,
-                tuition: program.tuition ?? null,
-                currency: program.currency ?? uni?.currency ?? null,
-                intlTuitionLow: uni?.intl_tuition_low ?? null,
-                intlTuitionHigh: uni?.intl_tuition_high ?? null
-              };
-            }) ?? [];
+              highlights: [program.field, program.level].filter(Boolean) as string[],
+              acceptanceRate: uni?.acceptance_rate ?? null,
+              durationYears: program.duration_years ?? null,
+              tuition: program.tuition ?? null,
+              currency: program.currency ?? uni?.currency ?? null,
+              intlTuitionLow: uni?.intl_tuition_low ?? null,
+              intlTuitionHigh: uni?.intl_tuition_high ?? null,
+              language: program.language ?? null,
+              requiresTest: uni?.requires_test ?? null
+            };
+          }) ?? [];
 
         setResults(mapped);
       } catch (fetchError) {
@@ -187,6 +193,17 @@ export default function UniversitySearchResultsPage() {
   // Filter Results
   const filteredResults = useMemo(() => {
     const normalizedQuery = searchQuery.toLowerCase();
+    const isBudgetFriendly = (result: ProgramSearchResult) => {
+      const tuition = result.tuition ?? result.intlTuitionLow ?? null;
+      if (tuition === null) return false;
+      return tuition <= 40000;
+    };
+    const isEnglishOnly = (result: ProgramSearchResult) => {
+      if (!result.language) return false;
+      return result.language.toLowerCase().includes('english');
+    };
+    const isTestOptional = (result: ProgramSearchResult) => result.requiresTest === false;
+
     return results.filter((result) => {
       const matchesSearch =
         !normalizedQuery ||
@@ -196,9 +213,20 @@ export default function UniversitySearchResultsPage() {
         selectedUniversities.length === 0 || selectedUniversities.includes(result.universityName);
       const matchesProgram =
         selectedPrograms.length === 0 || selectedPrograms.includes(result.programName);
-      return matchesSearch && matchesTier && matchesUniversity && matchesProgram;
+      const matchesBudget = !quickFilters.budgetFriendly || isBudgetFriendly(result);
+      const matchesLanguage = !quickFilters.englishOnly || isEnglishOnly(result);
+      const matchesTesting = !quickFilters.testOptional || isTestOptional(result);
+      return (
+        matchesSearch &&
+        matchesTier &&
+        matchesUniversity &&
+        matchesProgram &&
+        matchesBudget &&
+        matchesLanguage &&
+        matchesTesting
+      );
     });
-  }, [results, searchQuery, selectedTiers, selectedPrograms, selectedUniversities]);
+  }, [results, searchQuery, selectedTiers, selectedPrograms, selectedUniversities, quickFilters]);
 
   const handleToggleUniversity = (name: string) => {
     setSelectedUniversities((prev) =>
