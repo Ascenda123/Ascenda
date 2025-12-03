@@ -70,7 +70,7 @@ export default async function MatchesPage() {
   ]);
 
   const DEMO_PROGRAM_IDS = new Set(['44444444-4444-4444-4444-444444444444']);
-  const programsRaw = (programsData ?? []).filter((program) => !DEMO_PROGRAM_IDS.has(program.id));
+  const programsRaw = (programsData ?? []).filter((program: any) => !DEMO_PROGRAM_IDS.has(program.id));
   const universitiesRaw = universitiesData ?? [];
   const requirementsRaw = requirementsData ?? [];
 

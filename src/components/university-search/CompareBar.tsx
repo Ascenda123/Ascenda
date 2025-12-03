@@ -67,7 +67,7 @@ export function CompareBar({ selectedItems, onClear, onRemove, onCompare }: Comp
                             <button
                                 onClick={() => onRemove(item.id)}
                                 className="ml-1 rounded-full p-1 text-muted-foreground transition hover:bg-muted/60 hover:text-foreground"
-                                aria-label={`Remove ${item.name} from comparison`}
+                                aria-label={`Remove ${item.universityName} from comparison`}
                             >
                                 <X className="h-3 w-3" />
                             </button>

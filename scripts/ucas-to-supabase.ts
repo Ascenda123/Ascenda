@@ -152,7 +152,7 @@ const uuidFromString = (value: string): string => {
 
 const readInput = (inputPath: string): InputRow[] => {
   const contents = fs.readFileSync(inputPath, 'utf-8');
-  const parsed = Papa.parse<InputRow>(contents, {
+  const parsed = Papa.parse(contents, {
     header: true,
     skipEmptyLines: true
   });
@@ -260,8 +260,8 @@ const buildPrograms = (
     const languageTests =
       typeof ielts === 'number'
         ? {
-            ielts
-          }
+          ielts
+        }
         : undefined;
 
     requirements.push({

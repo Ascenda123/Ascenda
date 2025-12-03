@@ -26,7 +26,7 @@ export const TaskList = ({ title, tasks, onToggle, disabled }: TaskListProps) =>
   };
 
   return (
-    <div className="space-y-4 rounded-[32px] border border-border bg-card p-6 text-foreground shadow-[0_18px_50px_rgba(15,23,42,0.08)] transition-colors">
+    <div className="space-y-4 rounded-[32px] border border-border bg-card/50 p-6 text-foreground shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl transition-colors">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h3 className="text-xl font-semibold text-foreground">{title}</h3>

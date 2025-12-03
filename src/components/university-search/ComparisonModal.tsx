@@ -160,7 +160,7 @@ export function ComparisonModal({ isOpen, onClose, universities, onRemove, maxIt
         }, {});
     }, [visibleRows, universities]);
 
-    const getDiffBadge = (row: MetricRow, uni: PlaceholderResult) => {
+    const getDiffBadge = (row: MetricRow, uni: ProgramSearchResult) => {
         if (!highlightDiffs || !row.numeric) return null;
         const stats = metricStats[row.id];
         if (!stats) return null;

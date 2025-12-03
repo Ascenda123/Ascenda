@@ -25,7 +25,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: validation.error }, { status: 400 });
     }
 
-    const table = templateTableMap[parsedTemplate];
+    const table = templateTableMap[parsedTemplate as TemplateKey];
 
     const { error } = await supabase.from(table).upsert(validation.rows!, { onConflict: 'id' });
 

@@ -12,7 +12,7 @@ interface DeadlineTimelineProps {
 export const DeadlineTimeline = ({ items }: DeadlineTimelineProps) => {
   if (items.length === 0) {
     return (
-      <div className="rounded-[24px] border border-dashed border-border bg-muted/60 p-6 text-center text-sm text-muted-foreground">
+      <div className="rounded-[24px] border border-dashed border-border bg-muted/30 p-6 text-center text-sm text-muted-foreground">
         No upcoming deadlines yet. Track programs you plan to apply to.
       </div>
     );
@@ -21,8 +21,11 @@ export const DeadlineTimeline = ({ items }: DeadlineTimelineProps) => {
   return (
     <ol className="space-y-4">
       {items.map((item) => (
-        <li key={item.id} className="flex gap-3 rounded-2xl border border-border bg-card p-4 shadow-[0_10px_30px_rgba(15,23,42,0.05)] transition-colors">
-          <div className="mt-1 h-2 w-2 rounded-full bg-primary" aria-hidden />
+        <li
+          key={item.id}
+          className="group flex gap-3 rounded-2xl border border-border bg-card/50 p-4 shadow-[0_10px_30px_rgba(15,23,42,0.05)] backdrop-blur-sm transition-all duration-300 hover:bg-card/80 hover:shadow-[0_15px_40px_rgba(15,23,42,0.1)]"
+        >
+          <div className="mt-1 h-2 w-2 rounded-full bg-primary shadow-[0_0_8px_rgba(99,102,241,0.5)]" aria-hidden />
           <div>
             <p className="text-sm font-semibold text-foreground">{item.name}</p>
             <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">{item.date}</p>

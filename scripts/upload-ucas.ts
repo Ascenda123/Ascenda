@@ -27,7 +27,7 @@ const uniqueByKey = (rows: Row[], key: string): Row[] => {
 
 const readCsv = (filePath: string): Row[] => {
   const contents = fs.readFileSync(filePath, 'utf-8');
-  const parsed = Papa.parse<Row>(contents, { header: true, skipEmptyLines: true });
+  const parsed = Papa.parse(contents, { header: true, skipEmptyLines: true });
   if (parsed.errors.length) {
     const message = parsed.errors.map((e: any) => `${e.message} at row ${e.row}`).join('; ');
     throw new Error(`CSV parse errors in ${filePath}: ${message}`);

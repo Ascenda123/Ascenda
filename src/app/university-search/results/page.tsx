@@ -128,7 +128,7 @@ export default function UniversitySearchResultsPage() {
             console.error('Failed to load match scores', matchError);
           } else {
             matchScores =
-              matches?.reduce<Record<string, number>>((acc, entry) => {
+              matches?.reduce((acc: Record<string, number>, entry: any) => {
                 const numericScore =
                   typeof entry.score === 'string'
                     ? Number.parseFloat(entry.score)
@@ -139,7 +139,7 @@ export default function UniversitySearchResultsPage() {
                   acc[entry.program_id] = numericScore;
                 }
                 return acc;
-              }, {}) ?? {};
+              }, {} as Record<string, number>) ?? {};
           }
         }
 

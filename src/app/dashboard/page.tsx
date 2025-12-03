@@ -217,7 +217,7 @@ export default async function DashboardPage() {
           />
         </div>
         <aside className="space-y-6">
-          <div className="space-y-4 rounded-[28px] border border-border bg-card p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)] transition-colors">
+          <div className="space-y-4 rounded-[28px] border border-border bg-card/50 p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl transition-colors">
             <h2 className="text-2xl font-semibold text-foreground">Upcoming deadlines</h2>
             {deadlines.length > 0 ? (
               <DeadlineTimeline
@@ -234,7 +234,7 @@ export default async function DashboardPage() {
           </div>
         </aside>
         <div className="lg:col-span-3">
-          <div className="space-y-4 overflow-hidden rounded-[28px] border border-border bg-card p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)] transition-colors">
+          <div className="space-y-4 overflow-hidden rounded-[28px] border border-border bg-card/50 p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl transition-colors">
             <h2 className="text-2xl font-semibold text-foreground">Recommended programs</h2>
             {matches.length > 0 ? (
               <MatchList matches={matches} filtersSticky={false} />

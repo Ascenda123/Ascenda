@@ -186,7 +186,7 @@ export default async function ApplicationsPage() {
           id: deadline.id,
           title: deadline.name,
           date: deadline.deadline_date ?? '',
-          category: 'deadline',
+          category: 'deadline' as const,
           detail: deadline.intake ?? 'Application'
         }))
         .filter((event) => event.date && !Number.isNaN(new Date(event.date).getTime()))
