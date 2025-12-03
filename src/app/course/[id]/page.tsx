@@ -34,6 +34,7 @@ type CourseView = {
   quickFacts: QuickFact[];
   courseUrl?: string | null;
   applyUrl?: string | null;
+  studyLevel?: string | null;
 };
 
 const normalizeLocation = (city?: string | null, region?: string | null, country?: string | null) =>
@@ -183,6 +184,17 @@ export default function CoursePage({ params }: { params: { id: string } }) {
   const moduleItems = useMemo(() => extractBulletItems(course?.modules), [course?.modules]);
   const moduleYearSections = useMemo(() => extractYearSections(course?.modules), [course?.modules]);
   const visibleModules = showAllFlatModules ? moduleItems : moduleItems.slice(0, 8);
+  const metaChips = useMemo(
+    () =>
+      [
+        course?.studyLevel ? { label: 'Level', value: course.studyLevel } : null,
+        course?.duration ? { label: 'Duration', value: course.duration } : null,
+        course?.startDate ? { label: 'Start', value: course.startDate } : null,
+        course?.campus ? { label: 'Campus', value: course.campus } : null,
+        course?.ucasCode ? { label: 'UCAS', value: course.ucasCode } : null
+      ].filter(Boolean) as { label: string; value: string }[],
+    [course?.campus, course?.duration, course?.startDate, course?.studyLevel, course?.ucasCode]
+  );
 
   useEffect(() => {
     const fetchCourse = async () => {
@@ -224,6 +236,7 @@ export default function CoursePage({ params }: { params: { id: string } }) {
           university: uni.name ?? 'University',
           location,
           level: data.study_level ?? null,
+          studyLevel: data.study_level ?? null,
           duration,
           intake,
           campus: data.campus ?? null,
@@ -287,6 +300,19 @@ export default function CoursePage({ params }: { params: { id: string } }) {
                   <MapPin className="h-4 w-4" />
                   {course.location}
                 </p>
+                {metaChips.length ? (
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    {metaChips.map((chip) => (
+                      <span
+                        key={chip.label}
+                        className="inline-flex items-center gap-2 rounded-full border border-border bg-muted/40 px-3 py-1 text-xs font-semibold text-foreground"
+                      >
+                        <span className="text-muted-foreground">{chip.label}</span>
+                        <span className="text-foreground">{chip.value}</span>
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
               </div>
               <div className="flex gap-3">
                 {course.applyUrl ? (
