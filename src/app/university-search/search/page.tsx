@@ -70,8 +70,10 @@ export default function UniversitySearchPage() {
 
   return (
     <div className="space-y-8">
-      <section className="relative overflow-hidden rounded-[32px] border border-border bg-gradient-to-br from-background to-muted/70 p-8 shadow-[0_30px_60px_rgba(15,23,42,0.08)]">
-        <AnimatedBlobBanner className="opacity-80" />
+      <section className="relative z-20 rounded-[32px] border border-border bg-gradient-to-br from-background to-muted/70 p-8 shadow-[0_30px_60px_rgba(15,23,42,0.08)]">
+        <div className="absolute inset-0 overflow-hidden rounded-[32px]">
+          <AnimatedBlobBanner className="opacity-80" />
+        </div>
         <div className="relative z-10 space-y-8">
           <div className="space-y-5">
             <p className="text-xs font-semibold uppercase tracking-[0.35em] text-muted-foreground">Search hub</p>
