@@ -59,8 +59,8 @@ const buildQuickFacts = (course: CourseView): QuickFact[] => {
   if (course.duration) facts.push({ label: 'Duration', value: course.duration, icon: CalendarDays });
   if (course.intake) facts.push({ label: 'Intake', value: course.intake, icon: CalendarDays });
   if (course.campus) facts.push({ label: 'Campus', value: course.campus, icon: Landmark });
-  if (course.tuition) facts.push({ label: 'Tuition', value: course.tuition, icon: Wallet });
-  if (course.startDate) facts.push({ label: 'Start date', value: course.startDate, icon: CalendarDays });
+  facts.push({ label: 'Tuition', value: course.tuition ?? 'Contact university', icon: Wallet });
+  facts.push({ label: 'Start date', value: course.startDate ?? 'TBD', icon: CalendarDays });
   if (course.ucasCode) facts.push({ label: 'UCAS code', value: course.ucasCode, icon: ShieldCheck });
   return facts;
 };
@@ -307,8 +307,8 @@ export default function CoursePage({ params }: { params: { id: string } }) {
               </div>
             </header>
 
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-              <Card className="lg:col-span-2">
+            <div className="grid grid-cols-1 gap-6">
+              <Card className="w-full">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-lg">
                     <BookOpen className="h-5 w-5 text-primary" />
@@ -358,8 +358,8 @@ export default function CoursePage({ params }: { params: { id: string } }) {
               </Card>
             </div>
 
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-              <Card className="lg:col-span-2">
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-1">
+              <Card className="w-full">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-lg">
                     <BookOpen className="h-5 w-5 text-primary" />
