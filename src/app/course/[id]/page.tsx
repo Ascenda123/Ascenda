@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import { getBrowserSupabaseClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
+import React from 'react';
 
 type Requirement = { label: string; value: string };
 type QuickFact = { label: string; value: string; icon: ElementType };
@@ -61,6 +62,31 @@ const buildQuickFacts = (course: CourseView): QuickFact[] => {
   if (course.tuition) facts.push({ label: 'Tuition', value: course.tuition, icon: Wallet });
   if (course.ucasCode) facts.push({ label: 'UCAS code', value: course.ucasCode, icon: ShieldCheck });
   return facts;
+};
+
+const emphasize = (text: string) =>
+  text.split(/(\*\*[^*]+\*\*)/g).map((chunk, idx) => {
+    if (chunk.startsWith('**') && chunk.endsWith('**')) {
+      return (
+        <strong key={`${chunk}-${idx}`}>
+          {chunk.slice(2, -2)}
+        </strong>
+      );
+    }
+    return <React.Fragment key={`${chunk}-${idx}`}>{chunk}</React.Fragment>;
+  });
+
+const parseTextBlocks = (text?: string | null) => {
+  if (!text) return { intro: [] as string[], bullets: [] as string[] };
+  const normalized = text.replace(/\r/g, '').trim();
+  if (!normalized) return { intro: [], bullets: [] };
+
+  const parts = normalized.split(/\s+-\s+/).map((p) => p.trim()).filter(Boolean);
+  if (parts.length <= 1) {
+    return { intro: [normalized], bullets: [] };
+  }
+  const [first, ...rest] = parts;
+  return { intro: [first], bullets: rest };
 };
 
 export default function CoursePage({ params }: { params: { id: string } }) {
@@ -257,12 +283,32 @@ export default function CoursePage({ params }: { params: { id: string } }) {
                     Course Overview
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  {course.summary ? (
-                    <p className="whitespace-pre-line text-sm leading-relaxed text-foreground/80">{course.summary}</p>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">No overview available.</p>
-                  )}
+                <CardContent className="space-y-6 text-sm leading-relaxed text-foreground/85">
+                  {(() => {
+                    const { intro, bullets } = parseTextBlocks(course.summary);
+                    return intro.length || bullets.length ? (
+                      <div className="space-y-3">
+                        {intro.map((para, idx) => (
+                          <p key={`intro-${idx}`} className="text-foreground/85">
+                            {emphasize(para)}
+                          </p>
+                        ))}
+                        {bullets.length ? (
+                          <ul className="space-y-2">
+                            {bullets.map((item, idx) => (
+                              <li key={`bullet-${idx}`} className="flex gap-2">
+                                <span className="mt-1 block h-1.5 w-1.5 rounded-full bg-primary/70" aria-hidden />
+                                <span className="text-foreground/85">{emphasize(item)}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        ) : null}
+                      </div>
+                    ) : (
+                      <p className="text-muted-foreground">No overview available.</p>
+                    );
+                  })()}
+
                   {course.modules ? (
                     <div className="space-y-2">
                       <p className="text-sm font-semibold text-foreground">Modules</p>
