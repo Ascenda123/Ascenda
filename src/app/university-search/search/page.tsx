@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Search } from 'lucide-react';
 import { AnimatedBlobBanner } from '@/components/animated-blob-banner';
 import { Button } from '@/components/ui/button';
@@ -45,6 +46,7 @@ const filterGroups = [
 ];
 
 export default function UniversitySearchPage() {
+  const router = useRouter();
   const [selectedFilters, setSelectedFilters] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState('');
   const [suggestions, setSuggestions] = useState<SuggestionGroups>({ programs: [], universities: [] });
@@ -77,55 +79,75 @@ export default function UniversitySearchPage() {
       setIsLoadingSuggestions(true);
       try {
         const supabase = getBrowserSupabaseClient();
+
+        // Parallelize queries for better performance
+        // 1. Search Programs by name
+        // 2. Search Universities by name
         const [programsRes, universitiesRes] = await Promise.all([
           supabase
             .from('programs')
-            .select('id,name,field,universities(name,country,city,region)')
-            .or(`name.ilike.%${query}%,universities.name.ilike.%${query}%`)
-            .limit(8),
+            .select('id,name,field,universities!inner(name,country,city,region)')
+            .ilike('name', `%${trimmed}%`)
+            .limit(5),
           supabase
             .from('universities')
             .select('id,name,country,city,region')
-            .ilike('name', `%${query}%`)
-            .limit(4)
+            .ilike('name', `%${trimmed}%`)
+            .limit(5)
         ]);
 
-        if (programsRes.error) throw programsRes.error;
-        if (universitiesRes.error) throw universitiesRes.error;
+        if (programsRes.error) {
+          console.warn('Program search error:', programsRes.error);
+        }
+        if (universitiesRes.error) {
+          console.warn('University search error:', universitiesRes.error);
+        }
 
-        const normalizedQuery = query.toLowerCase();
+        const normalizedQuery = trimmed.toLowerCase();
+
+        // Scoring helper
         const scoreText = (value: string | null | undefined) => {
           if (!value) return 0;
           const lower = value.toLowerCase();
           if (lower === normalizedQuery) return 100;
           if (lower.startsWith(normalizedQuery)) return 90;
-          if (lower.includes(normalizedQuery)) return 75;
-          return 40;
+          if (lower.includes(` ${normalizedQuery}`)) return 80; // Word boundary match
+          if (lower.includes(normalizedQuery)) return 60;
+          return 0;
         };
 
-        const programSuggestions =
-          programsRes.data?.map((program) => {
-            const uni = (program as any).universities as { name?: string | null; city?: string | null; region?: string | null; country?: string | null } | null;
-            const location = [uni?.city, uni?.region, uni?.country].filter(Boolean).join(', ') || null;
-            const nameScore = scoreText(program.name);
-            const uniScore = scoreText(uni?.name);
-            const fieldScore = scoreText((program as any).field);
-            const score = Math.max(nameScore, uniScore, fieldScore);
-            return { id: program.id, name: program.name, university: uni?.name ?? null, location, score };
-          }) ?? [];
-        const universitySuggestions =
-          universitiesRes.data?.map((uni) => {
-            const location = [uni.city, uni.region, uni.country].filter(Boolean).join(', ') || null;
-            const score = scoreText(uni.name);
-            return {
-              id: uni.id,
-              name: uni.name,
-              location,
-              score
-            };
-          }) ?? [];
+        const programSuggestions = (programsRes.data || []).map((program: any) => {
+          const uni = program.universities as { name?: string | null; city?: string | null; region?: string | null; country?: string | null } | null;
+          const location = [uni?.city, uni?.region, uni?.country].filter(Boolean).join(', ') || null;
 
-        const sortByScore = (items: Suggestion[]) => [...items].sort((a, b) => b.score - a.score).slice(0, 8);
+          const nameScore = scoreText(program.name);
+          const fieldScore = scoreText(program.field);
+          // Boost score if the university name also matches
+          const uniScore = scoreText(uni?.name) * 0.5;
+
+          const score = Math.max(nameScore, fieldScore) + uniScore;
+
+          return {
+            id: program.id,
+            name: program.name,
+            university: uni?.name ?? null,
+            location,
+            score
+          };
+        });
+
+        const universitySuggestions = (universitiesRes.data || []).map((uni: any) => {
+          const location = [uni.city, uni.region, uni.country].filter(Boolean).join(', ') || null;
+          const score = scoreText(uni.name);
+          return {
+            id: uni.id,
+            name: uni.name,
+            location,
+            score
+          };
+        });
+
+        const sortByScore = (items: Suggestion[]) => [...items].sort((a, b) => b.score - a.score).slice(0, 5);
 
         setSuggestions({
           programs: sortByScore(programSuggestions),
@@ -156,9 +178,18 @@ export default function UniversitySearchPage() {
     [suggestions]
   );
 
-  const handleSelectSuggestion = (value: string) => {
-    setSearchQuery(value);
+  const handleSelectSuggestion = (item: Suggestion) => {
+    let query = item.name;
+    // If it's a program and has a university, combine them for a more specific search result
+    if (item.university) {
+      query = `${item.name} ${item.university}`;
+    }
+
+    setSearchQuery(query);
     setIsDropdownOpen(false);
+
+    // Navigate immediately
+    router.push(`/university-search/results?q=${encodeURIComponent(query)}`);
   };
 
   const handleBlur = () => {
@@ -220,7 +251,7 @@ export default function UniversitySearchPage() {
                                     <button
                                       type="button"
                                       onMouseDown={(e) => e.preventDefault()}
-                                      onClick={() => handleSelectSuggestion(item.name)}
+                                      onClick={() => handleSelectSuggestion(item)}
                                       className="flex w-full flex-col rounded-xl px-3 py-2 text-left text-sm transition hover:bg-muted"
                                     >
                                       <span className="font-semibold text-foreground">{item.name}</span>
@@ -243,7 +274,7 @@ export default function UniversitySearchPage() {
                                     <button
                                       type="button"
                                       onMouseDown={(e) => e.preventDefault()}
-                                      onClick={() => handleSelectSuggestion(item.name)}
+                                      onClick={() => handleSelectSuggestion(item)}
                                       className="flex w-full flex-col rounded-xl px-3 py-2 text-left text-sm transition hover:bg-muted"
                                     >
                                       <span className="font-semibold text-foreground">{item.name}</span>
