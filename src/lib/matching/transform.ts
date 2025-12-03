@@ -14,11 +14,11 @@ const ProgramRowSchema = z.object({
   name: z.string(),
   field: z.string().nullable().optional(),
   level: z.string().nullable().optional(),
-  duration_years: z.number().nullable().optional(),
+  duration_years: z.coerce.number().nullable().optional(),
   language: z.string().nullable().optional(),
   mode: z.string().nullable().optional(),
   intake_months: z.array(z.string()).nullable().optional(),
-  tuition: z.number().nullable().optional(),
+  tuition: z.coerce.number().nullable().optional(),
   currency: z.string().nullable().optional(),
   url: z.string().nullable().optional(),
   university_id: z.string()
@@ -31,17 +31,17 @@ const UniversityRowSchema = z.object({
   region: z.string().nullable().optional(),
   rank_overall: z.number().nullable().optional(),
   rank_source: z.string().nullable().optional(),
-  acceptance_rate: z.number().nullable().optional(),
+  acceptance_rate: z.coerce.number().nullable().optional(),
   requires_test: z.boolean().nullable().optional()
 });
 
 const RequirementRowSchema = z.object({
   program_id: z.string(),
   curriculum: z.string().nullable().optional(),
-  min_gpa: z.number().nullable().optional(),
-  min_ib_total: z.number().nullable().optional(),
-  min_sat: z.number().nullable().optional(),
-  min_act: z.number().nullable().optional(),
+  min_gpa: z.coerce.number().nullable().optional(),
+  min_ib_total: z.coerce.number().nullable().optional(),
+  min_sat: z.coerce.number().nullable().optional(),
+  min_act: z.coerce.number().nullable().optional(),
   required_subjects: z.array(z.string()).nullable().optional(),
   language_tests: z.record(z.string(), z.number()).nullable().optional(),
   other_requirements: z.string().nullable().optional()
@@ -49,12 +49,12 @@ const RequirementRowSchema = z.object({
 
 const AcademicsRowSchema = z.object({
   curriculum: z.string().nullable().optional(),
-  gpa: z.number().nullable().optional(),
-  ib_total: z.number().nullable().optional(),
-  sat: z.number().nullable().optional(),
-  act: z.number().nullable().optional(),
-  toefl: z.number().nullable().optional(),
-  ielts: z.number().nullable().optional(),
+  gpa: z.coerce.number().nullable().optional(),
+  ib_total: z.coerce.number().nullable().optional(),
+  sat: z.coerce.number().nullable().optional(),
+  act: z.coerce.number().nullable().optional(),
+  toefl: z.coerce.number().nullable().optional(),
+  ielts: z.coerce.number().nullable().optional(),
   subject_grades: z.array(z.object({
     subject: z.string(),
     level: z.string(),
@@ -63,8 +63,8 @@ const AcademicsRowSchema = z.object({
 });
 
 const PreferencesRowSchema = z.object({
-  budget_min: z.number().nullable().optional(),
-  budget_max: z.number().nullable().optional(),
+  budget_min: z.coerce.number().nullable().optional(),
+  budget_max: z.coerce.number().nullable().optional(),
   aid_needed: z.boolean().nullable().optional(),
   countries: z.array(z.string()).nullable().optional(),
   languages: z.array(z.string()).nullable().optional(),

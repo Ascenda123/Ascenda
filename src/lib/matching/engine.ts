@@ -97,6 +97,15 @@ export type MatchResult = {
 
 const clampScore = (value: number) => Math.max(0, Math.min(100, value));
 
+const normalizeAcceptanceRate = (value?: number | string | null) => {
+  if (value === null || value === undefined) return null;
+  const parsed = typeof value === 'string' ? Number.parseFloat(value) : value;
+  if (!Number.isFinite(parsed)) return null;
+  const ratio = parsed > 1 ? parsed / 100 : parsed;
+  if (ratio < 0) return null;
+  return Math.min(1, ratio);
+};
+
 const calculateEligibility = (input: MatchInput) => {
   const reasons: string[] = [];
   const { academics, requirement } = input;
@@ -226,10 +235,10 @@ const calculateOutcomeSignal = (input: MatchInput) => {
     scores.push(rankScore);
   }
 
-  if (typeof university.acceptanceRate === 'number') {
-    const acceptance = university.acceptanceRate;
-    const acceptanceScore = acceptance > 0 ? clampScore((1 - acceptance) * 100) / 100 : 0.5;
-    scores.push(acceptanceScore);
+  const acceptanceRate = normalizeAcceptanceRate(university.acceptanceRate);
+  if (acceptanceRate !== null) {
+    const acceptanceScore = 1 - acceptanceRate;
+    scores.push(Math.max(0, Math.min(1, acceptanceScore)));
   }
 
   if (program.field && aspirations.targetFields && aspirations.targetFields.length > 0) {
@@ -294,8 +303,8 @@ const describePrestige = (university: University) => {
   const rank =
     typeof university.rankOverall === 'number' && university.rankOverall > 0 ? university.rankOverall : undefined;
   const rankScore = rank ? Math.max(0, 1 - (rank - 1) / 500) : 0.4;
-  const acceptanceScore =
-    typeof university.acceptanceRate === 'number' ? Math.max(0, Math.min(1, 1 - university.acceptanceRate)) : 0.4;
+  const acceptanceRate = normalizeAcceptanceRate(university.acceptanceRate);
+  const acceptanceScore = acceptanceRate !== null ? Math.max(0, Math.min(1, 1 - acceptanceRate)) : 0.4;
   return (rankScore + acceptanceScore) / 2;
 };
 
@@ -303,7 +312,7 @@ const determineMatchTier = (input: MatchInput, score: number): MatchTier => {
   const prestige = describePrestige(input.university);
   const combinedScore = Math.max(0, Math.min(1, (score / 100) * 0.6 + prestige * 0.4));
 
-  if (combinedScore >= 0.75) return 'Reach';
+  if (combinedScore >= 0.75) return 'Safe';
   if (combinedScore >= 0.5) return 'Match';
-  return 'Safe';
+  return 'Reach';
 };
