@@ -140,6 +140,34 @@ const extractBulletItems = (text?: string | null) => {
   return [];
 };
 
+const extractYearSections = (modules?: string | null) => {
+  if (!modules) return [];
+  const lines = modules.replace(/\r/g, '').split(/\n+/).map((l) => l.trim()).filter(Boolean);
+  const yearRegex = /^year\\s*(\\d+)/i;
+  const sections: { title: string; items: string[] }[] = [];
+  let current: { title: string; items: string[] } | null = null;
+
+  lines.forEach((line) => {
+    const yearMatch = line.match(yearRegex);
+    if (yearMatch) {
+      if (current) sections.push(current);
+      current = { title: `Year ${yearMatch[1]}`, items: [] };
+      const remainder = line.replace(yearRegex, '').replace(/^[.:\\-\\s]+/, '');
+      if (remainder) current.items.push(remainder);
+      return;
+    }
+    if (!current) {
+      current = { title: 'Overview', items: [] };
+    }
+    current.items.push(line);
+  });
+
+  if (current) sections.push(current);
+  // If only one section with a generic title, treat as no structured years.
+  const hasYear = sections.some((s) => s.title.toLowerCase().startsWith('year'));
+  return hasYear ? sections : [];
+};
+
 export default function CoursePage({ params }: { params: { id: string } }) {
   const searchParams = useSearchParams();
   const [course, setCourse] = useState<CourseView | null>(null);
@@ -155,6 +183,7 @@ export default function CoursePage({ params }: { params: { id: string } }) {
   }, [searchParams]);
 
   const moduleItems = useMemo(() => extractBulletItems(course?.modules), [course?.modules]);
+  const moduleYearSections = useMemo(() => extractYearSections(course?.modules), [course?.modules]);
   const visibleModules = showAllModules ? moduleItems : moduleItems.slice(0, 8);
 
   useEffect(() => {
@@ -344,7 +373,35 @@ export default function CoursePage({ params }: { params: { id: string } }) {
                   {course.modules ? (
                     <div className="space-y-2">
                       <p className="text-sm font-semibold text-foreground">Modules</p>
-                      {moduleItems.length ? (
+                      {moduleYearSections.length ? (
+                        <div className="space-y-4">
+                          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                            {moduleYearSections.map((section, idx) => (
+                              <div key={`yr-${idx}`} className="rounded-2xl border border-border/70 bg-muted/30 p-4">
+                                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground">
+                                  {section.title}
+                                </p>
+                                <ul className="mt-2 space-y-2 text-sm text-foreground/85">
+                                  {section.items.slice(0, showAllModules ? section.items.length : 4).map((item, i) => (
+                                    <li key={`yr-${idx}-item-${i}`} className="flex gap-2">
+                                      <span className="mt-1 block h-1.5 w-1.5 shrink-0 rounded-full bg-primary/70" aria-hidden />
+                                      <span className="leading-relaxed">{emphasize(item)}</span>
+                                    </li>
+                                  ))}
+                                  {section.items.length > 4 && !showAllModules ? (
+                                    <li className="text-xs text-muted-foreground">+ {section.items.length - 4} more</li>
+                                  ) : null}
+                                </ul>
+                              </div>
+                            ))}
+                          </div>
+                          {moduleYearSections.some((s) => s.items.length > 4) ? (
+                            <Button variant="ghost" size="sm" onClick={() => setShowAllModules((v) => !v)} className="px-0 text-primary">
+                              {showAllModules ? 'Show fewer' : 'Show all modules'}
+                            </Button>
+                          ) : null}
+                        </div>
+                      ) : moduleItems.length ? (
                         <div className="space-y-3">
                           <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                             {visibleModules.map((item, idx) => (
