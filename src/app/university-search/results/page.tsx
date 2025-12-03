@@ -55,11 +55,6 @@ export default function UniversitySearchResultsPage() {
   const [isComparisonOpen, setIsComparisonOpen] = useState(false);
   const [selectedUniversities, setSelectedUniversities] = useState<string[]>([]);
   const [selectedPrograms, setSelectedPrograms] = useState<string[]>([]);
-  const [quickFilters, setQuickFilters] = useState({
-    budgetFriendly: false,
-    englishOnly: false,
-    testOptional: false
-  });
   const [results, setResults] = useState<ProgramSearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -227,16 +222,6 @@ export default function UniversitySearchResultsPage() {
 
   const filteredResults = useMemo(() => {
     const normalizedQuery = searchQuery.toLowerCase();
-    const isBudgetFriendly = (result: ProgramSearchResult) => {
-      const tuition = result.tuition ?? result.intlTuitionLow ?? null;
-      if (tuition === null) return false;
-      return tuition <= 40000;
-    };
-    const isEnglishOnly = (result: ProgramSearchResult) => {
-      if (!result.language) return false;
-      return result.language.toLowerCase().includes('english');
-    };
-    const isTestOptional = (result: ProgramSearchResult) => result.requiresTest === false;
 
     return results.filter((result) => {
       const matchesSearch =
@@ -247,20 +232,14 @@ export default function UniversitySearchResultsPage() {
         selectedUniversities.length === 0 || selectedUniversities.includes(result.universityName);
       const matchesProgram =
         selectedPrograms.length === 0 || selectedPrograms.includes(result.programName);
-      const matchesBudget = !quickFilters.budgetFriendly || isBudgetFriendly(result);
-      const matchesLanguage = !quickFilters.englishOnly || isEnglishOnly(result);
-      const matchesTesting = !quickFilters.testOptional || isTestOptional(result);
       return (
         matchesSearch &&
         matchesTier &&
         matchesUniversity &&
-        matchesProgram &&
-        matchesBudget &&
-        matchesLanguage &&
-        matchesTesting
+        matchesProgram
       );
     });
-  }, [results, searchQuery, selectedTiers, selectedPrograms, selectedUniversities, quickFilters]);
+  }, [results, searchQuery, selectedTiers, selectedPrograms, selectedUniversities]);
 
   const handleToggleUniversity = (name: string) => {
     // If we are un-toggling the university that is currently filtering the page via URL,
@@ -299,11 +278,6 @@ export default function UniversitySearchResultsPage() {
     setSelectedTiers(['Reach', 'Match', 'Safe']);
     setSelectedUniversities([]);
     setSelectedPrograms([]);
-    setQuickFilters({
-      budgetFriendly: false,
-      englishOnly: false,
-      testOptional: false
-    });
 
     // If there are URL params, clear them to truly reset
     if (programId || universityId || searchParams.get('q')) {
@@ -387,13 +361,6 @@ export default function UniversitySearchResultsPage() {
           viewMode={viewMode}
           onViewModeChange={setViewMode}
           resultCount={filteredResults.length}
-          quickFilters={quickFilters}
-          onQuickFilterChange={(key) =>
-            setQuickFilters((prev) => ({
-              ...prev,
-              [key]: !prev[key]
-            }))
-          }
           selectedUniversities={selectedUniversities}
           selectedPrograms={selectedPrograms}
           availableUniversities={availableUniversities}

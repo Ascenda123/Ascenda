@@ -2,25 +2,27 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { MatchTier } from '@/lib/matching/engine';
 import { cn } from '@/lib/utils';
-import { Check, ChevronDown, Grid, LayoutList, Search, X } from 'lucide-react';
+import { Check, ChevronDown, Grid, LayoutList, X } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { IntelligentSearchBar, Suggestion } from '@/components/university-search/IntelligentSearchBar';
+
+type QuickFilters = {
+    budgetFriendly: boolean;
+    englishOnly: boolean;
+    testOptional: boolean;
+};
 
 interface FilterBarProps {
     searchQuery: string;
     onSearchChange: (query: string) => void;
-    onSelectSuggestion: (item: Suggestion) => void;
+    onSelectSuggestion?: (item: Suggestion) => void;
     selectedTiers: MatchTier[];
     onTierChange: (tier: MatchTier) => void;
     viewMode: 'grid' | 'list';
     onViewModeChange: (mode: 'grid' | 'list') => void;
     resultCount: number;
-    quickFilters: {
-        budgetFriendly: boolean;
-        englishOnly: boolean;
-        testOptional: boolean;
-    };
-    onQuickFilterChange: (key: keyof FilterBarProps['quickFilters']) => void;
+    quickFilters?: QuickFilters;
+    onQuickFilterChange?: (key: keyof QuickFilters) => void;
     selectedUniversities?: string[];
     selectedPrograms?: string[];
     availableUniversities?: string[];
@@ -128,7 +130,7 @@ function SelectionDropdown({
 export function FilterBar({
     searchQuery,
     onSearchChange,
-    onSelectSuggestion,
+    onSelectSuggestion = () => { },
     selectedTiers,
     onTierChange,
     viewMode,
@@ -244,29 +246,31 @@ export function FilterBar({
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2 md:justify-end">
-                        {([
-                            { key: 'budgetFriendly', label: 'Budget' },
-                            { key: 'englishOnly', label: 'English' },
-                            { key: 'testOptional', label: 'Test-optional' }
-                        ] as const).map((filter) => {
-                            const active = quickFilters[filter.key];
-                            return (
-                                <button
-                                    key={filter.key}
-                                    onClick={() => onQuickFilterChange(filter.key)}
-                                    className={cn(
-                                        'flex h-9 items-center rounded-xl border px-3 text-xs font-semibold uppercase tracking-[0.2em] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:ring-offset-2 focus-visible:ring-offset-card',
-                                        active
-                                            ? 'border-primary bg-primary/10 text-primary'
-                                            : 'border-border bg-background text-muted-foreground hover:bg-muted'
-                                    )}
-                                    role="switch"
-                                    aria-checked={active}
-                                >
-                                    {filter.label}
-                                </button>
-                            );
-                        })}
+                        {quickFilters && onQuickFilterChange
+                            ? ([
+                                { key: 'budgetFriendly', label: 'Budget' },
+                                { key: 'englishOnly', label: 'English' },
+                                { key: 'testOptional', label: 'Test-optional' }
+                            ] as const).map((filter) => {
+                                const active = quickFilters[filter.key];
+                                return (
+                                    <button
+                                        key={filter.key}
+                                        onClick={() => onQuickFilterChange(filter.key)}
+                                        className={cn(
+                                            'flex h-9 items-center rounded-xl border px-3 text-xs font-semibold uppercase tracking-[0.2em] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:ring-offset-2 focus-visible:ring-offset-card',
+                                            active
+                                                ? 'border-primary bg-primary/10 text-primary'
+                                                : 'border-border bg-background text-muted-foreground hover:bg-muted'
+                                        )}
+                                        role="switch"
+                                        aria-checked={active}
+                                    >
+                                        {filter.label}
+                                    </button>
+                                );
+                            })
+                            : null}
                         {onClearFilters ? (
                             <Button
                                 variant="ghost"
