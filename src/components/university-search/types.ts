@@ -16,6 +16,7 @@ export type ProgramSearchResult = {
   intlTuitionHigh?: number | null;
   language?: string | null;
   requiresTest?: boolean | null;
+  universityId?: string;
 };
 
 export const tierFromScore = (score?: number | null): MatchTier | null => {

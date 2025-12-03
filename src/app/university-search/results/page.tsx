@@ -40,6 +40,9 @@ type ProgramRow = {
 
 export default function UniversitySearchResultsPage() {
   const searchParams = useSearchParams();
+  const programId = searchParams.get('programId');
+  const universityId = searchParams.get('universityId');
+
   const initialQuery = searchParams.get('q')?.trim() ?? '';
 
   // State
@@ -60,8 +63,6 @@ export default function UniversitySearchResultsPage() {
   const [error, setError] = useState<string | null>(null);
 
   const { items: shortlist, addItem, removeItem } = useShortlist();
-
-  // Load catalog results from Supabase
   useEffect(() => {
     const fetchResults = async () => {
       setIsLoading(true);
@@ -83,6 +84,7 @@ export default function UniversitySearchResultsPage() {
             tuition,
             currency,
             universities (
+              id,
               name,
               country,
               city,
@@ -137,22 +139,23 @@ export default function UniversitySearchResultsPage() {
               const tier = tierFromScore(score);
               return {
                 id: program.id,
+                universityId: (uni as any)?.id,
                 universityName: uni?.name ?? 'University',
                 programName: program.name,
                 location: location || 'Location unavailable',
                 fitScore: score ?? null,
                 tier: tier ?? null,
-              highlights: [program.field, program.level].filter(Boolean) as string[],
-              acceptanceRate: uni?.acceptance_rate ?? null,
-              durationYears: program.duration_years ?? null,
-              tuition: program.tuition ?? null,
-              currency: program.currency ?? uni?.currency ?? null,
-              intlTuitionLow: uni?.intl_tuition_low ?? null,
-              intlTuitionHigh: uni?.intl_tuition_high ?? null,
-              language: program.language ?? null,
-              requiresTest: uni?.requires_test ?? null
-            };
-          }) ?? [];
+                highlights: [program.field, program.level].filter(Boolean) as string[],
+                acceptanceRate: uni?.acceptance_rate ?? null,
+                durationYears: program.duration_years ?? null,
+                tuition: program.tuition ?? null,
+                currency: program.currency ?? uni?.currency ?? null,
+                intlTuitionLow: uni?.intl_tuition_low ?? null,
+                intlTuitionHigh: uni?.intl_tuition_high ?? null,
+                language: program.language ?? null,
+                requiresTest: uni?.requires_test ?? null
+              };
+            }) ?? [];
 
         setResults(mapped);
       } catch (fetchError) {
@@ -189,8 +192,6 @@ export default function UniversitySearchResultsPage() {
     selectedPrograms.forEach((program) => programs.add(program));
     return Array.from(programs).sort((a, b) => a.localeCompare(b));
   }, [results, selectedPrograms, selectedUniversities]);
-
-  // Filter Results
   const filteredResults = useMemo(() => {
     const normalizedQuery = searchQuery.toLowerCase();
     const isBudgetFriendly = (result: ProgramSearchResult) => {
@@ -205,6 +206,14 @@ export default function UniversitySearchResultsPage() {
     const isTestOptional = (result: ProgramSearchResult) => result.requiresTest === false;
 
     return results.filter((result) => {
+      // ID-based filtering (Strict)
+      if (programId) {
+        return result.id === programId;
+      }
+      if (universityId) {
+        return result.universityId === universityId;
+      }
+
       const matchesSearch =
         !normalizedQuery ||
         `${result.universityName} ${result.programName} ${result.location}`.toLowerCase().includes(normalizedQuery);
@@ -226,7 +235,7 @@ export default function UniversitySearchResultsPage() {
         matchesTesting
       );
     });
-  }, [results, searchQuery, selectedTiers, selectedPrograms, selectedUniversities, quickFilters]);
+  }, [results, searchQuery, selectedTiers, selectedPrograms, selectedUniversities, quickFilters, programId, universityId]);
 
   const handleToggleUniversity = (name: string) => {
     setSelectedUniversities((prev) =>
@@ -288,7 +297,7 @@ export default function UniversitySearchResultsPage() {
   };
 
   return (
-    <div className="min-h-screen space-y-8 pb-24">
+    <div className="min-h-screen space-y-8 pb-24" >
       <section className="space-y-6">
         <div className="flex flex-col gap-2">
           <Breadcrumbs className="mb-2" />

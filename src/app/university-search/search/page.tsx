@@ -179,17 +179,21 @@ export default function UniversitySearchPage() {
   );
 
   const handleSelectSuggestion = (item: Suggestion) => {
-    let query = item.name;
-    // If it's a program and has a university, combine them for a more specific search result
-    if (item.university) {
-      query = `${item.name} ${item.university}`;
-    }
-
-    setSearchQuery(query);
+    setSearchQuery(item.name);
     setIsDropdownOpen(false);
 
-    // Navigate immediately
-    router.push(`/university-search/results?q=${encodeURIComponent(query)}`);
+    const params = new URLSearchParams();
+    if (item.university) {
+      // It's a program
+      params.set('programId', item.id);
+      params.set('q', `${item.name} ${item.university}`); // Fallback/Context
+    } else {
+      // It's a university
+      params.set('universityId', item.id);
+      params.set('q', item.name); // Fallback/Context
+    }
+
+    router.push(`/university-search/results?${params.toString()}`);
   };
 
   const handleBlur = () => {
