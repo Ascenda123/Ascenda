@@ -21,7 +21,7 @@ export const NavLink = ({ item, mobile = false }: NavLinkProps) => {
                 className={cn(
                     'inline-flex items-center gap-1 rounded-full px-3 py-1 border border-transparent transition',
                     active
-                        ? 'border border-primary/15 bg-primary/12 text-primary backdrop-blur-sm'
+                        ? 'border border-primary bg-primary text-primary-foreground shadow-sm'
                         : 'hover:bg-foreground/5 hover:text-foreground/90'
                 )}
             >
@@ -36,7 +36,7 @@ export const NavLink = ({ item, mobile = false }: NavLinkProps) => {
             className={cn(
                 'inline-flex items-center gap-2 rounded-full px-3 py-1 border border-transparent transition',
                 active
-                    ? 'border border-primary/15 bg-primary/12 text-primary backdrop-blur-sm'
+                    ? 'border border-primary bg-primary text-primary-foreground shadow-sm'
                     : 'hover:bg-foreground/5 hover:text-foreground'
             )}
         >
