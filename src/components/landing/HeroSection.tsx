@@ -235,17 +235,6 @@ export function HeroSection() {
                             variants={storyPartVariants}
                         >
                             <div className="space-y-6">
-                                <div className="space-y-2">
-                                    <p className="text-xs uppercase tracking-[0.5em] text-accent">Admissions OS</p>
-                                    <motion.p
-                                        className="text-sm font-medium text-foreground/80"
-                                        initial={{ opacity: 0, y: 8 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                    transition={{ duration: 0.4, delay: 0.14 }}
-                                    >
-                                        You are closer than you think—let&apos;s finish your applications.
-                                    </motion.p>
-                                </div>
                                 <motion.div
                                     initial={{ opacity: 0.7, scale: 0.98, y: 10 }}
                                     animate={{ opacity: 1, scale: 1, y: 0 }}
