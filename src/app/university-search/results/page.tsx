@@ -63,18 +63,19 @@ export default function UniversitySearchResultsPage() {
   const [error, setError] = useState<string | null>(null);
 
   const { items: shortlist, addItem, removeItem } = useShortlist();
+  // Load catalog results from Supabase
   useEffect(() => {
     const fetchResults = async () => {
       setIsLoading(true);
       setError(null);
       try {
         const supabase = getBrowserSupabaseClient();
-        const [{ data: sessionData }, { data, error: supabaseError }] = await Promise.all([
-          supabase.auth.getSession(),
-          supabase
-            .from('programs')
-            .select(
-              `
+
+        // Base query
+        let query = supabase
+          .from('programs')
+          .select(
+            `
             id,
             name,
             field,
@@ -83,7 +84,7 @@ export default function UniversitySearchResultsPage() {
             language,
             tuition,
             currency,
-            universities (
+            universities!inner (
               id,
               name,
               country,
@@ -96,8 +97,24 @@ export default function UniversitySearchResultsPage() {
               currency
             )
           `
-            )
-            .limit(200)
+          );
+
+        // Apply ID filters if present
+        if (programId) {
+          query = query.eq('id', programId);
+        }
+        if (universityId) {
+          query = query.eq('universities.id', universityId);
+        }
+
+        // If no specific ID, limit results
+        if (!programId && !universityId) {
+          query = query.limit(200);
+        }
+
+        const [{ data: sessionData }, { data, error: supabaseError }] = await Promise.all([
+          supabase.auth.getSession(),
+          query
         ]);
 
         if (supabaseError) throw supabaseError;
@@ -158,6 +175,19 @@ export default function UniversitySearchResultsPage() {
             }) ?? [];
 
         setResults(mapped);
+
+        // Sync Filters with URL IDs
+        if (programId && mapped.length > 0) {
+          const program = mapped[0];
+          setSearchQuery(''); // Clear text search
+          setSelectedPrograms([program.programName]);
+          setSelectedUniversities([program.universityName]);
+        } else if (universityId && mapped.length > 0) {
+          const uniName = mapped[0].universityName;
+          setSearchQuery(''); // Clear text search
+          setSelectedUniversities([uniName]);
+        }
+
       } catch (fetchError) {
         const message = fetchError instanceof Error ? fetchError.message : 'Unable to load results';
         setError(message);
@@ -167,7 +197,7 @@ export default function UniversitySearchResultsPage() {
     };
 
     fetchResults();
-  }, []);
+  }, [programId, universityId]); // Re-fetch if IDs change
 
   const availableUniversities = useMemo(() => {
     const source =
@@ -192,6 +222,7 @@ export default function UniversitySearchResultsPage() {
     selectedPrograms.forEach((program) => programs.add(program));
     return Array.from(programs).sort((a, b) => a.localeCompare(b));
   }, [results, selectedPrograms, selectedUniversities]);
+
   const filteredResults = useMemo(() => {
     const normalizedQuery = searchQuery.toLowerCase();
     const isBudgetFriendly = (result: ProgramSearchResult) => {
@@ -206,14 +237,6 @@ export default function UniversitySearchResultsPage() {
     const isTestOptional = (result: ProgramSearchResult) => result.requiresTest === false;
 
     return results.filter((result) => {
-      // ID-based filtering (Strict)
-      if (programId) {
-        return result.id === programId;
-      }
-      if (universityId) {
-        return result.universityId === universityId;
-      }
-
       const matchesSearch =
         !normalizedQuery ||
         `${result.universityName} ${result.programName} ${result.location}`.toLowerCase().includes(normalizedQuery);
@@ -235,7 +258,7 @@ export default function UniversitySearchResultsPage() {
         matchesTesting
       );
     });
-  }, [results, searchQuery, selectedTiers, selectedPrograms, selectedUniversities, quickFilters, programId, universityId]);
+  }, [results, searchQuery, selectedTiers, selectedPrograms, selectedUniversities, quickFilters]);
 
   const handleToggleUniversity = (name: string) => {
     setSelectedUniversities((prev) =>
