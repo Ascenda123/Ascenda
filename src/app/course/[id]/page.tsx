@@ -149,29 +149,82 @@ const extractBulletItems = (text?: string | null) => {
   return [];
 };
 
-const extractYearSections = (modules?: string | null) => {
+const extractYearSections = (modules?: string | null, durationText?: string | null) => {
   if (!modules) return [];
   const normalized = modules.replace(/\r/g, ' ').replace(/\s+/g, ' ').trim();
   if (!normalized) return [];
 
-  const tokens = normalized.split(/(Year\s*\d+)/i).map((t) => t.trim()).filter(Boolean);
+  const yearPattern = /Year\s*\d+/gi;
   const sections: { title: string; items: string[] }[] = [];
+  let match: RegExpExecArray | null;
+  const indices: { title: string; start: number }[] = [];
 
-  tokens.forEach((token) => {
-    const yearMatch = token.match(/^Year\s*(\d+)/i);
-    if (yearMatch) {
-      sections.push({ title: `Year ${yearMatch[1]}`, items: [] });
-      return;
+  const stripLeadingNoise = (text: string) => {
+    let out = text.trim();
+    // Remove leading connectors/parentheticals like "(or", "(with work placement)"
+    out = out.replace(/^\(\s*or\b/i, '').trim();
+    out = out.replace(/^\(\s*with[^)]*\)\s*/i, '').trim();
+    out = out.replace(/^or\b/i, '').trim();
+    out = out.replace(/^with\s+work\s+placement\)?\s*/i, '').trim();
+    // Remove leftover leading parentheses or punctuation
+    out = out.replace(/^[()\s:.,-]+/, '').trim();
+    return out;
+  };
+
+  while ((match = yearPattern.exec(normalized)) !== null) {
+    indices.push({ title: match[0].replace(/\s+/g, ' ').trim(), start: match.index });
+  }
+
+  if (!indices.length) return [];
+
+  indices.forEach((entry, idx) => {
+    const end = idx + 1 < indices.length ? indices[idx + 1].start : normalized.length;
+    let content = normalized.slice(entry.start + entry.title.length, end).trim();
+    content = stripLeadingNoise(content);
+    if (!content) return;
+    const items = splitSentences(content).filter((item) => item.length > 0);
+    if (items.length) {
+      sections.push({ title: entry.title, items });
     }
-    if (!sections.length) {
-      sections.push({ title: 'Overview', items: splitSentences(token) });
-      return;
-    }
-    sections[sections.length - 1].items.push(...splitSentences(token));
   });
 
-  const hasYear = sections.some((s) => s.title.toLowerCase().startsWith('year'));
-  return hasYear ? sections : [];
+  const parseDurationCount = (text?: string | null) => {
+    if (!text) return null;
+    const m = text.match(/(\d+(?:\.\d+)?)/);
+    if (!m) return null;
+    const val = Number.parseFloat(m[1]);
+    if (!Number.isFinite(val)) return null;
+    return Math.round(val);
+  };
+
+  const yearNumber = (title: string) => {
+    const m = title.match(/Year\s*(\d+)/i);
+    if (!m) return null;
+    const num = Number.parseInt(m[1], 10);
+    return Number.isFinite(num) ? num : null;
+  };
+
+  const maxYears = parseDurationCount(durationText);
+  if (maxYears) {
+    const nums = sections.map((s) => yearNumber(s.title)).filter((n): n is number => n !== null);
+    const hasMax = nums.includes(maxYears);
+    if (!hasMax) {
+      const candidateIdx = sections.findIndex((s) => {
+        const n = yearNumber(s.title);
+        return n !== null && n > maxYears;
+      });
+      if (candidateIdx >= 0) {
+        sections[candidateIdx] = { ...sections[candidateIdx], title: `Year ${maxYears}` };
+      }
+    }
+
+    return sections.filter((section) => {
+      const num = yearNumber(section.title);
+      return num === null || num <= maxYears;
+    });
+  }
+
+  return sections;
 };
 
 export default function CoursePage({ params }: { params: { id: string } }) {
@@ -190,7 +243,10 @@ export default function CoursePage({ params }: { params: { id: string } }) {
   }, [searchParams]);
 
   const moduleItems = useMemo(() => extractBulletItems(course?.modules), [course?.modules]);
-  const moduleYearSections = useMemo(() => extractYearSections(course?.modules), [course?.modules]);
+  const moduleYearSections = useMemo(
+    () => extractYearSections(course?.modules, course?.duration),
+    [course?.modules, course?.duration]
+  );
   const visibleModules = showAllFlatModules ? moduleItems : moduleItems.slice(0, 8);
 
   useEffect(() => {
