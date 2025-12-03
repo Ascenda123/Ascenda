@@ -89,6 +89,30 @@ const parseTextBlocks = (text?: string | null) => {
   return { intro: [first], bullets: rest };
 };
 
+const renderRichText = (text?: string | null) => {
+  const { intro, bullets } = parseTextBlocks(text);
+  if (!intro.length && !bullets.length) return <p className="text-muted-foreground">No information available.</p>;
+  return (
+    <div className="space-y-3">
+      {intro.map((para, idx) => (
+        <p key={`intro-${idx}`} className="text-foreground/85 leading-relaxed">
+          {emphasize(para)}
+        </p>
+      ))}
+      {bullets.length ? (
+        <ul className="space-y-2">
+          {bullets.map((item, idx) => (
+            <li key={`bullet-${idx}`} className="flex gap-2">
+              <span className="mt-1 block h-1.5 w-1.5 rounded-full bg-primary/70" aria-hidden />
+              <span className="text-foreground/85 leading-relaxed">{emphasize(item)}</span>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </div>
+  );
+};
+
 export default function CoursePage({ params }: { params: { id: string } }) {
   const searchParams = useSearchParams();
   const [course, setCourse] = useState<CourseView | null>(null);
@@ -284,41 +308,18 @@ export default function CoursePage({ params }: { params: { id: string } }) {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6 text-sm leading-relaxed text-foreground/85">
-                  {(() => {
-                    const { intro, bullets } = parseTextBlocks(course.summary);
-                    return intro.length || bullets.length ? (
-                      <div className="space-y-3">
-                        {intro.map((para, idx) => (
-                          <p key={`intro-${idx}`} className="text-foreground/85">
-                            {emphasize(para)}
-                          </p>
-                        ))}
-                        {bullets.length ? (
-                          <ul className="space-y-2">
-                            {bullets.map((item, idx) => (
-                              <li key={`bullet-${idx}`} className="flex gap-2">
-                                <span className="mt-1 block h-1.5 w-1.5 rounded-full bg-primary/70" aria-hidden />
-                                <span className="text-foreground/85">{emphasize(item)}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        ) : null}
-                      </div>
-                    ) : (
-                      <p className="text-muted-foreground">No overview available.</p>
-                    );
-                  })()}
+                  {renderRichText(course.summary)}
 
                   {course.modules ? (
                     <div className="space-y-2">
                       <p className="text-sm font-semibold text-foreground">Modules</p>
-                      <p className="whitespace-pre-line text-sm leading-relaxed text-foreground/80">{course.modules}</p>
+                      {renderRichText(course.modules)}
                     </div>
                   ) : null}
                   {course.assessment ? (
                     <div className="space-y-2">
                       <p className="text-sm font-semibold text-foreground">Assessment</p>
-                      <p className="whitespace-pre-line text-sm leading-relaxed text-foreground/80">{course.assessment}</p>
+                      {renderRichText(course.assessment)}
                     </div>
                   ) : null}
                 </CardContent>
