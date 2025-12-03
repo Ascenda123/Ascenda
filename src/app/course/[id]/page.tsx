@@ -57,10 +57,16 @@ const buildQuickFacts = (course: CourseView): QuickFact[] => {
   const facts: QuickFact[] = [];
   if (course.level) facts.push({ label: 'Level', value: course.level, icon: GraduationCap });
   if (course.duration) facts.push({ label: 'Duration', value: course.duration, icon: CalendarDays });
-  if (course.intake) facts.push({ label: 'Intake', value: course.intake, icon: CalendarDays });
   if (course.campus) facts.push({ label: 'Campus', value: course.campus, icon: Landmark });
-  facts.push({ label: 'Tuition', value: course.tuition ?? 'Contact university', icon: Wallet });
-  facts.push({ label: 'Start date', value: course.startDate ?? 'TBD', icon: CalendarDays });
+  const tuitionDisplay = course.tuition && course.tuition.trim().length > 0 ? course.tuition : 'Contact university';
+  const startRaw = course.startDate?.trim() ?? '';
+  const intakeRaw = course.intake?.trim() ?? '';
+  const showStart = startRaw.length > 0 && startRaw.toLowerCase() !== intakeRaw.toLowerCase();
+  const startDisplay = showStart ? startRaw : '';
+  facts.push({ label: 'Tuition', value: tuitionDisplay, icon: Wallet });
+  if (showStart) {
+    facts.push({ label: 'Start date', value: startDisplay, icon: CalendarDays });
+  }
   if (course.ucasCode) facts.push({ label: 'UCAS code', value: course.ucasCode, icon: ShieldCheck });
   return facts;
 };
@@ -324,32 +330,6 @@ export default function CoursePage({ params }: { params: { id: string } }) {
                         <li key={`${item.label}-${idx}`} className="flex gap-3 rounded-xl border border-border/60 bg-muted/30 px-4 py-3 text-sm">
                           <span className="min-w-[120px] font-semibold text-foreground">{item.label}</span>
                           <span className="text-muted-foreground">{item.value}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <Globe2 className="h-5 w-5 text-primary" />
-                    Quick Facts
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {course.quickFacts.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">No quick facts available.</p>
-                  ) : (
-                    <ul className="space-y-2">
-                      {course.quickFacts.map((fact) => (
-                        <li key={fact.label} className="flex items-start gap-3 rounded-xl border border-border/60 bg-muted/30 px-3 py-2 text-sm">
-                          <fact.icon className="mt-0.5 h-4 w-4 text-primary" />
-                          <div>
-                            <p className="font-semibold text-foreground">{fact.label}</p>
-                            <p className="text-muted-foreground">{fact.value}</p>
-                          </div>
                         </li>
                       ))}
                     </ul>
