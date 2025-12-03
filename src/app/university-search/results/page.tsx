@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { MatchTier } from '@/lib/matching/engine';
 import { useShortlist } from '@/components/university-search/shortlist-store';
 import { UniversityCard } from '@/components/university-card';
@@ -11,6 +11,7 @@ import { ComparisonModal } from '@/components/university-search/ComparisonModal'
 import { cn } from '@/lib/utils';
 import { getBrowserSupabaseClient } from '@/lib/supabase/client';
 import { ProgramSearchResult, tierFromScore } from '@/components/university-search/types';
+import { Suggestion } from '@/components/university-search/IntelligentSearchBar';
 
 import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 
@@ -39,6 +40,7 @@ type ProgramRow = {
 };
 
 export default function UniversitySearchResultsPage() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const programId = searchParams.get('programId');
   const universityId = searchParams.get('universityId');
@@ -261,12 +263,32 @@ export default function UniversitySearchResultsPage() {
   }, [results, searchQuery, selectedTiers, selectedPrograms, selectedUniversities, quickFilters]);
 
   const handleToggleUniversity = (name: string) => {
+    // If we are un-toggling the university that is currently filtering the page via URL,
+    // we should remove the URL filter to allow dynamic expansion of results.
+    if (universityId && selectedUniversities.includes(name) && selectedUniversities.length === 1) {
+      // Check if the name matches the current ID-based university (we'd need to know the name from results)
+      // A simpler heuristic: if there's a universityId param, and we are toggling off the only selected university,
+      // it's likely the one from the URL.
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete('universityId');
+      params.delete('q'); // Clear fallback query too
+      router.push(`/university-search/results?${params.toString()}`);
+    }
+
     setSelectedUniversities((prev) =>
       prev.includes(name) ? prev.filter((item) => item !== name) : [...prev, name]
     );
   };
 
   const handleToggleProgram = (program: string) => {
+    // Similar logic for programs
+    if (programId && selectedPrograms.includes(program) && selectedPrograms.length === 1) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete('programId');
+      params.delete('q');
+      router.push(`/university-search/results?${params.toString()}`);
+    }
+
     setSelectedPrograms((prev) =>
       prev.includes(program) ? prev.filter((item) => item !== program) : [...prev, program]
     );
@@ -282,6 +304,28 @@ export default function UniversitySearchResultsPage() {
       englishOnly: false,
       testOptional: false
     });
+
+    // If there are URL params, clear them to truly reset
+    if (programId || universityId || searchParams.get('q')) {
+      router.push('/university-search/results');
+    }
+  };
+
+  const handleSelectSuggestion = (item: Suggestion) => {
+    setSearchQuery(item.name);
+
+    const params = new URLSearchParams();
+    if (item.university) {
+      // It's a program
+      params.set('programId', item.id);
+      params.set('q', `${item.name} ${item.university}`);
+    } else {
+      // It's a university
+      params.set('universityId', item.id);
+      params.set('q', item.name);
+    }
+
+    router.push(`/university-search/results?${params.toString()}`);
   };
 
   // Handlers
@@ -333,6 +377,7 @@ export default function UniversitySearchResultsPage() {
         <FilterBar
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
+          onSelectSuggestion={handleSelectSuggestion}
           selectedTiers={selectedTiers}
           onTierChange={(tier) => {
             setSelectedTiers((prev) =>

@@ -4,10 +4,12 @@ import { MatchTier } from '@/lib/matching/engine';
 import { cn } from '@/lib/utils';
 import { Check, ChevronDown, Grid, LayoutList, Search, X } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { IntelligentSearchBar, Suggestion } from '@/components/university-search/IntelligentSearchBar';
 
 interface FilterBarProps {
     searchQuery: string;
     onSearchChange: (query: string) => void;
+    onSelectSuggestion: (item: Suggestion) => void;
     selectedTiers: MatchTier[];
     onTierChange: (tier: MatchTier) => void;
     viewMode: 'grid' | 'list';
@@ -126,6 +128,7 @@ function SelectionDropdown({
 export function FilterBar({
     searchQuery,
     onSearchChange,
+    onSelectSuggestion,
     selectedTiers,
     onTierChange,
     viewMode,
@@ -137,8 +140,8 @@ export function FilterBar({
     selectedPrograms = [],
     availableUniversities = [],
     availablePrograms = [],
-    onUniversityToggle = () => {},
-    onProgramToggle = () => {},
+    onUniversityToggle = () => { },
+    onProgramToggle = () => { },
     onClearFilters,
     isSticky = true,
     showViewToggle = true
@@ -176,21 +179,13 @@ export function FilterBar({
             <div className="flex flex-col gap-3">
                 <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between md:gap-4">
                     <div className="relative w-full md:max-w-md">
-                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                        <Input
-                            placeholder="Search universities..."
+                        <IntelligentSearchBar
                             value={searchQuery}
-                            onChange={(e) => onSearchChange(e.target.value)}
-                            className="h-10 w-full rounded-xl border-border bg-background pl-9 pr-8"
+                            onChange={onSearchChange}
+                            onSelectSuggestion={onSelectSuggestion}
+                            placeholder="Search universities..."
+                            variant="minimal"
                         />
-                        {searchQuery && (
-                            <button
-                                onClick={() => onSearchChange('')}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                            >
-                                <X className="h-3 w-3" />
-                            </button>
-                        )}
                     </div>
 
                     <div className="flex items-center gap-3 self-start md:self-auto">

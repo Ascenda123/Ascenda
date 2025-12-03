@@ -1,26 +1,11 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search } from 'lucide-react';
 import { AnimatedBlobBanner } from '@/components/animated-blob-banner';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import { getBrowserSupabaseClient } from '@/lib/supabase/client';
-
-type Suggestion = {
-  id: string;
-  name: string;
-  university?: string | null;
-  location?: string | null;
-  score: number;
-};
-
-type SuggestionGroups = {
-  programs: Suggestion[];
-  universities: Suggestion[];
-};
+import { IntelligentSearchBar, Suggestion } from '@/components/university-search/IntelligentSearchBar';
 
 const filterGroups = [
   {
@@ -49,11 +34,6 @@ export default function UniversitySearchPage() {
   const router = useRouter();
   const [selectedFilters, setSelectedFilters] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState('');
-  const [suggestions, setSuggestions] = useState<SuggestionGroups>({ programs: [], universities: [] });
-  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const debounceRef = useRef<number | null>(null);
-  const blurTimeoutRef = useRef<number | null>(null);
 
   const toggleFilter = (option: string) => {
     const next = new Set(selectedFilters);
@@ -69,118 +49,8 @@ export default function UniversitySearchPage() {
     setSelectedFilters(new Set());
   };
 
-  useEffect(() => {
-    const fetchSuggestions = async (query: string) => {
-      const trimmed = query.trim();
-      if (trimmed.length === 0) {
-        setSuggestions({ programs: [], universities: [] });
-        return;
-      }
-      setIsLoadingSuggestions(true);
-      try {
-        const supabase = getBrowserSupabaseClient();
-
-        // Parallelize queries for better performance
-        // 1. Search Programs by name
-        // 2. Search Universities by name
-        const [programsRes, universitiesRes] = await Promise.all([
-          supabase
-            .from('programs')
-            .select('id,name,field,universities!inner(name,country,city,region)')
-            .ilike('name', `%${trimmed}%`)
-            .limit(5),
-          supabase
-            .from('universities')
-            .select('id,name,country,city,region')
-            .ilike('name', `%${trimmed}%`)
-            .limit(5)
-        ]);
-
-        if (programsRes.error) {
-          console.warn('Program search error:', programsRes.error);
-        }
-        if (universitiesRes.error) {
-          console.warn('University search error:', universitiesRes.error);
-        }
-
-        const normalizedQuery = trimmed.toLowerCase();
-
-        // Scoring helper
-        const scoreText = (value: string | null | undefined) => {
-          if (!value) return 0;
-          const lower = value.toLowerCase();
-          if (lower === normalizedQuery) return 100;
-          if (lower.startsWith(normalizedQuery)) return 90;
-          if (lower.includes(` ${normalizedQuery}`)) return 80; // Word boundary match
-          if (lower.includes(normalizedQuery)) return 60;
-          return 0;
-        };
-
-        const programSuggestions = (programsRes.data || []).map((program: any) => {
-          const uni = program.universities as { name?: string | null; city?: string | null; region?: string | null; country?: string | null } | null;
-          const location = [uni?.city, uni?.region, uni?.country].filter(Boolean).join(', ') || null;
-
-          const nameScore = scoreText(program.name);
-          const fieldScore = scoreText(program.field);
-          // Boost score if the university name also matches
-          const uniScore = scoreText(uni?.name) * 0.5;
-
-          const score = Math.max(nameScore, fieldScore) + uniScore;
-
-          return {
-            id: program.id,
-            name: program.name,
-            university: uni?.name ?? null,
-            location,
-            score
-          };
-        });
-
-        const universitySuggestions = (universitiesRes.data || []).map((uni: any) => {
-          const location = [uni.city, uni.region, uni.country].filter(Boolean).join(', ') || null;
-          const score = scoreText(uni.name);
-          return {
-            id: uni.id,
-            name: uni.name,
-            location,
-            score
-          };
-        });
-
-        const sortByScore = (items: Suggestion[]) => [...items].sort((a, b) => b.score - a.score).slice(0, 5);
-
-        setSuggestions({
-          programs: sortByScore(programSuggestions),
-          universities: sortByScore(universitySuggestions)
-        });
-      } catch (err) {
-        console.error('Failed to load suggestions', err);
-        setSuggestions({ programs: [], universities: [] });
-      } finally {
-        setIsLoadingSuggestions(false);
-      }
-    };
-
-    if (debounceRef.current) {
-      window.clearTimeout(debounceRef.current);
-    }
-    debounceRef.current = window.setTimeout(() => fetchSuggestions(searchQuery), 150);
-
-    return () => {
-      if (debounceRef.current) {
-        window.clearTimeout(debounceRef.current);
-      }
-    };
-  }, [searchQuery]);
-
-  const hasSuggestions = useMemo(
-    () => suggestions.programs.length > 0 || suggestions.universities.length > 0,
-    [suggestions]
-  );
-
   const handleSelectSuggestion = (item: Suggestion) => {
     setSearchQuery(item.name);
-    setIsDropdownOpen(false);
 
     const params = new URLSearchParams();
     if (item.university) {
@@ -196,16 +66,7 @@ export default function UniversitySearchPage() {
     router.push(`/university-search/results?${params.toString()}`);
   };
 
-  const handleBlur = () => {
-    blurTimeoutRef.current = window.setTimeout(() => setIsDropdownOpen(false), 80);
-  };
 
-  const handleFocus = () => {
-    if (blurTimeoutRef.current) {
-      window.clearTimeout(blurTimeoutRef.current);
-    }
-    setIsDropdownOpen(true);
-  };
 
   return (
     <div className="space-y-8">
@@ -228,72 +89,12 @@ export default function UniversitySearchPage() {
                 universities or courses
               </label>
               <div className="space-y-3">
-                <div className="relative flex w-full items-center gap-3 rounded-full border border-border bg-background px-6 py-3 shadow-[0_18px_35px_rgba(15,23,42,0.08)] focus-within:border-foreground/60">
-                  <Search className="h-5 w-5 text-muted-foreground" aria-hidden />
-                  <Input
-                    id="search-keyword"
-                    name="q"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onFocus={handleFocus}
-                    onBlur={handleBlur}
-                    placeholder="Search universities or courses by name, subject, or vibe"
-                    className="h-16 flex-1 border-0 bg-transparent text-base text-foreground placeholder:text-muted-foreground focus-visible:ring-0"
-                  />
-                  {isDropdownOpen && (hasSuggestions || isLoadingSuggestions) ? (
-                    <div className="absolute left-0 right-0 top-full z-20 mt-2 overflow-hidden rounded-2xl border border-border bg-card shadow-xl">
-                      {isLoadingSuggestions ? (
-                        <p className="px-3 py-2 text-xs text-muted-foreground">Finding matches…</p>
-                      ) : (
-                        <div className="max-h-72 divide-y divide-border overflow-y-auto">
-                          {suggestions.programs.length > 0 ? (
-                            <div>
-                              <p className="px-3 pt-2 text-[10px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Programs</p>
-                              <ul className="p-1">
-                                {suggestions.programs.map((item) => (
-                                  <li key={`program-${item.id}`}>
-                                    <button
-                                      type="button"
-                                      onMouseDown={(e) => e.preventDefault()}
-                                      onClick={() => handleSelectSuggestion(item)}
-                                      className="flex w-full flex-col rounded-xl px-3 py-2 text-left text-sm transition hover:bg-muted"
-                                    >
-                                      <span className="font-semibold text-foreground">{item.name}</span>
-                                      {item.university ? (
-                                        <span className="text-xs text-muted-foreground">{item.university}</span>
-                                      ) : null}
-                                      {item.location ? <span className="text-xs text-muted-foreground">{item.location}</span> : null}
-                                    </button>
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          ) : null}
-                          {suggestions.universities.length > 0 ? (
-                            <div>
-                              <p className="px-3 pt-2 text-[10px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Universities</p>
-                              <ul className="p-1">
-                                {suggestions.universities.map((item) => (
-                                  <li key={`university-${item.id}`}>
-                                    <button
-                                      type="button"
-                                      onMouseDown={(e) => e.preventDefault()}
-                                      onClick={() => handleSelectSuggestion(item)}
-                                      className="flex w-full flex-col rounded-xl px-3 py-2 text-left text-sm transition hover:bg-muted"
-                                    >
-                                      <span className="font-semibold text-foreground">{item.name}</span>
-                                      {item.location ? <span className="text-xs text-muted-foreground">{item.location}</span> : null}
-                                    </button>
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          ) : null}
-                        </div>
-                      )}
-                    </div>
-                  ) : null}
-                </div>
+                <IntelligentSearchBar
+                  value={searchQuery}
+                  onChange={setSearchQuery}
+                  onSelectSuggestion={handleSelectSuggestion}
+                  placeholder="Search universities or courses by name, subject, or vibe"
+                />
                 <Button size="lg" className="w-full" type="submit" variant="soft">
                   Search
                 </Button>
