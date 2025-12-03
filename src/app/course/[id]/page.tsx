@@ -142,28 +142,25 @@ const extractBulletItems = (text?: string | null) => {
 
 const extractYearSections = (modules?: string | null) => {
   if (!modules) return [];
-  const lines = modules.replace(/\r/g, '').split(/\n+/).map((l) => l.trim()).filter(Boolean);
-  const yearRegex = /^year\\s*(\\d+)/i;
-  const sections: { title: string; items: string[] }[] = [];
-  let current: { title: string; items: string[] } | null = null;
+  const normalized = modules.replace(/\r/g, ' ').replace(/\s+/g, ' ').trim();
+  if (!normalized) return [];
 
-  lines.forEach((line) => {
-    const yearMatch = line.match(yearRegex);
+  const tokens = normalized.split(/(Year\s*\d+)/i).map((t) => t.trim()).filter(Boolean);
+  const sections: { title: string; items: string[] }[] = [];
+
+  tokens.forEach((token) => {
+    const yearMatch = token.match(/^Year\s*(\d+)/i);
     if (yearMatch) {
-      if (current) sections.push(current);
-      current = { title: `Year ${yearMatch[1]}`, items: [] };
-      const remainder = line.replace(yearRegex, '').replace(/^[.:\\-\\s]+/, '');
-      if (remainder) current.items.push(remainder);
+      sections.push({ title: `Year ${yearMatch[1]}`, items: [] });
       return;
     }
-    if (!current) {
-      current = { title: 'Overview', items: [] };
+    if (!sections.length) {
+      sections.push({ title: 'Overview', items: splitSentences(token) });
+      return;
     }
-    current.items.push(line);
+    sections[sections.length - 1].items.push(...splitSentences(token));
   });
 
-  if (current) sections.push(current);
-  // If only one section with a generic title, treat as no structured years.
   const hasYear = sections.some((s) => s.title.toLowerCase().startsWith('year'));
   return hasYear ? sections : [];
 };
@@ -374,27 +371,32 @@ export default function CoursePage({ params }: { params: { id: string } }) {
                     <div className="space-y-2">
                       <p className="text-sm font-semibold text-foreground">Modules</p>
                       {moduleYearSections.length ? (
-                        <div className="space-y-4">
-                          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                            {moduleYearSections.map((section, idx) => (
-                              <div key={`yr-${idx}`} className="rounded-2xl border border-border/70 bg-muted/30 p-4">
-                                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground">
-                                  {section.title}
-                                </p>
-                                <ul className="mt-2 space-y-2 text-sm text-foreground/85">
-                                  {section.items.slice(0, showAllModules ? section.items.length : 4).map((item, i) => (
-                                    <li key={`yr-${idx}-item-${i}`} className="flex gap-2">
-                                      <span className="mt-1 block h-1.5 w-1.5 shrink-0 rounded-full bg-primary/70" aria-hidden />
-                                      <span className="leading-relaxed">{emphasize(item)}</span>
-                                    </li>
-                                  ))}
-                                  {section.items.length > 4 && !showAllModules ? (
-                                    <li className="text-xs text-muted-foreground">+ {section.items.length - 4} more</li>
-                                  ) : null}
-                                </ul>
+                        <div className="relative space-y-4">
+                          <div className="absolute left-2 top-1 bottom-4 w-px bg-border/80" aria-hidden />
+                          {moduleYearSections.map((section, idx) => {
+                            const items = section.items.slice(0, showAllModules ? section.items.length : 4);
+                            return (
+                              <div key={`yr-${idx}`} className="relative flex gap-4">
+                                <div className="mt-1.5 h-3 w-3 shrink-0 rounded-full border-2 border-primary bg-background shadow-sm" aria-hidden />
+                                <div className="w-full rounded-2xl border border-border/70 bg-muted/30 p-4">
+                                  <p className="text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground">
+                                    {section.title}
+                                  </p>
+                                  <ul className="mt-3 space-y-2 text-sm text-foreground/85">
+                                    {items.map((item, i) => (
+                                      <li key={`yr-${idx}-item-${i}`} className="flex gap-2">
+                                        <span className="mt-1 block h-1.5 w-1.5 shrink-0 rounded-full bg-primary/70" aria-hidden />
+                                        <span className="leading-relaxed">{emphasize(item)}</span>
+                                      </li>
+                                    ))}
+                                    {section.items.length > items.length ? (
+                                      <li className="text-xs text-muted-foreground">+ {section.items.length - items.length} more</li>
+                                    ) : null}
+                                  </ul>
+                                </div>
                               </div>
-                            ))}
-                          </div>
+                            );
+                          })}
                           {moduleYearSections.some((s) => s.items.length > 4) ? (
                             <Button variant="ghost" size="sm" onClick={() => setShowAllModules((v) => !v)} className="px-0 text-primary">
                               {showAllModules ? 'Show fewer' : 'Show all modules'}
