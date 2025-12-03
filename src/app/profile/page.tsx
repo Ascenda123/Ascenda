@@ -12,6 +12,7 @@ import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import { AnimatedBlobBanner } from '@/components/animated-blob-banner';
 import { SectionNav } from '@/components/layout/section-nav';
 import { PROFILE_SECTION_ITEMS } from '@/components/layout/navigation';
+import { ProfileProgressCard } from './_components/profile-progress-card';
 
 export const metadata: Metadata = {
   title: 'Profile onboarding | Ascenda'
@@ -123,58 +124,27 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
         }
       />
       <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
-        <div className="rounded-[28px] border border-border bg-card p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)] transition-colors">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Profile completion</p>
-              <p className="text-3xl font-semibold text-foreground">{completionPercent}%</p>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              {completedCount === PROFILE_STEPS.length
-                ? 'Everything is saved. Update any section anytime.'
-                : `Next step: ${nextStep?.title ?? 'Aspirations'}`}
+        <ProfileProgressCard
+          completionPercent={completionPercent}
+          completedCount={completedCount}
+          totalSteps={PROFILE_STEPS.length}
+          nextStepTitle={nextStep?.title}
+          stepCompletion={stepCompletion}
+        />
+        <div className="relative overflow-hidden rounded-[28px] border border-white/15 bg-card/60 p-6 text-sm text-muted-foreground shadow-[0_18px_60px_rgba(15,23,42,0.14)] backdrop-blur-lg transition-colors dark:border-white/10">
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/5 via-primary/5 to-emerald-400/5 opacity-60" aria-hidden />
+          <div className="relative z-10">
+            <p className="text-base font-semibold text-foreground">Why it matters</p>
+            <ul className="mt-4 space-y-3 text-foreground/80">
+              <li>Unlock tighter match suggestions as soon as each section is saved.</li>
+              <li>Surface prerequisite gaps and testing needs with your academic profile.</li>
+              <li>Align application plans with your preferences and long-term goals.</li>
+            </ul>
+            <p className="mt-4 text-xs text-muted-foreground">
+              Need help? Email <a className="underline" href="mailto:hello@ascenda.com">hello@ascenda.com</a> to reach a
+              counselor.
             </p>
           </div>
-          <div className="mt-4 h-2 rounded-full bg-muted">
-            <div
-              className="h-2 rounded-full bg-primary transition-all"
-              style={{ width: `${completionPercent}%` }}
-              aria-hidden
-            />
-          </div>
-          <div className="mt-6 grid gap-4 sm:grid-cols-2">
-            {PROFILE_STEPS.map((step) => {
-              const complete = stepCompletion[step.key];
-              return (
-                <div
-                  key={step.key}
-                  className="rounded-2xl border border-border bg-muted/60 p-4 shadow-[0_12px_25px_rgba(15,23,42,0.04)] transition-colors"
-                >
-                  <p className="text-sm font-semibold text-foreground">{step.title}</p>
-                  <p className="text-xs text-muted-foreground">{step.description}</p>
-                  <p
-                    className={
-                      complete ? 'mt-3 text-sm font-semibold text-emerald-500' : 'mt-3 text-sm font-semibold text-amber-500'
-                    }
-                  >
-                    {complete ? 'Complete' : 'Action needed'}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-        <div className="rounded-[28px] border border-dashed border-border bg-muted/60 p-6 text-sm text-muted-foreground shadow-[0_12px_30px_rgba(15,23,42,0.06)] transition-colors">
-          <p className="text-base font-semibold text-foreground">Why it matters</p>
-          <ul className="mt-4 space-y-3">
-            <li>Unlock tighter match suggestions as soon as each section is saved.</li>
-            <li>Surface prerequisite gaps and testing needs with your academic profile.</li>
-            <li>Align application plans with your preferences and long-term goals.</li>
-          </ul>
-          <p className="mt-4 text-xs text-muted-foreground">
-            Need help? Email <a className="underline" href="mailto:hello@ascenda.com">hello@ascenda.com</a> to reach a
-            counselor.
-          </p>
         </div>
       </div>
       {forceOnboarding || !hasCompletedProfile ? (

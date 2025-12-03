@@ -19,10 +19,10 @@ export const NavLink = ({ item, mobile = false }: NavLinkProps) => {
             <Link
                 href={item.href}
                 className={cn(
-                    'inline-flex items-center gap-1 rounded-full px-3 py-1 transition',
+                    'inline-flex items-center gap-1 rounded-full px-3 py-1 border border-transparent transition',
                     active
-                        ? 'bg-primary text-primary-foreground shadow-[0_6px_16px_rgba(15,23,42,0.18)]'
-                        : 'hover:text-foreground'
+                        ? 'border border-primary/15 bg-primary/12 text-primary backdrop-blur-sm'
+                        : 'hover:bg-foreground/5 hover:text-foreground/90'
                 )}
             >
                 {item.label}
@@ -34,10 +34,10 @@ export const NavLink = ({ item, mobile = false }: NavLinkProps) => {
         <Link
             href={item.href}
             className={cn(
-                'inline-flex items-center gap-2 rounded-full px-3 py-1 transition',
+                'inline-flex items-center gap-2 rounded-full px-3 py-1 border border-transparent transition',
                 active
-                    ? 'bg-primary text-primary-foreground shadow-[0_8px_20px_rgba(15,23,42,0.25)]'
-                    : 'hover:text-foreground'
+                    ? 'border border-primary/15 bg-primary/12 text-primary backdrop-blur-sm'
+                    : 'hover:bg-foreground/5 hover:text-foreground'
             )}
         >
             <span>{item.label}</span>

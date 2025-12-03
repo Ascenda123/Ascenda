@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { motion } from 'framer-motion';
 import { UniversityCard } from '@/components/university-card';
 import { FilterBar } from '@/components/university-search/FilterBar';
 import type { MatchTier } from '@/lib/matching/engine';
@@ -49,6 +50,21 @@ const TIER_DESCRIPTIONS: Record<MatchTier, string> = {
   Reach: 'Highly selective universities that stretch your profile.',
   Match: 'Programs that align closely with your academic and preference fit.',
   Safe: 'Comfortable options where you exceed the entry expectations.'
+};
+
+const tierCardVariants = {
+  hidden: { opacity: 0, y: 16 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: 'easeOut' } }
+};
+
+const staggeredGrid = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.07, delayChildren: 0.1 } }
+};
+
+const cardVariants = {
+  hidden: { opacity: 0, y: 18, scale: 0.98 },
+  show: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.4, ease: 'easeOut' } }
 };
 
 export const MatchList = ({ matches, filtersSticky = true }: MatchListProps) => {
@@ -165,9 +181,13 @@ export const MatchList = ({ matches, filtersSticky = true }: MatchListProps) => 
         ) : (
           tierGroups.map(({ tier, matches }) =>
             matches.length ? (
-              <div
+              <motion.div
                 key={tier}
                 className="space-y-5 rounded-[32px] border border-border bg-card p-6 shadow-[0_24px_50px_rgba(15,23,42,0.08)] transition-colors"
+                variants={tierCardVariants}
+                initial="hidden"
+                whileInView="show"
+                viewport={{ once: true, margin: '-80px' }}
               >
                 <div className="flex flex-col gap-2 border-b border-border pb-3">
                   <div className="flex items-center justify-between gap-4">
@@ -182,34 +202,36 @@ export const MatchList = ({ matches, filtersSticky = true }: MatchListProps) => 
                   </div>
                 </div>
 
-                <div
+                <motion.div
                   className={cn(
                     'grid gap-6',
                     viewMode === 'grid'
                       ? 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3'
                       : 'grid-cols-1'
                   )}
+                  variants={staggeredGrid}
                 >
                   {matches.map((match) => (
-                    <UniversityCard
-                      key={match.program.id}
-                      id={match.program.id}
-                      name={match.university.name}
-                      program={match.program.name}
-                      location={match.university.country}
-                      fitScore={match.score}
-                      tier={match.tier}
-                      highlights={[
-                        match.program.level ?? 'Program',
-                        match.program.language ?? 'English'
-                      ].filter(Boolean)}
-                      variant={viewMode === 'list' ? 'compact' : 'default'}
-                      isShortlisted={shortlist.some((item) => item.id === match.program.id)}
-                      onToggleShortlist={() => handleToggleShortlist(match)}
-                    />
+                    <motion.div key={match.program.id} variants={cardVariants} layout>
+                      <UniversityCard
+                        id={match.program.id}
+                        name={match.university.name}
+                        program={match.program.name}
+                        location={match.university.country}
+                        fitScore={match.score}
+                        tier={match.tier}
+                        highlights={[
+                          match.program.level ?? 'Program',
+                          match.program.language ?? 'English'
+                        ].filter(Boolean)}
+                        variant={viewMode === 'list' ? 'compact' : 'default'}
+                        isShortlisted={shortlist.some((item) => item.id === match.program.id)}
+                        onToggleShortlist={() => handleToggleShortlist(match)}
+                      />
+                    </motion.div>
                   ))}
-                </div>
-              </div>
+                </motion.div>
+              </motion.div>
             ) : null
           )
         )}
