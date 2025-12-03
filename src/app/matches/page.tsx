@@ -135,7 +135,6 @@ export default async function MatchesPage() {
     { label: 'Top fit', value: enriched[0] ? `${enriched[0].score}%` : '—', detail: 'Highest score' }
   ];
   const topMatch = enriched[0];
-  const filterChips = ['Budget friendly', 'Urban campus', 'STEM focus', 'Test-optional', 'Scholarship heavy'];
 
   return (
     <DashboardShell>
@@ -158,18 +157,6 @@ export default async function MatchesPage() {
           </>
         }
       />
-      <div className="mb-4 flex flex-wrap items-center gap-2 rounded-full border border-border bg-card p-3 text-sm text-muted-foreground shadow-[0_12px_30px_rgba(15,23,42,0.08)]">
-        <span className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Filters</span>
-        {filterChips.map((chip) => (
-          <span
-            key={chip}
-            className="rounded-full border border-border bg-background px-3 py-1 text-xs font-semibold text-foreground"
-            aria-hidden
-          >
-            {chip}
-          </span>
-        ))}
-      </div>
       {topMatch ? (
         <div className="sticky top-4 z-10 mb-4 rounded-[24px] border border-border bg-card/85 p-4 backdrop-blur shadow-[0_18px_45px_rgba(15,23,42,0.12)]">
           <div className="flex flex-wrap items-center justify-between gap-3">

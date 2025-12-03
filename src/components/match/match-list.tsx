@@ -3,7 +3,6 @@
 import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { UniversityCard } from '@/components/university-card';
-import { FilterBar } from '@/components/university-search/FilterBar';
 import type { MatchTier } from '@/lib/matching/engine';
 import { cn } from '@/lib/utils';
 import { useShortlist } from '@/components/university-search/shortlist-store';
@@ -42,7 +41,6 @@ export interface EnrichedMatch {
 
 interface MatchListProps {
   matches: EnrichedMatch[];
-  filtersSticky?: boolean;
 }
 
 const TIER_ORDER: MatchTier[] = ['Reach', 'Match', 'Safe'];
@@ -67,31 +65,10 @@ const cardVariants = {
   show: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.4, ease: 'easeOut' } }
 };
 
-export const MatchList = ({ matches, filtersSticky = true }: MatchListProps) => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedTiers, setSelectedTiers] = useState<MatchTier[]>(['Reach', 'Match', 'Safe']);
+export const MatchList = ({ matches }: MatchListProps) => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [quickFilters, setQuickFilters] = useState({
-    budgetFriendly: false,
-    englishOnly: false,
-    testOptional: false
-  });
 
   const { items: shortlist, addItem, removeItem } = useShortlist();
-
-  const filtered = useMemo(() => {
-    const normalizedQuery = searchQuery.toLowerCase();
-    return matches.filter((match) => {
-      const matchesSearch =
-        !normalizedQuery ||
-        `${match.program.name} ${match.university.name} ${match.university.country}`.toLowerCase().includes(normalizedQuery);
-      const matchesTier = selectedTiers.includes(match.tier);
-      const meetsBudget = !quickFilters.budgetFriendly || (match.program.tuition ?? Infinity) <= 40000;
-      const meetsLanguage = !quickFilters.englishOnly || (match.program.language ?? '').toLowerCase().includes('english');
-      const meetsTesting = !quickFilters.testOptional || match.university.requiresTest === false;
-      return matchesSearch && matchesTier && meetsBudget && meetsLanguage && meetsTesting;
-    });
-  }, [matches, searchQuery, selectedTiers, quickFilters]);
 
   const tierGroups = useMemo(() => {
     const accumulator: Record<MatchTier, EnrichedMatch[]> = {
@@ -99,11 +76,11 @@ export const MatchList = ({ matches, filtersSticky = true }: MatchListProps) => 
       Match: [],
       Safe: []
     };
-    filtered.forEach((match) => {
+    matches.forEach((match) => {
       accumulator[match.tier].push(match);
     });
     return TIER_ORDER.map((tier) => ({ tier, matches: accumulator[tier] }));
-  }, [filtered]);
+  }, [matches]);
 
   const handleToggleShortlist = (match: EnrichedMatch) => {
     const isShortlisted = shortlist.some((item) => item.id === match.program.id);
@@ -125,58 +102,41 @@ export const MatchList = ({ matches, filtersSticky = true }: MatchListProps) => 
 
   return (
     <div className="space-y-8">
-      <FilterBar
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        selectedTiers={selectedTiers}
-        onTierChange={(tier) => {
-          setSelectedTiers((prev) =>
-            prev.includes(tier) ? prev.filter((t) => t !== tier) : [...prev, tier]
-          );
-        }}
-        viewMode={viewMode}
-        onViewModeChange={setViewMode}
-        resultCount={filtered.length}
-        quickFilters={quickFilters}
-        onQuickFilterChange={(key) =>
-          setQuickFilters((prev) => ({
-            ...prev,
-            [key]: !prev[key]
-          }))
-        }
-        isSticky={filtersSticky}
-        showViewToggle={false}
-      />
+      <div className="flex items-center justify-between gap-3 rounded-[24px] border border-border bg-card/70 px-4 py-3 shadow-sm backdrop-blur">
+        <div className="flex flex-col gap-1">
+          <p className="text-[11px] uppercase tracking-[0.35em] text-muted-foreground">Matches</p>
+          <p className="text-sm text-muted-foreground">
+            Showing {matches.length} program{matches.length === 1 ? '' : 's'} ranked by fit
+          </p>
+        </div>
+        <div className="flex items-center gap-2 rounded-xl border border-border bg-background p-1 shadow-sm">
+          <button
+            onClick={() => setViewMode('grid')}
+            className={cn(
+              'flex h-8 w-8 items-center justify-center rounded-lg transition-all',
+              viewMode === 'grid' ? 'bg-muted text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+            )}
+            aria-label="Grid view"
+          >
+            <Grid className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => setViewMode('list')}
+            className={cn(
+              'flex h-8 w-8 items-center justify-center rounded-lg transition-all',
+              viewMode === 'list' ? 'bg-muted text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+            )}
+            aria-label="List view"
+          >
+            <LayoutList className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
 
       <section className="space-y-6">
-        <div className="flex justify-end">
-          <div className="flex items-center gap-2 rounded-xl border border-border bg-background p-1 shadow-sm">
-            <button
-              onClick={() => setViewMode('grid')}
-              className={cn(
-                'flex h-8 w-8 items-center justify-center rounded-lg transition-all',
-                viewMode === 'grid' ? 'bg-muted text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
-              )}
-              aria-label="Grid view"
-            >
-              <Grid className="h-4 w-4" />
-            </button>
-            <button
-              onClick={() => setViewMode('list')}
-              className={cn(
-                'flex h-8 w-8 items-center justify-center rounded-lg transition-all',
-                viewMode === 'list' ? 'bg-muted text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
-              )}
-              aria-label="List view"
-            >
-              <LayoutList className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
-
-        {filtered.length === 0 ? (
+        {matches.length === 0 ? (
           <div className="rounded-[28px] border border-dashed border-border bg-muted/60 p-10 text-center text-muted-foreground">
-            No matches found. Try adjusting your filters.
+            No matches available.
           </div>
         ) : (
           tierGroups.map(({ tier, matches }) =>
