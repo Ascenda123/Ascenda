@@ -60,6 +60,7 @@ const buildQuickFacts = (course: CourseView): QuickFact[] => {
   if (course.intake) facts.push({ label: 'Intake', value: course.intake, icon: CalendarDays });
   if (course.campus) facts.push({ label: 'Campus', value: course.campus, icon: Landmark });
   if (course.tuition) facts.push({ label: 'Tuition', value: course.tuition, icon: Wallet });
+  if (course.startDate) facts.push({ label: 'Start date', value: course.startDate, icon: CalendarDays });
   if (course.ucasCode) facts.push({ label: 'UCAS code', value: course.ucasCode, icon: ShieldCheck });
   return facts;
 };
@@ -463,24 +464,6 @@ export default function CoursePage({ params }: { params: { id: string } }) {
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <Wallet className="h-5 w-5 text-primary" />
-                    Fees & Dates
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3 text-sm text-foreground/80">
-                  <div className="space-y-1">
-                    <p className="text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground">Start date</p>
-                    <p>{course.startDate ?? 'TBD'}</p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground">Tuition (international)</p>
-                    <p>{course.tuition ?? 'Contact university'}</p>
-                  </div>
-                </CardContent>
-              </Card>
             </div>
           </div>
         ) : (
