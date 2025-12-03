@@ -307,8 +307,8 @@ export default function CoursePage({ params }: { params: { id: string } }) {
               </div>
             </header>
 
-            <div className="grid grid-cols-1 gap-6">
-              <Card className="w-full">
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+              <Card className="lg:col-span-2">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-lg">
                     <BookOpen className="h-5 w-5 text-primary" />
@@ -356,9 +356,35 @@ export default function CoursePage({ params }: { params: { id: string } }) {
                   )}
                 </CardContent>
               </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <Globe2 className="h-5 w-5 text-primary" />
+                    Quick Facts
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {course.quickFacts.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">No quick facts available.</p>
+                  ) : (
+                    <ul className="space-y-2">
+                      {course.quickFacts.map((fact) => (
+                        <li key={fact.label} className="flex items-start gap-3 rounded-xl border border-border/60 bg-muted/30 px-3 py-2 text-sm">
+                          <fact.icon className="mt-0.5 h-4 w-4 text-primary" />
+                          <div>
+                            <p className="font-semibold text-foreground">{fact.label}</p>
+                            <p className="text-muted-foreground">{fact.value}</p>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </CardContent>
+              </Card>
             </div>
 
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-1">
+            <div className="grid grid-cols-1 gap-6">
               <Card className="w-full">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-lg">
