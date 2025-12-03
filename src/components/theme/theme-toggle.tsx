@@ -1,6 +1,6 @@
 'use client';
 
-import { Moon, Sun } from 'lucide-react';
+import { Laptop, Moon, Sun } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useThemeMode } from './theme-provider';
 import { cn } from '@/lib/utils';
@@ -11,7 +11,7 @@ interface ThemeToggleProps {
 }
 
 export const ThemeToggle = ({ compact = false, className }: ThemeToggleProps) => {
-  const { mode, setMode, toggleMode } = useThemeMode();
+  const { mode, preference, setPreference, setMode, toggleMode } = useThemeMode();
 
   if (compact) {
     return (
@@ -24,7 +24,12 @@ export const ThemeToggle = ({ compact = false, className }: ThemeToggleProps) =>
           className
         )}
         onClick={toggleMode}
-        aria-label={`Switch to ${mode === 'dark' ? 'light' : 'dark'} mode`}
+        aria-label={
+          preference === 'system'
+            ? `Following system (${mode}). Switch to ${mode === 'dark' ? 'light' : 'dark'} mode`
+            : `Switch to ${mode === 'dark' ? 'light' : 'dark'} mode`
+        }
+        title={preference === 'system' ? `System ${mode} mode` : `${mode} mode`}
       >
         {mode === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
       </Button>
@@ -42,10 +47,21 @@ export const ThemeToggle = ({ compact = false, className }: ThemeToggleProps) =>
         <Button
           type="button"
           size="sm"
-          variant={mode === 'light' ? 'default' : 'ghost'}
+          variant={preference === 'system' ? 'default' : 'ghost'}
+          className="gap-1 px-3"
+          onClick={() => setPreference('system')}
+          aria-pressed={preference === 'system'}
+        >
+          <Laptop className="h-4 w-4" />
+          System
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          variant={preference === 'light' ? 'default' : 'ghost'}
           className="gap-1 px-3"
           onClick={() => setMode('light')}
-          aria-pressed={mode === 'light'}
+          aria-pressed={preference === 'light'}
         >
           <Sun className="h-4 w-4" />
           Light
@@ -53,10 +69,10 @@ export const ThemeToggle = ({ compact = false, className }: ThemeToggleProps) =>
         <Button
           type="button"
           size="sm"
-          variant={mode === 'dark' ? 'default' : 'ghost'}
+          variant={preference === 'dark' ? 'default' : 'ghost'}
           className="gap-1 px-3"
           onClick={() => setMode('dark')}
-          aria-pressed={mode === 'dark'}
+          aria-pressed={preference === 'dark'}
         >
           <Moon className="h-4 w-4" />
           Dark

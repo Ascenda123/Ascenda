@@ -4,47 +4,77 @@ import { Theme } from '@radix-ui/themes';
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 
 type ThemeMode = 'light' | 'dark';
+type ThemePreference = ThemeMode | 'system';
 
 interface ThemeContextValue {
   mode: ThemeMode;
+  preference: ThemePreference;
+  setPreference: (preference: ThemePreference) => void;
   setMode: (mode: ThemeMode) => void;
   toggleMode: () => void;
 }
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
-const STORAGE_KEY = 'ascenda-theme';
+const STORAGE_KEY = 'ascenda-theme-preference';
 
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
+  const [preference, setPreference] = useState<ThemePreference>('system');
   const [mode, setMode] = useState<ThemeMode>('light');
+  const [hasHydrated, setHasHydrated] = useState(false);
 
   useEffect(() => {
-    const stored = (typeof window !== 'undefined' && localStorage.getItem(STORAGE_KEY)) as ThemeMode | null;
-    if (stored === 'light' || stored === 'dark') {
-      setMode(stored);
-      applyDocumentTheme(stored);
-      return;
+    if (typeof window === 'undefined') return;
+    const stored = localStorage.getItem(STORAGE_KEY) as ThemePreference | null;
+    if (stored === 'light' || stored === 'dark' || stored === 'system') {
+      setPreference(stored);
     }
-
-    const prefersDark = typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const initialMode: ThemeMode = prefersDark ? 'dark' : 'light';
-    setMode(initialMode);
-    applyDocumentTheme(initialMode);
+    setHasHydrated(true);
   }, []);
 
   useEffect(() => {
-    applyDocumentTheme(mode);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(STORAGE_KEY, mode);
+    if (!hasHydrated || typeof window === 'undefined') return;
+    localStorage.setItem(STORAGE_KEY, preference);
+  }, [hasHydrated, preference]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const resolveSystemMode = () => (mediaQuery.matches ? 'dark' : 'light');
+    const updateFromSystem = (event: MediaQueryListEvent) => setMode(event.matches ? 'dark' : 'light');
+
+    if (preference === 'system') {
+      setMode(resolveSystemMode());
+      if (typeof mediaQuery.addEventListener === 'function') {
+        mediaQuery.addEventListener('change', updateFromSystem);
+        return () => mediaQuery.removeEventListener('change', updateFromSystem);
+      }
+
+      mediaQuery.addListener(updateFromSystem);
+      return () => mediaQuery.removeListener(updateFromSystem);
     }
+
+    setMode(preference);
+    return undefined;
+  }, [preference]);
+
+  useEffect(() => {
+    applyDocumentTheme(mode);
   }, [mode]);
 
   const value = useMemo<ThemeContextValue>(
     () => ({
       mode,
-      setMode,
-      toggleMode: () => setMode((prev) => (prev === 'dark' ? 'light' : 'dark'))
+      preference,
+      setPreference,
+      setMode: (nextMode) => setPreference(nextMode),
+      toggleMode: () =>
+        setPreference((prev) => {
+          if (prev === 'system') return mode === 'dark' ? 'light' : 'dark';
+          return prev === 'dark' ? 'light' : 'dark';
+        })
     }),
-    [mode]
+    [mode, preference]
   );
 
   return (
