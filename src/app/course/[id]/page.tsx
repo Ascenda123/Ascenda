@@ -89,9 +89,28 @@ const parseTextBlocks = (text?: string | null) => {
   return { intro: [first], bullets: rest };
 };
 
-const renderRichText = (text?: string | null) => {
+const splitSentences = (text: string) =>
+  text
+    .split(/(?<=[.!?])\s+(?=[A-Z0-9])/)
+    .map((s) => s.trim())
+    .flatMap((s) => {
+      if (s.length <= 220) return s;
+      // If still too long, break on semicolons/commas.
+      return s.split(/(?<=;|\.)\s+/).map((p) => p.trim()).filter(Boolean);
+    })
+    .filter(Boolean);
+
+const renderRichText = (text?: string | null, options?: { forceBullets?: boolean }) => {
+  const { forceBullets = false } = options ?? {};
   const { intro, bullets } = parseTextBlocks(text);
-  if (!intro.length && !bullets.length) return <p className="text-muted-foreground">No information available.</p>;
+  const fallbackSentences = forceBullets && text ? splitSentences(text.replace(/\r/g, '')) : [];
+  const hasContent = intro.length || bullets.length || fallbackSentences.length;
+
+  if (!hasContent) return <p className="text-muted-foreground">No information available.</p>;
+
+  const finalIntro = intro;
+  const finalBullets = bullets.length ? bullets : fallbackSentences;
+
   return (
     <div className="space-y-3">
       {intro.map((para, idx) => (
@@ -99,9 +118,9 @@ const renderRichText = (text?: string | null) => {
           {emphasize(para)}
         </p>
       ))}
-      {bullets.length ? (
+      {finalBullets.length ? (
         <ul className="space-y-2">
-          {bullets.map((item, idx) => (
+          {finalBullets.map((item, idx) => (
             <li key={`bullet-${idx}`} className="flex gap-2">
               <span className="mt-1 block h-1.5 w-1.5 rounded-full bg-primary/70" aria-hidden />
               <span className="text-foreground/85 leading-relaxed">{emphasize(item)}</span>
@@ -313,13 +332,13 @@ export default function CoursePage({ params }: { params: { id: string } }) {
                   {course.modules ? (
                     <div className="space-y-2">
                       <p className="text-sm font-semibold text-foreground">Modules</p>
-                      {renderRichText(course.modules)}
+                      {renderRichText(course.modules, { forceBullets: true })}
                     </div>
                   ) : null}
                   {course.assessment ? (
                     <div className="space-y-2">
                       <p className="text-sm font-semibold text-foreground">Assessment</p>
-                      {renderRichText(course.assessment)}
+                      {renderRichText(course.assessment, { forceBullets: true })}
                     </div>
                   ) : null}
                 </CardContent>
