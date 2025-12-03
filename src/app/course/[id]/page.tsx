@@ -132,11 +132,20 @@ const renderRichText = (text?: string | null, options?: { forceBullets?: boolean
   );
 };
 
+const extractBulletItems = (text?: string | null) => {
+  const { intro, bullets } = parseTextBlocks(text);
+  if (bullets.length) return bullets;
+  if (intro.length > 1) return intro;
+  if (text) return splitSentences(text);
+  return [];
+};
+
 export default function CoursePage({ params }: { params: { id: string } }) {
   const searchParams = useSearchParams();
   const [course, setCourse] = useState<CourseView | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showAllModules, setShowAllModules] = useState(false);
 
   const backHref = useMemo(() => {
     const from = searchParams.get('from');
@@ -144,6 +153,9 @@ export default function CoursePage({ params }: { params: { id: string } }) {
     if (from === 'university') return '/university-search/search';
     return '/dashboard';
   }, [searchParams]);
+
+  const moduleItems = useMemo(() => extractBulletItems(course?.modules), [course?.modules]);
+  const visibleModules = showAllModules ? moduleItems : moduleItems.slice(0, 8);
 
   useEffect(() => {
     const fetchCourse = async () => {
@@ -332,7 +344,32 @@ export default function CoursePage({ params }: { params: { id: string } }) {
                   {course.modules ? (
                     <div className="space-y-2">
                       <p className="text-sm font-semibold text-foreground">Modules</p>
-                      {renderRichText(course.modules, { forceBullets: true })}
+                      {moduleItems.length ? (
+                        <div className="space-y-3">
+                          <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                            {visibleModules.map((item, idx) => (
+                              <li
+                                key={`module-${idx}`}
+                                className="flex items-start gap-3 rounded-xl border border-border/60 bg-muted/30 px-3 py-2 text-sm text-foreground/85"
+                              >
+                                <span className="mt-1 block h-2 w-2 shrink-0 rounded-full bg-primary/70" aria-hidden />
+                                <span className="leading-relaxed">{emphasize(item)}</span>
+                              </li>
+                            ))}
+                          </ul>
+                          {moduleItems.length > visibleModules.length ? (
+                            <Button variant="ghost" size="sm" onClick={() => setShowAllModules(true)} className="px-0 text-primary">
+                              Show all modules ({moduleItems.length})
+                            </Button>
+                          ) : moduleItems.length > 8 ? (
+                            <Button variant="ghost" size="sm" onClick={() => setShowAllModules(false)} className="px-0 text-primary">
+                              Show fewer
+                            </Button>
+                          ) : null}
+                        </div>
+                      ) : (
+                        renderRichText(course.modules, { forceBullets: true })
+                      )}
                     </div>
                   ) : null}
                   {course.assessment ? (
