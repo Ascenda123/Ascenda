@@ -348,241 +348,249 @@ export default function CoursePage({ params }: { params: { id: string } }) {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Navbar />
-      <main className="mx-auto max-w-6xl px-4 pb-24 pt-10 sm:px-6 lg:px-8">
-        <Breadcrumbs className="mb-6" />
+      <main className="pb-24">
+        {/* Hero Section */}
+        <div className="relative border-b border-border/40 bg-muted/10">
+          <div className="absolute inset-0 bg-gradient-to-b from-background/5 to-background/60" />
+          <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 relative z-10">
+            <Breadcrumbs className="mb-8" />
 
-        <div className="mb-6 flex items-center gap-3">
-          <Button asChild variant="ghost" size="sm">
-            <Link href={backHref}>
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back
-            </Link>
-          </Button>
-          <p className="text-sm text-muted-foreground">Course overview</p>
+            <div className="mb-8 flex items-center gap-3">
+              <Button asChild variant="ghost" size="sm" className="-ml-2 text-muted-foreground hover:text-foreground">
+                <Link href={backHref}>
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Back to results
+                </Link>
+              </Button>
+            </div>
+
+            {loading ? (
+              <div className="flex items-center gap-3 rounded-2xl border border-border bg-muted/20 px-4 py-3 text-sm text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Loading course…
+              </div>
+            ) : error ? (
+              <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {error}
+              </div>
+            ) : course ? (
+              <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                      <GraduationCap className="h-6 w-6" />
+                    </div>
+                    <p className="text-sm font-bold uppercase tracking-widest text-primary">
+                      {course.university}
+                    </p>
+                  </div>
+                  <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
+                    {course.title}
+                  </h1>
+                  <div className="flex flex-wrap items-center gap-6 text-muted-foreground">
+                    <div className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4" />
+                      <span>{course.location}</span>
+                    </div>
+                    {course.ucasCode && (
+                      <div className="flex items-center gap-2">
+                        <ShieldCheck className="h-4 w-4" />
+                        <span>UCAS: {course.ucasCode}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  {course.courseUrl && (
+                    <Button asChild variant="outline" size="lg" className="h-12 px-6">
+                      <Link href={course.courseUrl} target="_blank" rel="noreferrer">
+                        Visit Website
+                      </Link>
+                    </Button>
+                  )}
+                  {course.applyUrl && (
+                    <Button asChild size="lg" className="h-12 px-8 shadow-lg shadow-primary/20">
+                      <Link href={course.applyUrl} target="_blank" rel="noreferrer">
+                        Apply Now
+                      </Link>
+                    </Button>
+                  )}
+                </div>
+              </div>
+            ) : null}
+          </div>
         </div>
 
-        {loading ? (
-          <div className="flex items-center gap-3 rounded-2xl border border-border bg-muted/20 px-4 py-3 text-sm text-muted-foreground">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            Loading course…
-          </div>
-        ) : error ? (
-          <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-            {error}
-          </div>
-        ) : course ? (
-          <div className="space-y-8">
-            <header className="flex flex-col gap-4 rounded-[28px] border border-border bg-card p-6 shadow-sm md:flex-row md:items-center md:justify-between">
-              <div className="space-y-2">
-                <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">{course.university}</p>
-                <h1 className="text-3xl font-semibold">{course.title}</h1>
-                <p className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <MapPin className="h-4 w-4" />
-                  {course.location}
-                </p>
-              </div>
-              <div className="flex gap-3">
-                {course.applyUrl ? (
-                  <Button asChild variant="default">
-                    <Link href={course.applyUrl} target="_blank" rel="noreferrer">
-                      Apply
-                    </Link>
-                  </Button>
-                ) : null}
-                {course.courseUrl ? (
-                  <Button asChild variant="outline">
-                    <Link href={course.courseUrl} target="_blank" rel="noreferrer">
-                      Course page
-                    </Link>
-                  </Button>
-                ) : null}
-              </div>
-            </header>
+        {course && !loading && !error && (
+          <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-1 gap-12 lg:grid-cols-12">
+              {/* Main Content Column */}
+              <div className="lg:col-span-8 space-y-12">
 
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-              <Card className="lg:col-span-2">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <BookOpen className="h-5 w-5 text-primary" />
-                    Entry Requirements
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {course.requirements.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">No requirements available.</p>
-                  ) : (
-                    <ul className="space-y-2">
-                      {course.requirements.map((item, idx) => (
-                        <li key={`${item.label}-${idx}`} className="flex gap-3 rounded-xl border border-border/60 bg-muted/30 px-4 py-3 text-sm">
-                          <span className="min-w-[120px] font-semibold text-foreground">{item.label}</span>
-                          <span className="text-muted-foreground">{item.value}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <Globe2 className="h-5 w-5 text-primary" />
-                    Quick Facts
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {course.quickFacts.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">No quick facts available.</p>
-                  ) : (
-                    <ul className="space-y-2">
-                      {course.quickFacts.map((fact) => (
-                        <li key={fact.label} className="flex items-start gap-3 rounded-xl border border-border/60 bg-muted/30 px-3 py-2 text-sm">
-                          <fact.icon className="mt-0.5 h-4 w-4 text-primary" />
-                          <div>
-                            <p className="font-semibold text-foreground">{fact.label}</p>
-                            <p className="text-muted-foreground">{fact.value}</p>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-
-            <div className="grid grid-cols-1 gap-6">
-              <Card className="w-full">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <BookOpen className="h-5 w-5 text-primary" />
-                    Course Overview
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-8 text-base leading-relaxed text-foreground/90">
-                  <div className="prose prose-neutral dark:prose-invert max-w-none">
+                {/* Overview Section */}
+                <section className="space-y-6">
+                  <div className="flex items-center gap-3 border-b border-border/40 pb-4">
+                    <BookOpen className="h-6 w-6 text-primary" />
+                    <h2 className="text-2xl font-semibold">Course Overview</h2>
+                  </div>
+                  <div className="prose prose-lg prose-neutral dark:prose-invert max-w-none text-muted-foreground">
                     {renderRichText(course.summary)}
                   </div>
+                </section>
 
-                  {course.modules ? (
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-2 border-b border-border/60 pb-2">
-                        <BookOpen className="h-5 w-5 text-primary" />
-                        <h3 className="text-lg font-semibold text-foreground">Modules</h3>
+                {/* Modules Section */}
+                {course.modules && (
+                  <section className="space-y-8">
+                    <div className="flex items-center gap-3 border-b border-border/40 pb-4">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                        <BookOpen className="h-4 w-4" />
                       </div>
+                      <h2 className="text-2xl font-semibold">Course Modules</h2>
+                    </div>
 
-                      {moduleYearSections.length ? (
-                        <div className="relative space-y-6 pt-2">
-                          <div className="absolute left-[19px] top-2 bottom-6 w-px bg-gradient-to-b from-primary/50 to-transparent" aria-hidden />
-                          {moduleYearSections.map((section, idx) => {
-                            const expanded = expandedYears[section.title] ?? false;
-                            const items = expanded ? section.items : section.items.slice(0, 5);
-                            const canExpand = section.items.length > 5;
-                            return (
-                              <div key={`yr-${idx}`} className="relative group">
-                                <div className="flex items-start gap-4">
-                                  <div className="relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-primary/20 bg-background shadow-sm transition-transform group-hover:scale-110">
-                                    <span className="text-xs font-bold text-primary">{section.yearNum ?? idx + 1}</span>
+                    {moduleYearSections.length ? (
+                      <div className="relative space-y-8 pl-4">
+                        <div className="absolute left-[27px] top-4 bottom-8 w-px bg-gradient-to-b from-primary/30 via-primary/10 to-transparent" />
+                        {moduleYearSections.map((section, idx) => {
+                          const expanded = expandedYears[section.title] ?? false;
+                          const items = expanded ? section.items : section.items.slice(0, 5);
+                          const canExpand = section.items.length > 5;
+                          return (
+                            <div key={`yr-${idx}`} className="relative group">
+                              <div className="flex items-start gap-6">
+                                <div className="relative z-10 flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-border bg-card shadow-sm transition-all group-hover:border-primary/50 group-hover:shadow-md">
+                                  <span className="text-lg font-bold text-primary">{section.yearNum ?? idx + 1}</span>
+                                </div>
+                                <div className="w-full space-y-4 pt-2">
+                                  <h3 className="text-lg font-bold uppercase tracking-wider text-foreground/80">
+                                    {section.title}
+                                  </h3>
+                                  <div className="grid gap-3 grid-cols-1">
+                                    {items.map((item, i) => (
+                                      <div
+                                        key={`yr-${idx}-item-${i}`}
+                                        className="flex items-start gap-3 rounded-xl border border-border/40 bg-muted/20 p-4 transition-colors hover:bg-muted/40"
+                                      >
+                                        <div className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary/60" />
+                                        <span className="text-sm font-medium leading-relaxed">{emphasize(item)}</span>
+                                      </div>
+                                    ))}
                                   </div>
-                                  <div className="w-full space-y-3 pt-1">
-                                    <h4 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
-                                      {section.title}
-                                    </h4>
-                                    <div className="rounded-2xl border border-white/10 bg-white/5 p-1 backdrop-blur-sm dark:bg-black/20">
-                                      <ul className="space-y-1">
-                                        {items.map((item, i) => (
-                                          <li
-                                            key={`yr-${idx}-item-${i}`}
-                                            className="flex items-start gap-3 rounded-xl px-4 py-3 transition-colors hover:bg-muted/50"
-                                          >
-                                            <div className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-primary/60" aria-hidden />
-                                            <span className="text-sm leading-relaxed text-foreground/90">{emphasize(item)}</span>
-                                          </li>
-                                        ))}
-                                      </ul>
-                                      {canExpand && (
-                                        <div className="px-4 pb-2 pt-1">
-                                          <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={() =>
-                                              setExpandedYears((prev) => ({
-                                                ...prev,
-                                                [section.title]: !expanded
-                                              }))
-                                            }
-                                            className="h-8 w-full justify-center text-xs font-medium text-muted-foreground hover:text-primary"
-                                          >
-                                            {expanded ? 'Show fewer modules' : `Show ${section.items.length - items.length} more modules`}
-                                          </Button>
-                                        </div>
-                                      )}
-                                    </div>
-                                  </div>
+                                  {canExpand && (
+                                    <Button
+                                      variant="ghost"
+                                      onClick={() =>
+                                        setExpandedYears((prev) => ({
+                                          ...prev,
+                                          [section.title]: !expanded
+                                        }))
+                                      }
+                                      className="text-muted-foreground hover:text-primary"
+                                    >
+                                      {expanded ? 'Show fewer modules' : `Show ${section.items.length - items.length} more modules`}
+                                    </Button>
+                                  )}
                                 </div>
                               </div>
-                            );
-                          })}
-                        </div>
-                      ) : moduleItems.length ? (
-                        <div className="space-y-4">
-                          <div className="rounded-2xl border border-border/50 bg-card/50 p-6 backdrop-blur-sm">
-                            <ul className="grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
-                              {visibleModules.map((item, idx) => (
-                                <li
-                                  key={`module-${idx}`}
-                                  className="flex items-start gap-3 text-sm text-foreground/85"
-                                >
-                                  <div className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-primary/60" aria-hidden />
-                                  <span className="leading-relaxed">{emphasize(item)}</span>
-                                </li>
-                              ))}
-                            </ul>
-                            {moduleItems.length > visibleModules.length ? (
-                              <Button
-                                variant="link"
-                                size="sm"
-                                onClick={() => setShowAllFlatModules(true)}
-                                className="mt-4 h-auto p-0 text-primary"
-                              >
-                                Show all {moduleItems.length} modules
-                              </Button>
-                            ) : moduleItems.length > 8 ? (
-                              <Button
-                                variant="link"
-                                size="sm"
-                                onClick={() => setShowAllFlatModules(false)}
-                                className="mt-4 h-auto p-0 text-primary"
-                              >
-                                Show fewer
-                              </Button>
-                            ) : null}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : moduleItems.length ? (
+                      <div className="rounded-3xl border border-border/50 bg-card/50 p-8 backdrop-blur-sm">
+                        <ul className="grid grid-cols-1 gap-4">
+                          {visibleModules.map((item, idx) => (
+                            <li key={`module-${idx}`} className="flex items-start gap-3 text-foreground/80">
+                              <div className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-primary/60" />
+                              <span className="leading-relaxed">{emphasize(item)}</span>
+                            </li>
+                          ))}
+                        </ul>
+                        {moduleItems.length > visibleModules.length && (
+                          <Button
+                            variant="link"
+                            onClick={() => setShowAllFlatModules(true)}
+                            className="mt-4 px-0 text-primary"
+                          >
+                            Show all {moduleItems.length} modules
+                          </Button>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="prose prose-neutral dark:prose-invert">
+                        {renderRichText(course.modules, { forceBullets: true })}
+                      </div>
+                    )}
+                  </section>
+                )}
+
+                {/* Assessment Section */}
+                {course.assessment && (
+                  <section className="space-y-6">
+                    <div className="flex items-center gap-3 border-b border-border/40 pb-4">
+                      <ShieldCheck className="h-6 w-6 text-primary" />
+                      <h2 className="text-2xl font-semibold">Assessment</h2>
+                    </div>
+                    <div className="prose prose-neutral dark:prose-invert max-w-none text-muted-foreground">
+                      {renderRichText(course.assessment, { forceBullets: true })}
+                    </div>
+                  </section>
+                )}
+              </div>
+
+              {/* Sidebar Column */}
+              <div className="lg:col-span-4 space-y-8">
+                <div className="sticky top-24 space-y-8">
+                  {/* Key Information Card */}
+                  <Card className="overflow-hidden border-border/60 shadow-lg">
+                    <CardHeader className="bg-muted/30 pb-4">
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <Globe2 className="h-5 w-5 text-primary" />
+                        Key Information
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="grid gap-4 p-6">
+                      {course.quickFacts.map((fact) => (
+                        <div key={fact.label} className="flex items-center gap-4 rounded-xl border border-border/40 bg-background p-3">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+                            <fact.icon className="h-5 w-5" />
+                          </div>
+                          <div>
+                            <p className="text-xs font-medium uppercase text-muted-foreground">{fact.label}</p>
+                            <p className="font-semibold text-foreground">{fact.value}</p>
                           </div>
                         </div>
+                      ))}
+                    </CardContent>
+                  </Card>
+
+                  {/* Entry Requirements Card */}
+                  <Card className="border-border/60">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <BookOpen className="h-5 w-5 text-primary" />
+                        Entry Requirements
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {course.requirements.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">No requirements listed.</p>
                       ) : (
-                        renderRichText(course.modules, { forceBullets: true })
+                        <ul className="space-y-3">
+                          {course.requirements.map((item, idx) => (
+                            <li key={`${item.label}-${idx}`} className="space-y-1 border-b border-border/40 pb-3 last:border-0 last:pb-0">
+                              <p className="text-sm font-medium text-foreground">{item.label}</p>
+                              <p className="text-sm text-muted-foreground">{item.value}</p>
+                            </li>
+                          ))}
+                        </ul>
                       )}
-                    </div>
-                  ) : null}
-
-                  {course.assessment ? (
-                    <div className="space-y-3 pt-4">
-                      <div className="flex items-center gap-2 border-b border-border/60 pb-2">
-                        <ShieldCheck className="h-5 w-5 text-primary" />
-                        <h3 className="text-lg font-semibold text-foreground">Assessment</h3>
-                      </div>
-                      <div className="text-sm leading-relaxed text-foreground/85">
-                        {renderRichText(course.assessment, { forceBullets: true })}
-                      </div>
-                    </div>
-                  ) : null}
-                </CardContent>
-              </Card>
-
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
             </div>
-          </div>
-        ) : (
-          <div className="rounded-2xl border border-border bg-muted/20 px-4 py-3 text-sm text-muted-foreground">
-            No course data available.
           </div>
         )}
       </main>
