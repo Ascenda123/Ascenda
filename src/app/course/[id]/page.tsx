@@ -140,10 +140,10 @@ const renderRichText = (text?: string | null, options?: { forceBullets?: boolean
         </p>
       ))}
       {finalBullets.length ? (
-        <ul className="space-y-2">
+        <ul className="space-y-3 not-prose">
           {finalBullets.map((item, idx) => (
-            <li key={`bullet-${idx}`} className="flex gap-2">
-              <span className="mt-1 block h-1.5 w-1.5 rounded-full bg-primary/70" aria-hidden />
+            <li key={`bullet-${idx}`} className="flex items-start gap-3">
+              <span className="mt-2.5 block h-1.5 w-1.5 shrink-0 rounded-full bg-primary/70" aria-hidden />
               <span className="text-foreground/85 leading-relaxed">{emphasize(item)}</span>
             </li>
           ))}
