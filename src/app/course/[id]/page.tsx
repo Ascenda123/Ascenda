@@ -188,6 +188,48 @@ const extractYearSections = (modules?: string | null, durationText?: string | nu
     }
   });
 
+  const yearNumber = (title: string) => {
+    const m = title.match(/Year\s*(\d+)/i);
+    if (!m) return null;
+    const num = Number.parseInt(m[1], 10);
+    return Number.isFinite(num) ? num : null;
+  };
+
+  // Merge duplicate years by concatenating items.
+  const mergedByYear = new Map<number, string[]>();
+  const extras: { title: string; items: string[] }[] = [];
+  sections.forEach((section) => {
+    const yr = yearNumber(section.title);
+    if (yr !== null) {
+      const existing = mergedByYear.get(yr) ?? [];
+      mergedByYear.set(yr, [...existing, ...section.items]);
+    } else {
+      extras.push(section);
+    }
+  });
+
+  const mergedSections: { title: string; items: string[]; yearNum: number | null }[] = [
+    ...Array.from(mergedByYear.entries()).map(([yearNum, items]) => ({
+      title: `Year ${yearNum}`,
+      yearNum,
+      items: Array.from(new Set(items.map((s) => s.trim()))).filter(Boolean)
+    })),
+    ...extras.map((s) => ({ ...s, yearNum: null }))
+  ].filter((s) => s.items.length > 0);
+
+  // Rebase if any year numbers start below 1 (e.g., Year 0 -> Year 1).
+  const yearNums = mergedSections.map((s) => s.yearNum).filter((n): n is number => n !== null);
+  const minYear = yearNums.length ? Math.min(...yearNums) : null;
+  if (minYear !== null && minYear < 1) {
+    const shift = 1 - minYear;
+    mergedSections.forEach((s) => {
+      if (s.yearNum !== null) {
+        s.yearNum = s.yearNum + shift;
+        s.title = `Year ${s.yearNum}`;
+      }
+    });
+  }
+
   const parseDurationCount = (text?: string | null) => {
     if (!text) return null;
     const m = text.match(/(\d+(?:\.\d+)?)/);
@@ -197,34 +239,27 @@ const extractYearSections = (modules?: string | null, durationText?: string | nu
     return Math.round(val);
   };
 
-  const yearNumber = (title: string) => {
-    const m = title.match(/Year\s*(\d+)/i);
-    if (!m) return null;
-    const num = Number.parseInt(m[1], 10);
-    return Number.isFinite(num) ? num : null;
-  };
-
   const maxYears = parseDurationCount(durationText);
   if (maxYears) {
-    const nums = sections.map((s) => yearNumber(s.title)).filter((n): n is number => n !== null);
+    const nums = mergedSections.map((s) => s.yearNum).filter((n): n is number => n !== null);
     const hasMax = nums.includes(maxYears);
     if (!hasMax) {
-      const candidateIdx = sections.findIndex((s) => {
-        const n = yearNumber(s.title);
-        return n !== null && n > maxYears;
-      });
+      const candidateIdx = mergedSections.findIndex((s) => (s.yearNum ?? Infinity) > maxYears);
       if (candidateIdx >= 0) {
-        sections[candidateIdx] = { ...sections[candidateIdx], title: `Year ${maxYears}` };
+        mergedSections[candidateIdx] = { ...mergedSections[candidateIdx], title: `Year ${maxYears}`, yearNum: maxYears };
       }
     }
 
-    return sections.filter((section) => {
-      const num = yearNumber(section.title);
-      return num === null || num <= maxYears;
-    });
+    return mergedSections
+      .filter((section) => section.yearNum === null || section.yearNum <= maxYears)
+      .sort((a, b) => {
+        if (a.yearNum === null || b.yearNum === null) return 0;
+        return a.yearNum - b.yearNum;
+      })
+      .map(({ title, items }) => ({ title, items }));
   }
 
-  return sections;
+  return mergedSections.map(({ title, items }) => ({ title, items }));
 };
 
 export default function CoursePage({ params }: { params: { id: string } }) {
