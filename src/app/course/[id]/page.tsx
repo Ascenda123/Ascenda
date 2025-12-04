@@ -161,7 +161,7 @@ const extractBulletItems = (text?: string | null) => {
   return [];
 };
 
-export const extractYearSections = (modules?: string | null, durationText?: string | null) => {
+const extractYearSections = (modules?: string | null, durationText?: string | null) => {
   if (!modules) return [];
   const normalized = modules.replace(/\r/g, '\n').trim(); // Keep newlines for structure
   if (!normalized) return [];

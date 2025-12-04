@@ -49,10 +49,15 @@ export default function RootLayout({
                   var userSetKey = 'ascenda-theme-user-set';
                   var stored = window.localStorage.getItem(storageKey);
                   var userSet = window.localStorage.getItem(userSetKey) === 'manual';
-                  var preference = (stored === 'light' || stored === 'dark' || stored === 'system') ? stored : 'system';
-                  if (!userSet && preference !== 'system') preference = 'system';
+                  
+                  var preference = 'system';
+                  if (stored && userSet && (stored === 'light' || stored === 'dark')) {
+                    preference = stored;
+                  }
+                  
                   var mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
                   var mode = preference === 'system' ? (mediaQuery.matches ? 'dark' : 'light') : preference;
+                  
                   document.documentElement.dataset.theme = mode;
                   document.documentElement.style.colorScheme = mode;
                 } catch (_) {}

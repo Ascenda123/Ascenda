@@ -25,24 +25,35 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
+
+    // Initialize from storage
     const stored = localStorage.getItem(STORAGE_KEY) as ThemePreference | null;
     const userSet = localStorage.getItem(USER_SET_KEY) === 'manual';
 
-    if (stored === 'light' || stored === 'dark' || stored === 'system') {
-      // If a manual preference wasn't intentionally set, default back to system.
-      setPreference(!userSet && stored !== 'system' ? 'system' : stored);
+    // If we have a stored preference and it was manually set, use it.
+    // Otherwise, default to system.
+    if (stored && userSet) {
+      setPreference(stored);
+    } else {
+      setPreference('system');
     }
+
     setHasHydrated(true);
   }, []);
 
   useEffect(() => {
     if (!hasHydrated || typeof window === 'undefined') return;
+
+    // Only persist if it's a user action (implied by changing preference after hydration)
+    // But we need to be careful not to overwrite on initial load if we just set it.
+    // Actually, we should always sync state to storage, but manage the USER_SET_KEY carefully.
+
     localStorage.setItem(STORAGE_KEY, preference);
-    if (preference === 'system') {
-      localStorage.removeItem(USER_SET_KEY);
-    } else {
-      localStorage.setItem(USER_SET_KEY, 'manual');
-    }
+
+    // We don't toggle USER_SET_KEY here because we don't know if this change came from 
+    // user interaction or initialization. 
+    // Instead, we'll handle USER_SET_KEY in the setPreference wrapper or toggleMode.
+
   }, [hasHydrated, preference]);
 
   useEffect(() => {
@@ -50,20 +61,28 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
 
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const resolveSystemMode = () => (mediaQuery.matches ? 'dark' : 'light');
-    const updateFromSystem = (event: MediaQueryListEvent) => setMode(event.matches ? 'dark' : 'light');
+    const updateFromSystem = (event: MediaQueryListEvent) => {
+      if (preference === 'system') {
+        setMode(event.matches ? 'dark' : 'light');
+      }
+    };
 
     if (preference === 'system') {
       setMode(resolveSystemMode());
-      if (typeof mediaQuery.addEventListener === 'function') {
+
+      // Modern browsers
+      if (mediaQuery.addEventListener) {
         mediaQuery.addEventListener('change', updateFromSystem);
         return () => mediaQuery.removeEventListener('change', updateFromSystem);
       }
-
-      mediaQuery.addListener(updateFromSystem);
-      return () => mediaQuery.removeListener(updateFromSystem);
+      // Legacy fallback
+      else if (mediaQuery.addListener) {
+        mediaQuery.addListener(updateFromSystem);
+        return () => mediaQuery.removeListener(updateFromSystem);
+      }
+    } else {
+      setMode(preference);
     }
-
-    setMode(preference);
     return undefined;
   }, [preference]);
 
@@ -71,17 +90,28 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     applyDocumentTheme(mode);
   }, [mode]);
 
+  const handleSetPreference = (newPreference: ThemePreference) => {
+    setPreference(newPreference);
+    // We can safely assume this is a user action if called via context
+    if (newPreference === 'system') {
+      localStorage.removeItem(USER_SET_KEY);
+    } else {
+      localStorage.setItem(USER_SET_KEY, 'manual');
+    }
+  };
+
   const value = useMemo<ThemeContextValue>(
     () => ({
       mode,
       preference,
-      setPreference,
-      setMode: (nextMode) => setPreference(nextMode),
-      toggleMode: () =>
-        setPreference((prev) => {
-          if (prev === 'system') return mode === 'dark' ? 'light' : 'dark';
-          return prev === 'dark' ? 'light' : 'dark';
-        })
+      setPreference: handleSetPreference,
+      setMode: (nextMode) => handleSetPreference(nextMode),
+      toggleMode: () => {
+        const next = preference === 'system'
+          ? (mode === 'dark' ? 'light' : 'dark')
+          : (preference === 'dark' ? 'light' : 'dark');
+        handleSetPreference(next);
+      }
     }),
     [mode, preference]
   );
