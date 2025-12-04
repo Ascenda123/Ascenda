@@ -46,8 +46,11 @@ export default function RootLayout({
               (function() {
                 try {
                   var storageKey = 'ascenda-theme-preference';
+                  var userSetKey = 'ascenda-theme-user-set';
                   var stored = window.localStorage.getItem(storageKey);
+                  var userSet = window.localStorage.getItem(userSetKey) === 'manual';
                   var preference = (stored === 'light' || stored === 'dark' || stored === 'system') ? stored : 'system';
+                  if (!userSet && preference !== 'system') preference = 'system';
                   var mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
                   var mode = preference === 'system' ? (mediaQuery.matches ? 'dark' : 'light') : preference;
                   document.documentElement.dataset.theme = mode;

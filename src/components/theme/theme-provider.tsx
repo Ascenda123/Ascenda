@@ -16,6 +16,7 @@ interface ThemeContextValue {
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 const STORAGE_KEY = 'ascenda-theme-preference';
+const USER_SET_KEY = 'ascenda-theme-user-set';
 
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   const [preference, setPreference] = useState<ThemePreference>('system');
@@ -25,8 +26,11 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const stored = localStorage.getItem(STORAGE_KEY) as ThemePreference | null;
+    const userSet = localStorage.getItem(USER_SET_KEY) === 'manual';
+
     if (stored === 'light' || stored === 'dark' || stored === 'system') {
-      setPreference(stored);
+      // If a manual preference wasn't intentionally set, default back to system.
+      setPreference(!userSet && stored !== 'system' ? 'system' : stored);
     }
     setHasHydrated(true);
   }, []);
@@ -34,6 +38,11 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (!hasHydrated || typeof window === 'undefined') return;
     localStorage.setItem(STORAGE_KEY, preference);
+    if (preference === 'system') {
+      localStorage.removeItem(USER_SET_KEY);
+    } else {
+      localStorage.setItem(USER_SET_KEY, 'manual');
+    }
   }, [hasHydrated, preference]);
 
   useEffect(() => {
