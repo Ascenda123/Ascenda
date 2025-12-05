@@ -38,6 +38,7 @@ export default function RootLayout({
         outfit.variable,
         inter.variable
       )}>
+
         <Script
           id="theme-init"
           strategy="beforeInteractive"
