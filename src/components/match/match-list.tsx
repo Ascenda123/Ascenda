@@ -5,20 +5,16 @@ import { motion } from 'framer-motion';
 import { UniversityCard } from '@/components/university-card';
 import type { MatchTier } from '@/lib/matching/engine';
 import { cn } from '@/lib/utils';
-import { useShortlist } from '@/components/university-search/shortlist-store';
 import { Grid, LayoutList } from 'lucide-react';
 import type { EnrichedMatch } from '@/lib/matching/types';
+import { MATCHES_TEXT } from '@/lib/constants/text';
 
 interface MatchListProps {
   matches: EnrichedMatch[];
 }
 
 const TIER_ORDER: MatchTier[] = ['Reach', 'Match', 'Safe'];
-const TIER_DESCRIPTIONS: Record<MatchTier, string> = {
-  Reach: 'Highly selective universities that stretch your profile.',
-  Match: 'Programs that align closely with your academic and preference fit.',
-  Safe: 'Comfortable options where you exceed the entry expectations.'
-};
+const TIER_DESCRIPTIONS: Record<MatchTier, string> = MATCHES_TEXT.tierDescriptions;
 
 const tierCardVariants = {
   hidden: { opacity: 0, y: 16 },
@@ -38,8 +34,6 @@ const cardVariants = {
 export const MatchList = ({ matches }: MatchListProps) => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
-  const { items: shortlist, addItem, removeItem } = useShortlist();
-
   const tierGroups = useMemo(() => {
     const accumulator: Record<MatchTier, EnrichedMatch[]> = {
       Reach: [],
@@ -52,29 +46,13 @@ export const MatchList = ({ matches }: MatchListProps) => {
     return TIER_ORDER.map((tier) => ({ tier, matches: accumulator[tier] }));
   }, [matches]);
 
-  const handleToggleShortlist = (match: EnrichedMatch) => {
-    const isShortlisted = shortlist.some((item) => item.id === match.program.id);
-    if (isShortlisted) {
-      removeItem(match.program.id);
-    } else {
-      addItem({
-        id: match.program.id,
-        name: match.university.name,
-        program: match.program.name,
-        stage: 'Researching',
-        fitScore: match.score,
-        nextAction: 'Review program details',
-        due: 'TBD',
-        location: match.university.country
-      });
-    }
-  };
-
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between gap-3 rounded-[24px] border border-border bg-card/70 px-4 py-3 shadow-sm backdrop-blur">
+      <div className="glass-panel flex flex-wrap items-center justify-between gap-3 rounded-[24px] px-4 py-3">
         <div className="flex flex-col gap-1">
-          <p className="text-[11px] uppercase tracking-[0.35em] text-muted-foreground">Matches</p>
+          <p className="text-[11px] uppercase tracking-[0.35em] text-muted-foreground">
+            {MATCHES_TEXT.list.headerEyebrow}
+          </p>
           <p className="text-sm text-muted-foreground">
             Showing {matches.length} program{matches.length === 1 ? '' : 's'} ranked by fit
           </p>
@@ -106,7 +84,7 @@ export const MatchList = ({ matches }: MatchListProps) => {
       <section className="space-y-6">
         {matches.length === 0 ? (
           <div className="rounded-[28px] border border-dashed border-border bg-muted/60 p-10 text-center text-muted-foreground">
-            No matches available.
+            {MATCHES_TEXT.list.noResults}
           </div>
         ) : (
           tierGroups.map(({ tier, matches }) =>
@@ -136,7 +114,7 @@ export const MatchList = ({ matches }: MatchListProps) => {
                   className={cn(
                     'grid gap-6',
                     viewMode === 'grid'
-                      ? 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3'
+                      ? 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-3'
                       : 'grid-cols-1'
                   )}
                   variants={staggeredGrid}
@@ -155,8 +133,7 @@ export const MatchList = ({ matches }: MatchListProps) => {
                           match.program.language ?? 'English'
                         ].filter(Boolean)}
                         variant={viewMode === 'list' ? 'compact' : 'default'}
-                        isShortlisted={shortlist.some((item) => item.id === match.program.id)}
-                        onToggleShortlist={() => handleToggleShortlist(match)}
+                        trackingLabelVariant="planner"
                       />
                     </motion.div>
                   ))}

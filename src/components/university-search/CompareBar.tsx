@@ -7,12 +7,12 @@ interface CompareBarProps {
     onClear: () => void;
     onRemove: (id: string) => void;
     onCompare: () => void;
+    maxItems?: number;
 }
 
-export function CompareBar({ selectedItems, onClear, onRemove, onCompare }: CompareBarProps) {
+export function CompareBar({ selectedItems, onClear, onRemove, onCompare, maxItems = 5 }: CompareBarProps) {
     if (selectedItems.length === 0) return null;
 
-    const maxItems = 3;
     const readyState =
         selectedItems.length === maxItems ? 'Ready for a side-by-side view.' : `Add ${maxItems - selectedItems.length} more to max out diff mode.`;
 
@@ -46,33 +46,35 @@ export function CompareBar({ selectedItems, onClear, onRemove, onCompare }: Comp
                     </div>
                 </div>
 
-                <div
-                    className="grid w-full gap-2 rounded-2xl border border-border/50 bg-muted/20 px-3 py-1.5 text-[12px] font-semibold shadow-inner"
-                    style={{
-                        gridTemplateColumns: `repeat(${selectedItems.length}, minmax(0, 1fr))`
-                    }}
-                >
-                    {selectedItems.map((item) => (
-                        <div
-                            key={item.id}
-                            className="group flex w-full items-center gap-2 rounded-xl border border-border/30 bg-background/50 px-2.5 py-1 text-foreground transition hover:border-foreground/40"
-                        >
-                            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-muted/60 text-xs font-bold text-foreground">
-                                {item.universityName.charAt(0)}
-                            </div>
-                            <div className="flex flex-col leading-tight">
-                                <span>{item.universityName}</span>
-                                <span className="text-[10px] text-muted-foreground/70">{item.programName}</span>
-                            </div>
-                            <button
-                                onClick={() => onRemove(item.id)}
-                                className="ml-1 rounded-full p-1 text-muted-foreground transition hover:bg-muted/60 hover:text-foreground"
-                                aria-label={`Remove ${item.universityName} from comparison`}
+                <div className="overflow-x-auto">
+                    <div
+                        className="grid w-full min-w-[260px] gap-2 rounded-2xl border border-border/50 bg-muted/20 px-3 py-1.5 text-[12px] font-semibold shadow-inner"
+                        style={{
+                            gridTemplateColumns: `repeat(${selectedItems.length}, minmax(220px, 1fr))`
+                        }}
+                    >
+                        {selectedItems.map((item) => (
+                            <div
+                                key={item.id}
+                                className="group flex w-full items-center gap-2 rounded-xl border border-border/30 bg-background/50 px-2.5 py-1 text-foreground transition hover:border-foreground/40"
                             >
-                                <X className="h-3 w-3" />
-                            </button>
-                        </div>
-                    ))}
+                                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-muted/60 text-xs font-bold text-foreground">
+                                    {item.universityName.charAt(0)}
+                                </div>
+                                <div className="flex flex-col leading-tight">
+                                    <span className="line-clamp-1" title={item.universityName}>{item.universityName}</span>
+                                    <span className="text-[10px] text-muted-foreground/70 line-clamp-1" title={item.programName}>{item.programName}</span>
+                                </div>
+                                <button
+                                    onClick={() => onRemove(item.id)}
+                                    className="ml-1 rounded-full p-1 text-muted-foreground transition hover:bg-muted/60 hover:text-foreground"
+                                    aria-label={`Remove ${item.universityName} from comparison`}
+                                >
+                                    <X className="h-3 w-3" />
+                                </button>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </div>
         </div>

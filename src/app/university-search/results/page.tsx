@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { MatchTier } from '@/lib/matching/engine';
-import { useShortlist } from '@/components/university-search/shortlist-store';
 import { UniversityCard } from '@/components/university-card';
+import { UniversityCardSkeleton } from '@/components/university-card-skeleton';
 import { FilterBar } from '@/components/university-search/FilterBar';
 import { CompareBar } from '@/components/university-search/CompareBar';
 import { ComparisonModal } from '@/components/university-search/ComparisonModal';
@@ -13,8 +14,12 @@ import { getBrowserSupabaseClient } from '@/lib/supabase/client';
 import { ProgramSearchResult, tierFromScore } from '@/components/university-search/types';
 import { Suggestion } from '@/components/university-search/IntelligentSearchBar';
 import { filterVisiblePrograms } from '@/lib/catalog/visibility';
+import type { Database } from '@/lib/types/database';
 
 import { Breadcrumbs } from '@/components/ui/breadcrumbs';
+import { Button } from '@/components/ui/button';
+
+type StudentMatchRow = Database['public']['Tables']['student_matches']['Row'];
 
 type ProgramRow = {
   id: string;
@@ -30,6 +35,7 @@ type ProgramRow = {
   currency?: string | null;
   metadata?: Record<string, unknown> | null;
   universities?: {
+    id?: string | null;
     name?: string | null;
     country?: string | null;
     city?: string | null;
@@ -43,6 +49,8 @@ type ProgramRow = {
 };
 
 export default function UniversitySearchResultsPage() {
+  const MAX_COMPARE_ITEMS = 5;
+  const PAGE_SIZE = 50;
   const router = useRouter();
   const searchParams = useSearchParams();
   const programId = searchParams.get('programId');
@@ -60,14 +68,26 @@ export default function UniversitySearchResultsPage() {
   const [selectedPrograms, setSelectedPrograms] = useState<string[]>([]);
   const [results, setResults] = useState<ProgramSearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const { items: shortlist, addItem, removeItem } = useShortlist();
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    setResults([]);
+    setPage(0);
+    setHasMore(true);
+  }, [programId, universityId]);
   // Load catalog results from Supabase
   useEffect(() => {
     const fetchResults = async () => {
-      setIsLoading(true);
-      setError(null);
+      const isFirstPage = page === 0;
+      if (isFirstPage) {
+        setIsLoading(true);
+        setError(null);
+      } else {
+        setIsLoadingMore(true);
+      }
       try {
         const supabase = getBrowserSupabaseClient();
 
@@ -89,7 +109,8 @@ export default function UniversitySearchResultsPage() {
               intl_tuition_high,
               currency
             )
-          `
+          `,
+            { count: programId || universityId ? undefined : 'exact' }
           );
 
         // Apply ID filters if present
@@ -100,12 +121,14 @@ export default function UniversitySearchResultsPage() {
           query = query.eq('universities.id', universityId);
         }
 
-        // If no specific ID, limit results
+        // If no specific ID, paginate results
         if (!programId && !universityId) {
-          query = query.limit(200);
+          const from = page * PAGE_SIZE;
+          const to = from + PAGE_SIZE - 1;
+          query = query.range(from, to);
         }
 
-        const [{ data: sessionData }, { data, error: supabaseError }] = await Promise.all([
+        const [{ data: sessionData }, { data, error: supabaseError, count }] = await Promise.all([
           supabase.auth.getSession(),
           query
         ]);
@@ -123,64 +146,78 @@ export default function UniversitySearchResultsPage() {
           if (matchError) {
             console.error('Failed to load match scores', matchError);
           } else {
-            matchScores =
-              matches?.reduce((acc: Record<string, number>, entry: any) => {
-                const numericScore =
-                  typeof entry.score === 'string'
-                    ? Number.parseFloat(entry.score)
-                    : typeof entry.score === 'number'
-                      ? entry.score
-                      : null;
-                if (numericScore !== null && Number.isFinite(numericScore)) {
-                  acc[entry.program_id] = numericScore;
-                }
-                return acc;
-              }, {} as Record<string, number>) ?? {};
+            const matchRows: StudentMatchRow[] = matches ?? [];
+            matchScores = matchRows.reduce<Record<string, number>>((acc, entry: StudentMatchRow) => {
+              const numericScore =
+                typeof entry.score === 'string'
+                  ? Number.parseFloat(entry.score)
+                  : typeof entry.score === 'number'
+                    ? entry.score
+                    : null;
+              if (numericScore !== null && Number.isFinite(numericScore)) {
+                acc[entry.program_id] = numericScore;
+              }
+              return acc;
+            }, {});
           }
         }
 
-        const visiblePrograms = filterVisiblePrograms(data ?? []);
+        const visiblePrograms = filterVisiblePrograms((data ?? []) as ProgramRow[]);
 
-        const mapped =
-          visiblePrograms.map((program: ProgramRow) => {
-            const uni = program.universities;
-            const location = [uni?.city, uni?.region, uni?.country].filter(Boolean).join(', ');
-            const score = matchScores[program.id];
-            const tier = tierFromScore(score);
-            const programName = program.course_name ?? program.name ?? 'Program';
-            const level = program.study_level ?? program.level ?? null;
-            const duration = program.duration ?? (program.duration_years ? `${program.duration_years} years` : null);
-            return {
-              id: program.id,
-              universityId: (uni as any)?.id,
-              universityName: uni?.name ?? 'University',
-              programName,
-              location: location || 'Location unavailable',
-              fitScore: score ?? null,
-              tier: tier ?? null,
-              highlights: [level, duration].filter(Boolean) as string[],
-              acceptanceRate: uni?.acceptance_rate ?? null,
-              duration: duration ?? null,
-              intlTuitionLow: uni?.intl_tuition_low ?? null,
-              intlTuitionHigh: uni?.intl_tuition_high ?? null,
-              requiresTest: uni?.requires_test ?? null,
-              tuition: program.tuition ?? null,
-              currency: program.currency ?? uni?.currency ?? null
-            };
-          }) ?? [];
+        const mapped: ProgramSearchResult[] = visiblePrograms.map((program: ProgramRow) => {
+          const uni = program.universities;
+          const location = [uni?.city, uni?.region, uni?.country].filter(Boolean).join(', ');
+          const score = matchScores[program.id];
+          const tier = tierFromScore(score);
+          const programName = program.course_name ?? program.name ?? 'Program';
+          const level = program.study_level ?? program.level ?? null;
+          const duration = program.duration ?? (program.duration_years ? `${program.duration_years} years` : null);
+          return {
+            id: program.id,
+            universityId: uni?.id ?? undefined,
+            universityName: uni?.name ?? 'University',
+            programName,
+            location: location || 'Location unavailable',
+            fitScore: score ?? null,
+            tier: tier ?? null,
+            highlights: [level, duration].filter(Boolean) as string[],
+            acceptanceRate: uni?.acceptance_rate ?? null,
+            duration: duration ?? null,
+            intlTuitionLow: uni?.intl_tuition_low ?? null,
+            intlTuitionHigh: uni?.intl_tuition_high ?? null,
+            requiresTest: uni?.requires_test ?? null,
+            tuition: program.tuition ?? null,
+            currency: program.currency ?? uni?.currency ?? null
+          };
+        });
 
-        setResults(mapped);
+        setResults((prev) => {
+          if (isFirstPage) return mapped;
+          const existingIds = new Set(prev.map((item) => item.id));
+          const incoming = mapped.filter((item) => !existingIds.has(item.id));
+          return [...prev, ...incoming];
+        });
 
-        // Sync Filters with URL IDs
-        if (programId && mapped.length > 0) {
-          const program = mapped[0];
-          setSearchQuery(''); // Clear text search
-          setSelectedPrograms([program.programName]);
-          setSelectedUniversities([program.universityName]);
-        } else if (universityId && mapped.length > 0) {
-          const uniName = mapped[0].universityName;
-          setSearchQuery(''); // Clear text search
-          setSelectedUniversities([uniName]);
+        if (!programId && !universityId) {
+          const pageCount = mapped.length;
+          const loaded = page * PAGE_SIZE + pageCount;
+          setHasMore(typeof count === 'number' ? loaded < count : pageCount === PAGE_SIZE);
+        } else {
+          setHasMore(false);
+        }
+
+        // Sync Filters with URL IDs on first page load
+        if (isFirstPage) {
+          if (programId && mapped.length > 0) {
+            const program = mapped[0];
+            setSearchQuery(''); // Clear text search
+            setSelectedPrograms([program.programName]);
+            setSelectedUniversities([program.universityName]);
+          } else if (universityId && mapped.length > 0) {
+            const uniName = mapped[0].universityName;
+            setSearchQuery(''); // Clear text search
+            setSelectedUniversities([uniName]);
+          }
         }
 
       } catch (fetchError) {
@@ -192,12 +229,16 @@ export default function UniversitySearchResultsPage() {
               : 'Unable to load results';
         setError(message || 'Unable to load results');
       } finally {
-        setIsLoading(false);
+        if (isFirstPage) {
+          setIsLoading(false);
+        } else {
+          setIsLoadingMore(false);
+        }
       }
     };
 
     fetchResults();
-  }, [programId, universityId]); // Re-fetch if IDs change
+  }, [page, programId, universityId]);
 
   const availableUniversities = useMemo(() => {
     const source =
@@ -305,21 +346,29 @@ export default function UniversitySearchResultsPage() {
     router.push(`/university-search/results?${params.toString()}`);
   };
 
-  // Handlers
-  const handleToggleShortlist = (result: ProgramSearchResult) => {
-    const isShortlisted = shortlist.some((item) => item.id === result.id);
-    if (isShortlisted) {
-      removeItem(result.id);
-    } else {
-      addItem({
-        id: result.id,
-        name: result.universityName,
-        program: result.programName,
-        fitScore: result.fitScore,
-        location: result.location
-      });
-    }
+  const handleLoadMore = () => {
+    if (isLoading || isLoadingMore || !hasMore || programId || universityId) return;
+    setPage((prev) => prev + 1);
   };
+
+  useEffect(() => {
+    if (programId || universityId) return;
+    const target = loadMoreRef.current;
+    if (!target || !hasMore) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        if (entry.isIntersecting && !isLoading && !isLoadingMore) {
+          setPage((prev) => prev + 1);
+        }
+      },
+      { rootMargin: '320px' }
+    );
+
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [hasMore, isLoading, isLoadingMore, programId, universityId]);
 
   const handleToggleSelect = (result: ProgramSearchResult) => {
     setSelectedForComparison((prev) => {
@@ -327,8 +376,8 @@ export default function UniversitySearchResultsPage() {
       if (isSelected) {
         return prev.filter((item) => item.id !== result.id);
       } else {
-        if (prev.length >= 3) {
-          // Optional: Show toast notification that max comparison is 3
+        if (prev.length >= MAX_COMPARE_ITEMS) {
+          // Optional: Show toast notification that max comparison is reached
           return prev;
         }
         return [...prev, result];
@@ -374,8 +423,15 @@ export default function UniversitySearchResultsPage() {
         />
 
         {isLoading ? (
-          <div className="rounded-[32px] border border-border bg-muted/20 p-6 text-sm text-muted-foreground">
-            Loading catalog results…
+          <div
+            className={cn(
+              'grid gap-6',
+              viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-3' : 'grid-cols-1'
+            )}
+          >
+            {Array.from({ length: viewMode === 'grid' ? 6 : 4 }).map((_, index) => (
+              <UniversityCardSkeleton key={index} variant={viewMode === 'list' ? 'compact' : 'default'} />
+            ))}
           </div>
         ) : error ? (
           <div className="rounded-[32px] border border-dashed border-red-300 bg-red-50 p-6 text-sm text-red-700">
@@ -388,8 +444,19 @@ export default function UniversitySearchResultsPage() {
             </div>
             <h3 className="text-lg font-semibold text-foreground">No matches found</h3>
             <p className="text-muted-foreground">
-              Try adjusting your filters or search query to find more results.
+              Try adjusting your filters or add one more detail to your profile to unlock matches.
             </p>
+            <div className="mt-6 flex flex-wrap justify-center gap-2 text-sm font-semibold">
+              <Button asChild size="sm" variant="outline" className="rounded-full px-4">
+                <Link href="/profile?step=academics">Add your GPA</Link>
+              </Button>
+              <Button asChild size="sm" variant="outline" className="rounded-full px-4">
+                <Link href="/profile?step=preferences">Set your budget range</Link>
+              </Button>
+              <Button asChild size="sm" variant="outline" className="rounded-full px-4">
+                <Link href="/profile?step=aspirations">Clarify goals & interests</Link>
+              </Button>
+            </div>
             <button
               onClick={handleResetFilters}
               className="mt-4 text-sm font-medium text-primary hover:underline"
@@ -402,7 +469,7 @@ export default function UniversitySearchResultsPage() {
             className={cn(
               'grid gap-6',
               viewMode === 'grid'
-                ? 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3'
+                ? 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-3'
                 : 'grid-cols-1'
             )}
           >
@@ -416,14 +483,25 @@ export default function UniversitySearchResultsPage() {
                 fitScore={result.fitScore}
                 tier={result.tier ?? undefined}
                 highlights={result.highlights}
-                isShortlisted={shortlist.some((item) => item.id === result.id)}
                 isSelected={selectedForComparison.some((item) => item.id === result.id)}
-                onToggleShortlist={() => handleToggleShortlist(result)}
                 onToggleSelect={() => handleToggleSelect(result)}
               />
             ))}
           </div>
         )}
+        {hasMore && !isLoading && filteredResults.length > 0 && !programId && !universityId ? (
+          <div className="mt-6 flex flex-col items-center gap-2">
+            <button
+              type="button"
+              onClick={handleLoadMore}
+              disabled={isLoadingMore}
+              className="rounded-full border border-border bg-background px-4 py-2 text-sm font-semibold text-primary transition hover:border-primary disabled:cursor-not-allowed disabled:text-muted-foreground"
+            >
+              {isLoadingMore ? 'Loading more results…' : 'Load more results'}
+            </button>
+            <div ref={loadMoreRef} className="h-6 w-full" />
+          </div>
+        ) : null}
       </section>
 
       <CompareBar
@@ -431,6 +509,7 @@ export default function UniversitySearchResultsPage() {
         onClear={() => setSelectedForComparison([])}
         onRemove={(id) => setSelectedForComparison((prev) => prev.filter((item) => item.id !== id))}
         onCompare={handleCompare}
+        maxItems={MAX_COMPARE_ITEMS}
       />
 
       <ComparisonModal
@@ -438,6 +517,7 @@ export default function UniversitySearchResultsPage() {
         onClose={() => setIsComparisonOpen(false)}
         universities={selectedForComparison}
         onRemove={(id) => setSelectedForComparison((prev) => prev.filter((i) => i.id !== id))}
+        maxItems={MAX_COMPARE_ITEMS}
       />
     </div>
   );

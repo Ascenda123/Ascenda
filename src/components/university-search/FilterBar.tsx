@@ -81,7 +81,7 @@ function SelectionDropdown({
             </button>
 
             {isOpen ? (
-                <div className="absolute right-0 z-30 mt-2 w-72 rounded-2xl border border-border bg-popover p-3 shadow-xl">
+                <div className="absolute right-0 z-30 mt-2 w-[min(18rem,calc(100vw-2rem))] rounded-2xl border border-border bg-popover p-3 shadow-xl sm:w-72">
                     <div className="mb-2 flex items-center justify-between gap-2">
                         <Input
                             value={localQuery}
@@ -171,7 +171,7 @@ export function FilterBar({
         <div
             ref={containerRef}
             className={cn(
-                'mb-6 flex flex-col gap-4 rounded-[24px] border border-border bg-card/80 p-4 shadow-sm backdrop-blur-xl',
+                'glass-panel mb-6 flex flex-col gap-4 rounded-[24px] p-4 md:gap-5',
                 {
                     'sticky top-4 z-20': isSticky,
                     'relative z-0': !isSticky
@@ -179,8 +179,8 @@ export function FilterBar({
             )}
         >
             <div className="flex flex-col gap-3">
-                <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between md:gap-4">
-                    <div className="relative w-full md:max-w-md">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+                    <div className="relative w-full sm:max-w-xl lg:max-w-2xl">
                         <IntelligentSearchBar
                             value={searchQuery}
                             onChange={onSearchChange}
@@ -190,7 +190,7 @@ export function FilterBar({
                         />
                     </div>
 
-                    <div className="flex items-center gap-3 self-start md:self-auto">
+                    <div className="flex w-full flex-wrap items-center gap-3 sm:w-auto sm:justify-end">
                         <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">
                             {resultCount} result{resultCount !== 1 && 's'}
                         </span>
@@ -221,7 +221,7 @@ export function FilterBar({
                     </div>
                 </div>
 
-                <div className="flex flex-col gap-2 md:flex-row md:flex-wrap md:items-center md:justify-between">
+                <div className="flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-center lg:justify-between">
                     <div className="flex flex-wrap items-center gap-2">
                         {TIERS.map((tier) => {
                             const isSelected = selectedTiers.includes(tier);
@@ -245,7 +245,7 @@ export function FilterBar({
                         })}
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-2 md:justify-end">
+                    <div className="flex flex-wrap items-center gap-2 sm:justify-start lg:justify-end">
                         {quickFilters && onQuickFilterChange
                             ? ([
                                 { key: 'budgetFriendly', label: 'Budget' },

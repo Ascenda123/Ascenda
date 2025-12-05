@@ -131,7 +131,7 @@ export const useShortlist = () => {
         return;
       }
 
-      const remoteItems = (data ?? []).map(mapRowToItem);
+      const remoteItems: ShortlistItem[] = (data ?? []).map(mapRowToItem);
       const merged: ShortlistItem[] = [...remoteItems];
 
       // Merge in any local-only items and persist them remotely

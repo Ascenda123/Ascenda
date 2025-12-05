@@ -5,7 +5,6 @@ import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { DashboardShell } from '@/components/layout/shell';
 import { DeadlineTimeline } from '@/components/dashboard/deadline-timeline';
 import { MatchList } from '@/components/match/match-list';
-import type { EnrichedMatch } from '@/components/match/match-list';
 import { loadMatchesForProfile } from '@/lib/matching/service';
 import type { EnrichedMatch } from '@/lib/matching/types';
 import { DashboardOverview } from '@/components/dashboard/overview';
@@ -13,20 +12,11 @@ import { PageHero } from '@/components/layout/page-hero';
 import { Button } from '@/components/ui/button';
 import { StatsCard } from '@/components/dashboard/stats-card';
 import { TaskListPanel } from '@/components/dashboard/task-list-panel';
+import type { Database } from '@/lib/types/database';
 
-interface ChecklistRow {
-  id: string;
-  task_name: string;
-  status: 'todo' | 'doing' | 'done';
-  due_date?: string | null;
-}
-
-interface DeadlineRow {
-  id: string;
-  name: string;
-  deadline_date?: string | null;
-  intake?: string | null;
-}
+type ChecklistRow = Database['public']['Tables']['application_checklist']['Row'];
+type DeadlineRow = Database['public']['Tables']['deadlines']['Row'];
+type ApplicationRow = Database['public']['Tables']['applications']['Row'];
 
 export const metadata: Metadata = {
   title: 'Dashboard | Ascenda'
@@ -49,8 +39,8 @@ export default async function DashboardPage() {
     .select('id, program_id')
     .eq('profile_id', user.id);
 
-  const applicationIds = (applications ?? []).map((app: any) => app.id);
-  const applicationProgramIds = (applications ?? []).map((app: any) => app.program_id);
+  const applicationIds = (applications ?? []).map((app: ApplicationRow) => app.id);
+  const applicationProgramIds = (applications ?? []).map((app: ApplicationRow) => app.program_id);
 
   const checklistPromise = applicationIds.length
     ? supabase
@@ -151,7 +141,7 @@ export default async function DashboardPage() {
           />
         </div>
         <aside className="space-y-6">
-          <div className="space-y-4 rounded-[28px] border border-border bg-card/50 p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl transition-colors">
+          <div className="glass-panel space-y-4 rounded-[28px] p-6 transition-colors">
             <h2 className="text-2xl font-semibold text-foreground">Upcoming deadlines</h2>
             {deadlines.length > 0 ? (
               <DeadlineTimeline
@@ -168,7 +158,7 @@ export default async function DashboardPage() {
           </div>
         </aside>
         <div className="lg:col-span-3">
-          <div className="space-y-4 overflow-hidden rounded-[28px] border border-border bg-card/50 p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)] backdrop-blur-xl transition-colors">
+          <div className="glass-panel space-y-4 overflow-hidden rounded-[28px] p-6 transition-colors">
             <h2 className="text-2xl font-semibold text-foreground">Recommended programs</h2>
             {matches.length > 0 ? (
               <MatchList matches={matches} />

@@ -10,6 +10,10 @@ import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import { SectionNav } from '@/components/layout/section-nav';
 import { EXPLORE_SECTION_ITEMS } from '@/components/layout/navigation';
 import { loadMatchesForProfile } from '@/lib/matching/service';
+import { getFitScoreVisuals } from '@/lib/theme/fit-score';
+import { cn } from '@/lib/utils';
+import { TrackProgramButton } from '@/components/programs/track-program-button';
+import { ACTION_TEXT, MATCHES_TEXT } from '@/lib/constants/text';
 
 export const metadata: Metadata = {
   title: 'Match suggestions | Ascenda'
@@ -32,19 +36,19 @@ export default async function MatchesPage() {
       <DashboardShell>
         <SectionNav items={EXPLORE_SECTION_ITEMS} />
         <PageHero
-          eyebrow="Matches"
-          title="Dial in your Fit Score"
-          description="Complete your profile to unlock personalized program rankings, tuition filters, and signal tracking."
-          highlight="Profile info missing"
+          eyebrow={MATCHES_TEXT.hero.eyebrow}
+          title={MATCHES_TEXT.profileIncomplete.title}
+          description={MATCHES_TEXT.profileIncomplete.description}
+          highlight={MATCHES_TEXT.profileIncomplete.highlight}
           stats={[{ label: 'Matches', value: '—' }, { label: 'Programs', value: '0' }, { label: 'Signals', value: '—' }]}
           actions={
             <Button asChild size="sm">
-              <Link href="/profile">Finish profile</Link>
+              <Link href="/profile">{ACTION_TEXT.finishProfile}</Link>
             </Button>
           }
         />
         <div className="rounded-[28px] border border-dashed border-border bg-muted/60 p-8 text-center text-muted-foreground">
-          Complete your profile to receive personalized matches.
+          {MATCHES_TEXT.profileIncomplete.emptyMessage}
         </div>
       </DashboardShell>
     );
@@ -54,7 +58,7 @@ export default async function MatchesPage() {
     return (
       <DashboardShell>
         <div className="rounded-[28px] border border-dashed border-border bg-muted/60 p-8 text-center text-muted-foreground">
-          We could not load the program catalog yet. Please check back later.
+          {MATCHES_TEXT.catalogUnavailable}
         </div>
       </DashboardShell>
     );
@@ -68,44 +72,69 @@ export default async function MatchesPage() {
     { label: 'Top fit', value: enriched[0] ? `${enriched[0].score}%` : '—', detail: 'Highest score' }
   ];
   const topMatch = enriched[0];
+  const topMatchVisuals = getFitScoreVisuals(topMatch?.score);
 
   return (
     <DashboardShell>
       <SectionNav items={EXPLORE_SECTION_ITEMS} />
       <PageHero
-        eyebrow="Matches"
-        title="Match suggestions"
-        description="Ranked by eligibility, academic alignment, preferences, and outcome indicators."
-        highlight="Signals watchlist"
+        eyebrow={MATCHES_TEXT.hero.eyebrow}
+        title={MATCHES_TEXT.hero.title}
+        description={MATCHES_TEXT.hero.description}
+        highlight={MATCHES_TEXT.hero.highlight}
         stats={heroStats}
         breadcrumbs={<Breadcrumbs />}
         actions={
           <>
-            <Button asChild size="sm">
-              <Link href="/applications">Add to planner</Link>
-            </Button>
+            {topMatch ? (
+              <TrackProgramButton
+                programId={topMatch.program.id}
+                programName={topMatch.program.name}
+                universityName={topMatch.university.name}
+                location={topMatch.university.country}
+                fitScore={topMatch.score}
+                labelVariant="planner"
+              />
+            ) : (
+              <Button asChild size="sm">
+                <Link href="/applications">{ACTION_TEXT.addToPlanner}</Link>
+              </Button>
+            )}
             <Button asChild size="sm" variant="outline">
-              <Link href="/dashboard">Return to dashboard</Link>
+              <Link href="/dashboard">{ACTION_TEXT.returnToDashboard}</Link>
             </Button>
           </>
         }
       />
       {topMatch ? (
-        <div className="sticky top-4 z-10 mb-4 rounded-[24px] border border-border bg-card/85 p-4 backdrop-blur shadow-[0_18px_45px_rgba(15,23,42,0.12)]">
+        <div className="glass-panel sticky top-4 z-10 mb-4 rounded-[24px] p-4 shadow-[0_18px_45px_rgba(15,23,42,0.12)]">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex flex-col gap-1">
-              <p className="text-[11px] uppercase tracking-[0.35em] text-muted-foreground">Top fit snapshot</p>
+              <p className="text-[11px] uppercase tracking-[0.35em] text-muted-foreground">
+                {MATCHES_TEXT.topSnapshot.eyebrow}
+              </p>
               <p className="text-sm font-semibold text-foreground">
                 {topMatch.program.name} • {topMatch.university.name}
               </p>
-              <p className="text-xs text-muted-foreground">Score {topMatch.score}% — {topMatch.tier} tier</p>
+              <p className="text-xs text-muted-foreground">
+                {MATCHES_TEXT.topSnapshot.scoreLabel}{' '}
+                <span className={cn('font-semibold', topMatchVisuals.textClass)}>
+                  {topMatchVisuals.value !== null ? `${topMatchVisuals.value}%` : 'N/A'}
+                </span>{' '}
+                — {topMatch.tier} tier
+              </p>
             </div>
             <div className="flex gap-2">
-              <Button asChild size="sm">
-                <Link href="/applications">Save to planner</Link>
-              </Button>
+              <TrackProgramButton
+                programId={topMatch.program.id}
+                programName={topMatch.program.name}
+                universityName={topMatch.university.name}
+                location={topMatch.university.country}
+                fitScore={topMatch.score}
+                labelVariant="planner"
+              />
               <Button size="sm" variant="outline">
-                Share
+                {ACTION_TEXT.share}
               </Button>
             </div>
           </div>
@@ -115,16 +144,16 @@ export default async function MatchesPage() {
         <MatchList matches={enriched} />
       ) : (
         <div className="rounded-[28px] border border-dashed border-border bg-muted/60 p-8 text-center text-muted-foreground">
-          <p className="text-base font-semibold text-foreground">No matches yet</p>
+          <p className="text-base font-semibold text-foreground">{MATCHES_TEXT.emptyState.title}</p>
           <p className="mt-2 text-sm">
-            Try widening your budget, adding more destinations, or updating test scores to unlock suggestions.
+            {MATCHES_TEXT.emptyState.description}
           </p>
           <div className="mt-4 flex flex-wrap justify-center gap-2">
             <Button asChild size="sm">
-              <Link href="/profile?step=preferences">Adjust preferences</Link>
+              <Link href="/profile?step=preferences">{ACTION_TEXT.adjustPreferences}</Link>
             </Button>
             <Button asChild size="sm" variant="outline">
-              <Link href="/profile?step=academics">Update academics</Link>
+              <Link href="/profile?step=academics">{ACTION_TEXT.updateAcademics}</Link>
             </Button>
           </div>
         </div>

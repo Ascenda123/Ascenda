@@ -23,6 +23,13 @@ import { filterVisiblePrograms } from '../catalog/visibility';
 import type { Database } from '../types/database';
 import type { EnrichedMatch, MissingProfileSection } from './types';
 
+type StudentAcademicsRow = Database['public']['Tables']['student_academics']['Row'];
+type StudentPreferencesRow = Database['public']['Tables']['student_preferences']['Row'];
+type StudentAspirationsRow = Database['public']['Tables']['student_aspirations']['Row'];
+type ProgramRow = Database['public']['Tables']['programs']['Row'];
+type UniversityRow = Database['public']['Tables']['universities']['Row'];
+type ProgramRequirementRow = Database['public']['Tables']['program_requirements']['Row'];
+
 type Client = SupabaseClient<Database>;
 
 type LoadMatchesOptions = {
@@ -38,9 +45,9 @@ export type MatchComputationResult = {
 };
 
 const mapProfileRows = (params: {
-  academics: unknown;
-  preferences: unknown;
-  aspirations: unknown;
+  academics: StudentAcademicsRow;
+  preferences: StudentPreferencesRow;
+  aspirations: StudentAspirationsRow;
 }) => {
   const academics: StudentAcademics = mapAcademicsRow(params.academics);
   const preferences: StudentPreferences = mapPreferencesRow(params.preferences);
@@ -105,7 +112,7 @@ export const loadMatchesForProfile = async (
     };
   }
 
-  const filteredPrograms = filterVisiblePrograms(programsData ?? []);
+  const filteredPrograms = filterVisiblePrograms((programsData ?? []) as ProgramRow[]);
   const programs: Program[] = filteredPrograms.map(mapProgramRow);
   const universities: University[] = (universitiesData ?? []).map(mapUniversityRow);
   const requirements: ProgramRequirement[] = (requirementsData ?? []).map(mapRequirementRow);

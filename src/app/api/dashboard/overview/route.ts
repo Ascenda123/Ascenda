@@ -12,27 +12,19 @@ import {
   mapRequirementRow,
   mapUniversityRow
 } from '@/lib/matching/transform';
-import type { EnrichedMatch } from '@/components/match/match-list';
+import type { EnrichedMatch } from '@/lib/matching/types';
+import type { Database } from '@/lib/types/database';
 
-interface ChecklistRow {
-  id: string;
-  task_name: string;
-  status: 'todo' | 'doing' | 'done';
-  due_date?: string | null;
-}
-
-interface DeadlineRow {
-  id: string;
-  name: string;
-  deadline_date?: string | null;
-  intake?: string | null;
-}
-
-interface ProfileRow {
-  full_name?: string | null;
-  country?: string | null;
-  time_zone?: string | null;
-}
+type ApplicationRow = Database['public']['Tables']['applications']['Row'];
+type ChecklistRow = Database['public']['Tables']['application_checklist']['Row'];
+type DeadlineRow = Database['public']['Tables']['deadlines']['Row'];
+type AcademicsRow = Database['public']['Tables']['student_academics']['Row'];
+type PreferencesRow = Database['public']['Tables']['student_preferences']['Row'];
+type AspirationsRow = Database['public']['Tables']['student_aspirations']['Row'];
+type ProfileRow = Database['public']['Tables']['profiles']['Row'];
+type ProgramRow = Database['public']['Tables']['programs']['Row'];
+type UniversityRow = Database['public']['Tables']['universities']['Row'];
+type ProgramRequirementRow = Database['public']['Tables']['program_requirements']['Row'];
 
 const shortDateFormatter = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' });
 
@@ -64,8 +56,8 @@ export async function GET() {
     .select('id, program_id')
     .eq('profile_id', user.id);
 
-  const applicationIds = (applications ?? []).map((app: any) => app.id);
-  const applicationProgramIds = (applications ?? []).map((app: any) => app.program_id);
+  const applicationIds = (applications ?? []).map((app: ApplicationRow) => app.id);
+  const applicationProgramIds = (applications ?? []).map((app: ApplicationRow) => app.program_id);
 
   const [
     checklistResponse,
@@ -105,27 +97,34 @@ export async function GET() {
   const preferences = preferencesResponse.data ?? null;
   const aspirations = aspirationsResponse.data ?? null;
   const profileRecord = (profileResponse.data ?? null) as ProfileRow | null;
-  const programs = programsResponse.data ?? [];
-  const universities = universitiesResponse.data ?? [];
-  const requirements = requirementsResponse.data ?? [];
+  const programs = (programsResponse.data ?? []) as ProgramRow[];
+  const universities = (universitiesResponse.data ?? []) as UniversityRow[];
+  const requirements = (requirementsResponse.data ?? []) as ProgramRequirementRow[];
 
   let matchResults = [] as Awaited<ReturnType<typeof rankMatches>>;
+  let mappedPrograms = new Map<string, ReturnType<typeof mapProgramRow>>();
+  let mappedUniversities = new Map<string, ReturnType<typeof mapUniversityRow>>();
   if (academics && preferences && aspirations && programs.length > 0 && universities.length > 0) {
     const mappedAcademics = mapAcademicsRow(academics);
     const mappedPreferences = mapPreferencesRow(preferences);
     const mappedAspirations = mapAspirationsRow(aspirations);
-    const requirementMap = new Map<string, any>(requirements.map((item: any) => [item.program_id, mapRequirementRow(item)]));
-    const universityMap = new Map<string, any>(universities.map((item: any) => [item.id, mapUniversityRow(item)]));
+    const requirementMap = new Map<string, ReturnType<typeof mapRequirementRow>>(
+      requirements.map((item) => [item.program_id, mapRequirementRow(item)])
+    );
+    mappedPrograms = new Map(programs.map((program) => [program.id, mapProgramRow(program)]));
+    mappedUniversities = new Map(universities.map((item) => [item.id, mapUniversityRow(item)]));
     const inputs = programs
-      .map((program: any) => {
-        const mappedProgram = mapProgramRow(program);
+      .map((program) => {
+        const mappedProgram = mappedPrograms.get(program.id);
+        const mappedUniversity = mappedUniversities.get(program.university_id);
+        if (!mappedProgram || !mappedUniversity) return null;
         return buildMatchInput({
           academics: mappedAcademics,
           preferences: mappedPreferences,
           aspirations: mappedAspirations,
           program: mappedProgram,
-          university: universityMap.get(mappedProgram.universityId),
-          requirement: requirementMap.get(mappedProgram.id)
+          university: mappedUniversity,
+          requirement: requirementMap.get(program.id)
         });
       })
       .filter((value: MatchInput | null): value is MatchInput => value !== null);
@@ -143,21 +142,20 @@ export async function GET() {
 
   const nextDeadline = deadlines[0] ?? null;
 
-  const enrichedMatches: EnrichedMatch[] = matchResults
-    .map((result) => {
-      const program = programs.find((item: any) => item.id === result.programId);
-      const university = universities.find((item: any) => item.id === result.universityId);
-      if (!program || !university) return null;
-      return {
-        program,
-        university,
-        score: result.score,
-        breakdown: result.breakdown,
-        blockingReasons: result.blockingReasons,
-        tier: result.tier
-      };
-    })
-    .filter((entry): entry is EnrichedMatch => entry !== null);
+  const enrichedMatches = matchResults.reduce<EnrichedMatch[]>((acc, result) => {
+    const program = mappedPrograms.get(result.programId);
+    const university = mappedUniversities.get(result.universityId);
+    if (!program || !university) return acc;
+    acc.push({
+      program,
+      university,
+      score: result.score,
+      breakdown: result.breakdown,
+      blockingReasons: result.blockingReasons,
+      tier: result.tier
+    });
+    return acc;
+  }, []);
 
   const averageMatchScore = enrichedMatches.length
     ? Math.round(enrichedMatches.reduce((total, item) => total + item.score, 0) / enrichedMatches.length)

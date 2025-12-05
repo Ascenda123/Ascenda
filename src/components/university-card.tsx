@@ -1,8 +1,13 @@
+'use client';
+
 import Link from 'next/link';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Check } from 'lucide-react';
 import { MatchTier } from '@/lib/matching/engine';
+import { TrackProgramButton, type TrackLabelVariant } from '@/components/programs/track-program-button';
+import { ACTION_TEXT } from '@/lib/constants/text';
+import { getFitScoreVisuals } from '@/lib/theme/fit-score';
 
 // Define a unified interface that covers both PlaceholderResult and EnrichedMatch
 export interface UniversityCardProps {
@@ -13,12 +18,12 @@ export interface UniversityCardProps {
     fitScore?: number | null;
     tier?: MatchTier | null;
     highlights?: string[]; // Optional, as EnrichedMatch might not have this exact field yet
-    isShortlisted?: boolean;
     isSelected?: boolean;
-    onToggleShortlist?: () => void;
     onToggleSelect?: () => void;
     actions?: React.ReactNode; // Slot for custom actions
     variant?: 'default' | 'compact';
+    trackingLabelVariant?: TrackLabelVariant;
+    hideTrackingButton?: boolean;
 }
 
 export function UniversityCard({
@@ -29,22 +34,14 @@ export function UniversityCard({
     fitScore,
     tier,
     highlights = [],
-    isShortlisted = false,
     isSelected = false,
-    onToggleShortlist,
     onToggleSelect,
     actions,
-    variant = 'default'
+    variant = 'default',
+    trackingLabelVariant = 'shortlist',
+    hideTrackingButton = false
 }: UniversityCardProps) {
-    // Determine color based on fit score
-    const getScoreColor = (score: number) => {
-        if (score >= 88) return 'text-emerald-600 ring-emerald-100 bg-emerald-50';
-        if (score >= 80) return 'text-amber-600 ring-amber-100 bg-amber-50';
-        return 'text-rose-600 ring-rose-100 bg-rose-50';
-    };
-
-    const scoreValue = typeof fitScore === 'number' ? Math.round(fitScore) : null;
-    const scoreColorClass = scoreValue !== null ? getScoreColor(scoreValue) : 'text-muted-foreground ring-border bg-muted';
+    const { value: scoreValue, badgeClass: scoreColorClass } = getFitScoreVisuals(fitScore);
     const courseHref = id ? `/course/${encodeURIComponent(id)}?from=search` : null;
 
     return (
@@ -126,22 +123,22 @@ export function UniversityCard({
                                 )}
                                 prefetch
                             >
-                                View Course
+                                {ACTION_TEXT.viewCourse}
                             </Link>
                         ) : (
                             <Button size="sm" className="w-full rounded-xl font-semibold shadow-sm" disabled>
-                                View Course
+                                {ACTION_TEXT.viewCourse}
                             </Button>
                         )}
-                        {onToggleShortlist && (
-                            <Button
-                                size="sm"
-                                variant={isShortlisted ? 'secondary' : 'outline'}
-                                className={cn('w-full rounded-xl font-semibold', isShortlisted && 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200')}
-                                onClick={onToggleShortlist}
-                            >
-                                {isShortlisted ? 'Shortlisted' : 'Shortlist'}
-                            </Button>
+                        {!hideTrackingButton && (
+                            <TrackProgramButton
+                                programId={id}
+                                programName={program}
+                                universityName={name}
+                                location={location}
+                                fitScore={fitScore ?? null}
+                                labelVariant={trackingLabelVariant}
+                            />
                         )}
                     </>
                 )}

@@ -119,12 +119,24 @@
 }
 
 @layer utilities {
-  .glass {
-    @apply bg-card/80 backdrop-blur-lg border border-border/60 shadow-soft;
+  .glass-panel {
+    @apply border border-border/60 bg-card/70 backdrop-blur-xl shadow-[0_18px_50px_rgba(15,23,42,0.08)];
   }
 
   .glass-card {
-    @apply bg-card/70 backdrop-blur-xl border border-border/60 shadow-floating;
+    @apply border border-border/60 bg-card/60 backdrop-blur-lg shadow-[0_18px_45px_rgba(15,23,42,0.08)];
+  }
+
+  .glass-muted {
+    @apply border border-border/60 bg-muted/60 backdrop-blur-md shadow-[0_12px_30px_rgba(15,23,42,0.06)];
+  }
+
+  .glass-pill {
+    @apply border border-border/60 bg-background/70 backdrop-blur-md shadow-sm;
+  }
+
+  .glass {
+    @apply glass-panel;
   }
 
   .text-glow {

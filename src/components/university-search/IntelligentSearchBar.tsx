@@ -40,16 +40,34 @@ export function IntelligentSearchBar({
 }: IntelligentSearchBarProps) {
     const [suggestions, setSuggestions] = useState<SuggestionGroups>({ programs: [], universities: [] });
     const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
+    const [isLoadingPrefill, setIsLoadingPrefill] = useState(false);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const [recentSearches, setRecentSearches] = useState<Suggestion[]>([]);
+    const [trendingSuggestions, setTrendingSuggestions] = useState<SuggestionGroups>({ programs: [], universities: [] });
     const debounceRef = useRef<number | null>(null);
     const blurTimeoutRef = useRef<number | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
+    const hasTypedQuery = value.trim().length > 0;
+
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        try {
+            const stored = window.localStorage.getItem('ascenda-recent-searches');
+            if (stored) {
+                const parsed = JSON.parse(stored) as Suggestion[];
+                setRecentSearches(parsed);
+            }
+        } catch (err) {
+            console.warn('Unable to load recent searches', err);
+        }
+    }, []);
 
     useEffect(() => {
         const fetchSuggestions = async (query: string) => {
             const trimmed = query.trim();
             if (trimmed.length === 0) {
                 setSuggestions({ programs: [], universities: [] });
+                setIsLoadingSuggestions(false);
                 return;
             }
             setIsLoadingSuggestions(true);
@@ -138,10 +156,85 @@ export function IntelligentSearchBar({
         };
     }, [value]);
 
+    useEffect(() => {
+        if (!isDropdownOpen || hasTypedQuery || trendingSuggestions.programs.length + trendingSuggestions.universities.length > 0) {
+            return;
+        }
+        let isActive = true;
+        const loadTrending = async () => {
+            setIsLoadingPrefill(true);
+            try {
+                const supabase = getBrowserSupabaseClient();
+                const [programsRes, universitiesRes] = await Promise.all([
+                    supabase
+                        .from('programs')
+                        .select('id,course_name,study_level,universities!inner(name,country,city,region)')
+                        .order('course_name', { ascending: true })
+                        .limit(4),
+                    supabase
+                        .from('universities')
+                        .select('id,name,country,city,region')
+                        .order('name', { ascending: true })
+                        .limit(4)
+                ]);
+
+                if (!isActive) return;
+
+                const formatLocation = (city?: string | null, region?: string | null, country?: string | null) =>
+                    [city, region, country].filter(Boolean).join(', ') || null;
+
+                const programs = (programsRes.data || []).map((program: any) => {
+                    const uni = program.universities as { name?: string | null; city?: string | null; region?: string | null; country?: string | null } | null;
+                    return {
+                        id: program.id,
+                        name: program.course_name,
+                        university: uni?.name ?? null,
+                        location: formatLocation(uni?.city ?? null, uni?.region ?? null, uni?.country ?? null),
+                        score: 0
+                    };
+                });
+
+                const universities = (universitiesRes.data || []).map((uni: any) => ({
+                    id: uni.id,
+                    name: uni.name,
+                    location: formatLocation(uni.city, uni.region, uni.country),
+                    score: 0
+                }));
+
+                setTrendingSuggestions({ programs, universities });
+            } catch (err) {
+                console.warn('Unable to load trending suggestions', err);
+            } finally {
+                if (isActive) setIsLoadingPrefill(false);
+            }
+        };
+
+        loadTrending();
+
+        return () => {
+            isActive = false;
+        };
+    }, [hasTypedQuery, isDropdownOpen, trendingSuggestions.programs.length, trendingSuggestions.universities.length]);
+
     const hasSuggestions = useMemo(
         () => suggestions.programs.length > 0 || suggestions.universities.length > 0,
         [suggestions]
     );
+
+    const persistRecentSearch = (item: Suggestion) => {
+        setRecentSearches((prev) => {
+            const filtered = prev.filter((entry) => entry.id !== item.id);
+            const next = [item, ...filtered].slice(0, 6);
+            try {
+                if (typeof window !== 'undefined') {
+                    window.localStorage.setItem('ascenda-recent-searches', JSON.stringify(next));
+                }
+            } catch (err) {
+                console.warn('Unable to save recent search', err);
+            }
+            return next;
+        });
+    };
 
     const handleBlur = () => {
         blurTimeoutRef.current = window.setTimeout(() => setIsDropdownOpen(false), 200);
@@ -157,8 +250,12 @@ export function IntelligentSearchBar({
     const handleSelect = (item: Suggestion) => {
         onChange(item.name);
         setIsDropdownOpen(false);
+        persistRecentSearch(item);
         onSelectSuggestion(item);
     };
+
+    const hasPrefill = recentSearches.length > 0 || trendingSuggestions.programs.length > 0 || trendingSuggestions.universities.length > 0;
+    const shouldShowDropdown = isDropdownOpen && (hasSuggestions || isLoadingSuggestions || !hasTypedQuery);
 
     return (
         <div ref={containerRef} className={cn("relative w-full", className)}>
@@ -199,57 +296,132 @@ export function IntelligentSearchBar({
                 )}
             </div>
 
-            {isDropdownOpen && (hasSuggestions || isLoadingSuggestions) && (
+            {shouldShowDropdown && (
                 <div className={cn(
                     "absolute left-0 right-0 z-50 mt-2 overflow-hidden rounded-2xl border border-border bg-card shadow-xl",
                     variant === 'default' ? "top-full" : "top-full"
                 )}>
-                    {isLoadingSuggestions ? (
-                        <p className="px-3 py-2 text-xs text-muted-foreground">Finding matches…</p>
+                    {hasTypedQuery ? (
+                        isLoadingSuggestions ? (
+                            <p className="px-3 py-2 text-xs text-muted-foreground">Finding matches…</p>
+                        ) : (
+                            <div className="max-h-72 divide-y divide-border overflow-y-auto">
+                                {suggestions.programs.length > 0 && (
+                                    <div>
+                                        <p className="px-3 pt-2 text-[10px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Programs</p>
+                                        <ul className="p-1">
+                                            {suggestions.programs.map((item) => (
+                                                <li key={`program-${item.id}`}>
+                                                    <button
+                                                        type="button"
+                                                        onMouseDown={(e) => e.preventDefault()}
+                                                        onClick={() => handleSelect(item)}
+                                                        className="flex w-full flex-col rounded-xl px-3 py-2 text-left text-sm transition hover:bg-muted"
+                                                    >
+                                                        <span className="font-semibold text-foreground">{item.name}</span>
+                                                        {item.university && (
+                                                            <span className="text-xs text-muted-foreground">{item.university}</span>
+                                                        )}
+                                                        {item.location && <span className="text-xs text-muted-foreground">{item.location}</span>}
+                                                    </button>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                )}
+                                {suggestions.universities.length > 0 && (
+                                    <div>
+                                        <p className="px-3 pt-2 text-[10px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Universities</p>
+                                        <ul className="p-1">
+                                            {suggestions.universities.map((item) => (
+                                                <li key={`university-${item.id}`}>
+                                                    <button
+                                                        type="button"
+                                                        onMouseDown={(e) => e.preventDefault()}
+                                                        onClick={() => handleSelect(item)}
+                                                        className="flex w-full flex-col rounded-xl px-3 py-2 text-left text-sm transition hover:bg-muted"
+                                                    >
+                                                        <span className="font-semibold text-foreground">{item.name}</span>
+                                                        {item.location && <span className="text-xs text-muted-foreground">{item.location}</span>}
+                                                    </button>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                )}
+                            </div>
+                        )
                     ) : (
-                        <div className="max-h-72 divide-y divide-border overflow-y-auto">
-                            {suggestions.programs.length > 0 && (
-                                <div>
-                                    <p className="px-3 pt-2 text-[10px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Programs</p>
-                                    <ul className="p-1">
-                                        {suggestions.programs.map((item) => (
-                                            <li key={`program-${item.id}`}>
-                                                <button
-                                                    type="button"
-                                                    onMouseDown={(e) => e.preventDefault()}
-                                                    onClick={() => handleSelect(item)}
-                                                    className="flex w-full flex-col rounded-xl px-3 py-2 text-left text-sm transition hover:bg-muted"
-                                                >
-                                                    <span className="font-semibold text-foreground">{item.name}</span>
-                                                    {item.university && (
-                                                        <span className="text-xs text-muted-foreground">{item.university}</span>
-                                                    )}
-                                                    {item.location && <span className="text-xs text-muted-foreground">{item.location}</span>}
-                                                </button>
-                                            </li>
-                                        ))}
-                                    </ul>
+                        <div className="space-y-2 p-3">
+                            {isLoadingPrefill ? (
+                                <p className="px-1 py-1 text-xs text-muted-foreground">Loading ideas…</p>
+                            ) : hasPrefill ? (
+                                <div className="space-y-3">
+                                    {recentSearches.length > 0 && (
+                                        <div>
+                                            <p className="px-1 text-[10px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Recent searches</p>
+                                            <ul className="mt-1 grid gap-1 md:grid-cols-2">
+                                                {recentSearches.map((item) => (
+                                                    <li key={`recent-${item.id}`}>
+                                                        <button
+                                                            type="button"
+                                                            onMouseDown={(e) => e.preventDefault()}
+                                                            onClick={() => handleSelect(item)}
+                                                            className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm transition hover:bg-muted"
+                                                        >
+                                                            <div className="flex flex-col">
+                                                                <span className="font-semibold text-foreground">{item.name}</span>
+                                                                {item.university && (
+                                                                    <span className="text-xs text-muted-foreground">{item.university}</span>
+                                                                )}
+                                                                {item.location && <span className="text-xs text-muted-foreground">{item.location}</span>}
+                                                            </div>
+                                                            <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">Recent</span>
+                                                        </button>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    )}
+                                    {(trendingSuggestions.programs.length > 0 || trendingSuggestions.universities.length > 0) && (
+                                        <div>
+                                            <p className="px-1 text-[10px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Trending</p>
+                                            <div className="grid gap-2 md:grid-cols-2">
+                                                {trendingSuggestions.programs.map((item) => (
+                                                    <button
+                                                        key={`trending-program-${item.id}`}
+                                                        type="button"
+                                                        onMouseDown={(e) => e.preventDefault()}
+                                                        onClick={() => handleSelect(item)}
+                                                        className="flex w-full flex-col rounded-xl border border-border/70 bg-muted/40 px-3 py-2 text-left text-sm transition hover:border-foreground/60 hover:bg-muted"
+                                                    >
+                                                        <span className="font-semibold text-foreground">{item.name}</span>
+                                                        {item.university && (
+                                                            <span className="text-xs text-muted-foreground">{item.university}</span>
+                                                        )}
+                                                        {item.location && <span className="text-[11px] text-muted-foreground">{item.location}</span>}
+                                                        <span className="mt-1 inline-flex w-fit rounded-full bg-background px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.25em] text-muted-foreground">Program</span>
+                                                    </button>
+                                                ))}
+                                                {trendingSuggestions.universities.map((item) => (
+                                                    <button
+                                                        key={`trending-university-${item.id}`}
+                                                        type="button"
+                                                        onMouseDown={(e) => e.preventDefault()}
+                                                        onClick={() => handleSelect(item)}
+                                                        className="flex w-full flex-col rounded-xl border border-border/70 bg-muted/40 px-3 py-2 text-left text-sm transition hover:border-foreground/60 hover:bg-muted"
+                                                    >
+                                                        <span className="font-semibold text-foreground">{item.name}</span>
+                                                        {item.location && <span className="text-[11px] text-muted-foreground">{item.location}</span>}
+                                                        <span className="mt-1 inline-flex w-fit rounded-full bg-background px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.25em] text-muted-foreground">University</span>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
-                            )}
-                            {suggestions.universities.length > 0 && (
-                                <div>
-                                    <p className="px-3 pt-2 text-[10px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Universities</p>
-                                    <ul className="p-1">
-                                        {suggestions.universities.map((item) => (
-                                            <li key={`university-${item.id}`}>
-                                                <button
-                                                    type="button"
-                                                    onMouseDown={(e) => e.preventDefault()}
-                                                    onClick={() => handleSelect(item)}
-                                                    className="flex w-full flex-col rounded-xl px-3 py-2 text-left text-sm transition hover:bg-muted"
-                                                >
-                                                    <span className="font-semibold text-foreground">{item.name}</span>
-                                                    {item.location && <span className="text-xs text-muted-foreground">{item.location}</span>}
-                                                </button>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
+                            ) : (
+                                <p className="px-1 py-1 text-xs text-muted-foreground">Start typing to search, or pick from trending results.</p>
                             )}
                         </div>
                     )}

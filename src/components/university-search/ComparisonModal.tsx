@@ -4,6 +4,7 @@ import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { ProgramSearchResult } from './types';
+import { cn } from '@/lib/utils';
 
 type MetricRow = {
     id: string;
@@ -45,7 +46,7 @@ const formatCurrencyRange = (value?: { low?: number | null; high?: number | null
     return 'N/A';
 };
 
-export function ComparisonModal({ isOpen, onClose, universities, onRemove, maxItems = 3 }: ComparisonModalProps) {
+export function ComparisonModal({ isOpen, onClose, universities, onRemove, maxItems = 5 }: ComparisonModalProps) {
     const [highlightDiffs, setHighlightDiffs] = useState(true);
     const [hideMatches, setHideMatches] = useState(false);
 
@@ -189,12 +190,38 @@ export function ComparisonModal({ isOpen, onClose, universities, onRemove, maxIt
                                         ? 'Select programs from results to compare side-by-side'
                                         : hideMatches
                                             ? `Showing only differences between ${universities.length} program${universities.length > 1 ? 's' : ''}`
-                                            : highlightDiffs
-                                                ? `Highlighting differences across ${universities.length} program${universities.length > 1 ? 's' : ''}`
-                                                : `Comparing ${universities.length} program${universities.length > 1 ? 's' : ''} side-by-side${universities.length >= maxItems ? ' · remove one to add another' : ''}`}
+                                                : highlightDiffs
+                                                    ? `Highlighting differences across ${universities.length} program${universities.length > 1 ? 's' : ''}`
+                                                    : `Comparing ${universities.length} program${universities.length > 1 ? 's' : ''} side-by-side${universities.length >= maxItems ? ' · remove one to add another' : ''}`}
                                 </p>
                             </div>
-                            <div className="flex gap-2">
+                            <div className="flex flex-wrap items-center gap-2">
+                                {!isEmpty && (
+                                    <button
+                                        onClick={() => setHighlightDiffs((v) => !v)}
+                                        role="switch"
+                                        aria-checked={highlightDiffs}
+                                        className={cn(
+                                            'flex items-center gap-2 rounded-full px-3 py-1 text-sm font-semibold transition',
+                                            highlightDiffs ? 'bg-foreground text-background shadow-sm' : 'bg-background text-foreground ring-1 ring-border'
+                                        )}
+                                    >
+                                        <span>Highlight differences</span>
+                                        <span
+                                            className={cn(
+                                                'flex h-5 w-9 items-center rounded-full px-0.5 transition',
+                                                highlightDiffs ? 'bg-background/50 justify-end text-foreground' : 'bg-muted text-muted-foreground justify-start'
+                                            )}
+                                        >
+                                            <span
+                                                className={cn(
+                                                    'h-4 w-4 rounded-full bg-current transition-transform',
+                                                    highlightDiffs ? 'translate-x-4' : 'translate-x-0'
+                                                )}
+                                            />
+                                        </span>
+                                    </button>
+                                )}
                                 <Button variant="outline" onClick={onClose}>
                                     Close
                                 </Button>
@@ -210,14 +237,13 @@ export function ComparisonModal({ isOpen, onClose, universities, onRemove, maxIt
                                 </div>
                                 <div className="flex flex-wrap items-center gap-2 text-sm font-medium">
                                     <button
-                                        onClick={() => setHighlightDiffs((v) => !v)}
-                                        className={`rounded-full px-3 py-1 transition ${highlightDiffs ? 'bg-foreground text-background' : 'bg-background text-foreground ring-1 ring-border'}`}
-                                    >
-                                        {highlightDiffs ? 'Diffs on' : 'Highlight differences'}
-                                    </button>
-                                    <button
                                         onClick={() => setHideMatches((v) => !v)}
-                                        className={`rounded-full px-3 py-1 transition ${hideMatches ? 'bg-foreground text-background' : 'bg-background text-foreground ring-1 ring-border'}`}
+                                        className={cn(
+                                            'rounded-full px-3 py-1 transition',
+                                            hideMatches ? 'bg-foreground text-background shadow-sm' : 'bg-background text-foreground ring-1 ring-border'
+                                        )}
+                                        role="switch"
+                                        aria-checked={hideMatches}
                                     >
                                         {hideMatches ? 'Showing only differences' : 'Hide matching rows'}
                                     </button>

@@ -1,14 +1,16 @@
-const SkeletonCard = () => (
-  <div className="h-48 animate-pulse rounded-[24px] border border-border bg-muted/60" />
-);
+import { UniversityCardSkeleton } from '@/components/university-card-skeleton';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function MatchesLoading() {
   return (
     <div className="space-y-6 p-4">
-      <div className="h-8 w-48 rounded-full bg-muted" />
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <div className="flex flex-col gap-2">
+        <Skeleton className="h-8 w-48" />
+        <Skeleton className="h-4 w-40" />
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {[1, 2, 3, 4, 5, 6].map((item) => (
-          <SkeletonCard key={item} />
+          <UniversityCardSkeleton key={item} />
         ))}
       </div>
     </div>

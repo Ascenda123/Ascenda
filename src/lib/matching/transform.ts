@@ -8,6 +8,24 @@ import type {
   StudentPreferences,
   University
 } from './engine';
+import type { Database } from '../types/database';
+
+type ProgramRowInput = Database['public']['Tables']['programs']['Row'] & {
+  name?: string | null;
+  level?: string | null;
+  duration_years?: number | null;
+  intake_months?: string[] | null;
+  tuition?: number | null;
+  currency?: string | null;
+  url?: string | null;
+  metadata?: Record<string, unknown> | null;
+};
+
+type UniversityRowInput = Database['public']['Tables']['universities']['Row'];
+type RequirementRowInput = Database['public']['Tables']['program_requirements']['Row'];
+type AcademicsRowInput = Database['public']['Tables']['student_academics']['Row'];
+type PreferencesRowInput = Database['public']['Tables']['student_preferences']['Row'];
+type AspirationsRowInput = Database['public']['Tables']['student_aspirations']['Row'];
 
 const ProgramRowSchema = z.object({
   id: z.string(),
@@ -28,7 +46,7 @@ const ProgramRowSchema = z.object({
   provider_course_url: z.string().nullable().optional(),
   url: z.string().nullable().optional(),
   university_id: z.string(),
-  metadata: z.record(z.any()).nullable().optional()
+  metadata: z.record(z.unknown()).nullable().optional()
 });
 
 const UniversityRowSchema = z.object({
@@ -40,7 +58,7 @@ const UniversityRowSchema = z.object({
   rank_source: z.string().nullable().optional(),
   acceptance_rate: z.coerce.number().nullable().optional(),
   requires_test: z.boolean().nullable().optional(),
-  metadata: z.record(z.any()).nullable().optional()
+  metadata: z.record(z.unknown()).nullable().optional()
 });
 
 const RequirementRowSchema = z.object({
@@ -88,7 +106,7 @@ const AspirationsRowSchema = z.object({
   job_titles: z.array(z.string()).nullable().optional()
 });
 
-export const mapProgramRow = (input: unknown): Program => {
+export const mapProgramRow = (input: ProgramRowInput): Program => {
   const row = ProgramRowSchema.parse(input);
   const programName = row.course_name ?? row.name ?? 'Program';
   const level = row.study_level ?? row.level ?? null;
@@ -113,7 +131,7 @@ export const mapProgramRow = (input: unknown): Program => {
   };
 };
 
-export const mapUniversityRow = (input: unknown): University => {
+export const mapUniversityRow = (input: UniversityRowInput): University => {
   const row = UniversityRowSchema.parse(input);
   return {
     id: row.id,
@@ -127,7 +145,7 @@ export const mapUniversityRow = (input: unknown): University => {
   };
 };
 
-export const mapRequirementRow = (input: unknown): ProgramRequirement => {
+export const mapRequirementRow = (input: RequirementRowInput): ProgramRequirement => {
   const row = RequirementRowSchema.parse(input);
   return {
     programId: row.program_id,
@@ -142,7 +160,7 @@ export const mapRequirementRow = (input: unknown): ProgramRequirement => {
   };
 };
 
-export const mapAcademicsRow = (input: unknown): StudentAcademics => {
+export const mapAcademicsRow = (input: AcademicsRowInput): StudentAcademics => {
   const row = AcademicsRowSchema.parse(input);
   return {
     curriculum: row.curriculum,
@@ -156,7 +174,7 @@ export const mapAcademicsRow = (input: unknown): StudentAcademics => {
   };
 };
 
-export const mapPreferencesRow = (input: unknown): StudentPreferences => {
+export const mapPreferencesRow = (input: PreferencesRowInput): StudentPreferences => {
   const row = PreferencesRowSchema.parse(input);
   return {
     budgetMin: row.budget_min,
@@ -172,7 +190,7 @@ export const mapPreferencesRow = (input: unknown): StudentPreferences => {
   };
 };
 
-export const mapAspirationsRow = (input: unknown): StudentAspirations => {
+export const mapAspirationsRow = (input: AspirationsRowInput): StudentAspirations => {
   const row = AspirationsRowSchema.parse(input);
   return {
     targetFields: row.target_fields,
