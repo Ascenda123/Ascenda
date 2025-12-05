@@ -550,6 +550,66 @@ export type Database = {
           },
         ]
       }
+      shortlisted_programs: {
+        Row: {
+          created_at: string
+          due_date: string | null
+          fit_score: number | null
+          id: string
+          location: string | null
+          metadata: Json | null
+          next_action: string | null
+          profile_id: string
+          program_id: string
+          program_name: string | null
+          stage: string | null
+          university_name: string | null
+        }
+        Insert: {
+          created_at?: string
+          due_date?: string | null
+          fit_score?: number | null
+          id?: string
+          location?: string | null
+          metadata?: Json | null
+          next_action?: string | null
+          profile_id: string
+          program_id: string
+          program_name?: string | null
+          stage?: string | null
+          university_name?: string | null
+        }
+        Update: {
+          created_at?: string
+          due_date?: string | null
+          fit_score?: number | null
+          id?: string
+          location?: string | null
+          metadata?: Json | null
+          next_action?: string | null
+          profile_id?: string
+          program_id?: string
+          program_name?: string | null
+          stage?: string | null
+          university_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shortlisted_programs_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shortlisted_programs_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       student_preferences: {
         Row: {
           aid_needed: boolean | null

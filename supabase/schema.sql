@@ -186,12 +186,30 @@ create table if not exists documents (
   uploaded_at timestamptz not null default timezone('utc', now())
 );
 
+-- Shortlisted programs
+create table if not exists shortlisted_programs (
+  id uuid primary key default gen_random_uuid(),
+  profile_id uuid not null references profiles(id) on delete cascade,
+  program_id uuid not null references programs(id) on delete cascade,
+  program_name text,
+  university_name text,
+  location text,
+  stage text,
+  fit_score numeric,
+  next_action text,
+  due_date text,
+  metadata jsonb default '{}'::jsonb,
+  created_at timestamptz not null default timezone('utc', now()),
+  unique(profile_id, program_id)
+);
+
 -- Indexes
 create index if not exists idx_programs_field on programs(field);
 create index if not exists idx_deadlines_date on deadlines(deadline_date);
 create index if not exists idx_student_matches_profile_score on student_matches(profile_id, score desc);
 create index if not exists idx_applications_profile on applications(profile_id);
 create index if not exists idx_documents_application on documents(application_id);
+create index if not exists idx_shortlisted_profile on shortlisted_programs(profile_id);
 
 -- Row Level Security
 alter table profiles enable row level security;
@@ -208,6 +226,7 @@ alter table applications enable row level security;
 alter table application_checklist enable row level security;
 alter table documents enable row level security;
 alter table sources enable row level security;
+alter table shortlisted_programs enable row level security;
 
 -- Helper function for role
 create or replace function auth_role() returns text as $$
@@ -292,6 +311,22 @@ create policy matches_self_write on student_matches
 create policy matches_self_update on student_matches
   for update using (auth.uid() = profile_id) with check (auth.uid() = profile_id);
 create policy matches_admin on student_matches using (auth_role() = 'admin');
+
+-- Shortlist policies
+drop policy if exists shortlist_self on shortlisted_programs;
+drop policy if exists shortlist_self_update on shortlisted_programs;
+drop policy if exists shortlist_self_insert on shortlisted_programs;
+drop policy if exists shortlist_self_delete on shortlisted_programs;
+drop policy if exists shortlist_admin on shortlisted_programs;
+create policy shortlist_self on shortlisted_programs
+  for select using (auth.uid() = profile_id);
+create policy shortlist_self_update on shortlisted_programs
+  for update using (auth.uid() = profile_id) with check (auth.uid() = profile_id);
+create policy shortlist_self_insert on shortlisted_programs
+  for insert with check (auth.uid() = profile_id);
+create policy shortlist_self_delete on shortlisted_programs
+  for delete using (auth.uid() = profile_id);
+create policy shortlist_admin on shortlisted_programs using (auth_role() = 'admin');
 
 -- Applications policies
 drop policy if exists applications_self on applications;

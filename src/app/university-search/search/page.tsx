@@ -6,8 +6,9 @@ import { AnimatedBlobBanner } from '@/components/animated-blob-banner';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { IntelligentSearchBar, Suggestion } from '@/components/university-search/IntelligentSearchBar';
+import { getBrowserSupabaseClient } from '@/lib/supabase/client';
 
-const filterGroups = [
+const DEFAULT_FILTER_GROUPS = [
   {
     title: 'Country',
     description: 'Where do you picture yourself living?',
@@ -32,8 +33,68 @@ const filterGroups = [
 
 export default function UniversitySearchPage() {
   const router = useRouter();
+  const [filterGroups, setFilterGroups] = useState(DEFAULT_FILTER_GROUPS);
   const [selectedFilters, setSelectedFilters] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState('');
+
+  useEffect(() => {
+    const uniqueSorted = (values: (string | null | undefined)[], limit = 12) =>
+      Array.from(new Set(values.filter((value): value is string => Boolean(value && value.trim()))))
+        .sort((a, b) => a.localeCompare(b))
+        .slice(0, limit);
+
+    const loadFilters = async () => {
+      try {
+        const supabase = getBrowserSupabaseClient();
+        const [{ data: universityData, error: universityError }, { data: programData, error: programError }] = await Promise.all([
+          supabase.from('universities').select('country,region,city'),
+          supabase.from('programs').select('field,study_level,level,mode')
+        ]);
+
+        if (universityError || programError) {
+          console.warn('Using fallback filters due to Supabase error', universityError ?? programError);
+          return;
+        }
+
+        const countries = uniqueSorted((universityData ?? []).map((uni: any) => uni.country));
+        const lifestyle = uniqueSorted(
+          (universityData ?? []).flatMap((uni: any) => [uni.region, uni.city])
+        );
+        const subjects = uniqueSorted(
+          (programData ?? []).flatMap((program: any) => [program.field, program.study_level, program.level])
+        );
+        const fitFocus = uniqueSorted(
+          (programData ?? [])
+            .map((program: any) => program.mode)
+            .filter(Boolean),
+          8
+        );
+
+        setFilterGroups([
+          {
+            ...DEFAULT_FILTER_GROUPS[0],
+            options: countries.length ? countries : DEFAULT_FILTER_GROUPS[0].options
+          },
+          {
+            ...DEFAULT_FILTER_GROUPS[1],
+            options: subjects.length ? subjects : DEFAULT_FILTER_GROUPS[1].options
+          },
+          {
+            ...DEFAULT_FILTER_GROUPS[2],
+            options: fitFocus.length ? fitFocus : DEFAULT_FILTER_GROUPS[2].options
+          },
+          {
+            ...DEFAULT_FILTER_GROUPS[3],
+            options: lifestyle.length ? lifestyle : DEFAULT_FILTER_GROUPS[3].options
+          }
+        ]);
+      } catch (err) {
+        console.warn('Using fallback filters due to unexpected error', err);
+      }
+    };
+
+    void loadFilters();
+  }, []);
 
   const toggleFilter = (option: string) => {
     const next = new Set(selectedFilters);

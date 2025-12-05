@@ -12,17 +12,23 @@ import { cn } from '@/lib/utils';
 import { getBrowserSupabaseClient } from '@/lib/supabase/client';
 import { ProgramSearchResult, tierFromScore } from '@/components/university-search/types';
 import { Suggestion } from '@/components/university-search/IntelligentSearchBar';
+import { filterVisiblePrograms } from '@/lib/catalog/visibility';
 
 import { Breadcrumbs } from '@/components/ui/breadcrumbs';
-
-const DEMO_PROGRAM_IDS = new Set(['44444444-4444-4444-4444-444444444444']);
 
 type ProgramRow = {
   id: string;
   course_name: string;
+  name?: string | null;
   study_level?: string | null;
+  level?: string | null;
   duration?: string | null;
+  duration_years?: number | null;
   start_date?: string | null;
+  intake_months?: string[] | null;
+  tuition?: number | null;
+  currency?: string | null;
+  metadata?: Record<string, unknown> | null;
   universities?: {
     name?: string | null;
     country?: string | null;
@@ -70,11 +76,7 @@ export default function UniversitySearchResultsPage() {
           .from('programs')
           .select(
             `
-            id,
-            course_name,
-            study_level,
-            duration,
-            start_date,
+            *,
             universities!inner (
               id,
               name,
@@ -137,30 +139,35 @@ export default function UniversitySearchResultsPage() {
           }
         }
 
+        const visiblePrograms = filterVisiblePrograms(data ?? []);
+
         const mapped =
-          data
-            ?.filter((program: ProgramRow) => !DEMO_PROGRAM_IDS.has(program.id))
-            .map((program: ProgramRow) => {
-              const uni = program.universities;
-              const location = [uni?.city, uni?.region, uni?.country].filter(Boolean).join(', ');
-              const score = matchScores[program.id];
-              const tier = tierFromScore(score);
-              return {
-                id: program.id,
-                universityId: (uni as any)?.id,
-                universityName: uni?.name ?? 'University',
-                programName: program.course_name,
-                location: location || 'Location unavailable',
-                fitScore: score ?? null,
-                tier: tier ?? null,
-                highlights: [program.study_level, program.duration].filter(Boolean) as string[],
-                acceptanceRate: uni?.acceptance_rate ?? null,
-                duration: program.duration ?? null,
-                intlTuitionLow: uni?.intl_tuition_low ?? null,
-                intlTuitionHigh: uni?.intl_tuition_high ?? null,
-                requiresTest: uni?.requires_test ?? null
-              };
-            }) ?? [];
+          visiblePrograms.map((program: ProgramRow) => {
+            const uni = program.universities;
+            const location = [uni?.city, uni?.region, uni?.country].filter(Boolean).join(', ');
+            const score = matchScores[program.id];
+            const tier = tierFromScore(score);
+            const programName = program.course_name ?? program.name ?? 'Program';
+            const level = program.study_level ?? program.level ?? null;
+            const duration = program.duration ?? (program.duration_years ? `${program.duration_years} years` : null);
+            return {
+              id: program.id,
+              universityId: (uni as any)?.id,
+              universityName: uni?.name ?? 'University',
+              programName,
+              location: location || 'Location unavailable',
+              fitScore: score ?? null,
+              tier: tier ?? null,
+              highlights: [level, duration].filter(Boolean) as string[],
+              acceptanceRate: uni?.acceptance_rate ?? null,
+              duration: duration ?? null,
+              intlTuitionLow: uni?.intl_tuition_low ?? null,
+              intlTuitionHigh: uni?.intl_tuition_high ?? null,
+              requiresTest: uni?.requires_test ?? null,
+              tuition: program.tuition ?? null,
+              currency: program.currency ?? uni?.currency ?? null
+            };
+          }) ?? [];
 
         setResults(mapped);
 
@@ -177,8 +184,13 @@ export default function UniversitySearchResultsPage() {
         }
 
       } catch (fetchError) {
-        const message = fetchError instanceof Error ? fetchError.message : 'Unable to load results';
-        setError(message);
+        const message =
+          fetchError instanceof Error
+            ? fetchError.message
+            : typeof fetchError === 'object' && fetchError !== null && 'message' in fetchError
+              ? String((fetchError as { message?: unknown }).message)
+              : 'Unable to load results';
+        setError(message || 'Unable to load results');
       } finally {
         setIsLoading(false);
       }

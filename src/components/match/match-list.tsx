@@ -7,37 +7,7 @@ import type { MatchTier } from '@/lib/matching/engine';
 import { cn } from '@/lib/utils';
 import { useShortlist } from '@/components/university-search/shortlist-store';
 import { Grid, LayoutList } from 'lucide-react';
-
-export interface EnrichedMatch {
-  program: {
-    id: string;
-    name: string;
-    field?: string | null;
-    level?: string | null;
-    language?: string | null;
-    mode?: string | null;
-    tuition?: number | null;
-    currency?: string | null;
-    url?: string | null;
-  };
-  university: {
-    id: string;
-    name: string;
-    country: string;
-    rank_overall?: number | null;
-    rank_source?: string | null;
-    requiresTest?: boolean | null;
-  };
-  score: number;
-  breakdown: {
-    eligibility: number;
-    academicFit: number;
-    preferenceFit: number;
-    outcomes: number;
-  };
-  blockingReasons: string[];
-  tier: MatchTier;
-}
+import type { EnrichedMatch } from '@/lib/matching/types';
 
 interface MatchListProps {
   matches: EnrichedMatch[];

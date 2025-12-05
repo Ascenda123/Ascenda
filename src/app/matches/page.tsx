@@ -3,22 +3,13 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { DashboardShell } from '@/components/layout/shell';
-import { rankMatches, type MatchInput, type Program, type University, type ProgramRequirement } from '@/lib/matching/engine';
 import { MatchList } from '@/components/match/match-list';
 import { PageHero } from '@/components/layout/page-hero';
 import { Button } from '@/components/ui/button';
 import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import { SectionNav } from '@/components/layout/section-nav';
 import { EXPLORE_SECTION_ITEMS } from '@/components/layout/navigation';
-import {
-  buildMatchInput,
-  mapAcademicsRow,
-  mapAspirationsRow,
-  mapPreferencesRow,
-  mapProgramRow,
-  mapRequirementRow,
-  mapUniversityRow
-} from '@/lib/matching/transform';
+import { loadMatchesForProfile } from '@/lib/matching/service';
 
 export const metadata: Metadata = {
   title: 'Match suggestions | Ascenda'
@@ -34,13 +25,9 @@ export default async function MatchesPage() {
     redirect('/login');
   }
 
-  const [{ data: academicsData }, { data: preferencesData }, { data: aspirationsData }] = await Promise.all([
-    supabase.from('student_academics').select('*').eq('profile_id', user.id).single(),
-    supabase.from('student_preferences').select('*').eq('profile_id', user.id).single(),
-    supabase.from('student_aspirations').select('*').eq('profile_id', user.id).single()
-  ]);
+  const matchResult = await loadMatchesForProfile(supabase, user.id);
 
-  if (!academicsData || !preferencesData || !aspirationsData) {
+  if (matchResult.missingSections.length > 0) {
     return (
       <DashboardShell>
         <SectionNav items={EXPLORE_SECTION_ITEMS} />
@@ -63,18 +50,7 @@ export default async function MatchesPage() {
     );
   }
 
-  const [{ data: programsData }, { data: universitiesData }, { data: requirementsData }] = await Promise.all([
-    supabase.from('programs').select('*'),
-    supabase.from('universities').select('*'),
-    supabase.from('program_requirements').select('*')
-  ]);
-
-  const DEMO_PROGRAM_IDS = new Set(['44444444-4444-4444-4444-444444444444']);
-  const programsRaw = (programsData ?? []).filter((program: any) => !DEMO_PROGRAM_IDS.has(program.id));
-  const universitiesRaw = universitiesData ?? [];
-  const requirementsRaw = requirementsData ?? [];
-
-  if (programsRaw.length === 0 || universitiesRaw.length === 0) {
+  if (matchResult.catalogSize.programs === 0 || matchResult.catalogSize.universities === 0) {
     return (
       <DashboardShell>
         <div className="rounded-[28px] border border-dashed border-border bg-muted/60 p-8 text-center text-muted-foreground">
@@ -84,53 +60,10 @@ export default async function MatchesPage() {
     );
   }
 
-  // Transform catalog data to camelCase
-  const programs: Program[] = programsRaw.map(mapProgramRow);
-  const universities: University[] = universitiesRaw.map(mapUniversityRow);
-  const requirements: ProgramRequirement[] = requirementsRaw.map(mapRequirementRow);
-
-  const requirementMap = new Map(requirements.map((item) => [item.programId, item]));
-  const universityMap = new Map(universities.map((item) => [item.id, item]));
-
-  // Transform user profile data to camelCase
-  const academics = mapAcademicsRow(academicsData);
-  const preferences = mapPreferencesRow(preferencesData);
-  const aspirations = mapAspirationsRow(aspirationsData);
-
-  const inputs = programs
-    .map((program) => {
-      const university = universityMap.get(program.universityId);
-      if (!university) return null;
-      return buildMatchInput({
-        academics,
-        preferences,
-        aspirations,
-        program,
-        university,
-        requirement: requirementMap.get(program.id)
-      });
-    })
-    .filter((value): value is MatchInput => value !== null);
-
-  const results = rankMatches(inputs);
-  const enriched = results.map((result) => {
-    const program = programs.find((item) => item.id === result.programId)!;
-    const university = universityMap.get(result.universityId)!;
-    return {
-      program,
-      university: {
-        ...university,
-        requiresTest: university.requiresTest
-      },
-      score: result.score,
-      breakdown: result.breakdown,
-      blockingReasons: result.blockingReasons,
-      tier: result.tier
-    };
-  });
+  const enriched = matchResult.matches;
 
   const heroStats = [
-    { label: 'Programs', value: `${programs.length}`, detail: 'in catalog' },
+    { label: 'Programs', value: `${matchResult.catalogSize.programs}`, detail: 'in catalog' },
     { label: 'Live matches', value: `${enriched.length}`, detail: 'Ranked for you' },
     { label: 'Top fit', value: enriched[0] ? `${enriched[0].score}%` : '—', detail: 'Highest score' }
   ];

@@ -6,16 +6,8 @@ import { DashboardShell } from '@/components/layout/shell';
 import { DeadlineTimeline } from '@/components/dashboard/deadline-timeline';
 import { MatchList } from '@/components/match/match-list';
 import type { EnrichedMatch } from '@/components/match/match-list';
-import { rankMatches, type MatchInput, type Program, type University, type ProgramRequirement } from '@/lib/matching/engine';
-import {
-  buildMatchInput,
-  mapAcademicsRow,
-  mapAspirationsRow,
-  mapPreferencesRow,
-  mapProgramRow,
-  mapRequirementRow,
-  mapUniversityRow
-} from '@/lib/matching/transform';
+import { loadMatchesForProfile } from '@/lib/matching/service';
+import type { EnrichedMatch } from '@/lib/matching/types';
 import { DashboardOverview } from '@/components/dashboard/overview';
 import { PageHero } from '@/components/layout/page-hero';
 import { Button } from '@/components/ui/button';
@@ -60,94 +52,36 @@ export default async function DashboardPage() {
   const applicationIds = (applications ?? []).map((app: any) => app.id);
   const applicationProgramIds = (applications ?? []).map((app: any) => app.program_id);
 
-  const [
-    checklistResponse,
-    deadlinesResponse,
-    academicsResponse,
-    preferencesResponse,
-    aspirationsResponse,
-    programsResponse,
-    universitiesResponse,
-    requirementsResponse
-  ] = await Promise.all([
-    applicationIds.length
-      ? supabase.from('application_checklist').select('*').in('application_id', applicationIds).order('due_date', { ascending: true }).limit(5)
-      : Promise.resolve({ data: [] }),
-    applicationProgramIds.length
-      ? supabase
-        .from('deadlines')
-        .select('*')
-        .in('program_id', applicationProgramIds)
-        .gte('deadline_date', today)
-        .order('deadline_date', { ascending: true })
-        .limit(5)
-      : Promise.resolve({ data: [] }),
-    supabase.from('student_academics').select('*').eq('profile_id', user.id).single(),
-    supabase.from('student_preferences').select('*').eq('profile_id', user.id).single(),
-    supabase.from('student_aspirations').select('*').eq('profile_id', user.id).single(),
-    supabase.from('programs').select('*').limit(10),
-    supabase.from('universities').select('*'),
-    supabase.from('program_requirements').select('*')
+  const checklistPromise = applicationIds.length
+    ? supabase
+      .from('application_checklist')
+      .select('*')
+      .in('application_id', applicationIds)
+      .order('due_date', { ascending: true })
+      .limit(5)
+    : Promise.resolve({ data: [] });
+
+  const deadlinesPromise = applicationProgramIds.length
+    ? supabase
+      .from('deadlines')
+      .select('*')
+      .in('program_id', applicationProgramIds)
+      .gte('deadline_date', today)
+      .order('deadline_date', { ascending: true })
+      .limit(5)
+    : Promise.resolve({ data: [] });
+
+  const [checklistResponse, deadlinesResponse, matchResult] = await Promise.all([
+    checklistPromise,
+    deadlinesPromise,
+    loadMatchesForProfile(supabase, user.id, { programLimit: 10, resultLimit: 3 })
   ]);
 
   const checklist = (checklistResponse.data ?? []) as ChecklistRow[];
   const deadlines = (deadlinesResponse.data ?? []) as DeadlineRow[];
-  const academicsData = academicsResponse.data;
-  const preferencesData = preferencesResponse.data;
-  const aspirationsData = aspirationsResponse.data;
-  const profileSectionsComplete = [academicsData, preferencesData, aspirationsData].filter(Boolean).length;
+  const profileSectionsComplete = 3 - matchResult.missingSections.length;
   const profileCompletionPercent = Math.round((profileSectionsComplete / 3) * 100);
-
-  const programsRaw = programsResponse.data ?? [];
-  const universitiesRaw = universitiesResponse.data ?? [];
-  const requirementsRaw = requirementsResponse.data ?? [];
-
-  const programs: Program[] = programsRaw.map(mapProgramRow);
-  const universities: University[] = universitiesRaw.map(mapUniversityRow);
-  const requirements: ProgramRequirement[] = requirementsRaw.map(mapRequirementRow);
-
-  let matches: EnrichedMatch[] = [];
-
-  if (academicsData && preferencesData && aspirationsData && programs.length > 0 && universities.length > 0) {
-    const requirementMap = new Map(requirements.map((item) => [item.programId, item]));
-    const universityMap = new Map(universities.map((item) => [item.id, item]));
-
-    // Transform user profile data
-    const academics = mapAcademicsRow(academicsData);
-    const preferences = mapPreferencesRow(preferencesData);
-    const aspirations = mapAspirationsRow(aspirationsData);
-
-    const inputs = programs
-      .map((program) => {
-        const university = universityMap.get(program.universityId);
-        if (!university) return null;
-
-        return buildMatchInput({
-          academics,
-          preferences,
-          aspirations,
-          program,
-          university,
-          requirement: requirementMap.get(program.id)
-        });
-      })
-      .filter((item): item is MatchInput => item !== null);
-
-    matches = rankMatches(inputs)
-      .slice(0, 3)
-      .map((result) => {
-        const program = programs.find((item) => item.id === result.programId)!;
-        const university = universityMap.get(result.universityId)!;
-        return {
-          program,
-          university: { ...university, requiresTest: university.requiresTest },
-          score: result.score,
-          breakdown: result.breakdown,
-          blockingReasons: result.blockingReasons,
-          tier: result.tier
-        };
-      });
-  }
+  const matches: EnrichedMatch[] = matchResult.matches;
 
   const completedTasks = checklist.filter((task) => task.status === 'done').length;
   const heroHighlight = matches.length ? 'Matches refreshed' : 'Complete your profile';

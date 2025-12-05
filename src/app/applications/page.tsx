@@ -30,27 +30,39 @@ export default async function ApplicationsPage() {
     redirect('/login');
   }
 
-  const [{ data: applications }] = await Promise.all([
-    supabase
-      .from('applications')
-      .select('*, program:programs(*, universities(*))')
-      .eq('profile_id', user.id)
-  ]);
-
-  const appIds = (applications ?? []).map((app: any) => app.id);
-  const programIds = (applications ?? []).map((app: any) => app.program_id);
-
-  const { data: checklists } = appIds.length
-    ? await supabase.from('application_checklist').select('*').in('application_id', appIds)
-    : { data: [] };
-
-  const { data: deadlines } = programIds.length
-    ? await supabase
-      .from('deadlines')
-      .select('*')
-      .in('program_id', programIds)
-      .order('deadline_date', { ascending: true })
-    : { data: [] };
+  const { data: applications } = await supabase
+    .from('applications')
+    .select(`
+      id,
+      status,
+      notes,
+      program_id,
+      program:programs(
+        id,
+        name,
+        field,
+        level,
+        universities(name,country),
+        deadlines(
+          id,
+          name,
+          deadline_date,
+          intake,
+          type,
+          program_id
+        )
+      ),
+      application_checklist(
+        id,
+        task_name,
+        status,
+        due_date,
+        category,
+        owner,
+        application_id
+      )
+    `)
+    .eq('profile_id', user.id);
 
   type ApplicationRecord = {
     id: string;
@@ -58,7 +70,15 @@ export default async function ApplicationsPage() {
     notes?: string | null;
     priority_score?: number | null;
     program_id: string;
-    program?: { name?: string | null; discipline?: string | null; universities?: { name?: string | null } | null } | null;
+    program?: {
+      id: string;
+      name?: string | null;
+      field?: string | null;
+      level?: string | null;
+      universities?: { name?: string | null; country?: string | null } | null;
+      deadlines?: DeadlineRecord[] | null;
+    } | null;
+    application_checklist?: ChecklistRecord[] | null;
   };
 
   type ChecklistRecord = {
@@ -81,8 +101,13 @@ export default async function ApplicationsPage() {
   };
 
   const appRecords = ((applications ?? []) as ApplicationRecord[]) ?? [];
-  const checklistRecords = ((checklists ?? []) as ChecklistRecord[]) ?? [];
-  const deadlineRecords = ((deadlines ?? []) as DeadlineRecord[]) ?? [];
+  const checklistRecords = appRecords.flatMap((app) => app.application_checklist ?? []);
+  const deadlineRecords = appRecords.flatMap((app) => app.program?.deadlines ?? []);
+  deadlineRecords.sort((a, b) => {
+    const first = a.deadline_date ? new Date(a.deadline_date).getTime() : Number.POSITIVE_INFINITY;
+    const second = b.deadline_date ? new Date(b.deadline_date).getTime() : Number.POSITIVE_INFINITY;
+    return first - second;
+  });
 
   const parsePriorityScore = (score?: number | string | null) => {
     if (typeof score === 'number') return score;
@@ -205,7 +230,7 @@ export default async function ApplicationsPage() {
     interviews: plannerEvents.filter((event) => event.category === 'interview' && isSameDay(event.date)).length
   };
 
-  const disciplineFocus = appRecords[0]?.program?.discipline ?? 'university';
+  const disciplineFocus = appRecords[0]?.program?.field ?? 'university';
   const resourceHighlights = [
     {
       id: 'essay-template',
