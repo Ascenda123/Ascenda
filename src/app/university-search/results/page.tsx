@@ -25,6 +25,7 @@ type ProgramRow = {
   id: string;
   course_name: string;
   name?: string | null;
+  metadata?: Record<string, unknown> | null;
   study_level?: string | null;
   level?: string | null;
   duration?: string | null;
@@ -33,7 +34,6 @@ type ProgramRow = {
   intake_months?: string[] | null;
   tuition?: number | null;
   currency?: string | null;
-  metadata?: Record<string, unknown> | null;
   universities?: {
     id?: string | null;
     name?: string | null;
@@ -46,6 +46,11 @@ type ProgramRow = {
     intl_tuition_high?: number | null;
     currency?: string | null;
   } | null;
+};
+
+type FilterOption = {
+  programName: string;
+  universityName: string;
 };
 
 export default function UniversitySearchResultsPage() {
@@ -66,6 +71,8 @@ export default function UniversitySearchResultsPage() {
   const [isComparisonOpen, setIsComparisonOpen] = useState(false);
   const [selectedUniversities, setSelectedUniversities] = useState<string[]>([]);
   const [selectedPrograms, setSelectedPrograms] = useState<string[]>([]);
+  const [filterOptions, setFilterOptions] = useState<FilterOption[]>([]);
+  const [areFiltersLoading, setAreFiltersLoading] = useState(true);
   const [results, setResults] = useState<ProgramSearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -78,6 +85,89 @@ export default function UniversitySearchResultsPage() {
     setPage(0);
     setHasMore(true);
   }, [programId, universityId]);
+
+  // Load available filter options directly from Supabase
+  useEffect(() => {
+    let isActive = true;
+
+    const fetchFilters = async () => {
+      try {
+        const supabase = getBrowserSupabaseClient();
+        const pageSize = 1000;
+        let pageIndex = 0;
+        const allPrograms: ProgramRow[] = [];
+
+        // Fetch all programs in batches to ensure the dropdowns see the whole catalog
+        // even when Supabase applies a default limit.
+        // eslint-disable-next-line no-constant-condition
+        while (true) {
+          const from = pageIndex * pageSize;
+          const to = from + pageSize - 1;
+          const { data, error: supabaseError } = await supabase
+            .from('programs')
+            .select(
+              `
+              id,
+              course_name,
+              name,
+              metadata,
+              universities!inner (
+                name
+              )
+            `
+            )
+            .range(from, to);
+
+          if (supabaseError) throw supabaseError;
+          const batch = data ?? [];
+          allPrograms.push(...batch);
+          if (batch.length < pageSize) break;
+          pageIndex += 1;
+        }
+
+        if (!isActive) return;
+
+        const visiblePrograms = filterVisiblePrograms(allPrograms);
+        const mapped: FilterOption[] = visiblePrograms
+          .map((program) => {
+            const universityName = program.universities?.name;
+            const programName = program.course_name ?? program.name;
+            if (!universityName || !programName) return null;
+            return { universityName, programName };
+          })
+          .filter((item): item is FilterOption => Boolean(item));
+
+        const deduped = Array.from(
+          new Map(mapped.map((item) => [`${item.universityName}-${item.programName}`, item])).values()
+        );
+
+        setFilterOptions(deduped);
+      } catch (filtersError) {
+        console.error('Failed to load filter options', filtersError);
+      } finally {
+        if (isActive) {
+          setAreFiltersLoading(false);
+        }
+      }
+    };
+
+    fetchFilters();
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  // Fallback: if filter options failed to load, derive from loaded results
+  useEffect(() => {
+    if (!areFiltersLoading && filterOptions.length === 0 && results.length > 0) {
+      const derived = results.map((result) => ({
+        programName: result.programName,
+        universityName: result.universityName
+      }));
+      setFilterOptions(derived);
+    }
+  }, [areFiltersLoading, filterOptions.length, results]);
   // Load catalog results from Supabase
   useEffect(() => {
     const fetchResults = async () => {
@@ -243,26 +333,26 @@ export default function UniversitySearchResultsPage() {
   const availableUniversities = useMemo(() => {
     const source =
       selectedPrograms.length > 0
-        ? results.filter((result) => selectedPrograms.includes(result.programName))
-        : results;
+        ? filterOptions.filter((option) => selectedPrograms.includes(option.programName))
+        : filterOptions;
 
     const names = new Set<string>();
-    source.forEach((result) => names.add(result.universityName));
+    source.forEach((option) => names.add(option.universityName));
     selectedUniversities.forEach((name) => names.add(name));
     return Array.from(names).sort((a, b) => a.localeCompare(b));
-  }, [results, selectedPrograms, selectedUniversities]);
+  }, [filterOptions, selectedPrograms, selectedUniversities]);
 
   const availablePrograms = useMemo(() => {
     const source =
       selectedUniversities.length > 0
-        ? results.filter((result) => selectedUniversities.includes(result.universityName))
-        : results;
+        ? filterOptions.filter((option) => selectedUniversities.includes(option.universityName))
+        : filterOptions;
 
     const programs = new Set<string>();
-    source.forEach((result) => programs.add(result.programName));
+    source.forEach((option) => programs.add(option.programName));
     selectedPrograms.forEach((program) => programs.add(program));
     return Array.from(programs).sort((a, b) => a.localeCompare(b));
-  }, [results, selectedPrograms, selectedUniversities]);
+  }, [filterOptions, selectedPrograms, selectedUniversities]);
 
   const filteredResults = useMemo(() => {
     const normalizedQuery = searchQuery.toLowerCase();
