@@ -74,8 +74,9 @@ export default function UniversitySearchResultsPage() {
   const [filterOptions, setFilterOptions] = useState<FilterOption[]>([]);
   const [areFiltersLoading, setAreFiltersLoading] = useState(true);
   // Store all unique universities directly from the DB to ensure the filter list is complete
-  const [allUniversities, setAllUniversities] = useState<string[]>([]);
+  const [allUniversities, setAllUniversities] = useState<{ id: string; name: string }[]>([]);
   const [results, setResults] = useState<ProgramSearchResult[]>([]);
+  const [resultCount, setResultCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -97,15 +98,15 @@ export default function UniversitySearchResultsPage() {
         const supabase = getBrowserSupabaseClient();
 
         // 1. Fetch Universities separately (FAST & COMPLETE)
-        // This guarantees the University dropdown has every single university
+        // We get all distinct simplified university names AND IDs
         const { data: uniData, error: uniError } = await supabase
           .from('universities')
-          .select('name')
+          .select('id, name')
           .order('name');
 
         if (uniError) console.error('Error fetching universities:', uniError);
 
-        const allUnis = (uniData as { name: string }[])?.map((u) => u.name).filter(Boolean) as string[] || [];
+        const allUnis = (uniData as { id: string; name: string }[])?.filter(u => u.name) || [];
 
         if (isActive) {
           setAllUniversities(allUnis);
@@ -205,6 +206,14 @@ export default function UniversitySearchResultsPage() {
     }
   }, [areFiltersLoading, filterOptions.length, results]);
   // Load catalog results from Supabase
+  // Reset pagination when filters change
+  useEffect(() => {
+    setResults([]);
+    setPage(0);
+    setHasMore(true);
+  }, [programId, universityId, selectedUniversities, selectedPrograms, searchQuery]);
+
+  // Load catalog results from Supabase
   useEffect(() => {
     const fetchResults = async () => {
       const isFirstPage = page === 0;
@@ -218,6 +227,8 @@ export default function UniversitySearchResultsPage() {
         const supabase = getBrowserSupabaseClient();
 
         // Base query
+        // We always use the 'universities' inner join to get location/tuition details
+        // and to allow filtering by university name.
         let query = supabase
           .from('programs')
           .select(
@@ -236,23 +247,55 @@ export default function UniversitySearchResultsPage() {
               currency
             )
           `,
-            { count: programId || universityId ? undefined : 'exact' }
+            { count: 'exact' }
           );
 
-        // Apply ID filters if present
-        if (programId) {
-          query = query.eq('id', programId);
-        }
-        if (universityId) {
+        // 1. URL ID Filters (Initial Load priority, but often synced to state)
+        // If we have selectedUniversities/Programs state, that takes precedence over raw IDs
+        // because the state is initialized from IDs anyway.
+        // So we strictly use the STATE for filtering if populated, or fallback to IDs if state is empty (rare delay).
+
+        const activeUniFilters = selectedUniversities.length > 0 ? selectedUniversities : [];
+        const activeProgFilters = selectedPrograms.length > 0 ? selectedPrograms : [];
+
+        if (activeUniFilters.length > 0) {
+          query = query.in('universities.name', activeUniFilters);
+        } else if (universityId && activeUniFilters.length === 0) {
+          // Fallback to ID if state not yet synced/empty
           query = query.eq('universities.id', universityId);
         }
 
-        // If no specific ID, paginate results
-        if (!programId && !universityId) {
-          const from = page * PAGE_SIZE;
-          const to = from + PAGE_SIZE - 1;
-          query = query.range(from, to);
+        if (activeProgFilters.length > 0) {
+          query = query.in('course_name', activeProgFilters);
+        } else if (programId && activeProgFilters.length === 0) {
+          query = query.eq('id', programId);
         }
+
+        // 2. Text Search
+        // Only apply fuzzy text search if we haven't already selected a specific item via ID
+        // (If provided by ID, the text query is likely the name of that item, which might not match 'course_name')
+        if (searchQuery && !programId && !universityId) {
+          // Complex Logic: Find IDs of universities matching the name
+          const normalizedQ = searchQuery.toLowerCase();
+          const matchedUniIds = allUniversities
+            .filter(u => u.name?.toLowerCase().includes(normalizedQ))
+            .map(u => u.id)
+            .slice(0, 50); // Limit to 50 to avoid massive URLs
+
+          // Construct OR query
+          // course_name ILIKE query OR university_id IN (matches)
+          if (matchedUniIds.length > 0) {
+            // Use the simplified syntax avoiding joined table reference
+            query = query.or(`course_name.ilike.%${searchQuery}%,university_id.in.(${matchedUniIds.join(',')})`);
+          } else {
+            query = query.ilike('course_name', `%${searchQuery}%`);
+          }
+        }
+
+        // Pagination
+        const from = page * PAGE_SIZE;
+        const to = from + PAGE_SIZE - 1;
+        query = query.range(from, to);
 
         const [{ data: sessionData }, { data, error: supabaseError, count }] = await Promise.all([
           supabase.auth.getSession(),
@@ -324,25 +367,35 @@ export default function UniversitySearchResultsPage() {
           return [...prev, ...incoming];
         });
 
-        if (!programId && !universityId) {
-          const pageCount = mapped.length;
-          const loaded = page * PAGE_SIZE + pageCount;
-          setHasMore(typeof count === 'number' ? loaded < count : pageCount === PAGE_SIZE);
+        const pageCount = mapped.length;
+        // Check if we hit the total count or if the page returned less than full size
+        if (typeof count === 'number') {
+          // 'count' from Supabase is total matching records
+          const loadedSoFar = (page + 1) * PAGE_SIZE; // Approximation, better to track cumulative? 
+          // Actually 'results.length' + current batch
+          // Supabase range is inclusive. 
+          // If we have count, we rely on it.
+          // But 'results' state resets on filter change.
+          // So simply:
+          const totalFetched = (page * PAGE_SIZE) + pageCount;
+          setHasMore(totalFetched < count);
+          setResultCount(count);
         } else {
-          setHasMore(false);
+          setHasMore(pageCount === PAGE_SIZE);
         }
 
-        // Sync Filters with URL IDs on first page load
-        if (isFirstPage) {
+        // Sync local filters with URL ID only on very first visual load if empty
+        // logic moved to separate effect or handled implicitly by precedence
+        if (isFirstPage && selectedUniversities.length === 0 && selectedPrograms.length === 0) {
+          // We only sync if we used the IDs to filter.
           if (programId && mapped.length > 0) {
-            const program = mapped[0];
-            setSearchQuery(''); // Clear text search
-            setSelectedPrograms([program.programName]);
-            setSelectedUniversities([program.universityName]);
+            const p = mapped[0];
+            // Note: Calling setState inside useEffect might trigger re-run if dependencies include it.
+            // But we guard with 'length === 0'.
+            setSelectedPrograms([p.programName]);
+            setSelectedUniversities([p.universityName]);
           } else if (universityId && mapped.length > 0) {
-            const uniName = mapped[0].universityName;
-            setSearchQuery(''); // Clear text search
-            setSelectedUniversities([uniName]);
+            setSelectedUniversities([mapped[0].universityName]);
           }
         }
 
@@ -364,7 +417,7 @@ export default function UniversitySearchResultsPage() {
     };
 
     fetchResults();
-  }, [page, programId, universityId]);
+  }, [page, programId, universityId, selectedUniversities, selectedPrograms, searchQuery, allUniversities]);
 
   const availableUniversities = useMemo(() => {
     const source =
@@ -396,7 +449,9 @@ export default function UniversitySearchResultsPage() {
     return results.filter((result) => {
       const matchesSearch =
         !normalizedQuery ||
-        `${result.universityName} ${result.programName} ${result.location}`.toLowerCase().includes(normalizedQuery);
+        `${result.universityName} ${result.programName} ${result.location}`.toLowerCase().includes(normalizedQuery) ||
+        // Fallback: if server sent it, it likely matched via ID or special logic
+        (allUniversities.find(u => u.id === result.universityId)?.name?.toLowerCase().includes(normalizedQuery) ?? false);
       const matchesTier = result.tier ? selectedTiers.includes(result.tier) : true;
       const matchesUniversity =
         selectedUniversities.length === 0 || selectedUniversities.includes(result.universityName);
