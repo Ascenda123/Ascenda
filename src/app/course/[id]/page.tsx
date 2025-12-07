@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState, type ElementType } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { ArrowLeft, BookOpen, CalendarDays, GraduationCap, Landmark, Layers, ListChecks, Loader2, MapPin, ShieldCheck, Wallet } from 'lucide-react';
+import { ArrowLeft, BookOpen, CalendarDays, CheckCircle2, Dot, GraduationCap, Landmark, Layers, ListChecks, Loader2, MapPin, ShieldCheck, Wallet } from 'lucide-react';
 import { Navbar } from '@/components/layout/navbar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -257,100 +257,64 @@ const extractYearSections = (modules?: string | null, durationText?: string | nu
 
 const RequirementRenderer = ({ value }: { value: string }) => {
   // 1. Split Standard vs Contextual
-  const parts = value.split(/Typical Contextual Offer:/i);
+  // Some descriptions combine both. We try to split them.
+  const parts = value.split(/Typical Contextual Offer:|Contextual Offer:/i);
   const standard = parts[0].trim();
   const contextual = parts.length > 1 ? parts[1].trim() : null;
 
-  const renderSection = (text: string, title?: string) => {
+  const renderList = (text: string, title?: string) => {
     if (!text) return null;
 
-    // Detect Grade (simple heuristic: starts with A-Z/0-9 chars, short length)
-    // e.g. "AAA; AAA, including..." -> Grade "AAA"
-    // e.g. "36 points" -> Grade "36 points"
-    const gradeMatch = text.match(/^([A-Z\*]{1,4}|[0-9]{1,3}\s*points?)(?:[;,]|\s|$)/);
-    const grade = gradeMatch ? gradeMatch[1] : null;
-    let content = text;
+    // Remove any leading "Typical Offer:" or similar prefixes if they exist redundantly
+    const cleanText = text.replace(/^(Typical Offer:|Entry Requirements:)/i, '').trim();
 
-    // Highlighting the grade if found
-    /*
-       Refined logic:
-       If we find a grade at the start, we can display it prominently.
-       But we should be careful not to remove it from context if the sentence relies on it.
-       If the text is just "AAA", then content is empty.
-    */
+    // Heuristic for splitting into a list:
+    // 1. Semicolons are strong separators.
+    // 2. If no semicolons, maybe split by sentences if it's long?
+    // 3. Or if it contains bullet-like chars.
 
-    // Identify lists (semicolons)
-    // Heuristic: if roughly > 3 semicolons, it's a list.
-    const semicolonCount = (text.match(/;/g) || []).length;
-    let isList = semicolonCount >= 3;
+    let items: string[] = [];
 
-    // Split into sentences/segments for better readability if not a clear list
-    let segments: React.ReactNode[] = [];
-
-    if (isList) {
-      // Try to find the start of the list (often after a colon)
-      const colonIndex = text.indexOf(':');
-      if (colonIndex !== -1 && colonIndex < 100) {
-        const preamble = text.slice(0, colonIndex + 1);
-        const listPart = text.slice(colonIndex + 1);
-
-        // Further split the listPart by semicolon
-        const items = listPart.split(';').map(s => s.trim()).filter(Boolean);
-
-        segments.push(
-          <div key="list-group" className="mt-2">
-            <p className="mb-2 text-sm text-muted-foreground">{emphasize(preamble)}</p>
-            <ul className="grid grid-cols-1 gap-1 sm:grid-cols-2">
-              {items.map((item, i) => (
-                // Check if item is very long, if so, maybe it's not a simple subject list item
-                <li key={i} className="flex items-start gap-2 text-sm">
-                  <div className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-primary" />
-                  <span className="text-foreground/90">{emphasize(item)}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        );
-      } else {
-        // Just split by semicolon
-        const items = text.split(';').map(s => s.trim()).filter(Boolean);
-        segments.push(
-          <ul key="simple-list" className="space-y-1 mt-2">
-            {items.map((item, i) => (
-              <li key={i} className="flex items-start gap-2 text-sm">
-                <div className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-primary" />
-                <span>{emphasize(item)}</span>
-              </li>
-            ))}
-          </ul>
-        );
-      }
+    if (cleanText.includes(';')) {
+      items = cleanText.split(';').map(s => s.trim()).filter(Boolean);
+    } else if (cleanText.includes('•') || cleanText.includes('- ')) {
+      items = cleanText.split(/[•-]/).map(s => s.trim()).filter(Boolean);
     } else {
-      // Fallback: Split by period followed by space to break huge paragraphs
-      // But keep "A.B." or similar intact.
-      // Simple regex: period followed by space and capital letter.
-      const sent = text.split(/(?<=\.)\s+(?=[A-Z])/);
-      segments = sent.map((s, i) => <p key={i} className="text-sm leading-relaxed text-muted-foreground mb-2 last:mb-0">{emphasize(s)}</p>);
+      // Fallback: If it's a long paragraph (> 150 chars) with multiple sentences,
+      // split by period to make it digestible.
+      // But preserve "A.B." acronyms: Look for period followed by space and capital letter.
+      if (cleanText.length > 150) {
+        items = cleanText.split(/(?<=\.)\s+(?=[A-Z])/).map(s => s.trim()).filter(Boolean);
+      } else {
+        items = [cleanText];
+      }
     }
+
+    // Clean up items (remove trailing periods inside list items usually looks cleaner, or keep them)
+    // We'll keep them to be safe.
 
     return (
       <div className="space-y-3">
-        {title && <h4 className="text-xs font-bold uppercase tracking-wider text-primary/80">{title}</h4>}
-        {grade ? (
-          <div className="flex flex-col gap-2">
-            <div className="text-2xl font-bold text-foreground">{grade}</div>
-            {/* If the text started with the grade, we might have stripped it or kept it.
-                   For now, let's just render the parsed segments below.
-                   Ideally we remove the grade from the start of the first segment if it duplicates.
-               */}
-            <div className="text-sm text-muted-foreground">
-              {segments}
-            </div>
-          </div>
+        {title && (
+          <h4 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary/80">
+            <span className="h-px w-4 bg-primary/40"></span>
+            {title}
+          </h4>
+        )}
+
+        {items.length === 1 ? (
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            {emphasize(items[0])}
+          </p>
         ) : (
-          <div>
-            {segments}
-          </div>
+          <ul className="grid gap-3 sm:grid-cols-1">
+            {items.map((item, i) => (
+              <li key={i} className="flex items-start gap-3 rounded-lg border border-border/40 bg-muted/20 p-3 text-sm transition-colors hover:bg-muted/40">
+                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary/70" />
+                <span className="text-foreground/90 leading-relaxed">{emphasize(item)}</span>
+              </li>
+            ))}
+          </ul>
         )}
       </div>
     );
@@ -358,11 +322,10 @@ const RequirementRenderer = ({ value }: { value: string }) => {
 
   return (
     <div className="space-y-6">
-      {renderSection(standard)}
+      {renderList(standard)}
       {contextual && (
         <>
-          <div className="h-px w-full bg-border/50" />
-          {renderSection(contextual, 'Typical Contextual Offer')}
+          {renderList(contextual, 'Contextual Offer')}
         </>
       )}
     </div>
@@ -723,26 +686,46 @@ export default function CoursePage({ params }: { params: { id: string } }) {
                     <div className="grid gap-4 sm:grid-cols-3">
                       {course.requirements
                         .filter(req => ['IB minimum', 'A-Levels', 'UCAS points'].includes(req.label))
-                        .map((req, idx) => (
-                          <Card key={idx} className="border-border/60 bg-primary/5 border-primary/20">
-                            <CardHeader className="pb-2">
-                              <CardTitle className="text-xs font-bold text-primary uppercase tracking-wider">
-                                {req.label}
-                              </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                              <div className="text-2xl font-bold text-foreground">
-                                {req.value.split(/[,;]/)[0]} {/* Show just the main grade first */}
-                              </div>
-                              {/* If there's more text, show it as small muted text or hide it if it's too long */}
-                              {req.value.length > 10 && (
-                                <p className="mt-1 text-xs text-muted-foreground line-clamp-2">
-                                  {req.value}
-                                </p>
-                              )}
-                            </CardContent>
-                          </Card>
-                        ))}
+                        .map((req, idx) => {
+                          const separator = req.value.match(/[,;]/);
+                          const splitIndex = separator ? separator.index : -1;
+
+                          const headline = splitIndex !== -1 ? req.value.substring(0, splitIndex) : req.value;
+                          const rawSubtext = splitIndex !== -1 ? req.value.substring(splitIndex! + 1).trim() : null;
+
+                          // Parse subtext into list items
+                          // Split by semicolon or comma to create a clean list
+                          const subtextItems = rawSubtext
+                            ? rawSubtext.split(/;|(?<=\w), /)
+                              .map(s => s.trim())
+                              .filter(s => s.length > 0)
+                            : [];
+
+                          return (
+                            <Card key={idx} className="border-border/60 bg-primary/5 border-primary/20">
+                              <CardHeader className="pb-2">
+                                <CardTitle className="text-xs font-bold text-primary uppercase tracking-wider">
+                                  {req.label}
+                                </CardTitle>
+                              </CardHeader>
+                              <CardContent className="space-y-2">
+                                <div className="text-2xl font-bold text-foreground">
+                                  {headline}
+                                </div>
+                                {subtextItems.length > 0 && (
+                                  <ul className="space-y-1">
+                                    {subtextItems.map((item, i) => (
+                                      <li key={i} className="flex items-start gap-2 text-xs font-medium text-muted-foreground leading-snug">
+                                        <div className="mt-1 h-1 w-1 shrink-0 rounded-full bg-primary/60" />
+                                        <span>{item}</span>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                )}
+                              </CardContent>
+                            </Card>
+                          );
+                        })}
                     </div>
                   )}
 
