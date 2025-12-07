@@ -111,7 +111,7 @@ export default function UniversitySearchResultsPage() {
               course_name,
               name,
               metadata,
-              universities!inner (
+              universities (
                 name
               )
             `
@@ -127,8 +127,7 @@ export default function UniversitySearchResultsPage() {
 
         if (!isActive) return;
 
-        const visiblePrograms = filterVisiblePrograms(allPrograms);
-        const mapped: FilterOption[] = visiblePrograms
+        const mapped: FilterOption[] = allPrograms
           .map((program) => {
             const universityName = program.universities?.name;
             const programName = program.course_name ?? program.name;
