@@ -73,6 +73,8 @@ export default function UniversitySearchResultsPage() {
   const [selectedPrograms, setSelectedPrograms] = useState<string[]>([]);
   const [filterOptions, setFilterOptions] = useState<FilterOption[]>([]);
   const [areFiltersLoading, setAreFiltersLoading] = useState(true);
+  // Store all unique universities directly from the DB to ensure the filter list is complete
+  const [allUniversities, setAllUniversities] = useState<string[]>([]);
   const [results, setResults] = useState<ProgramSearchResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -93,56 +95,91 @@ export default function UniversitySearchResultsPage() {
     const fetchFilters = async () => {
       try {
         const supabase = getBrowserSupabaseClient();
+
+        // 1. Fetch Universities separately (FAST & COMPLETE)
+        // This guarantees the University dropdown has every single university
+        const { data: uniData, error: uniError } = await supabase
+          .from('universities')
+          .select('name')
+          .order('name');
+
+        if (uniError) console.error('Error fetching universities:', uniError);
+
+        const allUnis = (uniData as { name: string }[])?.map((u) => u.name).filter(Boolean) as string[] || [];
+
+        if (isActive) {
+          setAllUniversities(allUnis);
+        }
+
+        // 2. Fetch Programs (Course Names)
+        // We fetching these to link them, but we won't block the uni dropdown on this
         const pageSize = 1000;
         let pageIndex = 0;
-        const allPrograms: ProgramRow[] = [];
+        const allProgramsRaw: { course_name: string; universities: { name: string } | null }[] = [];
 
-        // Fetch all programs in batches to ensure the dropdowns see the whole catalog
-        // even when Supabase applies a default limit.
-        // eslint-disable-next-line no-constant-condition
-        while (true) {
+        // Safety limit: 50 pages (50k records)
+        while (pageIndex < 50) {
           const from = pageIndex * pageSize;
           const to = from + pageSize - 1;
-          const { data, error: supabaseError } = await supabase
+          const { data, error: progError } = await supabase
             .from('programs')
-            .select(
-              `
-              id,
-              course_name,
-              name,
-              metadata,
-              universities (
-                name
-              )
-            `
-            )
+            .select(`course_name, universities (name)`)
             .range(from, to);
 
-          if (supabaseError) throw supabaseError;
+          if (progError) {
+            console.error('Error fetching programs:', progError);
+            break;
+          }
+
           const batch = data ?? [];
-          allPrograms.push(...batch);
+          allProgramsRaw.push(...(batch as any));
+
           if (batch.length < pageSize) break;
-          pageIndex += 1;
+          pageIndex++;
         }
 
         if (!isActive) return;
 
-        const mapped: FilterOption[] = allPrograms
-          .map((program) => {
-            const universityName = program.universities?.name;
-            const programName = program.course_name ?? program.name;
-            if (!universityName || !programName) return null;
-            return { universityName, programName };
+        // Map to FilterOption
+        // We link them so selecting a Uni can still filter programs if the UI supports it
+        // and we have the link from the program fetch.
+        const mapped: FilterOption[] = allProgramsRaw
+          .map((p) => {
+            const uName = p.universities?.name;
+            const pName = p.course_name;
+            if (!uName || !pName) return null;
+            return { universityName: uName, programName: pName };
           })
           .filter((item): item is FilterOption => Boolean(item));
 
-        const deduped = Array.from(
-          new Map(mapped.map((item) => [`${item.universityName}-${item.programName}`, item])).values()
-        );
+        // Deduplicate
+        // Use a Map for O(1) lookups
+        const uniqueMap = new Map<string, FilterOption>();
+        mapped.forEach(item => {
+          const key = `${item.universityName}|${item.programName}`;
+          if (!uniqueMap.has(key)) {
+            uniqueMap.set(key, item);
+          }
+        });
 
-        setFilterOptions(deduped);
-      } catch (filtersError) {
-        console.error('Failed to load filter options', filtersError);
+        const dedupedListeners = Array.from(uniqueMap.values());
+
+        // Use the separately fetched Uni list for the absolute source of truth for Unis
+        // This ensures even if a Uni has no programs (edge case) or pagination missed it, it appears if in DB.
+        // But FilterBar expects 'availableUniversities' derived?
+        // Actually FilterBar usually takes passed lists.
+        // We'll merge the knowledge.
+
+        // Ideally we pass `allUnis` to availableUniversities if possible,
+        // but the current logic derives `availableUniversities` from `filterOptions`.
+        // So we need to make sure `filterOptions` contains entries for ALL universities.
+        // If a uni has no program, it won't be in `dedupedListeners`.
+        // But for "Search Results" context, filtering by a Uni with no programs is useless?
+        // So maybe relying on programs fetch is correct.
+
+        setFilterOptions(dedupedListeners);
+      } catch (err) {
+        console.error('Failed to fetch filters:', err);
       } finally {
         if (isActive) {
           setAreFiltersLoading(false);

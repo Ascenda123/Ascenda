@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState, type ElementType } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { ArrowLeft, BookOpen, CalendarDays, Globe2, GraduationCap, Landmark, Loader2, MapPin, ShieldCheck, Wallet } from 'lucide-react';
+import { ArrowLeft, BookOpen, CalendarDays, GraduationCap, Landmark, Layers, ListChecks, Loader2, MapPin, ShieldCheck, Wallet } from 'lucide-react';
 import { Navbar } from '@/components/layout/navbar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -255,6 +255,120 @@ const extractYearSections = (modules?: string | null, durationText?: string | nu
   return mergedSections;
 };
 
+const RequirementRenderer = ({ value }: { value: string }) => {
+  // 1. Split Standard vs Contextual
+  const parts = value.split(/Typical Contextual Offer:/i);
+  const standard = parts[0].trim();
+  const contextual = parts.length > 1 ? parts[1].trim() : null;
+
+  const renderSection = (text: string, title?: string) => {
+    if (!text) return null;
+
+    // Detect Grade (simple heuristic: starts with A-Z/0-9 chars, short length)
+    // e.g. "AAA; AAA, including..." -> Grade "AAA"
+    // e.g. "36 points" -> Grade "36 points"
+    const gradeMatch = text.match(/^([A-Z\*]{1,4}|[0-9]{1,3}\s*points?)(?:[;,]|\s|$)/);
+    const grade = gradeMatch ? gradeMatch[1] : null;
+    let content = text;
+
+    // Highlighting the grade if found
+    /*
+       Refined logic:
+       If we find a grade at the start, we can display it prominently.
+       But we should be careful not to remove it from context if the sentence relies on it.
+       If the text is just "AAA", then content is empty.
+    */
+
+    // Identify lists (semicolons)
+    // Heuristic: if roughly > 3 semicolons, it's a list.
+    const semicolonCount = (text.match(/;/g) || []).length;
+    let isList = semicolonCount >= 3;
+
+    // Split into sentences/segments for better readability if not a clear list
+    let segments: React.ReactNode[] = [];
+
+    if (isList) {
+      // Try to find the start of the list (often after a colon)
+      const colonIndex = text.indexOf(':');
+      if (colonIndex !== -1 && colonIndex < 100) {
+        const preamble = text.slice(0, colonIndex + 1);
+        const listPart = text.slice(colonIndex + 1);
+
+        // Further split the listPart by semicolon
+        const items = listPart.split(';').map(s => s.trim()).filter(Boolean);
+
+        segments.push(
+          <div key="list-group" className="mt-2">
+            <p className="mb-2 text-sm text-muted-foreground">{emphasize(preamble)}</p>
+            <ul className="grid grid-cols-1 gap-1 sm:grid-cols-2">
+              {items.map((item, i) => (
+                // Check if item is very long, if so, maybe it's not a simple subject list item
+                <li key={i} className="flex items-start gap-2 text-sm">
+                  <div className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-primary" />
+                  <span className="text-foreground/90">{emphasize(item)}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        );
+      } else {
+        // Just split by semicolon
+        const items = text.split(';').map(s => s.trim()).filter(Boolean);
+        segments.push(
+          <ul key="simple-list" className="space-y-1 mt-2">
+            {items.map((item, i) => (
+              <li key={i} className="flex items-start gap-2 text-sm">
+                <div className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-primary" />
+                <span>{emphasize(item)}</span>
+              </li>
+            ))}
+          </ul>
+        );
+      }
+    } else {
+      // Fallback: Split by period followed by space to break huge paragraphs
+      // But keep "A.B." or similar intact.
+      // Simple regex: period followed by space and capital letter.
+      const sent = text.split(/(?<=\.)\s+(?=[A-Z])/);
+      segments = sent.map((s, i) => <p key={i} className="text-sm leading-relaxed text-muted-foreground mb-2 last:mb-0">{emphasize(s)}</p>);
+    }
+
+    return (
+      <div className="space-y-3">
+        {title && <h4 className="text-xs font-bold uppercase tracking-wider text-primary/80">{title}</h4>}
+        {grade ? (
+          <div className="flex flex-col gap-2">
+            <div className="text-2xl font-bold text-foreground">{grade}</div>
+            {/* If the text started with the grade, we might have stripped it or kept it.
+                   For now, let's just render the parsed segments below.
+                   Ideally we remove the grade from the start of the first segment if it duplicates.
+               */}
+            <div className="text-sm text-muted-foreground">
+              {segments}
+            </div>
+          </div>
+        ) : (
+          <div>
+            {segments}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <div className="space-y-6">
+      {renderSection(standard)}
+      {contextual && (
+        <>
+          <div className="h-px w-full bg-border/50" />
+          {renderSection(contextual, 'Typical Contextual Offer')}
+        </>
+      )}
+    </div>
+  );
+};
+
 export default function CoursePage({ params }: { params: { id: string } }) {
   const searchParams = useSearchParams();
   const [course, setCourse] = useState<CourseView | null>(null);
@@ -345,6 +459,15 @@ export default function CoursePage({ params }: { params: { id: string } }) {
     fetchCourse();
   }, [params.id]);
 
+  const [activeTab, setActiveTab] = useState('overview');
+
+  const TABS = [
+    { id: 'overview', label: 'Overview', icon: BookOpen },
+    { id: 'curriculum', label: 'Curriculum', icon: Layers },
+    { id: 'requirements', label: 'Requirements', icon: ListChecks },
+    { id: 'assessment', label: 'Assessment', icon: ShieldCheck },
+  ];
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Navbar />
@@ -374,48 +497,63 @@ export default function CoursePage({ params }: { params: { id: string } }) {
                 {error}
               </div>
             ) : course ? (
-              <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                      <GraduationCap className="h-6 w-6" />
-                    </div>
-                    <p className="text-sm font-bold uppercase tracking-widest text-primary">
-                      {course.university}
-                    </p>
-                  </div>
-                  <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
-                    {course.title}
-                  </h1>
-                  <div className="flex flex-wrap items-center gap-6 text-muted-foreground">
-                    <div className="flex items-center gap-2">
-                      <MapPin className="h-4 w-4" />
-                      <span>{course.location}</span>
-                    </div>
-                    {course.ucasCode && (
-                      <div className="flex items-center gap-2">
-                        <ShieldCheck className="h-4 w-4" />
-                        <span>UCAS: {course.ucasCode}</span>
+              <div className="space-y-8">
+                <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                        <GraduationCap className="h-6 w-6" />
                       </div>
+                      <p className="text-sm font-bold uppercase tracking-widest text-primary">
+                        {course.university}
+                      </p>
+                    </div>
+                    <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl max-w-3xl">
+                      {course.title}
+                    </h1>
+                    <div className="flex flex-wrap items-center gap-6 text-muted-foreground">
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4" />
+                        <span>{course.location}</span>
+                      </div>
+                      {course.ucasCode && (
+                        <div className="flex items-center gap-2">
+                          <ShieldCheck className="h-4 w-4" />
+                          <span>UCAS: {course.ucasCode}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3">
+                    {course.courseUrl && (
+                      <Button asChild variant="outline" size="lg" className="h-12 px-6">
+                        <Link href={course.courseUrl} target="_blank" rel="noreferrer">
+                          Visit Website
+                        </Link>
+                      </Button>
+                    )}
+                    {course.applyUrl && (
+                      <Button asChild size="lg" className="h-12 px-8 shadow-lg shadow-primary/20">
+                        <Link href={course.applyUrl} target="_blank" rel="noreferrer">
+                          Apply Now
+                        </Link>
+                      </Button>
                     )}
                   </div>
                 </div>
 
-                <div className="flex gap-3">
-                  {course.courseUrl && (
-                    <Button asChild variant="outline" size="lg" className="h-12 px-6">
-                      <Link href={course.courseUrl} target="_blank" rel="noreferrer">
-                        Visit Website
-                      </Link>
-                    </Button>
-                  )}
-                  {course.applyUrl && (
-                    <Button asChild size="lg" className="h-12 px-8 shadow-lg shadow-primary/20">
-                      <Link href={course.applyUrl} target="_blank" rel="noreferrer">
-                        Apply Now
-                      </Link>
-                    </Button>
-                  )}
+                {/* Highlights Bar */}
+                <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+                  {course.quickFacts.map((fact) => (
+                    <div key={fact.label} className="flex flex-col gap-1 rounded-2xl border border-border/60 bg-card/50 p-4 transition-colors hover:bg-card">
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <fact.icon className="h-4 w-4" />
+                        <span className="text-xs font-semibold uppercase tracking-wider">{fact.label}</span>
+                      </div>
+                      <p className="font-semibold text-foreground">{fact.value}</p>
+                    </div>
+                  ))}
                 </div>
               </div>
             ) : null}
@@ -423,175 +561,234 @@ export default function CoursePage({ params }: { params: { id: string } }) {
         </div>
 
         {course && !loading && !error && (
-          <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 gap-12 lg:grid-cols-12">
-              {/* Main Content Column */}
-              <div className="lg:col-span-8 space-y-12">
-
-                {/* Overview Section */}
-                <section className="space-y-6">
-                  <div className="flex items-center gap-3 border-b border-border/40 pb-4">
-                    <BookOpen className="h-6 w-6 text-primary" />
-                    <h2 className="text-2xl font-semibold">Course Overview</h2>
-                  </div>
-                  <div className="prose prose-lg prose-neutral dark:prose-invert max-w-none text-muted-foreground">
-                    {renderRichText(course.summary)}
-                  </div>
-                </section>
-
-                {/* Modules Section */}
-                {course.modules && (
-                  <section className="space-y-8">
-                    <div className="flex items-center gap-3 border-b border-border/40 pb-4">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                        <BookOpen className="h-4 w-4" />
-                      </div>
-                      <h2 className="text-2xl font-semibold">Course Modules</h2>
-                    </div>
-
-                    {moduleYearSections.length ? (
-                      <div className="relative space-y-8 pl-4">
-                        <div className="absolute left-[27px] top-4 bottom-8 w-px bg-gradient-to-b from-primary/30 via-primary/10 to-transparent" />
-                        {moduleYearSections.map((section, idx) => {
-                          const expanded = expandedYears[section.title] ?? false;
-                          const items = expanded ? section.items : section.items.slice(0, 5);
-                          const canExpand = section.items.length > 5;
-                          return (
-                            <div key={`yr-${idx}`} className="relative group">
-                              <div className="flex items-start gap-6">
-                                <div className="relative z-10 flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-border bg-card shadow-sm transition-all group-hover:border-primary/50 group-hover:shadow-md">
-                                  <span className="text-lg font-bold text-primary">{section.yearNum ?? idx + 1}</span>
-                                </div>
-                                <div className="w-full space-y-4 pt-2">
-                                  <h3 className="text-lg font-bold uppercase tracking-wider text-foreground/80">
-                                    {section.title}
-                                  </h3>
-                                  <div className="grid gap-3 grid-cols-1">
-                                    {items.map((item, i) => (
-                                      <div
-                                        key={`yr-${idx}-item-${i}`}
-                                        className="flex items-start gap-3 rounded-xl border border-border/40 bg-muted/20 p-4 transition-colors hover:bg-muted/40"
-                                      >
-                                        <div className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary/60" />
-                                        <span className="text-sm font-medium leading-relaxed">{emphasize(item)}</span>
-                                      </div>
-                                    ))}
-                                  </div>
-                                  {canExpand && (
-                                    <Button
-                                      variant="ghost"
-                                      onClick={() =>
-                                        setExpandedYears((prev) => ({
-                                          ...prev,
-                                          [section.title]: !expanded
-                                        }))
-                                      }
-                                      className="text-muted-foreground hover:text-primary"
-                                    >
-                                      {expanded ? 'Show fewer modules' : `Show ${section.items.length - items.length} more modules`}
-                                    </Button>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    ) : moduleItems.length ? (
-                      <div className="rounded-3xl border border-border/50 bg-card/50 p-8 backdrop-blur-sm">
-                        <ul className="grid grid-cols-1 gap-4">
-                          {visibleModules.map((item, idx) => (
-                            <li key={`module-${idx}`} className="flex items-start gap-3 text-foreground/80">
-                              <div className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-primary/60" />
-                              <span className="leading-relaxed">{emphasize(item)}</span>
-                            </li>
-                          ))}
-                        </ul>
-                        {moduleItems.length > visibleModules.length && (
-                          <Button
-                            variant="link"
-                            onClick={() => setShowAllFlatModules(true)}
-                            className="mt-4 px-0 text-primary"
-                          >
-                            Show all {moduleItems.length} modules
-                          </Button>
+          <>
+            {/* Sticky Tabs Navigation */}
+            <div className="sticky top-0 z-20 border-b border-border/40 bg-background/80 backdrop-blur-md">
+              <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <div className="flex gap-1 overflow-x-auto py-2 no-scrollbar">
+                  {TABS.map((tab) => {
+                    const isActive = activeTab === tab.id;
+                    const Icon = tab.icon;
+                    return (
+                      <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                        className={cn(
+                          'flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium transition-all',
+                          isActive
+                            ? 'bg-primary text-primary-foreground shadow-md'
+                            : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                         )}
-                      </div>
-                    ) : (
-                      <div className="prose prose-neutral dark:prose-invert">
-                        {renderRichText(course.modules, { forceBullets: true })}
-                      </div>
-                    )}
-                  </section>
-                )}
-
-                {/* Assessment Section */}
-                {course.assessment && (
-                  <section className="space-y-6">
-                    <div className="flex items-center gap-3 border-b border-border/40 pb-4">
-                      <ShieldCheck className="h-6 w-6 text-primary" />
-                      <h2 className="text-2xl font-semibold">Assessment</h2>
-                    </div>
-                    <div className="prose prose-neutral dark:prose-invert max-w-none text-muted-foreground">
-                      {renderRichText(course.assessment, { forceBullets: true })}
-                    </div>
-                  </section>
-                )}
-              </div>
-
-              {/* Sidebar Column */}
-              <div className="lg:col-span-4 space-y-8">
-                <div className="sticky top-24 space-y-8">
-                  {/* Key Information Card */}
-                  <Card className="overflow-hidden border-border/60 shadow-lg">
-                    <CardHeader className="bg-muted/30 pb-4">
-                      <CardTitle className="flex items-center gap-2 text-lg">
-                        <Globe2 className="h-5 w-5 text-primary" />
-                        Key Information
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="grid gap-4 p-6">
-                      {course.quickFacts.map((fact) => (
-                        <div key={fact.label} className="flex items-center gap-4 rounded-xl border border-border/40 bg-background p-3">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
-                            <fact.icon className="h-5 w-5" />
-                          </div>
-                          <div>
-                            <p className="text-xs font-medium uppercase text-muted-foreground">{fact.label}</p>
-                            <p className="font-semibold text-foreground">{fact.value}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </CardContent>
-                  </Card>
-
-                  {/* Entry Requirements Card */}
-                  <Card className="border-border/60">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-lg">
-                        <BookOpen className="h-5 w-5 text-primary" />
-                        Entry Requirements
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      {course.requirements.length === 0 ? (
-                        <p className="text-sm text-muted-foreground">No requirements listed.</p>
-                      ) : (
-                        <ul className="space-y-3">
-                          {course.requirements.map((item, idx) => (
-                            <li key={`${item.label}-${idx}`} className="space-y-1 border-b border-border/40 pb-3 last:border-0 last:pb-0">
-                              <p className="text-sm font-medium text-foreground">{item.label}</p>
-                              <p className="text-sm text-muted-foreground">{item.value}</p>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </CardContent>
-                  </Card>
+                      >
+                        <Icon className="h-4 w-4" />
+                        {tab.label}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </div>
-          </div>
+
+            {/* Tab Content */}
+            <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 min-h-[500px]">
+
+              {/* Overview Tab */}
+              {activeTab === 'overview' && (
+                <div className="max-w-5xl space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+
+                  {/* Summary Text */}
+                  <div className="rounded-3xl border border-border/60 bg-card p-8 shadow-sm">
+                    <h2 className="text-2xl font-bold mb-6">Course Overview</h2>
+                    <div className="prose prose-lg prose-neutral dark:prose-invert max-w-none text-muted-foreground">
+                      {renderRichText(course.summary)}
+                    </div>
+                  </div>
+
+                  {/* At a Glance Dashboard */}
+                  <div className="grid gap-6 md:grid-cols-2">
+
+                    {/* Requirements Preview */}
+                    <div
+                      className="group relative cursor-pointer overflow-hidden rounded-3xl border border-border/60 bg-card p-6 transition-all hover:border-primary/50 hover:shadow-lg"
+                      onClick={() => setActiveTab('requirements')}
+                    >
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-bold flex items-center gap-2">
+                          <ListChecks className="h-5 w-5 text-primary" />
+                          Entry Requirements
+                        </h3>
+                        <ArrowLeft className="h-4 w-4 rotate-180 opacity-0 transition-all group-hover:opacity-100 group-hover:translate-x-1" />
+                      </div>
+                      <div className="space-y-3">
+                        {/* Show top 3 short requirements */}
+                        {course.requirements.slice(0, 3).map((r, i) => (
+                          <div key={i} className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">{r.label}</span>
+                            <span className="font-medium text-foreground truncate max-w-[120px]">{r.value}</span>
+                          </div>
+                        ))}
+                        {course.requirements.length === 0 && <p className="text-sm text-muted-foreground italic">View requirements details...</p>}
+                      </div>
+                      <div className="mt-4 text-xs font-bold text-primary uppercase tracking-wider">View Full Details</div>
+                    </div>
+
+                    {/* Curriculum Preview */}
+                    <div
+                      className="group relative cursor-pointer overflow-hidden rounded-3xl border border-border/60 bg-card p-6 transition-all hover:border-primary/50 hover:shadow-lg"
+                      onClick={() => setActiveTab('curriculum')}
+                    >
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-bold flex items-center gap-2">
+                          <Layers className="h-5 w-5 text-primary" />
+                          Curriculum
+                        </h3>
+                        <ArrowLeft className="h-4 w-4 rotate-180 opacity-0 transition-all group-hover:opacity-100 group-hover:translate-x-1" />
+                      </div>
+                      <div className="space-y-2">
+                        <p className="text-sm text-muted-foreground line-clamp-3">
+                          {course.modules ? course.modules.slice(0, 150) + "..." : "Explore the modules and subjects you will study."}
+                        </p>
+                      </div>
+                      <div className="mt-4 text-xs font-bold text-primary uppercase tracking-wider">View Modules</div>
+                    </div>
+
+                  </div>
+                </div>
+              )}
+
+              {/* Curriculum Tab */}
+              {activeTab === 'curriculum' && (
+                <div className="max-w-5xl space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-2xl font-bold">Course Curriculum</h2>
+                    {moduleItems.length > 8 && !moduleYearSections.length && (
+                      <Button
+                        variant="outline"
+                        onClick={() => setShowAllFlatModules(!showAllFlatModules)}
+                      >
+                        {showAllFlatModules ? 'Show Less' : 'Show All'}
+                      </Button>
+                    )}
+                  </div>
+
+                  {moduleYearSections.length ? (
+                    <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+                      {moduleYearSections.map((section, idx) => (
+                        <Card key={idx} className="overflow-hidden border-border/60 bg-card hover:shadow-md transition-all">
+                          <CardHeader className="bg-muted/30 pb-4 border-b border-border/40">
+                            <CardTitle className="flex items-center gap-3 text-lg">
+                              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary text-sm font-bold">
+                                {section.yearNum ?? idx + 1}
+                              </div>
+                              {section.title}
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent className="p-0">
+                            <ul className="divide-y divide-border/40">
+                              {section.items.map((item, i) => (
+                                <li key={i} className="flex items-start gap-3 p-4 hover:bg-muted/20 transition-colors">
+                                  <div className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary/60" />
+                                  <span className="text-sm text-foreground/80 leading-relaxed">{emphasize(item)}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  ) : moduleItems.length ? (
+                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                      {(showAllFlatModules ? moduleItems : moduleItems.slice(0, 9)).map((item, idx) => (
+                        <div key={idx} className="flex items-start gap-3 rounded-2xl border border-border/60 bg-card p-5 hover:border-primary/40 transition-colors">
+                          <div className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+                          <span className="text-sm font-medium text-foreground/90 leading-relaxed">{emphasize(item)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="rounded-3xl border border-border/60 bg-card p-8">
+                      <p className="text-muted-foreground italic">No specific curriculum modules available for this course.</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Requirements Tab */}
+              {activeTab === 'requirements' && (
+                <div className="max-w-5xl space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <h2 className="text-2xl font-bold">Entry Requirements</h2>
+
+                  {/* 1. Key Metrics Row (Grades, Points - things that are short) */}
+                  {course.requirements.some(r => ['IB minimum', 'A-Levels', 'UCAS points'].includes(r.label)) && (
+                    <div className="grid gap-4 sm:grid-cols-3">
+                      {course.requirements
+                        .filter(req => ['IB minimum', 'A-Levels', 'UCAS points'].includes(req.label))
+                        .map((req, idx) => (
+                          <Card key={idx} className="border-border/60 bg-primary/5 border-primary/20">
+                            <CardHeader className="pb-2">
+                              <CardTitle className="text-xs font-bold text-primary uppercase tracking-wider">
+                                {req.label}
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                              <div className="text-2xl font-bold text-foreground">
+                                {req.value.split(/[,;]/)[0]} {/* Show just the main grade first */}
+                              </div>
+                              {/* If there's more text, show it as small muted text or hide it if it's too long */}
+                              {req.value.length > 10 && (
+                                <p className="mt-1 text-xs text-muted-foreground line-clamp-2">
+                                  {req.value}
+                                </p>
+                              )}
+                            </CardContent>
+                          </Card>
+                        ))}
+                    </div>
+                  )}
+
+                  {/* 2. Detailed Requirements (Subjects, Overview, English, etc.) */}
+                  <div className="space-y-4">
+                    {course.requirements
+                      .filter(req => !['IB minimum', 'A-Levels', 'UCAS points'].includes(req.label))
+                      .map((req, idx) => (
+                        <div key={idx} className="rounded-2xl border border-border/60 bg-card overflow-hidden">
+                          <div className="border-b border-border/40 bg-muted/30 px-6 py-4">
+                            <h3 className="font-semibold text-foreground">{req.label}</h3>
+                          </div>
+                          <div className="p-6">
+                            <RequirementRenderer value={req.value} />
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+
+                  {/* Fallback */}
+                  {course.requirements.length === 0 && (
+                    <div className="rounded-3xl border border-border/60 bg-card p-8">
+                      <p className="text-muted-foreground italic">No specific entry requirements listed.</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Assessment Tab */}
+              {activeTab === 'assessment' && (
+                <div className="max-w-4xl space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <div className="rounded-3xl border border-border/60 bg-card p-8 shadow-sm">
+                    <h2 className="text-2xl font-bold mb-6">Assessment Methods</h2>
+                    {course.assessment ? (
+                      <div className="prose prose-lg prose-neutral dark:prose-invert max-w-none text-muted-foreground">
+                        {renderRichText(course.assessment)}
+                      </div>
+                    ) : (
+                      <p className="text-muted-foreground italic">No assessment information available.</p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+            </div>
+          </>
         )}
       </main>
     </div>
