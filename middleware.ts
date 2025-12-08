@@ -26,7 +26,13 @@ export async function middleware(req: NextRequest) {
   const isProtected = PROTECTED_PREFIXES.some((prefix) => pathname.startsWith(prefix));
   const isAuthRoute = pathname.startsWith('/login') || pathname.startsWith('/signup');
 
-  const getOnboardingStatus = async () => {
+  const applyCookies = (source: NextResponse, target: NextResponse) => {
+    source.cookies.getAll().forEach((cookie) => {
+      target.cookies.set(cookie);
+    });
+  };
+
+  const getOnboardingStatus = async (response: NextResponse) => {
     if (!session) {
       return false;
     }
@@ -53,7 +59,7 @@ export async function middleware(req: NextRequest) {
     const needsOnboarding = !isProfileComplete(completionRecords);
 
     if (!needsOnboarding) {
-      res.cookies.set('onboarding_complete', session.user.id, {
+      response.cookies.set('onboarding_complete', session.user.id, {
         path: '/',
         maxAge: 60 * 60 * 24 * 7,
         httpOnly: true,
@@ -68,27 +74,33 @@ export async function middleware(req: NextRequest) {
     const redirectUrl = req.nextUrl.clone();
     redirectUrl.pathname = '/login';
     redirectUrl.searchParams.set('redirectedFrom', pathname);
-    return NextResponse.redirect(redirectUrl);
+    const redirectResponse = NextResponse.redirect(redirectUrl);
+    applyCookies(res, redirectResponse);
+    return redirectResponse;
   }
 
   if (session && isAuthRoute) {
     const redirectUrl = req.nextUrl.clone();
-    const needsOnboarding = await getOnboardingStatus();
+    const needsOnboarding = await getOnboardingStatus(res);
     redirectUrl.pathname = needsOnboarding ? '/profile' : '/dashboard';
     if (needsOnboarding) {
       redirectUrl.searchParams.set('onboarding', 'true');
     }
     redirectUrl.searchParams.delete('redirectedFrom');
-    return NextResponse.redirect(redirectUrl);
+    const redirectResponse = NextResponse.redirect(redirectUrl);
+    applyCookies(res, redirectResponse);
+    return redirectResponse;
   }
 
   if (session && isProtected && !pathname.startsWith('/profile')) {
-    const needsOnboarding = await getOnboardingStatus();
+    const needsOnboarding = await getOnboardingStatus(res);
     if (needsOnboarding) {
       const redirectUrl = req.nextUrl.clone();
       redirectUrl.pathname = '/profile';
       redirectUrl.searchParams.set('onboarding', 'true');
-      return NextResponse.redirect(redirectUrl);
+      const redirectResponse = NextResponse.redirect(redirectUrl);
+      applyCookies(res, redirectResponse);
+      return redirectResponse;
     }
   }
 

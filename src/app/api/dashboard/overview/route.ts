@@ -66,9 +66,7 @@ export async function GET() {
     preferencesResponse,
     aspirationsResponse,
     profileResponse,
-    programsResponse,
-    universitiesResponse,
-    requirementsResponse
+    programsResponse
   ] = await Promise.all([
     applicationIds.length
       ? supabase.from('application_checklist').select('*').in('application_id', applicationIds).order('due_date', { ascending: true }).limit(5)
@@ -86,9 +84,7 @@ export async function GET() {
     supabase.from('student_preferences').select('*').eq('profile_id', user.id).single(),
     supabase.from('student_aspirations').select('*').eq('profile_id', user.id).single(),
     supabase.from('profiles').select('full_name,country,time_zone').eq('id', user.id).single(),
-    supabase.from('programs').select('*').limit(10),
-    supabase.from('universities').select('*'),
-    supabase.from('program_requirements').select('*')
+    supabase.from('programs').select('*').limit(10)
   ]);
 
   const checklist = (checklistResponse.data ?? []) as ChecklistRow[];
@@ -98,8 +94,29 @@ export async function GET() {
   const aspirations = aspirationsResponse.data ?? null;
   const profileRecord = (profileResponse.data ?? null) as ProfileRow | null;
   const programs = (programsResponse.data ?? []) as ProgramRow[];
-  const universities = (universitiesResponse.data ?? []) as UniversityRow[];
-  const requirements = (requirementsResponse.data ?? []) as ProgramRequirementRow[];
+  const programIds = programs.map((program) => program.id);
+  const universityIds = programs.map((program) => program.university_id);
+
+  const filteredUniversitiesResponse =
+    universityIds.length > 0
+      ? await supabase
+        .from('universities')
+        .select('id,name,country,region,rank_overall,rank_source,acceptance_rate,requires_test,metadata')
+        .in('id', universityIds)
+      : { data: [] };
+
+  const filteredRequirementsResponse =
+    programIds.length > 0
+      ? await supabase
+        .from('program_requirements')
+        .select(
+          'program_id,curriculum,min_gpa,min_ib_total,min_sat,min_act,required_subjects,language_tests,other_requirements'
+        )
+        .in('program_id', programIds)
+      : { data: [] };
+
+  const universities = (filteredUniversitiesResponse.data ?? []) as UniversityRow[];
+  const requirements = (filteredRequirementsResponse.data ?? []) as ProgramRequirementRow[];
 
   let matchResults = [] as Awaited<ReturnType<typeof rankMatches>>;
   let mappedPrograms = new Map<string, ReturnType<typeof mapProgramRow>>();

@@ -46,6 +46,7 @@ export function IntelligentSearchBar({
     const [trendingSuggestions, setTrendingSuggestions] = useState<SuggestionGroups>({ programs: [], universities: [] });
     const debounceRef = useRef<number | null>(null);
     const blurTimeoutRef = useRef<number | null>(null);
+    const latestRequestRef = useRef<number>(0);
     const containerRef = useRef<HTMLDivElement>(null);
     const hasTypedQuery = value.trim().length > 0;
 
@@ -71,6 +72,8 @@ export function IntelligentSearchBar({
                 return;
             }
             setIsLoadingSuggestions(true);
+            const requestId = Date.now();
+            latestRequestRef.current = requestId;
             try {
                 const supabase = getBrowserSupabaseClient();
 
@@ -132,15 +135,21 @@ export function IntelligentSearchBar({
 
                 const sortByScore = (items: Suggestion[]) => [...items].sort((a, b) => b.score - a.score).slice(0, 5);
 
-                setSuggestions({
-                    programs: sortByScore(programSuggestions),
-                    universities: sortByScore(universitySuggestions)
-                });
+                if (latestRequestRef.current === requestId) {
+                    setSuggestions({
+                        programs: sortByScore(programSuggestions),
+                        universities: sortByScore(universitySuggestions)
+                    });
+                }
             } catch (err) {
                 console.error('Failed to load suggestions', err);
-                setSuggestions({ programs: [], universities: [] });
+                if (latestRequestRef.current === requestId) {
+                    setSuggestions({ programs: [], universities: [] });
+                }
             } finally {
-                setIsLoadingSuggestions(false);
+                if (latestRequestRef.current === requestId) {
+                    setIsLoadingSuggestions(false);
+                }
             }
         };
 
