@@ -438,9 +438,11 @@ export default function UniversitySearchResultsPage() {
 
   const filteredResults = useMemo(() => {
     const normalizedQuery = searchQuery.toLowerCase();
+    const hasExplicitIdFilter = Boolean(programId || universityId);
 
     return results.filter((result) => {
       const matchesSearch =
+        hasExplicitIdFilter ||
         !normalizedQuery ||
         `${result.universityName} ${result.programName} ${result.location}`.toLowerCase().includes(normalizedQuery) ||
         // Fallback: if server sent it, it likely matched via ID or special logic
@@ -457,7 +459,7 @@ export default function UniversitySearchResultsPage() {
         matchesProgram
       );
     });
-  }, [results, searchQuery, selectedTiers, selectedPrograms, selectedUniversities, allUniversities]);
+  }, [results, searchQuery, selectedTiers, selectedPrograms, selectedUniversities, allUniversities, programId, universityId]);
 
   const handleToggleUniversity = (name: string) => {
     // If we are un-toggling the university that is currently filtering the page via URL,
