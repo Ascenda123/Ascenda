@@ -47,6 +47,7 @@ export function IntelligentSearchBar({
     const debounceRef = useRef<number | null>(null);
     const blurTimeoutRef = useRef<number | null>(null);
     const latestRequestRef = useRef<number>(0);
+    const activeRequests = useRef<AbortController[]>([]);
     const containerRef = useRef<HTMLDivElement>(null);
     const hasTypedQuery = value.trim().length > 0;
 
@@ -74,6 +75,9 @@ export function IntelligentSearchBar({
             setIsLoadingSuggestions(true);
             const requestId = Date.now();
             latestRequestRef.current = requestId;
+            activeRequests.current.forEach((controller) => controller.abort());
+            const controller = new AbortController();
+            activeRequests.current = [controller];
             try {
                 const supabase = getBrowserSupabaseClient();
 
@@ -149,6 +153,7 @@ export function IntelligentSearchBar({
             } finally {
                 if (latestRequestRef.current === requestId) {
                     setIsLoadingSuggestions(false);
+                    activeRequests.current = [];
                 }
             }
         };
@@ -162,6 +167,8 @@ export function IntelligentSearchBar({
             if (debounceRef.current) {
                 window.clearTimeout(debounceRef.current);
             }
+            activeRequests.current.forEach((controller) => controller.abort());
+            activeRequests.current = [];
         };
     }, [value]);
 

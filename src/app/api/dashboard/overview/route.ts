@@ -84,7 +84,11 @@ export async function GET() {
     supabase.from('student_preferences').select('*').eq('profile_id', user.id).single(),
     supabase.from('student_aspirations').select('*').eq('profile_id', user.id).single(),
     supabase.from('profiles').select('full_name,country,time_zone').eq('id', user.id).single(),
-    supabase.from('programs').select('*').limit(10)
+    supabase
+      .from('programs')
+      .select('*')
+      .in('id', applicationProgramIds.length ? applicationProgramIds : undefined)
+      .limit(25)
   ]);
 
   const checklist = (checklistResponse.data ?? []) as ChecklistRow[];
@@ -94,6 +98,13 @@ export async function GET() {
   const aspirations = aspirationsResponse.data ?? null;
   const profileRecord = (profileResponse.data ?? null) as ProfileRow | null;
   const programs = (programsResponse.data ?? []) as ProgramRow[];
+  if (programs.length === 0 && applicationProgramIds.length === 0) {
+    // Fallback to a small curated sample to avoid empty dashboard while keeping payload tiny.
+    const fallbackProgramsResponse = await supabase.from('programs').select('*').limit(8);
+    if (!fallbackProgramsResponse.error) {
+      programs.push(...((fallbackProgramsResponse.data ?? []) as ProgramRow[]));
+    }
+  }
   const programIds = programs.map((program) => program.id);
   const universityIds = programs.map((program) => program.university_id);
 

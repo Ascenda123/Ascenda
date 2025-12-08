@@ -29,7 +29,7 @@ export const DocumentUploader = ({ applicationId, taskId, onUpload }: DocumentUp
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file) return;
+    if (!file || isUploading) return;
     setError(null);
 
     if (file.size > 20 * 1024 * 1024) {

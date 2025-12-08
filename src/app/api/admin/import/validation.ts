@@ -82,7 +82,9 @@ const requirementsSchema = z.object({
   min_sat: z.coerce.number().optional(),
   min_act: z.coerce.number().optional(),
   required_subjects: z.array(z.string()).optional(),
-  language_tests: z.record(z.string(), z.number()).optional(),
+  language_tests: z
+    .record(z.string(), z.coerce.number())
+    .optional(),
   other_requirements: z.string().optional()
 });
 
