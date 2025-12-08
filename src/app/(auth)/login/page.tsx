@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 
 export default function LoginPage() {
   return (
-    <div className="space-y-6 rounded-[32px] border border-border bg-card p-8 text-foreground shadow-[0_25px_70px_rgba(15,23,42,0.08)] transition-colors">
+    <div className="space-y-6">
       <div className="space-y-2 text-center">
         <h1 className="text-3xl font-semibold">Welcome back</h1>
         <p className="text-sm text-muted-foreground">Sign in to access your dashboard.</p>

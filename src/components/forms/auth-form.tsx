@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -24,12 +24,31 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
   const supabase = useSupabase();
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [authServiceReady, setAuthServiceReady] = useState(true);
   const [isPending, startTransition] = useTransition();
 
   const form = useForm<AuthFormValues>({
     resolver: zodResolver(authSchema),
     defaultValues: { email: '', password: '' }
   });
+
+  useEffect(() => {
+    let isMounted = true;
+    supabase.auth.getSession().then(({ error: sessionError }) => {
+      if (!isMounted) return;
+      if (sessionError) {
+        console.error('Supabase auth unavailable', sessionError);
+        setAuthServiceReady(false);
+        setError((prev) => prev ?? 'We could not reach the sign-in service. Please refresh and try again.');
+      } else {
+        setAuthServiceReady(true);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [supabase]);
 
   const buildAuthCallbackUrl = (nextPath: string) => {
     const envUrl = process.env.NEXT_PUBLIC_SITE_URL;
@@ -86,9 +105,27 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
     return needsOnboarding ? '/profile?onboarding=true' : '/dashboard';
   };
 
+  const formatAuthError = (authError: AuthError) => {
+    const message = authError.message || 'Something went wrong.';
+    if (/already registered/i.test(message)) {
+      return 'This email is already registered. Try signing in instead or reset your password.';
+    }
+    if (/invalid login credentials/i.test(message)) {
+      return 'Email or password looks incorrect. Double-check and try again.';
+    }
+    if (/over email rate limit/i.test(message) || authError.status === 429) {
+      return 'Too many attempts. Please wait a moment before trying again.';
+    }
+    return message;
+  };
+
   const onSubmit = (values: AuthFormValues) => {
     setError(null);
     setSuccess(null);
+    if (!authServiceReady) {
+      setError('Sign-in service is temporarily unavailable. Please refresh and try again.');
+      return;
+    }
     startTransition(async () => {
       let authError: AuthError | null = null;
       let shouldRedirect = false;
@@ -108,6 +145,10 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
         });
         authError = signUpError;
         if (!signUpError) {
+          if (data.user?.identities?.length === 0) {
+            setError('This email is already registered. Try signing in instead.');
+            return;
+          }
           if (data.session) {
             shouldRedirect = true;
           } else {
@@ -119,7 +160,7 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
       }
 
       if (authError) {
-        setError(authError.message);
+        setError(formatAuthError(authError));
         return;
       }
 
@@ -138,6 +179,10 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
   const handleGoogle = () => {
     setError(null);
     setSuccess(null);
+    if (!authServiceReady) {
+      setError('Sign-in service is temporarily unavailable. Please refresh and try again.');
+      return;
+    }
     startTransition(async () => {
       const redirectTo =
         dashboardRedirectUrl ??
@@ -150,7 +195,7 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
       });
 
       if (signInError) {
-        setError(signInError.message);
+        setError(formatAuthError(signInError));
         return;
       }
 
@@ -177,13 +222,18 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
         <Label className="form-label" htmlFor="password">
           Password
         </Label>
-        <Input
-          id="password"
-          type="password"
-          autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
-          className="form-input"
-          {...form.register('password')}
-        />
+        <div className="relative">
+          <Input
+            id="password"
+            type="password"
+            autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
+            className="form-input pr-28"
+            {...form.register('password')}
+          />
+          <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+            {mode === 'signup' ? '8+ characters' : 'Secure login'}
+          </div>
+        </div>
         {form.formState.errors.password ? (
           <p className="form-feedback form-feedback--error" role="alert">
             {form.formState.errors.password.message}
@@ -203,24 +253,30 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
       <Button
         type="submit"
         className="form-action w-full"
-        disabled={isPending}
+        disabled={isPending || !authServiceReady}
         data-loading={isPending ? 'true' : undefined}
       >
         {isPending ? 'Please wait…' : mode === 'login' ? 'Sign in' : 'Create account'}
       </Button>
-      <div className="form-divider">
-        <span>or continue with</span>
+
+      <div className="flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+        <span className="h-px flex-1 bg-border" aria-hidden />
+        <span>Or continue with</span>
+        <span className="h-px flex-1 bg-border" aria-hidden />
       </div>
       <Button
         type="button"
         variant="outline"
         className="form-action w-full"
         onClick={handleGoogle}
-        disabled={isPending}
+        disabled={isPending || !authServiceReady}
         data-loading={isPending ? 'true' : undefined}
       >
         Google
       </Button>
+      <p className="text-center text-xs text-muted-foreground">
+        Supabase keeps your session secure and lets us warn you if this email is already registered.
+      </p>
     </form>
   );
 };
