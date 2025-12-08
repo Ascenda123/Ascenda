@@ -32,6 +32,12 @@ const clearOnboardingCache = () => {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production'
   });
+  cookies().set('onboarding_status', '', {
+    path: '/',
+    maxAge: 0,
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production'
+  });
 };
 
 export const savePersonalStep = async (values: ProfilePersonalValues) => {

@@ -4,7 +4,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Search, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import { getBrowserSupabaseClient } from '@/lib/supabase/client';
 
 export type Suggestion = {
     id: string;
@@ -67,7 +66,7 @@ export function IntelligentSearchBar({
     useEffect(() => {
         const fetchSuggestions = async (query: string) => {
             const trimmed = query.trim();
-            if (trimmed.length === 0) {
+            if (trimmed.length < 2) {
                 setSuggestions({ programs: [], universities: [] });
                 setIsLoadingSuggestions(false);
                 return;
@@ -79,23 +78,13 @@ export function IntelligentSearchBar({
             const controller = new AbortController();
             activeRequests.current = [controller];
             try {
-                const supabase = getBrowserSupabaseClient();
-
-                const [programsRes, universitiesRes] = await Promise.all([
-                    supabase
-                        .from('programs')
-                        .select('id,course_name,study_level,universities!inner(name,country,city,region)')
-                        .ilike('course_name', `%${trimmed}%`)
-                        .limit(5),
-                    supabase
-                        .from('universities')
-                        .select('id,name,country,city,region')
-                        .ilike('name', `%${trimmed}%`)
-                        .limit(5)
-                ]);
-
-                if (programsRes.error) console.warn('Program search error:', programsRes.error);
-                if (universitiesRes.error) console.warn('University search error:', universitiesRes.error);
+                const response = await fetch(`/api/search/suggestions?q=${encodeURIComponent(trimmed)}`, {
+                    signal: controller.signal
+                });
+                if (!response.ok) {
+                    throw new Error(`Search failed: ${response.status}`);
+                }
+                const payload = (await response.json()) as { programs: any[]; universities: any[] };
 
                 const normalizedQuery = trimmed.toLowerCase();
 
@@ -109,7 +98,7 @@ export function IntelligentSearchBar({
                     return 0;
                 };
 
-                const programSuggestions = (programsRes.data || []).map((program: any) => {
+                const programSuggestions = (payload.programs || []).map((program: any) => {
                     const uni = program.universities as { name?: string | null; city?: string | null; region?: string | null; country?: string | null } | null;
                     const location = [uni?.city, uni?.region, uni?.country].filter(Boolean).join(', ') || null;
                     const nameScore = scoreText(program.course_name);
@@ -126,7 +115,7 @@ export function IntelligentSearchBar({
                     };
                 });
 
-                const universitySuggestions = (universitiesRes.data || []).map((uni: any) => {
+                const universitySuggestions = (payload.universities || []).map((uni: any) => {
                     const location = [uni.city, uni.region, uni.country].filter(Boolean).join(', ') || null;
                     const score = scoreText(uni.name);
                     return {
@@ -180,26 +169,16 @@ export function IntelligentSearchBar({
         const loadTrending = async () => {
             setIsLoadingPrefill(true);
             try {
-                const supabase = getBrowserSupabaseClient();
-                const [programsRes, universitiesRes] = await Promise.all([
-                    supabase
-                        .from('programs')
-                        .select('id,course_name,study_level,universities!inner(name,country,city,region)')
-                        .order('course_name', { ascending: true })
-                        .limit(4),
-                    supabase
-                        .from('universities')
-                        .select('id,name,country,city,region')
-                        .order('name', { ascending: true })
-                        .limit(4)
-                ]);
+                const response = await fetch('/api/search/suggestions?trending=true');
+                if (!response.ok) throw new Error('Trending fetch failed');
+                const payload = (await response.json()) as { programs: any[]; universities: any[] };
 
                 if (!isActive) return;
 
                 const formatLocation = (city?: string | null, region?: string | null, country?: string | null) =>
                     [city, region, country].filter(Boolean).join(', ') || null;
 
-                const programs = (programsRes.data || []).map((program: any) => {
+                const programs = (payload.programs || []).map((program: any) => {
                     const uni = program.universities as { name?: string | null; city?: string | null; region?: string | null; country?: string | null } | null;
                     return {
                         id: program.id,
@@ -210,7 +189,7 @@ export function IntelligentSearchBar({
                     };
                 });
 
-                const universities = (universitiesRes.data || []).map((uni: any) => ({
+                const universities = (payload.universities || []).map((uni: any) => ({
                     id: uni.id,
                     name: uni.name,
                     location: formatLocation(uni.city, uni.region, uni.country),

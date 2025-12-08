@@ -25,6 +25,25 @@ export const trackEvent = (name: string, payload?: Record<string, unknown>) => {
       console.error('Analytics listener error', error);
     }
   });
+
+  const endpoint = process.env.NEXT_PUBLIC_ANALYTICS_ENDPOINT;
+  if (endpoint) {
+    try {
+      const body = JSON.stringify(event);
+      if (typeof window !== 'undefined' && typeof window.navigator?.sendBeacon === 'function') {
+        window.navigator.sendBeacon(endpoint, body);
+      } else {
+        void fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body
+        });
+      }
+    } catch (error) {
+      // Fail silently to avoid blocking user flows.
+      console.error('Analytics dispatch failed', error);
+    }
+  }
 };
 
 export const subscribeToAnalytics = (listener: Listener) => {

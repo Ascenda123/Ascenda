@@ -42,6 +42,26 @@ export async function middleware(req: NextRequest) {
       return false;
     }
 
+    const statusCookie = req.cookies.get('onboarding_status')?.value;
+    if (statusCookie) {
+      const [userId, status, timestamp] = statusCookie.split(':');
+      const ageMinutes = timestamp ? (Date.now() - Number(timestamp)) / (1000 * 60) : Number.POSITIVE_INFINITY;
+      if (userId === session.user.id) {
+        if (status === 'complete') {
+          response.cookies.set('onboarding_complete', session.user.id, {
+            path: '/',
+            maxAge: 60 * 60 * 24 * 30,
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production'
+          });
+          return false;
+        }
+        if (status === 'pending' && ageMinutes < 60) {
+          return true;
+        }
+      }
+    }
+
     const [profileResponse, academicsResponse, preferencesResponse, aspirationsResponse] = await Promise.all([
       supabase.from('profiles').select('full_name,country,time_zone').eq('id', session.user.id).maybeSingle(),
       supabase.from('student_academics').select('curriculum').eq('profile_id', session.user.id).maybeSingle(),
@@ -62,6 +82,19 @@ export async function middleware(req: NextRequest) {
       response.cookies.set('onboarding_complete', session.user.id, {
         path: '/',
         maxAge: 60 * 60 * 24 * 30,
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production'
+      });
+      response.cookies.set('onboarding_status', `${session.user.id}:complete:${Date.now()}`, {
+        path: '/',
+        maxAge: 60 * 60 * 24 * 7,
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production'
+      });
+    } else {
+      response.cookies.set('onboarding_status', `${session.user.id}:pending:${Date.now()}`, {
+        path: '/',
+        maxAge: 60 * 60 * 12,
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production'
       });

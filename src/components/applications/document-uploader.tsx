@@ -28,70 +28,80 @@ export const DocumentUploader = ({ applicationId, taskId, onUpload }: DocumentUp
   const bucket = useMemo(() => process.env.NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET ?? 'application-documents', []);
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file || isUploading) return;
+    const files = Array.from(event.target.files ?? []);
+    if (!files.length || isUploading) return;
     setError(null);
 
-    if (file.size > 20 * 1024 * 1024) {
+    const oversize = files.find((file) => file.size > 20 * 1024 * 1024);
+    if (oversize) {
       setStatus(null);
-      setError('File exceeds 20 MB limit.');
+      setError(`File ${oversize.name} exceeds 20 MB limit.`);
       return;
     }
 
-    const extension = file.name.split('.').pop()?.toLowerCase();
-    const isAllowedType =
-      allowedMimeTypes.has(file.type) || (extension && ['pdf', 'doc', 'docx'].includes(extension));
-    if (!isAllowedType) {
+    const invalid = files.find((file) => {
+      const extension = file.name.split('.').pop()?.toLowerCase();
+      return !(
+        allowedMimeTypes.has(file.type) ||
+        (extension && ['pdf', 'doc', 'docx'].includes(extension))
+      );
+    });
+    if (invalid) {
       setStatus(null);
-      setError('Only PDF or Word documents are allowed.');
+      setError(`File ${invalid.name} is not a PDF or Word document.`);
       return;
     }
 
     if (!onUpload) {
       setIsUploading(true);
-    setStatus('Uploading…');
+      setStatus(`Uploading ${files.length} file${files.length > 1 ? 's' : ''}…`);
 
-    try {
-      const {
-        data: { user },
-        error: userError
-      } = await supabase.auth.getUser();
+      try {
+        const {
+          data: { user },
+          error: userError
+        } = await supabase.auth.getUser();
 
-      if (userError || !user) {
-        setError('You need to be signed in to upload a document.');
-        setStatus(null);
-        return;
-      }
-
-      const scope = applicationId ? `applications/${applicationId}` : 'unassigned';
-      const taskSegment = taskId ? `task-${taskId}/` : '';
-      const ownerSegment = applicationId ? '' : `${user.id}/`;
-      const path = `${scope}/${ownerSegment}${taskSegment}${Date.now()}-${file.name.replace(/\s+/g, '-')}`;
-        const { error: uploadError } = await supabase.storage.from(bucket).upload(path, file, {
-          upsert: false,
-          contentType: file.type || undefined
-        });
-
-        if (uploadError) {
-          throw uploadError;
+        if (userError || !user) {
+          setError('You need to be signed in to upload a document.');
+          setStatus(null);
+          return;
         }
 
-        if (applicationId) {
-          const { error: insertError } = await supabase.from('documents').insert({
-            application_id: applicationId,
-            name: file.name,
-            type: file.type || extension,
-            storage_path: path
+        for (const file of files) {
+          const extension = file.name.split('.').pop()?.toLowerCase();
+          const scope = applicationId ? `applications/${applicationId}` : 'unassigned';
+          const taskSegment = taskId ? `task-${taskId}/` : '';
+          const ownerSegment = applicationId ? '' : `${user.id}/`;
+          const path = `${scope}/${ownerSegment}${taskSegment}${Date.now()}-${file.name.replace(/\s+/g, '-')}`;
+          const { error: uploadError } = await supabase.storage.from(bucket).upload(path, file, {
+            upsert: false,
+            contentType: file.type || undefined
           });
-          if (insertError) {
-            throw insertError;
+
+          if (uploadError) {
+            throw uploadError;
           }
+
+          if (applicationId) {
+            const { error: insertError } = await supabase.from('documents').insert({
+              application_id: applicationId,
+              name: file.name,
+              type: file.type || extension,
+              storage_path: path
+            });
+            if (insertError) {
+              await supabase.storage.from(bucket).remove([path]);
+              throw insertError;
+            }
+          }
+
+          const { data: signedUrl } = await supabase.storage.from(bucket).createSignedUrl(path, 60 * 60);
+          setUploaded((prev) => [...prev, { name: file.name, url: signedUrl?.signedUrl }]);
+          trackEvent('document_uploaded', { fileName: file.name, bucket });
         }
 
-        const { data: signedUrl } = await supabase.storage.from(bucket).createSignedUrl(path, 60 * 60);
-        setUploaded((prev) => [...prev, { name: file.name, url: signedUrl?.signedUrl }]);
-        setStatus(`Uploaded ${file.name}`);
-        trackEvent('document_uploaded', { fileName: file.name, bucket });
+        setStatus(`Uploaded ${files.length} file${files.length > 1 ? 's' : ''}`);
       } catch (uploadError) {
         const message = uploadError instanceof Error ? uploadError.message : 'Unable to upload document.';
         setError(message);
@@ -104,9 +114,11 @@ export const DocumentUploader = ({ applicationId, taskId, onUpload }: DocumentUp
 
     setStatus('Uploading…');
     try {
-      await onUpload(file);
-      setStatus(`Uploaded ${file.name}`);
-      trackEvent('document_uploaded_custom_handler', { fileName: file.name });
+      for (const file of files) {
+        await onUpload(file);
+        trackEvent('document_uploaded_custom_handler', { fileName: file.name });
+      }
+      setStatus(`Uploaded ${files.length} file${files.length > 1 ? 's' : ''}`);
     } catch (customError) {
       const message = customError instanceof Error ? customError.message : 'Upload failed.';
       setError(message);
@@ -128,7 +140,7 @@ export const DocumentUploader = ({ applicationId, taskId, onUpload }: DocumentUp
         <p className="text-sm font-semibold text-foreground">Drag & drop or click to browse</p>
         <p className="text-xs text-muted-foreground">We auto-tag the document to the right checklist item.</p>
       </label>
-      <input id="document-upload" type="file" className="hidden" onChange={handleFileChange} disabled={isUploading} />
+      <input id="document-upload" type="file" multiple className="hidden" onChange={handleFileChange} disabled={isUploading} />
       {status ? <p className="text-xs text-muted-foreground">{status}</p> : <p className="text-xs text-muted-foreground">No document selected yet.</p>}
       {error ? (
         <p className="text-xs text-red-500" role="alert">
