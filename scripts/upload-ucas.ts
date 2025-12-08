@@ -57,6 +57,12 @@ const readCsv = (filePath: string): Row[] => {
         }
         normalized[key] = value;
       });
+      if (normalized.name && !normalized.course_name) {
+        normalized.course_name = normalized.name;
+      }
+      if (normalized.course_name && !normalized.name) {
+        normalized.name = normalized.course_name;
+      }
       return normalized;
     })
     .filter((row: Row) => Object.keys(row).length > 0);

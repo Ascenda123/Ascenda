@@ -43,11 +43,20 @@ const universitiesSchema = z.object({
 const programsSchema = z.object({
   id: z.string().uuid().optional(),
   university_id: z.string().uuid(),
+  name: z.string().optional(),
   course_name: z.string().min(1),
+  field: z.string().optional(),
   study_level: z.string().optional(),
+  level: z.string().optional(),
   duration: z.string().optional(),
+  duration_years: z.coerce.number().optional(),
   start_date: z.string().optional(),
   campus: z.string().optional(),
+  language: z.string().optional(),
+  mode: z.string().optional(),
+  intake_months: z.array(z.string()).optional(),
+  tuition: z.coerce.number().optional(),
+  currency: z.string().optional(),
   course_summary: z.string().optional(),
   modules: z.string().optional(),
   assessment_methods: z.string().optional(),
@@ -71,7 +80,9 @@ const programsSchema = z.object({
   student_outcomes: z.string().optional(),
   average_salary_after_15m: z.string().optional(),
   historic_entry_grades: z.string().optional(),
-  open_days: z.string().optional()
+  open_days: z.string().optional(),
+  url: z.string().url().optional(),
+  metadata: z.record(z.any()).optional()
 });
 
 const requirementsSchema = z.object({
@@ -137,6 +148,17 @@ export const sanitizeRows = (rows: unknown[]): Record<string, unknown>[] =>
     })
     .filter((row: Record<string, unknown>) => Object.keys(row).length > 0);
 
+const normalizeProgramRow = (row: Record<string, unknown>): Record<string, unknown> => {
+  const copy = { ...row };
+  if (!copy.course_name && typeof copy.name === 'string') {
+    copy.course_name = copy.name;
+  }
+  if (!copy.name && typeof copy.course_name === 'string') {
+    copy.name = copy.course_name;
+  }
+  return copy;
+};
+
 export const validateTemplateRows = (
   template: TemplateKey | undefined,
   rawRows: unknown[]
@@ -150,6 +172,9 @@ export const validateTemplateRows = (
     return { error: 'No rows provided for import.' };
   }
 
+  const normalized =
+    template === 'programs' ? sanitized.map(normalizeProgramRow) : sanitized;
+
   if (sanitized.length > MAX_IMPORT_ROWS) {
     return { error: `Row limit exceeded. Max rows: ${MAX_IMPORT_ROWS}.` };
   }
@@ -157,8 +182,8 @@ export const validateTemplateRows = (
   const schema = templateSchemas[template];
   const parsedRows: Record<string, unknown>[] = [];
 
-  for (let i = 0; i < sanitized.length; i += 1) {
-    const row = sanitized[i];
+  for (let i = 0; i < normalized.length; i += 1) {
+    const row = normalized[i];
     const result = schema.safeParse(row);
     if (!result.success) {
       const issue = result.error.issues[0];

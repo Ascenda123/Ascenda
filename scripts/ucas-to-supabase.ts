@@ -42,6 +42,7 @@ type ProgramOut = {
   id: string;
   university_id: string;
   name: string;
+  course_name: string;
   field?: string;
   level?: string;
   duration_years?: number;
@@ -236,6 +237,7 @@ const buildPrograms = (
       id: programId,
       university_id: uni.id,
       name: row.course_name.trim(),
+      course_name: row.course_name.trim(),
       field: undefined,
       level: row.study_level,
       duration_years: durationYears,
@@ -356,6 +358,7 @@ const main = () => {
       'id',
       'university_id',
       'name',
+      'course_name',
       'field',
       'level',
       'duration_years',

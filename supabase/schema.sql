@@ -95,11 +95,20 @@ create table if not exists universities (
 create table if not exists programs (
   id uuid primary key default gen_random_uuid(),
   university_id uuid not null references universities(id) on delete cascade,
+  name text,
   course_name text not null,
+  field text,
   study_level text,
+  level text,
   duration text,
+  duration_years numeric,
   start_date text,
   campus text,
+  language text,
+  mode text,
+  intake_months text[],
+  tuition numeric,
+  currency text,
   course_summary text,
   modules text,
   assessment_methods text,
@@ -124,6 +133,8 @@ create table if not exists programs (
   average_salary_after_15m text,
   historic_entry_grades text,
   open_days text,
+  url text,
+  metadata jsonb default '{}'::jsonb,
   created_at timestamptz not null default timezone('utc', now())
 );
 
@@ -496,7 +507,7 @@ create policy application_documents_delete on storage.objects
         split_part(name, '/', 1) = 'applications'
         and exists (
           select 1 from applications a
-          where a.id = split_part(name, '/', 2)
+          where a.id::text = split_part(name, '/', 2)
             and a.profile_id = auth.uid()
         )
       )
