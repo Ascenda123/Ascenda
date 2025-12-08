@@ -16,7 +16,7 @@ export interface ShortlistItem {
   location?: string;
 }
 
-const STORAGE_KEY = 'ascenda-university-shortlist-v2';
+const STORAGE_KEY_PREFIX = 'ascenda-university-shortlist-v2';
 const OLD_STORAGE_KEY = 'ascenda-university-shortlist';
 const DEMO_IDS = new Set(['yale-epe', 'melbourne-design', 'hkust-gbus']);
 const TABLE_NAME = 'shortlisted_programs';
@@ -49,15 +49,21 @@ export const useShortlist = () => {
     };
   };
 
-  const persistLocal = useCallback((value: ShortlistItem[]) => {
+  const getStorageKey = useCallback((userId?: string | null) => {
+    return userId ? `${STORAGE_KEY_PREFIX}::${userId}` : `${STORAGE_KEY_PREFIX}::guest`;
+  }, []);
+
+  const persistLocal = useCallback((storageKey: string, value: ShortlistItem[]) => {
     if (typeof window !== 'undefined') {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(value));
+      window.localStorage.setItem(storageKey, JSON.stringify(value));
     }
   }, []);
 
-  const loadLocal = useCallback((): ShortlistItem[] => {
-    const stored = typeof window !== 'undefined' ? window.localStorage.getItem(STORAGE_KEY) : null;
-    const legacy = typeof window !== 'undefined' ? window.localStorage.getItem(OLD_STORAGE_KEY) : null;
+  const loadLocal = useCallback((storageKey: string, fallbackKeys: string[] = []): ShortlistItem[] => {
+    const stored = typeof window !== 'undefined' ? window.localStorage.getItem(storageKey) : null;
+    const legacy = fallbackKeys.length && typeof window !== 'undefined'
+      ? fallbackKeys.map((key) => window.localStorage.getItem(key)).find((entry) => entry)
+      : null;
     const parseItems = (value: string | null) => {
       if (!value) return null;
       try {
@@ -108,15 +114,24 @@ export const useShortlist = () => {
     supabaseRef.current = supabase;
 
     const hydrate = async () => {
-      const localItems = loadLocal();
       const session = await supabase.auth.getSession();
       const userId = session.data.session?.user?.id ?? null;
+      const storageKey = getStorageKey(userId);
+      const localItems = loadLocal(
+        storageKey,
+        userId ? [] : [OLD_STORAGE_KEY]
+      );
       setProfileId(userId);
 
       if (!userId) {
         setItems(localItems);
         setReady(true);
         return;
+      }
+
+      // Clear legacy guest storage when a user signs in to avoid cross-account import.
+      if (typeof window !== 'undefined') {
+        window.localStorage.removeItem(OLD_STORAGE_KEY);
       }
 
       const { data, error } = await supabase
@@ -144,21 +159,19 @@ export const useShortlist = () => {
       }
 
       setItems(merged);
-      persistLocal(merged);
-      if (typeof window !== 'undefined') {
-        window.localStorage.removeItem(OLD_STORAGE_KEY);
-      }
+      persistLocal(storageKey, merged);
       setReady(true);
     };
 
     void hydrate();
-  }, [loadLocal, persistLocal, upsertRemoteItem]);
+  }, [getStorageKey, loadLocal, persistLocal, upsertRemoteItem]);
 
   useEffect(() => {
     if (ready && typeof window !== 'undefined') {
-      persistLocal(items);
+      const storageKey = getStorageKey(profileId);
+      persistLocal(storageKey, items);
     }
-  }, [items, persistLocal, ready]);
+  }, [getStorageKey, items, persistLocal, profileId, ready]);
 
   const addItem = useCallback((item: ShortlistItem) => {
     setItems((prev) => {

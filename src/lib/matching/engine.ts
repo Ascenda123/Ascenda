@@ -215,9 +215,9 @@ const calculatePreferenceFit = (input: MatchInput) => {
     scores.push(program.mode.toLowerCase() === preferences.delivery.toLowerCase() ? 1 : 0.5);
   }
 
-  if (typeof preferences.budgetMax === 'number' && program.tuition) {
+  if (typeof preferences.budgetMax === 'number' && preferences.budgetMax > 0 && program.tuition) {
     const withinBudget = program.tuition <= preferences.budgetMax;
-    const penalty = withinBudget ? 1 : Math.max(0, 1 - (program.tuition - preferences.budgetMax) / (preferences.budgetMax || 1));
+    const penalty = withinBudget ? 1 : Math.max(0, 1 - (program.tuition - preferences.budgetMax) / preferences.budgetMax);
     scores.push(penalty);
   }
 

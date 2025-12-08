@@ -14,6 +14,7 @@ import {
 } from '@/lib/matching/transform';
 import type { EnrichedMatch } from '@/lib/matching/types';
 import type { Database } from '@/lib/types/database';
+import { filterVisiblePrograms } from '@/lib/catalog/visibility';
 
 type ApplicationRow = Database['public']['Tables']['applications']['Row'];
 type ChecklistRow = Database['public']['Tables']['application_checklist']['Row'];
@@ -103,8 +104,9 @@ export async function GET() {
       programs.push(...((fallbackProgramsResponse.data ?? []) as ProgramRow[]));
     }
   }
-  const programIds = programs.map((program) => program.id);
-  const universityIds = programs.map((program) => program.university_id);
+  const visiblePrograms = filterVisiblePrograms(programs);
+  const programIds = visiblePrograms.map((program) => program.id);
+  const universityIds = visiblePrograms.map((program) => program.university_id);
 
   const filteredUniversitiesResponse =
     universityIds.length > 0
@@ -130,16 +132,16 @@ export async function GET() {
   let matchResults = [] as Awaited<ReturnType<typeof rankMatches>>;
   let mappedPrograms = new Map<string, ReturnType<typeof mapProgramRow>>();
   let mappedUniversities = new Map<string, ReturnType<typeof mapUniversityRow>>();
-  if (academics && preferences && aspirations && programs.length > 0 && universities.length > 0) {
+  if (academics && preferences && aspirations && visiblePrograms.length > 0 && universities.length > 0) {
     const mappedAcademics = mapAcademicsRow(academics);
     const mappedPreferences = mapPreferencesRow(preferences);
     const mappedAspirations = mapAspirationsRow(aspirations);
     const requirementMap = new Map<string, ReturnType<typeof mapRequirementRow>>(
       requirements.map((item) => [item.program_id, mapRequirementRow(item)])
     );
-    mappedPrograms = new Map(programs.map((program) => [program.id, mapProgramRow(program)]));
+    mappedPrograms = new Map(visiblePrograms.map((program) => [program.id, mapProgramRow(program)]));
     mappedUniversities = new Map(universities.map((item) => [item.id, mapUniversityRow(item)]));
-    const inputs = programs
+    const inputs = visiblePrograms
       .map((program) => {
         const mappedProgram = mappedPrograms.get(program.id);
         const mappedUniversity = mappedUniversities.get(program.university_id);

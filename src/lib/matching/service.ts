@@ -60,6 +60,8 @@ export const loadMatchesForProfile = async (
   profileId: string,
   options: LoadMatchesOptions = {}
 ): Promise<MatchComputationResult> => {
+  const programLimit = options.programLimit ?? 500;
+
   const [
     { data: academicsData },
     { data: preferencesData },
@@ -83,28 +85,11 @@ export const loadMatchesForProfile = async (
     };
   }
 
-  const programQuery = supabase
-    .from('programs')
-    .select('*');
+  const programQuery = supabase.from('programs').select('*').limit(programLimit);
+  const { data: programsData, error: programsError } = await programQuery;
 
-  const [
-    { data: programsData, error: programsError },
-    { data: universitiesData, error: universitiesError },
-    { data: requirementsData, error: requirementsError }
-  ] = await Promise.all([
-    options.programLimit ? programQuery.limit(options.programLimit) : programQuery,
-    supabase
-      .from('universities')
-      .select('id,name,country,region,rank_overall,rank_source,acceptance_rate,requires_test,metadata'),
-    supabase
-      .from('program_requirements')
-      .select(
-        'program_id,curriculum,min_gpa,min_ib_total,min_sat,min_act,required_subjects,language_tests,other_requirements'
-      )
-  ]);
-
-  if (programsError || universitiesError || requirementsError) {
-    console.error('Failed to load catalog data', { programsError, universitiesError, requirementsError });
+  if (programsError) {
+    console.error('Failed to load catalog data', { programsError });
     return {
       matches: [],
       catalogSize: { programs: 0, universities: 0 },
@@ -114,6 +99,45 @@ export const loadMatchesForProfile = async (
 
   const filteredPrograms = filterVisiblePrograms((programsData ?? []) as ProgramRow[]);
   const programs: Program[] = filteredPrograms.map(mapProgramRow);
+
+  if (!programs.length) {
+    return {
+      matches: [],
+      catalogSize: { programs: filteredPrograms.length, universities: 0 },
+      missingSections
+    };
+  }
+
+  const programIds = programs.map((program) => program.id);
+  const universityIds = programs.map((program) => program.universityId);
+
+  const [{ data: universitiesData, error: universitiesError }, { data: requirementsData, error: requirementsError }] =
+    await Promise.all([
+      universityIds.length
+        ? supabase
+          .from('universities')
+          .select('id,name,country,region,rank_overall,rank_source,acceptance_rate,requires_test,metadata')
+          .in('id', universityIds)
+        : Promise.resolve({ data: [] } as { data: UniversityRow[] }),
+      programIds.length
+        ? supabase
+          .from('program_requirements')
+          .select(
+            'program_id,curriculum,min_gpa,min_ib_total,min_sat,min_act,required_subjects,language_tests,other_requirements'
+          )
+          .in('program_id', programIds)
+        : Promise.resolve({ data: [] } as { data: ProgramRequirementRow[] })
+    ]);
+
+  if (universitiesError || requirementsError) {
+    console.error('Failed to load catalog data', { universitiesError, requirementsError });
+    return {
+      matches: [],
+      catalogSize: { programs: filteredPrograms.length, universities: 0 },
+      missingSections
+    };
+  }
+
   const universities: University[] = (universitiesData ?? []).map((u) => mapUniversityRow(u as any));
   const requirements: ProgramRequirement[] = (requirementsData ?? []).map((r) => mapRequirementRow(r as any));
 

@@ -176,8 +176,8 @@ export const ProfileWizard = ({
   const preferencesForm = useForm<ProfilePreferencesValues>({
     resolver: zodResolver(profilePreferencesSchema),
     defaultValues: {
-      budgetMin: preferences?.budget_min ?? 0,
-      budgetMax: preferences?.budget_max ?? 0,
+      budgetMin: preferences?.budget_min ?? undefined,
+      budgetMax: preferences?.budget_max ?? undefined,
       aidNeeded: preferences?.aid_needed ?? false,
       countries: initialCountries,
       campusType: preferences?.campus_type ?? undefined,

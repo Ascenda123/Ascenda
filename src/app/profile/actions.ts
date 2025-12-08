@@ -92,8 +92,8 @@ export const savePreferencesStep = async (values: ProfilePreferencesValues) => {
 
   const { error } = await supabase.from('student_preferences').upsert({
     profile_id: userId,
-    budget_min: parsed.budgetMin,
-    budget_max: parsed.budgetMax,
+    budget_min: parsed.budgetMin ?? null,
+    budget_max: parsed.budgetMax ?? null,
     aid_needed: parsed.aidNeeded,
     countries: parsed.countries,
     campus_type: parsed.campusType,
