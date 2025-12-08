@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { getBrowserSupabaseClient } from '@/lib/supabase/client';
-import type { SupabaseClient } from '@supabase/auth-helpers-nextjs';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/lib/types/database';
 
 export interface ShortlistItem {
@@ -131,7 +131,7 @@ export const useShortlist = () => {
         return;
       }
 
-      const remoteItems: ShortlistItem[] = (data ?? []).map(mapRowToItem);
+      const remoteItems: ShortlistItem[] = (data ?? []).map((row) => mapRowToItem(row as any));
       const merged: ShortlistItem[] = [...remoteItems];
 
       // Merge in any local-only items and persist them remotely

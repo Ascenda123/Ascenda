@@ -51,7 +51,7 @@ const fallbackScholarships: Scholarship[] = [
 
 export default async function ScholarshipsPage() {
   const supabase = createServerSupabaseClient();
-  const { data } = await supabase.from('scholarships').select('*').order('deadline', { ascending: true });
+  const { data } = await supabase.from('scholarships' as any).select('*').order('deadline', { ascending: true });
 
   const scholarships: Scholarship[] =
     data && data.length > 0

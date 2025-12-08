@@ -289,32 +289,32 @@ create policy aspirations_admin on student_aspirations
 -- Catalog policies
 drop policy if exists universities_read_all on universities;
 drop policy if exists universities_admin on universities;
-create policy universities_read_all on universities for select using (true);
+create policy universities_read_all on universities for select using (auth.uid() is not null);
 create policy universities_admin on universities using (auth_role() = 'admin');
 
 drop policy if exists programs_read_all on programs;
 drop policy if exists programs_admin on programs;
-create policy programs_read_all on programs for select using (true);
+create policy programs_read_all on programs for select using (auth.uid() is not null);
 create policy programs_admin on programs using (auth_role() = 'admin');
 
 drop policy if exists requirements_read_all on program_requirements;
 drop policy if exists requirements_admin on program_requirements;
-create policy requirements_read_all on program_requirements for select using (true);
+create policy requirements_read_all on program_requirements for select using (auth.uid() is not null);
 create policy requirements_admin on program_requirements using (auth_role() = 'admin');
 
 drop policy if exists deadlines_read_all on deadlines;
 drop policy if exists deadlines_admin on deadlines;
-create policy deadlines_read_all on deadlines for select using (true);
+create policy deadlines_read_all on deadlines for select using (auth.uid() is not null);
 create policy deadlines_admin on deadlines using (auth_role() = 'admin');
 
 drop policy if exists application_tasks_read_all on application_tasks;
 drop policy if exists application_tasks_admin on application_tasks;
-create policy application_tasks_read_all on application_tasks for select using (true);
+create policy application_tasks_read_all on application_tasks for select using (auth.uid() is not null);
 create policy application_tasks_admin on application_tasks using (auth_role() = 'admin');
 
 drop policy if exists sources_read_all on sources;
 drop policy if exists sources_admin on sources;
-create policy sources_read_all on sources for select using (true);
+create policy sources_read_all on sources for select using (auth.uid() is not null);
 create policy sources_admin on sources using (auth_role() = 'admin');
 
 -- Matches policies

@@ -11,6 +11,7 @@ export type Suggestion = {
     university?: string | null;
     location?: string | null;
     score: number;
+    type: 'program' | 'university';
 };
 
 export type SuggestionGroups = {
@@ -52,15 +53,42 @@ export function IntelligentSearchBar({
 
     useEffect(() => {
         if (typeof window === 'undefined') return;
-        try {
-            const stored = window.localStorage.getItem('ascenda-recent-searches');
-            if (stored) {
+
+        const validateAndLoadRecents = async () => {
+            try {
+                const stored = window.localStorage.getItem('ascenda-recent-searches');
+                if (!stored) return;
                 const parsed = JSON.parse(stored) as Suggestion[];
-                setRecentSearches(parsed);
+
+                // Normalize legacy entries that may not have a type.
+                const normalized = parsed.map((item) => ({
+                    ...item,
+                    type: item.type ?? (item.university ? 'program' : 'university')
+                })) as Suggestion[];
+
+                const validated: Suggestion[] = [];
+                for (const entry of normalized) {
+                    const response = await fetch(`/api/search/suggestions?q=${encodeURIComponent(entry.name)}`);
+                    if (!response.ok) continue;
+                    const payload = (await response.json()) as { programs: any[]; universities: any[] };
+                    const exists =
+                        entry.type === 'program'
+                            ? (payload.programs || []).some((p) => p.id === entry.id)
+                            : (payload.universities || []).some((u) => u.id === entry.id);
+
+                    if (exists) {
+                        validated.push(entry);
+                    }
+                }
+
+                setRecentSearches(validated);
+                window.localStorage.setItem('ascenda-recent-searches', JSON.stringify(validated));
+            } catch (err) {
+                console.warn('Unable to load recent searches', err);
             }
-        } catch (err) {
-            console.warn('Unable to load recent searches', err);
-        }
+        };
+
+        void validateAndLoadRecents();
     }, []);
 
     useEffect(() => {
@@ -111,7 +139,8 @@ export function IntelligentSearchBar({
                         name: program.course_name,
                         university: uni?.name ?? null,
                         location,
-                        score
+                        score,
+                        type: 'program' as const
                     };
                 });
 
@@ -122,7 +151,8 @@ export function IntelligentSearchBar({
                         id: uni.id,
                         name: uni.name,
                         location,
-                        score
+                        score,
+                        type: 'university' as const
                     };
                 });
 
@@ -185,7 +215,8 @@ export function IntelligentSearchBar({
                         name: program.course_name,
                         university: uni?.name ?? null,
                         location: formatLocation(uni?.city ?? null, uni?.region ?? null, uni?.country ?? null),
-                        score: 0
+                        score: 0,
+                        type: 'program' as const
                     };
                 });
 
@@ -193,7 +224,8 @@ export function IntelligentSearchBar({
                     id: uni.id,
                     name: uni.name,
                     location: formatLocation(uni.city, uni.region, uni.country),
-                    score: 0
+                    score: 0,
+                    type: 'university' as const
                 }));
 
                 setTrendingSuggestions({ programs, universities });

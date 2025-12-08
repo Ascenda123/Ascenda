@@ -114,7 +114,7 @@ export default function UniversitySearchPage() {
     setSearchQuery(item.name);
 
     const params = new URLSearchParams();
-    if (item.university) {
+    if (item.type === 'program') {
       // It's a program
       params.set('programId', item.id);
       params.set('q', `${item.name} ${item.university}`); // Fallback/Context

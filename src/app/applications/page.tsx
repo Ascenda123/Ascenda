@@ -39,16 +39,14 @@ export default async function ApplicationsPage() {
       program_id,
       program:programs(
         id,
-        name,
-        field,
-        level,
+        name:course_name,
+        level:study_level,
         universities(name,country),
         deadlines(
           id,
           name,
           deadline_date,
           intake,
-          type,
           program_id
         )
       ),
@@ -57,8 +55,6 @@ export default async function ApplicationsPage() {
         task_name,
         status,
         due_date,
-        category,
-        owner,
         application_id
       )
     `)
@@ -73,7 +69,6 @@ export default async function ApplicationsPage() {
     program?: {
       id: string;
       name?: string | null;
-      field?: string | null;
       level?: string | null;
       universities?: { name?: string | null; country?: string | null } | null;
       deadlines?: DeadlineRecord[] | null;
@@ -86,8 +81,6 @@ export default async function ApplicationsPage() {
     task_name: string;
     status: 'todo' | 'doing' | 'done';
     due_date?: string | null;
-    category?: string | null;
-    owner?: string | null;
     application_id?: string | null;
   };
 
@@ -97,7 +90,6 @@ export default async function ApplicationsPage() {
     deadline_date?: string | null;
     intake?: string | null;
     program_id: string;
-    type?: string | null;
   };
 
   const appRecords = ((applications ?? []) as ApplicationRecord[]) ?? [];
@@ -198,7 +190,7 @@ export default async function ApplicationsPage() {
           requirement: task.task_name,
           application: appRecords.find((app) => app.id === task.application_id)?.program?.name ?? 'General',
           dueDate: task.due_date ?? undefined,
-          owner: task.owner ?? (status === 'requested' ? 'Recommender' : 'You'),
+          owner: status === 'requested' ? 'Recommender' : 'You',
           status
         };
       })
@@ -230,7 +222,7 @@ export default async function ApplicationsPage() {
     interviews: plannerEvents.filter((event) => event.category === 'interview' && isSameDay(event.date)).length
   };
 
-  const disciplineFocus = appRecords[0]?.program?.field ?? 'university';
+  const disciplineFocus = appRecords[0]?.program?.name ?? 'university';
   const resourceHighlights = [
     {
       id: 'essay-template',
@@ -268,8 +260,8 @@ export default async function ApplicationsPage() {
         .filter((task) => task.task_name.toLowerCase().includes('reference'))
         .map((task, index) => ({
           id: task.id,
-          name: task.owner ?? `Recommender ${index + 1}`,
-          relationship: task.category ?? 'Teacher',
+          name: `Recommender ${index + 1}`,
+          relationship: 'Teacher',
           school: appRecords.find((app) => app.id === task.application_id)?.program?.universities?.name ?? 'Multiple schools',
           dueDate: task.due_date ?? undefined,
           status: task.status === 'done' ? 'received' : 'sent',

@@ -1,4 +1,105 @@
 import type { Config } from 'tailwindcss';
+import plugin from 'tailwindcss/plugin';
+const {
+  default: flattenColorPalette,
+} = require("tailwindcss/lib/util/flattenColorPalette");
+
+function addVariablesForColors({ addBase, theme }: any) {
+  let allColors = flattenColorPalette(theme("colors"));
+  let newVars = Object.fromEntries(
+    Object.entries(allColors).map(([key, val]) => [`--${key}`, val])
+  );
+
+  addBase({
+    ":root": newVars,
+  });
+}
+
+// Plugin to add the glass and form utilities
+const customUtilitiesPlugin = plugin(function ({ addComponents, theme }) {
+  addComponents({
+    '.glass-panel': {
+      '@apply border border-border/60 bg-card/70 backdrop-blur-xl shadow-[0_18px_50px_rgba(15,23,42,0.08)]': {},
+    },
+    '.glass-card': {
+      '@apply border border-border/60 bg-card/60 backdrop-blur-lg shadow-[0_18px_45px_rgba(15,23,42,0.08)]': {},
+    },
+    '.glass-muted': {
+      '@apply border border-border/60 bg-muted/60 backdrop-blur-md shadow-[0_12px_30px_rgba(15,23,42,0.06)]': {},
+    },
+    '.glass-pill': {
+      '@apply border border-border/60 bg-background/70 backdrop-blur-md shadow-sm': {},
+    },
+    '.glass': {
+      '@apply glass-panel': {},
+    },
+    '.text-glow': {
+      'text-shadow': '0 0 20px rgba(99, 102, 241, 0.5)',
+    },
+    // Form utilities
+    '.form-grid': {
+      '@apply grid gap-4 sm:gap-6': {},
+    },
+    '.form-flow': {
+      '@apply gap-6': {},
+    },
+    '.form-stack': {
+      '@apply flex flex-col gap-4': {},
+    },
+    '.form-panel': {
+      '@apply rounded-2xl border border-border bg-card text-foreground shadow-sm transition-colors': {},
+    },
+    '.form-panel--roomy': {
+      '@apply gap-6 p-6 sm:p-8': {},
+    },
+    '.form-panel--quiet': {
+      '@apply gap-4 p-5 sm:p-6 bg-muted/60': {},
+    },
+    '.form-field': {
+      '@apply flex flex-col gap-2': {},
+    },
+    '.form-label': {
+      '@apply text-sm font-semibold text-foreground': {},
+    },
+    '.form-input': {
+      '@apply w-full rounded-2xl border border-input bg-background px-4 py-3 text-sm text-foreground shadow-sm transition placeholder:text-muted-foreground/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring': {},
+    },
+    '.form-input--multi': {
+      '@apply min-h-[120px]': {},
+    },
+    '.form-input--textarea': {
+      '@apply min-h-[140px] resize-y': {},
+    },
+    '.form-touch-target': {
+      '@apply rounded-xl bg-muted/40 px-3 py-2 transition hover:bg-muted/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring': {},
+    },
+    '.form-feedback': {
+      '@apply text-sm font-medium': {},
+    },
+    '.form-feedback--error': {
+      '@apply text-destructive': {},
+    },
+    '.form-feedback--success': {
+      '@apply text-emerald-500': {},
+    },
+    '.form-action': {
+      '@apply w-full sm:w-auto': {},
+    },
+    // Navbar utilities
+    '.navbar-brand': {
+      color: '#0f172a',
+    },
+    '[data-theme="dark"] .navbar-brand': {
+      color: '#ffffff',
+    },
+    '.navbar-subtitle': {
+      color: '#334155',
+    },
+    '[data-theme="dark"] .navbar-subtitle': {
+      color: '#d1d5db',
+    },
+  })
+});
 
 const config: Config = {
   darkMode: ['class', '[data-theme="dark"]'],
@@ -104,7 +205,7 @@ const config: Config = {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [require("tailwindcss-animate"), customUtilitiesPlugin],
 };
 
 export default config;

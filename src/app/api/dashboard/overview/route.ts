@@ -56,8 +56,8 @@ export async function GET() {
     .select('id, program_id')
     .eq('profile_id', user.id);
 
-  const applicationIds = (applications ?? []).map((app: ApplicationRow) => app.id);
-  const applicationProgramIds = (applications ?? []).map((app: ApplicationRow) => app.program_id);
+  const applicationIds = (applications ?? []).map((app) => app.id);
+  const applicationProgramIds = (applications ?? []).map((app) => app.program_id);
 
   const [
     checklistResponse,
@@ -84,11 +84,9 @@ export async function GET() {
     supabase.from('student_preferences').select('*').eq('profile_id', user.id).single(),
     supabase.from('student_aspirations').select('*').eq('profile_id', user.id).single(),
     supabase.from('profiles').select('full_name,country,time_zone').eq('id', user.id).single(),
-    supabase
-      .from('programs')
-      .select('*')
-      .in('id', applicationProgramIds.length ? applicationProgramIds : undefined)
-      .limit(25)
+    applicationProgramIds.length
+      ? supabase.from('programs').select('*').in('id', applicationProgramIds).limit(25)
+      : supabase.from('programs').select('*').limit(25)
   ]);
 
   const checklist = (checklistResponse.data ?? []) as ChecklistRow[];

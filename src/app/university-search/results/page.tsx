@@ -201,6 +201,22 @@ export default function UniversitySearchResultsPage() {
     setHasMore(true);
   }, [programId, universityId, selectedUniversities, selectedPrograms, searchQuery]);
 
+  // If all filters and search are cleared, remove any lingering URL params so we fetch full results.
+  useEffect(() => {
+    const noSelections = selectedPrograms.length === 0 && selectedUniversities.length === 0;
+    const noSearch = searchQuery.trim() === '';
+    const hasUrlFilters = programId || universityId || searchParams.get('q');
+
+    if (noSelections && noSearch && hasUrlFilters) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete('programId');
+      params.delete('universityId');
+      params.delete('q');
+      const next = params.toString();
+      router.replace(next ? `/university-search/results?${next}` : '/university-search/results');
+    }
+  }, [programId, universityId, searchParams, selectedPrograms.length, selectedUniversities.length, searchQuery, router]);
+
   // Load catalog results from Supabase
   useEffect(() => {
     const fetchResults = async () => {
@@ -222,7 +238,7 @@ export default function UniversitySearchResultsPage() {
           .select(
             `
             *,
-            universities!inner (
+            universities!left (
               id,
               name,
               country,
@@ -308,8 +324,8 @@ export default function UniversitySearchResultsPage() {
           if (matchError) {
             console.error('Failed to load match scores', matchError);
           } else {
-            const matchRows: StudentMatchRow[] = matches ?? [];
-            matchScores = matchRows.reduce<Record<string, number>>((acc, entry: StudentMatchRow) => {
+            const matchRows = matches ?? [];
+            matchScores = matchRows.reduce<Record<string, number>>((acc, entry) => {
               const numericScore =
                 typeof entry.score === 'string'
                   ? Number.parseFloat(entry.score)
@@ -413,16 +429,12 @@ export default function UniversitySearchResultsPage() {
   }, [page, programId, universityId, selectedUniversities, selectedPrograms, searchQuery, allUniversities]);
 
   const availableUniversities = useMemo(() => {
-    const source =
-      selectedPrograms.length > 0
-        ? filterOptions.filter((option) => selectedPrograms.includes(option.programName))
-        : filterOptions;
-
+    // Use the full universities list from Supabase (not the capped filterOptions)
     const names = new Set<string>();
-    source.forEach((option) => names.add(option.universityName));
+    allUniversities.forEach((uni) => names.add(uni.name));
     selectedUniversities.forEach((name) => names.add(name));
     return Array.from(names).sort((a, b) => a.localeCompare(b));
-  }, [filterOptions, selectedPrograms, selectedUniversities]);
+  }, [allUniversities, selectedUniversities]);
 
   const availablePrograms = useMemo(() => {
     const source =
@@ -498,6 +510,11 @@ export default function UniversitySearchResultsPage() {
     setSelectedTiers(['Reach', 'Match', 'Safe']);
     setSelectedUniversities([]);
     setSelectedPrograms([]);
+    setResults([]);
+    setPage(0);
+    setHasMore(true);
+    setResultCount(0);
+    setError(null);
 
     // If there are URL params, clear them to truly reset
     if (programId || universityId || searchParams.get('q')) {
@@ -509,7 +526,7 @@ export default function UniversitySearchResultsPage() {
     setSearchQuery(item.name);
 
     const params = new URLSearchParams();
-    if (item.university) {
+    if (item.type === 'program') {
       // It's a program
       params.set('programId', item.id);
       params.set('q', `${item.name} ${item.university}`);

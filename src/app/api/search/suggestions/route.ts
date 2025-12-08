@@ -41,6 +41,9 @@ export async function GET(request: Request) {
       programs: programsRes.data ?? [],
       universities: universitiesRes.data ?? []
     },
-    { headers: { 'Cache-Control': 's-maxage=60, stale-while-revalidate=120' } }
+    {
+      // Accuracy over caching: always pull fresh rows from Supabase
+      headers: { 'Cache-Control': 'no-store' }
+    }
   );
 }

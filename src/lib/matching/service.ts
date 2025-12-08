@@ -1,4 +1,4 @@
-import type { SupabaseClient } from '@supabase/auth-helpers-nextjs';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { defaultWeights, type MatchingWeights } from './config';
 import {
   rankMatches,
@@ -114,8 +114,8 @@ export const loadMatchesForProfile = async (
 
   const filteredPrograms = filterVisiblePrograms((programsData ?? []) as ProgramRow[]);
   const programs: Program[] = filteredPrograms.map(mapProgramRow);
-  const universities: University[] = (universitiesData ?? []).map(mapUniversityRow);
-  const requirements: ProgramRequirement[] = (requirementsData ?? []).map(mapRequirementRow);
+  const universities: University[] = (universitiesData ?? []).map((u) => mapUniversityRow(u as any));
+  const requirements: ProgramRequirement[] = (requirementsData ?? []).map((r) => mapRequirementRow(r as any));
 
   if (!programs.length || !universities.length) {
     return {

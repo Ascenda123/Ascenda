@@ -49,8 +49,8 @@ export default async function DashboardPage() {
     .select('id, program_id')
     .eq('profile_id', user.id);
 
-  const applicationIds = (applications ?? []).map((app: ApplicationRow) => app.id);
-  const applicationProgramIds = (applications ?? []).map((app: ApplicationRow) => app.program_id);
+  const applicationIds = (applications ?? []).map((app) => app.id);
+  const applicationProgramIds = (applications ?? []).map((app) => app.program_id);
 
   const [
     checklistResponse,
