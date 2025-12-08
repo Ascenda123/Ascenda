@@ -53,6 +53,8 @@ type FilterOption = {
   universityName: string;
 };
 
+const PROGRAM_FILTER_LIMIT = 2000;
+
 export default function UniversitySearchResultsPage() {
   const MAX_COMPARE_ITEMS = 5;
   const PAGE_SIZE = 50;
@@ -112,32 +114,18 @@ export default function UniversitySearchResultsPage() {
           setAllUniversities(allUnis);
         }
 
-        // 2. Fetch Programs (Course Names)
-        // We fetching these to link them, but we won't block the uni dropdown on this
-        const pageSize = 1000;
-        let pageIndex = 0;
-        const allProgramsRaw: { course_name: string; universities: { name: string } | null }[] = [];
+        // 2. Fetch Programs (Course Names) with a hard cap to avoid huge downloads
+        const { data: programData, error: progError } = await supabase
+          .from('programs')
+          .select(`course_name, universities (name)`)
+          .limit(PROGRAM_FILTER_LIMIT);
 
-        // Safety limit: 50 pages (50k records)
-        while (pageIndex < 50) {
-          const from = pageIndex * pageSize;
-          const to = from + pageSize - 1;
-          const { data, error: progError } = await supabase
-            .from('programs')
-            .select(`course_name, universities (name)`)
-            .range(from, to);
-
-          if (progError) {
-            console.error('Error fetching programs:', progError);
-            break;
-          }
-
-          const batch = data ?? [];
-          allProgramsRaw.push(...(batch as any));
-
-          if (batch.length < pageSize) break;
-          pageIndex++;
+        if (progError) {
+          console.error('Error fetching programs:', progError);
         }
+
+        const allProgramsRaw: { course_name: string; universities: { name: string } | null }[] =
+          (programData as any) ?? [];
 
         if (!isActive) return;
 
@@ -274,9 +262,14 @@ export default function UniversitySearchResultsPage() {
         // 2. Text Search
         // Only apply fuzzy text search if we haven't already selected a specific item via ID
         // (If provided by ID, the text query is likely the name of that item, which might not match 'course_name')
-        if (searchQuery && !programId && !universityId) {
+        const sanitizeSearchValue = (value: string) =>
+          value.replace(/[(),%_]/g, ' ').replace(/\s+/g, ' ').trim();
+
+        const safeSearchQuery = sanitizeSearchValue(searchQuery);
+
+        if (safeSearchQuery && !programId && !universityId) {
           // Complex Logic: Find IDs of universities matching the name
-          const normalizedQ = searchQuery.toLowerCase();
+          const normalizedQ = safeSearchQuery.toLowerCase();
           const matchedUniIds = allUniversities
             .filter(u => u.name?.toLowerCase().includes(normalizedQ))
             .map(u => u.id)
@@ -286,9 +279,9 @@ export default function UniversitySearchResultsPage() {
           // course_name ILIKE query OR university_id IN (matches)
           if (matchedUniIds.length > 0) {
             // Use the simplified syntax avoiding joined table reference
-            query = query.or(`course_name.ilike.%${searchQuery}%,university_id.in.(${matchedUniIds.join(',')})`);
+            query = query.or(`course_name.ilike.%${safeSearchQuery}%,university_id.in.(${matchedUniIds.join(',')})`);
           } else {
-            query = query.ilike('course_name', `%${searchQuery}%`);
+            query = query.ilike('course_name', `%${safeSearchQuery}%`);
           }
         }
 
@@ -464,7 +457,7 @@ export default function UniversitySearchResultsPage() {
         matchesProgram
       );
     });
-  }, [results, searchQuery, selectedTiers, selectedPrograms, selectedUniversities]);
+  }, [results, searchQuery, selectedTiers, selectedPrograms, selectedUniversities, allUniversities]);
 
   const handleToggleUniversity = (name: string) => {
     // If we are un-toggling the university that is currently filtering the page via URL,
