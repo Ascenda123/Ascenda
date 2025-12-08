@@ -1,12 +1,7 @@
-'use client';
-
-import Script from 'next/script';
-
 export function ThemeScript() {
     return (
-        <Script
+        <script
             id="theme-init"
-            strategy="beforeInteractive"
             dangerouslySetInnerHTML={{
                 __html: `
           (function() {

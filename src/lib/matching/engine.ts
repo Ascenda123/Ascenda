@@ -134,7 +134,7 @@ const calculateEligibility = (input: MatchInput) => {
     reasons.push(`Minimum ACT ${requirement.minAct}`);
   }
 
-  if (requirement.requiredSubjects && requirement.requiredSubjects.length > 0) {
+  if (requirement.requiredSubjects && requirement.requiredSubjects.length > 0 && (academics.subjectGrades?.length ?? 0) > 0) {
     const subjects = (academics.subjectGrades ?? []).map((entry) => entry.subject.toLowerCase());
     const missing = requirement.requiredSubjects.filter((subject) => !subjects.includes(subject.toLowerCase()));
     if (missing.length > 0) {

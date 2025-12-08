@@ -33,13 +33,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <ThemeScript />
+      </head>
       <body className={cn(
         "min-h-screen bg-background font-sans antialiased",
         outfit.variable,
         inter.variable
       )}>
-
-        <ThemeScript />
         <a
           href="#main-content"
           className="absolute left-4 top-4 -translate-y-16 rounded-full border border-border bg-background px-4 py-2 text-sm text-foreground shadow focus-visible:translate-y-0 z-50"

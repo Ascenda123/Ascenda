@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { useSupabase } from '@/hooks/useSupabase';
@@ -24,6 +24,7 @@ export const DocumentUploader = ({ applicationId, taskId, onUpload }: DocumentUp
   const [error, setError] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploaded, setUploaded] = useState<{ name: string; url?: string }[]>([]);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const bucket = useMemo(() => process.env.NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET ?? 'application-documents', []);
 
@@ -140,7 +141,15 @@ export const DocumentUploader = ({ applicationId, taskId, onUpload }: DocumentUp
         <p className="text-sm font-semibold text-foreground">Drag & drop or click to browse</p>
         <p className="text-xs text-muted-foreground">We auto-tag the document to the right checklist item.</p>
       </label>
-      <input id="document-upload" type="file" multiple className="hidden" onChange={handleFileChange} disabled={isUploading} />
+      <input
+        ref={fileInputRef}
+        id="document-upload"
+        type="file"
+        multiple
+        className="hidden"
+        onChange={handleFileChange}
+        disabled={isUploading}
+      />
       {status ? <p className="text-xs text-muted-foreground">{status}</p> : <p className="text-xs text-muted-foreground">No document selected yet.</p>}
       {error ? (
         <p className="text-xs text-red-500" role="alert">
@@ -174,7 +183,12 @@ export const DocumentUploader = ({ applicationId, taskId, onUpload }: DocumentUp
         </ul>
       ) : null}
       <div className="flex flex-wrap gap-2">
-        <Button type="button" variant="soft" disabled={isUploading}>
+        <Button
+          type="button"
+          variant="soft"
+          disabled={isUploading}
+          onClick={() => fileInputRef.current?.click()}
+        >
           {isUploading ? 'Uploading…' : 'Upload to Supabase'}
         </Button>
         <Button
