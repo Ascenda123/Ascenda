@@ -27,6 +27,8 @@ interface IntelligentSearchBarProps {
     className?: string;
     inputClassName?: string;
     variant?: 'default' | 'minimal';
+    inputId?: string;
+    inputName?: string;
 }
 
 export function IntelligentSearchBar({
@@ -36,7 +38,9 @@ export function IntelligentSearchBar({
     placeholder = 'Search universities or courses...',
     className,
     inputClassName,
-    variant = 'default'
+    variant = 'default',
+    inputId,
+    inputName
 }: IntelligentSearchBarProps) {
     const [suggestions, setSuggestions] = useState<SuggestionGroups>({ programs: [], universities: [] });
     const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
@@ -301,6 +305,8 @@ export function IntelligentSearchBar({
                     onChange={(e) => onChange(e.target.value)}
                     onFocus={handleFocus}
                     onBlur={handleBlur}
+                    id={inputId}
+                    name={inputName}
                     placeholder={placeholder}
                     className={cn(
                         variant === 'default'

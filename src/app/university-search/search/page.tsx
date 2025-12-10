@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type FormEvent, type MouseEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { AnimatedBlobBanner } from '@/components/animated-blob-banner';
 import { Button } from '@/components/ui/button';
@@ -110,6 +110,25 @@ export default function UniversitySearchPage() {
     setSelectedFilters(new Set());
   };
 
+  const buildSearchUrl = () => {
+    const params = new URLSearchParams();
+    const combinedQuery = [searchQuery, ...selectedFilters]
+      .filter(Boolean)
+      .join(' ')
+      .trim();
+    if (combinedQuery) {
+      params.set('q', combinedQuery);
+    }
+    return params.toString()
+      ? `/university-search/results?${params.toString()}`
+      : '/university-search/results';
+  };
+
+  const handleSubmit = (event?: FormEvent<HTMLFormElement> | MouseEvent<HTMLButtonElement>) => {
+    event?.preventDefault();
+    router.push(buildSearchUrl());
+  };
+
   const handleSelectSuggestion = (item: Suggestion) => {
     setSearchQuery(item.name);
 
@@ -145,7 +164,7 @@ export default function UniversitySearchPage() {
               </p>
             </div>
             <form
-              action="/university-search/results"
+              onSubmit={handleSubmit}
               className="space-y-3 rounded-[28px] border border-border bg-card/90 p-4 shadow-[0_20px_45px_rgba(15,23,42,0.08)] backdrop-blur"
             >
               <label htmlFor="search-keyword" className="text-xs font-semibold uppercase tracking-[0.35em] text-muted-foreground">
@@ -156,6 +175,8 @@ export default function UniversitySearchPage() {
                   value={searchQuery}
                   onChange={setSearchQuery}
                   onSelectSuggestion={handleSelectSuggestion}
+                  inputId="search-keyword"
+                  inputName="q"
                   placeholder="Search universities or courses by name, subject, or vibe"
                 />
                 <Button size="lg" className="w-full" type="submit" variant="soft">
@@ -218,7 +239,7 @@ export default function UniversitySearchPage() {
             >
               Reset filters
             </button>
-            <Button size="sm">Apply filters</Button>
+            <Button size="sm" type="button" onClick={handleSubmit}>Apply filters</Button>
           </div>
         </div>
       </section>

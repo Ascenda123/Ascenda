@@ -37,11 +37,6 @@ export const Navbar = () => {
             <NavLink key={link.href} item={link} />
           ))}
         </nav>
-        <nav className="flex items-center gap-2 overflow-x-auto text-xs font-medium text-muted-foreground md:hidden">
-          {navItems.map((link) => (
-            <NavLink key={link.href} item={link} mobile />
-          ))}
-        </nav>
         <div className="flex items-center gap-2">
           <ThemeToggle compact />
         </div>
