@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
@@ -75,10 +76,11 @@ export function ProfileProgressCard({
         {PROFILE_STEPS.map((step) => {
           const complete = stepCompletion[step.key];
           return (
-            <div
+            <Link
               key={step.key}
+              href={`/profile?onboarding=true&step=${step.key}`}
               className={cn(
-                'relative overflow-hidden rounded-2xl border px-4 py-4 shadow-[0_12px_30px_rgba(15,23,42,0.12)] backdrop-blur-sm transition-colors',
+                'group relative overflow-hidden rounded-2xl border px-4 py-4 shadow-[0_12px_30px_rgba(15,23,42,0.12)] backdrop-blur-sm transition-colors hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
                 complete
                   ? 'border-emerald-200/60 bg-emerald-50/30 dark:border-emerald-400/30 dark:bg-emerald-500/10'
                   : 'border-white/10 bg-white/5 dark:border-white/10 dark:bg-white/5'
@@ -98,7 +100,10 @@ export function ProfileProgressCard({
                 </span>
               </div>
               <p className="mt-1 text-xs text-muted-foreground">{step.description}</p>
-            </div>
+              <span className="mt-3 inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-primary opacity-80 transition group-hover:opacity-100">
+                Open
+              </span>
+            </Link>
           );
         })}
       </div>
