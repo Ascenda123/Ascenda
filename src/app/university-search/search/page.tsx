@@ -189,7 +189,7 @@ export default function UniversitySearchPage() {
         </div>
       </section>
 
-      <section className="rounded-[32px] border border-border bg-card p-6 shadow-[0_24px_50px_rgba(15,23,42,0.08)] transition-colors">
+      <section className="surface-card surface-card--static">
         <div className="flex flex-col gap-2 pb-6">
           <p className="text-xs font-semibold uppercase tracking-[0.35em] text-muted-foreground">Filter universities</p>
           <h2 className="text-2xl font-semibold text-foreground">Tune the signals to surface better matches.</h2>
@@ -198,11 +198,11 @@ export default function UniversitySearchPage() {
           {filterGroups.map((group) => (
             <div
               key={group.title}
-              className="space-y-3 rounded-[28px] border border-border bg-muted/60 p-5 shadow-[0_14px_25px_rgba(15,23,42,0.05)] transition-colors"
+              className="surface-card surface-card--static space-y-3 bg-muted/70 p-5 shadow-none"
             >
               <div className="space-y-1">
                 <p className="text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground">{group.title}</p>
-                <p className="text-sm text-muted-foreground">{group.description}</p>
+                <p className="helper-text">{group.description}</p>
               </div>
               <div className="flex flex-wrap gap-2">
                 {group.options.map((option) => {
@@ -228,7 +228,7 @@ export default function UniversitySearchPage() {
           ))}
         </div>
         <div className="mt-6 flex flex-col gap-4 border-t border-border pt-6 md:flex-row md:items-center md:justify-between">
-          <p className="text-sm text-muted-foreground">
+          <p className="helper-text">
             These filters don’t run a live query yet—they help counselors understand what to curate next for you.
           </p>
           <div className="flex gap-3">

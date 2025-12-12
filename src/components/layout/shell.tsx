@@ -12,7 +12,7 @@ export const DashboardShell = ({ children }: { children: ReactNode }) => {
         <main
           id="main-content"
           tabIndex={-1}
-          className="flex-1 min-w-0 space-y-8 rounded-[28px] border border-border/50 bg-card/70 backdrop-blur-xl p-6 text-foreground shadow-soft transition-colors dark:bg-muted/10 dark:border-white/10 dark:shadow-none"
+          className="flex-1 min-w-0 space-y-8 rounded-[28px] border border-border/60 bg-card/80 backdrop-blur-xl p-6 text-foreground shadow-[0_26px_70px_-30px_rgba(15,23,42,0.45)] transition-colors motion-safe:animate-fade-in dark:bg-muted/15 dark:border-white/10"
         >
           {children}
         </main>

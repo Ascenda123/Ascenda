@@ -54,7 +54,7 @@ export const TaskListPanel = ({ title, tasks }: TaskListPanelProps) => {
   };
 
   return (
-    <div className="rounded-[28px] border border-border/50 bg-card/50 backdrop-blur-md shadow-soft p-6 transition-colors dark:bg-muted/20 dark:border-white/10 dark:shadow-none">
+    <div className="surface-card surface-card--static">
       <TaskList title={title} tasks={items} onToggle={handleToggle} disabled={isPending} />
     </div>
   );

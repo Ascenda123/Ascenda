@@ -95,7 +95,7 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased leading-relaxed text-[15px];
   }
 
   h1,
@@ -106,6 +106,26 @@
   h6 {
     @apply font-heading tracking-tight;
   }
+
+  h1 {
+    @apply text-4xl md:text-5xl font-semibold leading-[1.05];
+  }
+
+  h2 {
+    @apply text-3xl md:text-4xl font-semibold leading-tight;
+  }
+
+  h3 {
+    @apply text-2xl font-semibold leading-snug;
+  }
+
+  h4 {
+    @apply text-xl font-semibold leading-snug;
+  }
+
+  p {
+    @apply leading-relaxed;
+  }
 }
 
 
@@ -114,7 +134,35 @@
 }
 
 @layer components {
-  /* Components moved to tailwind.config.ts */
+  .helper-text {
+    @apply text-sm text-muted-foreground/90 leading-relaxed;
+  }
+
+  .surface-card {
+    @apply relative overflow-hidden rounded-[26px] border border-border/70 bg-card/80 p-6 shadow-[0_26px_70px_-30px_rgba(15,23,42,0.45)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_30px_80px_-30px_rgba(15,23,42,0.5)] dark:border-white/10 dark:bg-muted/25 dark:shadow-[0_20px_60px_-28px_rgba(0,0,0,0.45)];
+  }
+
+  .surface-card::before {
+    content: '';
+    @apply pointer-events-none absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-0 transition-opacity duration-500 dark:from-white/5;
+  }
+
+  .surface-card:hover::before {
+    @apply opacity-100;
+  }
+
+  .surface-card--static {
+    @apply hover:translate-y-0 hover:shadow-[0_24px_70px_-40px_rgba(15,23,42,0.3)];
+  }
+
+  .page-soft-bg {
+    @apply relative isolate min-h-screen;
+  }
+
+  .page-soft-bg::before {
+    content: '';
+    @apply pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_20%_20%,rgba(99,102,241,0.06),transparent_35%),radial-gradient(circle_at_80%_10%,rgba(14,165,233,0.06),transparent_35%),linear-gradient(180deg,rgba(15,23,42,0.03),transparent_30%)];
+  }
 }
 
 /* React Big Calendar Dark Mode Overrides */

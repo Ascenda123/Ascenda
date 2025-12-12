@@ -33,7 +33,7 @@ export const PageHero = ({
   return (
     <section
       className={cn(
-        'rounded-[28px] border border-border bg-card p-6 text-foreground shadow-[0_15px_40px_rgba(15,23,42,0.06)] transition-colors',
+        'surface-card surface-card--static text-foreground',
         className
       )}
     >

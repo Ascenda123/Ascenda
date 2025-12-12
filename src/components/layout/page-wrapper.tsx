@@ -11,5 +11,9 @@ export function PageWrapper({ children }: PropsWithChildren) {
     return children;
   }
 
-  return <div className="container mx-auto px-4 md:px-6">{children}</div>;
+  return (
+    <div className="w-full">
+      <div className="container mx-auto px-4 md:px-6">{children}</div>
+    </div>
+  );
 }
