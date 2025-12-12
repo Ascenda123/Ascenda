@@ -118,7 +118,7 @@ export const loadMatchesForProfile = async (
           .from('universities')
           .select('id,name,country,region,rank_overall,rank_source,acceptance_rate,requires_test,metadata')
           .in('id', universityIds)
-        : Promise.resolve({ data: [] } as { data: UniversityRow[] }),
+        : Promise.resolve({ data: [], error: null } as any),
       programIds.length
         ? supabase
           .from('program_requirements')
@@ -126,7 +126,7 @@ export const loadMatchesForProfile = async (
             'program_id,curriculum,min_gpa,min_ib_total,min_sat,min_act,required_subjects,language_tests,other_requirements'
           )
           .in('program_id', programIds)
-        : Promise.resolve({ data: [] } as { data: ProgramRequirementRow[] })
+        : Promise.resolve({ data: [], error: null } as any)
     ]);
 
   if (universitiesError || requirementsError) {
@@ -138,8 +138,8 @@ export const loadMatchesForProfile = async (
     };
   }
 
-  const universities: University[] = (universitiesData ?? []).map((u) => mapUniversityRow(u as any));
-  const requirements: ProgramRequirement[] = (requirementsData ?? []).map((r) => mapRequirementRow(r as any));
+  const universities: University[] = (universitiesData ?? []).map((u: any) => mapUniversityRow(u as any));
+  const requirements: ProgramRequirement[] = (requirementsData ?? []).map((r: any) => mapRequirementRow(r as any));
 
   if (!programs.length || !universities.length) {
     return {

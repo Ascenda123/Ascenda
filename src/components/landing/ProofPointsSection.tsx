@@ -8,21 +8,29 @@ const metrics = [
 
 export function ProofPointsSection() {
     return (
-        <section className="mt-16 rounded-[32px] border border-border bg-card/50 backdrop-blur-sm p-6">
-            <div className="flex flex-col gap-2 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-                <p className="text-xs uppercase tracking-[0.4em] text-accent">Proof points</p>
-                <p>Students and families feel the delta immediately, data shows why.</p>
-            </div>
-            <div className="mt-6 grid gap-4 sm:grid-cols-3">
-                {metrics.map((metric) => (
-                    <div
-                        key={metric.label}
-                        className="rounded-[24px] border border-border bg-card/70 p-5 text-left text-sm text-muted-foreground shadow-sm"
-                    >
-                        <p className="text-3xl font-semibold text-foreground">{metric.value}</p>
-                        <p className="mt-2 font-medium text-muted-foreground">{metric.label}</p>
+        <section className="w-full py-24 bg-background">
+            <div className="max-w-7xl mx-auto px-6">
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16 border-b border-border/40 pb-8">
+                    <div className="max-w-xl">
+                        <p className="text-sm font-medium uppercase tracking-widest text-primary/80 mb-3">The Reality</p>
+                        <h2 className="text-3xl font-heading font-bold text-foreground">Why the old way isn&#39;t working</h2>
                     </div>
-                ))}
+                    <p className="text-muted-foreground max-w-md text-lg">Students and families feel the delta immediately, and the data backs it up.</p>
+                </div>
+
+                <div className="grid gap-8 md:grid-cols-3">
+                    {metrics.map((metric) => (
+                        <div
+                            key={metric.label}
+                            className="group relative flex flex-col justify-between p-8 rounded-3xl bg-secondary/10 hover:bg-secondary/20 transition-colors duration-300"
+                        >
+                            <div className="space-y-4">
+                                <p className="text-5xl md:text-6xl font-bold tracking-tight text-primary">{metric.value}</p>
+                                <p className="text-lg text-muted-foreground font-medium leading-relaxed">{metric.label}</p>
+                            </div>
+                        </div>
+                    ))}
+                </div>
             </div>
         </section>
     );

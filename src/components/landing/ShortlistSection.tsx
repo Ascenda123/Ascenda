@@ -19,34 +19,44 @@ const steps = [
 
 export function ShortlistSection() {
     return (
-        <section className="mt-16 space-y-6">
-            <div>
-                <h2 className="text-3xl font-heading font-semibold text-foreground">Your shortlist in 3 steps</h2>
-                <p className="text-sm text-muted-foreground">The easiest way to see what’s next, why it matters, and how to act.</p>
-            </div>
-            <div className="relative space-y-4 pt-4">
-                {steps.map((step, index) => (
-                    <motion.div
-                        key={step.title}
-                        className="flex items-start gap-4 rounded-[26px] border border-border bg-card/50 backdrop-blur-sm p-5 shadow-lg"
-                        initial="hidden"
-                        whileInView="visible"
-                        viewport={{ once: true, amount: 0.3 }}
-                        variants={{
-                            hidden: { opacity: 0, y: 10 },
-                            visible: { opacity: 1, y: 0, transition: { duration: 0.6, delay: index * 0.05 } }
-                        }}
-                    >
-                        <div className="flex h-10 w-10 flex-none items-center justify-center rounded-2xl border border-border bg-card/70 text-sm font-semibold text-foreground">
-                            {index + 1}
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                            <p className="text-xs font-semibold uppercase tracking-[0.4em] text-accent">Step {index + 1}</p>
-                            <h3 className="mt-2 text-lg font-semibold text-foreground">{step.title}</h3>
-                            <p className="mt-1">{step.copy}</p>
-                        </div>
-                    </motion.div>
-                ))}
+        <section className="w-full py-24 bg-background">
+            <div className="max-w-7xl mx-auto px-6">
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16">
+                    <div className="max-w-2xl space-y-4">
+                        <h2 className="text-4xl md:text-5xl font-heading font-bold text-foreground tracking-tight">Your shortlist in 3 steps</h2>
+                        <p className="text-lg text-muted-foreground leading-relaxed max-w-xl">The easiest way to see what’s next, why it matters, and how to act.</p>
+                    </div>
+                </div>
+
+                <div className="grid gap-6 md:grid-cols-3">
+                    {steps.map((step, index) => (
+                        <motion.div
+                            key={step.title}
+                            className="group relative flex flex-col justify-between rounded-3xl border border-border/40 bg-secondary/10 p-8 hover:bg-secondary/30 transition-all duration-500"
+                            initial="hidden"
+                            whileInView="visible"
+                            viewport={{ once: true, amount: 0.3 }}
+                            variants={{
+                                hidden: { opacity: 0, y: 20 },
+                                visible: { opacity: 1, y: 0, transition: { duration: 0.5, delay: index * 0.1 } }
+                            }}
+                        >
+                            <div className="space-y-6">
+                                <div className="flex items-center gap-4">
+                                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-background border border-border/50 text-sm font-bold text-foreground shadow-sm">
+                                        {index + 1}
+                                    </span>
+                                    <span className="text-xs font-bold uppercase tracking-widest text-primary/70">Step {index + 1}</span>
+                                </div>
+
+                                <div>
+                                    <h3 className="text-2xl font-bold text-foreground mb-3">{step.title}</h3>
+                                    <p className="text-muted-foreground leading-relaxed">{step.copy}</p>
+                                </div>
+                            </div>
+                        </motion.div>
+                    ))}
+                </div>
             </div>
         </section>
     );

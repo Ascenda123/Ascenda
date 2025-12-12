@@ -13,19 +13,16 @@ export default function HomePage() {
   return (
     <main
       id="main-content"
-      className="bg-background text-foreground font-sans"
+      className="bg-background text-foreground font-sans w-full"
     >
       <HeroSection />
-
-      <div className="w-full max-w-6xl px-4 pb-10 pt-10 sm:px-6 lg:px-10 mx-auto">
-        <FeaturesSection />
-        <ShortlistSection />
-        <ComparisonSection />
-        <ProofPointsSection />
-        <DemoSection />
-        <FAQSection />
-        <CTASection />
-      </div>
+      <FeaturesSection />
+      <ShortlistSection />
+      <ComparisonSection />
+      <ProofPointsSection />
+      <DemoSection />
+      <FAQSection />
+      <CTASection />
     </main>
   );
 }

@@ -12,54 +12,61 @@ const fadeIn: Variants = {
 
 export function DemoSection() {
     return (
-        <motion.section
-            className="mt-16 grid gap-8 rounded-[32px] border border-border bg-card/50 backdrop-blur-sm p-6 md:grid-cols-[0.9fr_1.1fr]"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.3 }}
-            variants={fadeIn}
-        >
-            <div className="space-y-4">
-                <p className="text-xs uppercase tracking-[0.4em] text-accent">Quick demo</p>
-                <h2 className="text-3xl font-heading font-semibold text-foreground">Aim higher. Land smarter.</h2>
-                <p className="text-sm text-muted-foreground">
-                    Paste predicted grades, hit enter, and Ascenda animates Fit Scores, timelines, and required actions in real time. No extra UI
-                    noise, just the next move.
-                </p>
-                <ul className="space-y-2 text-sm text-muted-foreground">
-                    <li className="flex items-center gap-2">
-                        <span className="h-1.5 w-1.5 rounded-full bg-accent" />
-                        Live Fit Score recalculations
-                    </li>
-                    <li className="flex items-center gap-2">
-                        <span className="h-1.5 w-1.5 rounded-full bg-accent" />
-                        Scholarships + visa checks in-line
-                    </li>
-                    <li className="flex items-center gap-2">
-                        <span className="h-1.5 w-1.5 rounded-full bg-accent" />
-                        Notes stay synced automatically
-                    </li>
-                </ul>
-                <div className="flex flex-wrap gap-3 pt-2">
-                    <Button asChild size="sm">
-                        <Link href="/demo">Watch 45s demo</Link>
-                    </Button>
-                    <Button asChild size="sm" variant="ghost" className="border border-border text-foreground hover:bg-card/70">
-                        <Link href="/stories">See student reels</Link>
-                    </Button>
+        <section className="w-full py-24 bg-secondary/20">
+            <motion.div
+                className="max-w-7xl mx-auto px-6 grid gap-12 md:grid-cols-[0.9fr_1.1fr] items-center"
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, amount: 0.3 }}
+                variants={fadeIn}
+            >
+                <div className="space-y-8">
+                    <div className="space-y-4">
+                        <p className="text-sm font-medium uppercase tracking-widest text-primary/80">Quick demo</p>
+                        <h2 className="text-4xl font-heading font-bold text-foreground tracking-tight">Aim higher. Land smarter.</h2>
+                        <p className="text-lg text-muted-foreground leading-relaxed">
+                            Paste predicted grades, hit enter, and Ascenda animates Fit Scores, timelines, and required actions in real time. No extra UI
+                            noise, just the next move.
+                        </p>
+                    </div>
+
+                    <ul className="space-y-3">
+                        <li className="flex items-center gap-3 text-muted-foreground">
+                            <span className="h-2 w-2 rounded-full bg-accent" />
+                            Live Fit Score recalculations
+                        </li>
+                        <li className="flex items-center gap-3 text-muted-foreground">
+                            <span className="h-2 w-2 rounded-full bg-accent" />
+                            Scholarships + visa checks in-line
+                        </li>
+                        <li className="flex items-center gap-3 text-muted-foreground">
+                            <span className="h-2 w-2 rounded-full bg-accent" />
+                            Notes stay synced automatically
+                        </li>
+                    </ul>
+
+                    <div className="flex flex-wrap gap-4 pt-4">
+                        <Button asChild size="lg" className="rounded-full shadow-lg hover:shadow-xl transition-all">
+                            <Link href="/demo">Watch 45s demo</Link>
+                        </Button>
+                        <Button asChild size="lg" variant="outline" className="rounded-full border-border hover:bg-background/80">
+                            <Link href="/stories">See student reels</Link>
+                        </Button>
+                    </div>
                 </div>
-            </div>
-            <div className="relative overflow-hidden rounded-[28px] border border-border bg-black/40 p-4">
-                <div className="absolute inset-x-4 top-4 h-12 rounded-full bg-primary/20 blur-3xl" />
-                <Image
-                    src="/demo-loop.gif"
-                    alt="Ascenda demo loop"
-                    width={960}
-                    height={540}
-                    className="relative h-auto w-full rounded-[18px] border border-border opacity-90"
-                    priority
-                />
-            </div>
-        </motion.section>
+
+                <div className="relative overflow-hidden rounded-[28px] border border-border/50 bg-black/5 dark:bg-white/5 p-4 shadow-2xl">
+                    <div className="absolute inset-x-4 top-4 h-12 rounded-full bg-primary/20 blur-3xl opacity-50" />
+                    <Image
+                        src="/demo-loop.gif"
+                        alt="Ascenda demo loop"
+                        width={960}
+                        height={540}
+                        className="relative h-auto w-full rounded-2xl border border-border/20 shadow-sm"
+                        priority
+                    />
+                </div>
+            </motion.div>
+        </section>
     );
 }

@@ -33,38 +33,42 @@ const fadeIn: Variants = {
 
 export function FeaturesSection() {
     return (
-        <section className="mt-16 space-y-8">
-            <div className="max-w-2xl space-y-2">
-                <p className="text-xs uppercase tracking-[0.4em] text-accent">Why Ascenda</p>
-                <h2 className="text-3xl font-heading font-semibold text-foreground">Four ways to make your application journey easier</h2>
-                <p className="text-sm text-muted-foreground">
-                    Everything in Ascenda is tuned to blend calm clarity with clear actions—so you and your team can move through the cycle with
-                    confidence and zero guesswork.
-                </p>
-            </div>
-            <div className="grid gap-5 md:grid-cols-2">
-                {features.map((feature, index) => (
-                    <motion.div
-                        key={feature.title}
-                        className="flex flex-col gap-4 rounded-[28px] border border-border bg-card/50 backdrop-blur-sm px-6 py-7 shadow-lg hover:bg-card/80 transition-colors"
-                        initial="hidden"
-                        whileInView="visible"
-                        viewport={{ once: true, amount: 0.3 }}
-                        variants={fadeIn}
-                    >
-                        <div className="flex items-center gap-3 text-sm uppercase tracking-[0.4em] text-muted-foreground">
-                            <span className="flex h-10 w-10 items-center justify-center rounded-2xl border border-border bg-card/70 text-base font-semibold text-foreground">
-                                {String(index + 1).padStart(2, '0')}
-                            </span>
-                            Pillar
-                        </div>
-                        <div>
-                            <feature.icon className="mb-4 h-9 w-9 text-primary" />
-                            <h3 className="text-xl font-semibold text-foreground">{feature.title}</h3>
-                            <p className="mt-2 text-sm text-muted-foreground">{feature.description}</p>
-                        </div>
-                    </motion.div>
-                ))}
+        <section className="w-full py-24 bg-secondary/20">
+            <div className="max-w-7xl mx-auto px-6 space-y-12">
+                <div className="max-w-3xl space-y-3">
+                    <p className="text-sm font-medium uppercase tracking-widest text-primary/80">Why Ascenda</p>
+                    <h2 className="text-4xl md:text-5xl font-heading font-bold text-foreground tracking-tight">Four ways to make your application journey easier</h2>
+                    <p className="text-lg text-muted-foreground leading-relaxed max-w-2xl">
+                        Everything in Ascenda is tuned to blend calm clarity with clear actions—so you and your team can move through the cycle with
+                        confidence and zero guesswork.
+                    </p>
+                </div>
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
+                    {features.map((feature, index) => (
+                        <motion.div
+                            key={feature.title}
+                            className="group flex flex-col gap-5 rounded-3xl border border-border/50 bg-background/60 backdrop-blur-sm p-8 shadow-sm hover:shadow-md hover:bg-background/80 transition-all duration-300"
+                            initial="hidden"
+                            whileInView="visible"
+                            viewport={{ once: true, amount: 0.3 }}
+                            variants={fadeIn}
+                        >
+                            <div className="flex items-center justify-between">
+                                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary text-primary group-hover:scale-110 transition-transform duration-300">
+                                    <feature.icon className="h-6 w-6" />
+                                </div>
+                                <span className="text-4xl font-bold text-black/5 dark:text-white/5 font-heading">
+                                    {String(index + 1).padStart(2, '0')}
+                                </span>
+                            </div>
+
+                            <div className="space-y-2">
+                                <h3 className="text-xl font-bold text-foreground tracking-tight">{feature.title}</h3>
+                                <p className="text-base text-muted-foreground leading-relaxed">{feature.description}</p>
+                            </div>
+                        </motion.div>
+                    ))}
+                </div>
             </div>
         </section>
     );

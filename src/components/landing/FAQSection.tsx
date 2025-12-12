@@ -41,38 +41,51 @@ const fadeIn: Variants = {
 };
 
 export function FAQSection() {
-    const [openFaq, setOpenFaq] = useState(faqs[0].question);
+    const [openFaq, setOpenFaq] = useState<string | null>(faqs[0].question);
 
     return (
-        <section className="mt-16 space-y-8 rounded-[32px] border border-border bg-card/50 backdrop-blur-sm p-6 shadow-lg">
-            <div className="text-center text-muted-foreground md:text-left">
-                <p className="text-xs uppercase tracking-[0.4em] text-accent">Frequently asked questions</p>
-                <h2 className="mt-2 text-3xl font-heading font-semibold text-foreground">Answers before you even ask.</h2>
-                <p className="text-sm">
-                    We keep the playbook simple: transparent timelines, privacy controls, and human support whenever you need it.
-                </p>
-            </div>
-            <div className="grid gap-4 md:grid-cols-2">
-                {faqs.map((faq) => (
-                    <motion.div
-                        key={faq.question}
-                        className="rounded-[24px] border border-border bg-card/70 p-5 hover:bg-muted/60 transition-colors"
-                        initial="hidden"
-                        whileInView="visible"
-                        viewport={{ once: true, amount: 0.3 }}
-                        variants={fadeIn}
-                    >
-                        <button
-                            type="button"
-                            className="flex w-full items-center justify-between text-left text-base font-semibold text-foreground"
-                            onClick={() => setOpenFaq((prev) => (prev === faq.question ? '' : faq.question))}
+        <section className="w-full py-24 bg-background">
+            <div className="max-w-7xl mx-auto px-6 grid gap-12 lg:grid-cols-[0.4fr_0.6fr]">
+                <div className="space-y-4">
+                    <p className="text-sm font-medium uppercase tracking-widest text-primary/80">FAQ</p>
+                    <h2 className="text-3xl md:text-4xl font-heading font-bold text-foreground tracking-tight">Answers before you even ask.</h2>
+                    <p className="text-lg text-muted-foreground leading-relaxed">
+                        We keep the playbook simple: transparent timelines, privacy controls, and human support whenever you need it.
+                    </p>
+                </div>
+
+                <div className="space-y-4">
+                    {faqs.map((faq) => (
+                        <motion.div
+                            key={faq.question}
+                            className="rounded-2xl border border-border/50 bg-secondary/5 overflow-hidden transition-all hover:bg-secondary/10"
+                            initial="hidden"
+                            whileInView="visible"
+                            viewport={{ once: true, amount: 0.3 }}
+                            variants={fadeIn}
                         >
-                            <span>{faq.question}</span>
-                            <span className="text-sm text-muted-foreground">{openFaq === faq.question ? '−' : '+'}</span>
-                        </button>
-                        {openFaq === faq.question && <p className="mt-3 text-sm text-muted-foreground">{faq.answer}</p>}
-                    </motion.div>
-                ))}
+                            <button
+                                type="button"
+                                className="flex w-full items-center justify-between p-6 text-left"
+                                onClick={() => setOpenFaq((prev) => (prev === faq.question ? null : faq.question))}
+                            >
+                                <span className="text-base font-semibold text-foreground pr-4">{faq.question}</span>
+                                <span className="flex-none text-muted-foreground">
+                                    {openFaq === faq.question ? (
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /></svg>
+                                    ) : (
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12h14" /></svg>
+                                    )}
+                                </span>
+                            </button>
+                            {openFaq === faq.question && (
+                                <div className="px-6 pb-6 pt-0">
+                                    <p className="text-muted-foreground leading-relaxed">{faq.answer}</p>
+                                </div>
+                            )}
+                        </motion.div>
+                    ))}
+                </div>
             </div>
         </section>
     );

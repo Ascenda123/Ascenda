@@ -21,7 +21,20 @@ const OLD_STORAGE_KEY = 'ascenda-university-shortlist';
 const DEMO_IDS = new Set(['yale-epe', 'melbourne-design', 'hkust-gbus']);
 const TABLE_NAME = 'shortlisted_programs';
 
-type ShortlistRow = Database['public']['Tables']['shortlisted_programs']['Row'];
+// type ShortlistRow = Database['public']['Tables']['shortlisted_programs']['Row'];
+// Temporary fix for missing table type
+type ShortlistRow = {
+  profile_id: string;
+  program_id: string;
+  program_name: string | null;
+  university_name: string | null;
+  location: string | null;
+  fit_score: number | string | null;
+  stage: string | null;
+  next_action: string | null;
+  due_date: string | null;
+  metadata: any | null;
+};
 type Client = SupabaseClient<Database>;
 
 export const useShortlist = () => {
@@ -72,14 +85,14 @@ export const useShortlist = () => {
         return null;
       }
     };
-    const migrated = parseItems(stored) ?? parseItems(legacy);
+    const migrated = parseItems(stored) ?? parseItems(legacy ?? null);
     const cleaned = migrated?.filter((item) => !DEMO_IDS.has(item.id)) ?? [];
     return cleaned;
   }, []);
 
   const upsertRemoteItem = useCallback(
     async (client: Client, userId: string, item: ShortlistItem) => {
-      const payload: Database['public']['Tables']['shortlisted_programs']['Insert'] = {
+      const payload: any = {
         profile_id: userId,
         program_id: item.id,
         program_name: item.program,
@@ -91,7 +104,7 @@ export const useShortlist = () => {
         due_date: item.due ?? null,
         metadata: null
       };
-      const { error } = await client.from(TABLE_NAME).upsert(payload, { onConflict: 'profile_id,program_id' });
+      const { error } = await client.from(TABLE_NAME as any).upsert(payload, { onConflict: 'profile_id,program_id' });
       if (error) {
         console.warn('Failed to upsert shortlist item', error);
       }
@@ -101,7 +114,7 @@ export const useShortlist = () => {
 
   const deleteRemoteItem = useCallback(
     async (client: Client, userId: string, programId: string) => {
-      const { error } = await client.from(TABLE_NAME).delete().eq('profile_id', userId).eq('program_id', programId);
+      const { error } = await client.from(TABLE_NAME as any).delete().eq('profile_id', userId).eq('program_id', programId);
       if (error) {
         console.warn('Failed to remove shortlist item', error);
       }
@@ -135,7 +148,7 @@ export const useShortlist = () => {
       }
 
       const { data, error } = await supabase
-        .from(TABLE_NAME)
+        .from(TABLE_NAME as any)
         .select('program_id,program_name,university_name,location,fit_score,stage,next_action,due_date')
         .eq('profile_id', userId);
 
