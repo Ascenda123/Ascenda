@@ -131,7 +131,7 @@ export const mapProgramRow = (input: ProgramRowInput): Program => {
   };
 };
 
-export const mapUniversityRow = (input: UniversityRowInput): University => {
+export const mapUniversityRow = (input: unknown): University => {
   const row = UniversityRowSchema.parse(input);
   return {
     id: row.id,
@@ -145,7 +145,7 @@ export const mapUniversityRow = (input: UniversityRowInput): University => {
   };
 };
 
-export const mapRequirementRow = (input: RequirementRowInput): ProgramRequirement => {
+export const mapRequirementRow = (input: unknown): ProgramRequirement => {
   const row = RequirementRowSchema.parse(input);
   return {
     programId: row.program_id,
