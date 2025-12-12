@@ -53,5 +53,9 @@ export const TaskListPanel = ({ title, tasks }: TaskListPanelProps) => {
     });
   };
 
-  return <TaskList title={title} tasks={items} onToggle={handleToggle} disabled={isPending} />;
+  return (
+    <div className="rounded-[28px] border border-border/50 bg-card/50 backdrop-blur-md shadow-soft p-6 transition-colors dark:bg-muted/20 dark:border-white/10 dark:shadow-none">
+      <TaskList title={title} tasks={items} onToggle={handleToggle} disabled={isPending} />
+    </div>
+  );
 };

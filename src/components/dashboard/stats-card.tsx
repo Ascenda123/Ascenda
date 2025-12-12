@@ -15,7 +15,7 @@ export function StatsCard({ label, value, detail, icon, trend, className }: Stat
     return (
         <div
             className={cn(
-                'group relative overflow-hidden rounded-[24px] glass-card p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_22px_60px_rgba(15,23,42,0.12)]',
+                'group relative overflow-hidden rounded-[24px] border border-border/50 bg-card/60 backdrop-blur-xl shadow-soft p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_-5px_rgba(0,0,0,0.1)] hover:border-border/80 dark:bg-muted/20 dark:border-white/10 dark:shadow-none dark:hover:border-primary/50 dark:hover:bg-muted/30',
                 className
             )}
         >

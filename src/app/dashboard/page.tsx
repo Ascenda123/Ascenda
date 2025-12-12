@@ -285,7 +285,7 @@ export default async function DashboardPage() {
           />
         </div>
         <aside className="space-y-6">
-          <div className="glass-panel space-y-4 rounded-[28px] p-6 transition-colors">
+          <div className="glass-panel space-y-4 rounded-[28px] border border-border/50 bg-card/50 backdrop-blur-md shadow-soft p-6 transition-colors dark:bg-muted/20 dark:border-white/10 dark:shadow-none">
             <h2 className="text-2xl font-semibold text-foreground">Upcoming deadlines</h2>
             {deadlines.length > 0 ? (
               <DeadlineTimeline
@@ -302,7 +302,7 @@ export default async function DashboardPage() {
           </div>
         </aside>
         <div className="lg:col-span-3">
-          <div className="glass-panel space-y-4 overflow-hidden rounded-[28px] p-6 transition-colors">
+          <div className="glass-panel space-y-4 overflow-hidden rounded-[28px] border border-border/50 bg-card/50 backdrop-blur-md shadow-soft p-6 transition-colors dark:bg-muted/20 dark:border-white/10 dark:shadow-none">
             <h2 className="text-2xl font-semibold text-foreground">Recommended programs</h2>
             {matches.length > 0 ? (
               <MatchList matches={matches} />

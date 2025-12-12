@@ -47,7 +47,7 @@ export function UniversityCard({
     return (
         <article
             className={cn(
-                'group relative flex h-full flex-col rounded-[24px] border bg-card transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)]',
+                'group relative flex h-full flex-col rounded-[24px] border bg-card/80 backdrop-blur-sm shadow-soft transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_-5px_rgba(0,0,0,0.1)] dark:bg-muted/20 dark:border-white/10 dark:shadow-none dark:hover:border-primary/50 dark:hover:bg-muted/30',
                 isSelected ? 'border-primary ring-1 ring-primary' : 'border-border',
                 variant === 'compact' ? 'p-4' : 'p-5'
             )}

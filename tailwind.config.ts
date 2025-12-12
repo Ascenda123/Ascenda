@@ -19,16 +19,16 @@ function addVariablesForColors({ addBase, theme }: any) {
 const customUtilitiesPlugin = plugin(function ({ addComponents, theme }) {
   addComponents({
     '.glass-panel': {
-      '@apply border border-border/60 bg-card/70 backdrop-blur-xl shadow-[0_18px_50px_rgba(15,23,42,0.08)]': {},
+      '@apply border border-border/60 bg-card/70 backdrop-blur-xl shadow-[0_18px_50px_rgba(15,23,42,0.08)] dark:bg-muted/10 dark:border-white/10 dark:shadow-none': {},
     },
     '.glass-card': {
-      '@apply border border-border/60 bg-card/60 backdrop-blur-lg shadow-[0_18px_45px_rgba(15,23,42,0.08)]': {},
+      '@apply border border-border/60 bg-card/60 backdrop-blur-lg shadow-[0_18px_45px_rgba(15,23,42,0.08)] dark:bg-muted/20 dark:border-white/10 dark:shadow-none': {},
     },
     '.glass-muted': {
-      '@apply border border-border/60 bg-muted/60 backdrop-blur-md shadow-[0_12px_30px_rgba(15,23,42,0.06)]': {},
+      '@apply border border-border/60 bg-muted/60 backdrop-blur-md shadow-[0_12px_30px_rgba(15,23,42,0.06)] dark:bg-muted/30 dark:border-white/5': {},
     },
     '.glass-pill': {
-      '@apply border border-border/60 bg-background/70 backdrop-blur-md shadow-sm': {},
+      '@apply border border-border/60 bg-background/70 backdrop-blur-md shadow-sm dark:bg-muted/40 dark:border-white/10': {},
     },
     '.glass': {
       '@apply glass-panel': {},
