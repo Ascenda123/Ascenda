@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from '../theme/theme-toggle';
 import { filterNavByRole, NAV_ITEMS } from './navigation';
@@ -12,11 +13,24 @@ export const Navbar = () => {
   const role = useUserRole();
   const navItems = filterNavByRole(NAV_ITEMS, role);
   const logoSrc = '/Ascenda_Logo-removebg-.png';
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   return (
     <header className="fixed inset-x-0 top-0 z-50">
       <div className="container mx-auto px-4 pb-3 pt-3 md:px-6">
-        <div className="flex w-full items-center justify-between rounded-[28px] border border-white/30 bg-background/70 px-4 py-2 text-foreground shadow-nav backdrop-blur-md backdrop-saturate-150 transition-colors supports-[backdrop-filter]:bg-background/70 dark:border-white/10 dark:bg-card/70">
+        <div
+          className={cn(
+            'flex w-full items-center justify-between rounded-[28px] border border-white/30 bg-background/70 px-4 py-2 text-foreground backdrop-blur-md backdrop-saturate-150 transition-all supports-[backdrop-filter]:bg-background/70 dark:border-white/10 dark:bg-card/70',
+            scrolled ? 'shadow-[0_18px_60px_-30px_rgba(15,23,42,0.45)]' : 'shadow-nav'
+          )}
+        >
           <Link href="/dashboard" className="flex items-center gap-3 text-lg font-semibold text-foreground">
             <div className="relative h-12 w-12 shrink-0 scale-125">
               <Image

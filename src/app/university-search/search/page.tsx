@@ -213,10 +213,10 @@ export default function UniversitySearchPage() {
                       type="button"
                       onClick={() => toggleFilter(option)}
                       className={cn(
-                        'rounded-full border px-4 py-1 text-sm font-semibold transition',
+                        'rounded-full border px-4 py-1 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
                         isSelected
-                          ? 'border-primary bg-primary text-primary-foreground shadow-sm'
-                          : 'border-border bg-background text-foreground hover:border-foreground/60 hover:text-foreground'
+                          ? 'border-foreground/30 bg-foreground/5 text-foreground'
+                          : 'border-border bg-background text-foreground hover:border-border hover:text-foreground'
                       )}
                     >
                       {option}
