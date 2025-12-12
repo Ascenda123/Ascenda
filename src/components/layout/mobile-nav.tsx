@@ -13,7 +13,7 @@ export const MobileNav = () => {
 
   return (
     <nav className="fixed inset-x-0 bottom-4 z-50 mx-auto w-full max-w-3xl px-4 md:hidden">
-      <div className="flex items-center justify-between gap-2 rounded-full border border-border bg-card/95 px-4 py-3 text-xs font-semibold text-muted-foreground shadow-[0_24px_45px_rgba(15,23,42,0.12)] backdrop-blur">
+      <div className="flex items-center justify-between gap-2 rounded-full border border-border/50 bg-card/70 px-4 py-3 text-xs font-semibold text-muted-foreground shadow-soft backdrop-blur-xl dark:bg-muted/20 dark:border-white/10 dark:shadow-none">
         {items.map((item) => {
           const Icon = item.icon;
           const active = isNavActive(item, pathname);

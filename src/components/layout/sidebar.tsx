@@ -12,7 +12,7 @@ export const Sidebar = () => {
   const items = filterNavByRole(NAV_ITEMS, role);
 
   return (
-    <aside className="sticky top-28 hidden w-60 self-start rounded-[24px] border border-border bg-card p-5 text-foreground shadow-[0_12px_30px_rgba(15,23,42,0.06)] transition-colors md:block">
+    <aside className="glass-panel sticky top-28 hidden w-60 self-start rounded-[24px] p-5 text-foreground transition-colors md:block">
       <nav className="space-y-1">
         {items.map((item) => {
           const active = isNavActive(item, pathname);

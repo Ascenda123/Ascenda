@@ -127,7 +127,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
               tweak the details later.
             </p>
           </header>
-          <div className="rounded-[32px] border border-border bg-card p-6 shadow-[0_35px_120px_rgba(15,23,42,0.55)] backdrop-blur">
+          <div className="rounded-[32px] glass-panel p-6 shadow-soft backdrop-blur">
             <ProfileWizard
               profile={profile ?? null}
               academics={academics ?? null}
@@ -164,7 +164,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
         }
       />
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
-        <div className="relative overflow-hidden rounded-[28px] border border-white/15 bg-card/60 p-6 shadow-[0_18px_50px_rgba(15,23,42,0.12)] backdrop-blur-lg transition-colors dark:border-white/10">
+        <div className="relative overflow-hidden rounded-[28px] glass-panel p-6 shadow-soft transition-colors">
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/5 via-primary/5 to-emerald-400/5 opacity-50" aria-hidden />
           <div className="relative z-10 flex items-start justify-between gap-4">
             <div className="space-y-1">
@@ -235,7 +235,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
           </div>
         </div>
         <div className="space-y-6">
-          <div className="relative overflow-hidden rounded-[24px] border border-white/15 bg-card/60 p-5 shadow-[0_16px_45px_rgba(15,23,42,0.1)] backdrop-blur-lg dark:border-white/10">
+          <div className="relative overflow-hidden rounded-[24px] glass-card p-5 shadow-soft">
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/5 via-primary/5 to-emerald-400/5 opacity-50" aria-hidden />
             <div className="relative z-10 flex items-start justify-between gap-4">
               <div>
@@ -278,7 +278,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
               </Button>
             </div>
           </div>
-          <div className="relative overflow-hidden rounded-[24px] border border-white/15 bg-card/60 p-5 shadow-[0_16px_45px_rgba(15,23,42,0.1)] backdrop-blur-lg dark:border-white/10">
+          <div className="relative overflow-hidden rounded-[24px] glass-card p-5 shadow-soft">
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/6 via-primary/5 to-emerald-400/6 opacity-50" aria-hidden />
             <div className="relative z-10 flex items-start justify-between gap-4">
               <div>
@@ -327,7 +327,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
           nextStepTitle={nextStep?.title}
           stepCompletion={stepCompletion}
         />
-        <div className="relative overflow-hidden rounded-[28px] border border-white/15 bg-card/60 p-6 text-sm text-muted-foreground shadow-[0_18px_60px_rgba(15,23,42,0.14)] backdrop-blur-lg transition-colors dark:border-white/10">
+        <div className="relative overflow-hidden rounded-[28px] glass-panel p-6 text-sm text-muted-foreground shadow-soft transition-colors">
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/5 via-primary/5 to-emerald-400/5 opacity-60" aria-hidden />
           <div className="relative z-10">
             <p className="text-base font-semibold text-foreground">Why it matters</p>
@@ -344,7 +344,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
         </div>
       </div>
       <div className="mt-6">
-        <div className="relative overflow-hidden rounded-[28px] border border-white/15 bg-card/60 p-6 text-sm text-muted-foreground shadow-[0_18px_50px_rgba(15,23,42,0.12)] backdrop-blur-lg transition-colors dark:border-white/10">
+        <div className="relative overflow-hidden rounded-[28px] glass-panel p-6 text-sm text-muted-foreground shadow-soft transition-colors">
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/6 via-primary/8 to-emerald-400/8 opacity-60" aria-hidden />
           <div className="relative z-10 space-y-4">
             <div className="flex items-start justify-between gap-3">

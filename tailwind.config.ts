@@ -62,7 +62,7 @@ const customUtilitiesPlugin = plugin(function ({ addComponents, theme }) {
       '@apply text-sm font-semibold text-foreground': {},
     },
     '.form-input': {
-      '@apply w-full rounded-2xl border border-input bg-background px-4 py-3 text-sm text-foreground shadow-sm transition placeholder:text-muted-foreground/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring': {},
+      '@apply w-full rounded-2xl border border-input bg-background px-4 py-3 text-sm text-foreground shadow-sm transition-all duration-300 placeholder:text-muted-foreground/80 hover:border-primary/50 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring': {},
     },
     '.form-input--multi': {
       '@apply min-h-[120px]': {},
