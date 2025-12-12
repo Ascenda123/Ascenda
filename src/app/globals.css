@@ -6,35 +6,36 @@
   :root {
     --background: 0 0% 100%;
     /* Pure white for main background */
-    --foreground: 240 10% 3.9%;
-    /* #09090b - Softer black */
+    --foreground: 222 47% 11%;
+    /* Deep navy for stronger contrast */
 
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
+    --card: 210 22% 98%;
+    --card-foreground: 222 47% 11%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
+    --popover: 210 22% 98%;
+    --popover-foreground: 222 47% 11%;
 
-    --primary: 240 5.9% 10%;
-    /* #18181b - Very dark grey/black for primary actions */
+    --primary: 220 85% 56%;
+    /* Rich blue primary */
     --primary-foreground: 0 0% 98%;
 
-    --secondary: 240 4.8% 95.9%;
-    /* #f4f4f5 - Light gray for secondary sections */
-    --secondary-foreground: 240 5.9% 10%;
+    --secondary: 216 33% 96%;
+    /* Soft cool neutral */
+    --secondary-foreground: 222 47% 11%;
 
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
+    --muted: 216 33% 96%;
+    --muted-foreground: 220 9% 46%;
 
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
+    --accent: 178 73% 48%;
+    /* Teal accent */
+    --accent-foreground: 0 0% 98%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 240 5.9% 10%;
+    --border: 218 18% 88%;
+    --input: 218 18% 88%;
+    --ring: 220 85% 56%;
 
     --success: 142 71% 45%;
     --success-foreground: 210 40% 98%;
@@ -49,34 +50,35 @@
   }
 
   [data-theme='dark'] {
-    --background: 240 10% 3.9%;
-    /* #09090b */
+    --background: 220 24% 8%;
+    /* Deep navy base */
     --foreground: 0 0% 98%;
 
-    --card: 240 10% 3.9%;
+    --card: 220 10% 12%;
     --card-foreground: 0 0% 98%;
 
-    --popover: 240 10% 3.9%;
+    --popover: 220 10% 12%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 0 0% 98%;
-    --primary-foreground: 240 5.9% 10%;
+    --primary: 210 100% 77%;
+    /* Lighter blue for dark mode punch */
+    --primary-foreground: 222 47% 11%;
 
-    --secondary: 240 3.7% 15.9%;
+    --secondary: 220 12% 18%;
     --secondary-foreground: 0 0% 98%;
 
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
+    --muted: 220 12% 18%;
+    --muted-foreground: 220 10% 70%;
 
-    --accent: 240 3.7% 15.9%;
+    --accent: 174 70% 45%;
     --accent-foreground: 0 0% 98%;
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
+    --border: 220 10% 24%;
+    --input: 220 10% 24%;
+    --ring: 210 100% 77%;
 
     --success: 142 71% 45%;
     --success-foreground: 210 40% 98%;
