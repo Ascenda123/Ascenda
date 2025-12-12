@@ -75,7 +75,6 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
   const destinationCountries = Array.isArray(preferences?.countries) ? preferences.countries.filter(Boolean) : [];
   const programLevels = Array.isArray(preferences?.program_levels) ? preferences.program_levels.filter(Boolean) : [];
   const targetFields = Array.isArray(aspirations?.target_fields) ? aspirations.target_fields.filter(Boolean) : [];
-  const jobTitles = Array.isArray(aspirations?.job_titles) ? aspirations.job_titles.filter(Boolean) : [];
 
   const formatCurrency = (value?: number | null) => {
     if (typeof value !== 'number') return null;
@@ -344,163 +343,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
           </div>
         </div>
       </div>
-      <div className="mt-6 grid gap-6 lg:grid-cols-2">
-        <div className="relative overflow-hidden rounded-[28px] border border-white/15 bg-card/60 p-6 shadow-[0_18px_50px_rgba(15,23,42,0.12)] backdrop-blur-lg transition-colors dark:border-white/10">
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/5 via-primary/5 to-emerald-400/5 opacity-50" aria-hidden />
-          <div className="relative z-10 flex items-start justify-between gap-4">
-            <div className="space-y-1">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Profile</p>
-              <p className="text-xl font-semibold text-foreground">{profile?.full_name || 'Add your full name'}</p>
-              <p className="text-sm text-muted-foreground">{user?.email ?? 'Add an email'}</p>
-            </div>
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/20">
-              <MapPin className="h-5 w-5" />
-            </div>
-          </div>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Country</p>
-              <p className="text-sm font-semibold text-foreground">{profile?.country || 'Add home country'}</p>
-            </div>
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Time zone</p>
-              <p className="text-sm font-semibold text-foreground">{profile?.time_zone || 'Set time zone'}</p>
-            </div>
-          </div>
-          <div className="mt-4">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Destinations</p>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {destinationCountries.length ? (
-                destinationCountries.map((country) => (
-                  <span
-                    key={country}
-                    className="inline-flex items-center gap-2 rounded-full bg-white/5 px-3 py-1 text-xs font-semibold text-foreground ring-1 ring-white/10"
-                  >
-                    <Compass className="h-3.5 w-3.5" />
-                    {country}
-                  </span>
-                ))
-              ) : (
-                <span className="inline-flex items-center gap-2 rounded-full bg-white/5 px-3 py-1 text-xs font-semibold text-muted-foreground ring-1 ring-white/10">
-                  Add destination countries
-                </span>
-              )}
-            </div>
-          </div>
-          <div className="mt-4">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Focus</p>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {targetFields.slice(0, 2).map((field) => (
-                <span
-                  key={field}
-                  className="inline-flex items-center gap-2 rounded-full bg-white/5 px-3 py-1 text-xs font-semibold text-foreground ring-1 ring-white/10"
-                >
-                  <Target className="h-3.5 w-3.5" />
-                  {field}
-                </span>
-              ))}
-              {!targetFields.length ? (
-                <span className="inline-flex items-center gap-2 rounded-full bg-white/5 px-3 py-1 text-xs font-semibold text-muted-foreground ring-1 ring-white/10">
-                  Add fields of interest
-                </span>
-              ) : null}
-            </div>
-          </div>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <Button size="sm" variant="outline" asChild>
-              <Link href="/profile?onboarding=true&step=personal">Edit profile</Link>
-            </Button>
-            <Button size="sm" asChild>
-              <Link href="/matches">Preview matches</Link>
-            </Button>
-          </div>
-        </div>
-        <div className="space-y-6">
-          <div className="relative overflow-hidden rounded-[24px] border border-white/15 bg-card/60 p-5 shadow-[0_16px_45px_rgba(15,23,42,0.1)] backdrop-blur-lg dark:border-white/10">
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/5 via-primary/5 to-emerald-400/5 opacity-50" aria-hidden />
-            <div className="relative z-10 flex items-start justify-between gap-4">
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Preferences</p>
-                <p className="text-lg font-semibold text-foreground">Study setup</p>
-                <p className="text-sm text-muted-foreground">Budget and program focus</p>
-              </div>
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/20">
-                <Target className="h-5 w-5" />
-              </div>
-            </div>
-            <div className="mt-3 grid gap-3 sm:grid-cols-2">
-              <div className="rounded-xl border border-white/10 bg-white/5 p-3">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Budget</p>
-                <p className="text-sm font-semibold text-foreground">{budgetRange}</p>
-              </div>
-              <div className="rounded-xl border border-white/10 bg-white/5 p-3">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Levels</p>
-                <p className="text-sm font-semibold text-foreground">
-                  {programLevels.length ? programLevels.join(', ') : 'Add program levels'}
-                </p>
-              </div>
-            </div>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {programLevels.slice(0, 3).map((level) => (
-                <span
-                  key={level}
-                  className="rounded-full bg-white/5 px-3 py-1 text-xs font-semibold text-foreground ring-1 ring-white/10"
-                >
-                  {level}
-                </span>
-              ))}
-            </div>
-            <div className="mt-4 flex flex-wrap gap-2">
-              <Button size="sm" variant="outline" asChild>
-                <Link href="/profile?onboarding=true&step=preferences">Edit preferences</Link>
-              </Button>
-              <Button size="sm" variant="secondary" asChild>
-                <Link href="/profile?onboarding=true&step=preferences">Update budget</Link>
-              </Button>
-            </div>
-          </div>
-          <div className="relative overflow-hidden rounded-[24px] border border-white/15 bg-card/60 p-5 shadow-[0_16px_45px_rgba(15,23,42,0.1)] backdrop-blur-lg dark:border-white/10">
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/6 via-primary/5 to-emerald-400/6 opacity-50" aria-hidden />
-            <div className="relative z-10 flex items-start justify-between gap-4">
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Academics</p>
-                <p className="text-lg font-semibold text-foreground">Snapshot</p>
-                <p className="text-sm text-muted-foreground">
-                  {academics?.curriculum ? academics.curriculum : 'Add curriculum and grades'}
-                </p>
-              </div>
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/20">
-                <GraduationCap className="h-5 w-5" />
-              </div>
-            </div>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {academicSignals.length ? (
-                academicSignals.map((signal) => (
-                  <span
-                    key={signal}
-                    className="rounded-full bg-white/5 px-3 py-1 text-xs font-semibold text-foreground ring-1 ring-white/10"
-                  >
-                    {signal}
-                  </span>
-                ))
-              ) : (
-                <span className="rounded-full bg-white/5 px-3 py-1 text-xs font-semibold text-muted-foreground ring-1 ring-white/10">
-                  Add scores to sharpen matches
-                </span>
-              )}
-            </div>
-            <div className="mt-4 flex flex-wrap gap-2">
-              <Button size="sm" variant="outline" asChild>
-                <Link href="/profile?onboarding=true&step=academics">Edit academics</Link>
-              </Button>
-              <Button size="sm" variant="secondary" asChild>
-                <Link href="/profile?onboarding=true&step=academics">Add scores</Link>
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div className="mt-6 grid gap-6 xl:grid-cols-[1.5fr,1fr]">
+      <div className="mt-6">
         <div className="relative overflow-hidden rounded-[28px] border border-white/15 bg-card/60 p-6 text-sm text-muted-foreground shadow-[0_18px_50px_rgba(15,23,42,0.12)] backdrop-blur-lg transition-colors dark:border-white/10">
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/6 via-primary/8 to-emerald-400/8 opacity-60" aria-hidden />
           <div className="relative z-10 space-y-4">
@@ -542,26 +385,15 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
           </div>
         </div>
       </div>
-      {forceOnboarding || !hasCompletedProfile ? (
-        <ProfileWizard
-          profile={profile ?? null}
-          academics={academics ?? null}
-          preferences={preferences ?? null}
-          aspirations={aspirations ?? null}
-          initialStep={initialStepKey}
-          stepCompletion={stepCompletion}
-        />
-      ) : (
-        <div className="mt-6 rounded-[28px] border border-border bg-card p-6 text-muted-foreground shadow-[0_18px_50px_rgba(15,23,42,0.08)] transition-colors">
-          <p className="text-base font-semibold text-foreground">Profile complete</p>
-          <p className="mt-2 text-sm">
-            You&apos;ve already finished onboarding. You can revisit the wizard anytime if you need to update details.
-          </p>
-          <Button className="mt-4" size="sm" asChild>
-            <Link href="/profile?onboarding=true">Open profile wizard</Link>
-          </Button>
-        </div>
-      )}
+      <div className="mt-6 rounded-[28px] border border-border bg-card p-6 text-muted-foreground shadow-[0_18px_50px_rgba(15,23,42,0.08)] transition-colors">
+        <p className="text-base font-semibold text-foreground">Profile complete</p>
+        <p className="mt-2 text-sm">
+          You&apos;ve already finished onboarding. You can revisit the wizard anytime if you need to update details.
+        </p>
+        <Button className="mt-4" size="sm" asChild>
+          <Link href="/profile?onboarding=true">Open profile wizard</Link>
+        </Button>
+      </div>
     </DashboardShell>
   );
 }
