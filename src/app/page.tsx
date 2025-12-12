@@ -17,7 +17,7 @@ export default function HomePage() {
     >
       <HeroSection />
 
-      <div className="mx-auto max-w-6xl px-4 pb-10 pt-10 sm:px-6">
+      <div className="w-full px-4 pb-10 pt-10 sm:px-6 lg:px-10">
         <FeaturesSection />
         <ShortlistSection />
         <ComparisonSection />

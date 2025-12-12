@@ -118,7 +118,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
     return (
       <div className="relative min-h-screen overflow-hidden bg-background text-foreground">
         <AnimatedBlobBanner className="opacity-60" variant="cool" />
-        <div className="relative z-10 mx-auto flex max-w-6xl flex-col gap-8 px-4 pb-16 pt-24">
+        <div className="relative z-10 mx-auto flex w-full max-w-none flex-col gap-8 px-4 pb-16 pt-24 sm:px-6 lg:px-10">
           <header className="text-center">
             <p className="text-xs uppercase tracking-[0.6em] text-muted-foreground">Welcome aboard</p>
             <h1 className="mt-4 text-4xl font-semibold text-foreground">Let&apos;s build your profile</h1>

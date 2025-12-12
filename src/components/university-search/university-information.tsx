@@ -151,7 +151,7 @@ export const UniversityInformation = ({
     <div
       className={cn(
         'min-h-screen w-full space-y-10 bg-background px-4 pb-12 pt-28 text-foreground md:px-8 lg:px-12',
-        'mx-auto max-w-screen-2xl',
+        'mx-auto w-full max-w-none',
         className
       )}
     >

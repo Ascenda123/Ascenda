@@ -198,7 +198,7 @@ export function HeroSection() {
                     animate="visible"
                     variants={topBarVariants}
                 >
-                    <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 text-foreground">
+                    <div className="flex w-full items-center justify-between gap-4 text-foreground">
                         <Link href="/" className="flex items-center gap-3 text-lg font-semibold tracking-tight text-foreground">
                             <Image
                                 src="/Gemini_Generated_Image_t7l91wt7l91wt7l9-removebg-preview.png"
@@ -226,7 +226,7 @@ export function HeroSection() {
                     </div>
                 </motion.header>
 
-                <div className="mx-auto max-w-6xl px-4 pb-10 pt-10 sm:px-6">
+                <div className="w-full px-4 pb-10 pt-10 sm:px-6 lg:px-10">
                     <section className="space-y-12 pb-16 pt-4">
                         <motion.div
                             className="grid items-center gap-10 lg:grid-cols-[0.9fr,1.1fr]"

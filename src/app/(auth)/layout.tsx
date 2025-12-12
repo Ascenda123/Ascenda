@@ -7,7 +7,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
       <div className="pointer-events-none absolute -left-24 top-10 h-80 w-80 rounded-full bg-indigo-200/30 blur-3xl dark:bg-indigo-500/20" />
       <div className="pointer-events-none absolute bottom-10 right-[-4rem] h-80 w-80 rounded-full bg-sky-200/40 blur-3xl dark:bg-sky-400/10" />
 
-      <div className="relative mx-auto flex min-h-screen max-w-6xl items-center px-6 py-12">
+      <div className="relative mx-auto flex min-h-screen w-full items-center px-6 py-12 lg:px-12">
         <div className="grid w-full items-center gap-10 lg:grid-cols-[1.05fr_0.95fr]">
           <section className="space-y-6">
             <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/60 px-3 py-1 text-xs font-medium shadow-sm backdrop-blur">

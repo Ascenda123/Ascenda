@@ -438,7 +438,7 @@ export default function CoursePage({ params }: { params: { id: string } }) {
         {/* Hero Section */}
         <div className="relative border-b border-border/40 bg-muted/10">
           <div className="absolute inset-0 bg-gradient-to-b from-background/5 to-background/60" />
-          <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 relative z-10">
+          <div className="relative z-10 w-full px-4 py-12 sm:px-6 lg:px-10">
             <Breadcrumbs className="mb-8" />
 
             <div className="mb-8 flex items-center gap-3">
@@ -471,7 +471,7 @@ export default function CoursePage({ params }: { params: { id: string } }) {
                         {course.university}
                       </p>
                     </div>
-                    <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl max-w-3xl">
+                    <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
                       {course.title}
                     </h1>
                     <div className="flex flex-wrap items-center gap-6 text-muted-foreground">
@@ -527,7 +527,7 @@ export default function CoursePage({ params }: { params: { id: string } }) {
           <>
             {/* Sticky Tabs Navigation */}
             <div className="sticky top-0 z-20 border-b border-border/40 bg-background/80 backdrop-blur-md">
-              <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+              <div className="w-full px-4 sm:px-6 lg:px-10">
                 <div className="flex gap-1 overflow-x-auto py-2 no-scrollbar">
                   {TABS.map((tab) => {
                     const isActive = activeTab === tab.id;
@@ -553,11 +553,11 @@ export default function CoursePage({ params }: { params: { id: string } }) {
             </div>
 
             {/* Tab Content */}
-            <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 min-h-[500px]">
+            <div className="w-full px-4 py-12 sm:px-6 lg:px-10 min-h-[500px]">
 
               {/* Overview Tab */}
               {activeTab === 'overview' && (
-                <div className="max-w-5xl space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="w-full space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
 
                   {/* Summary Text */}
                   <div className="rounded-3xl border border-border/60 bg-card p-8 shadow-sm">
@@ -621,7 +621,7 @@ export default function CoursePage({ params }: { params: { id: string } }) {
 
               {/* Curriculum Tab */}
               {activeTab === 'curriculum' && (
-                <div className="max-w-5xl space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="w-full space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                   <div className="flex items-center justify-between">
                     <h2 className="text-2xl font-bold">Course Curriculum</h2>
                     {moduleItems.length > 8 && !moduleYearSections.length && (
@@ -678,7 +678,7 @@ export default function CoursePage({ params }: { params: { id: string } }) {
 
               {/* Requirements Tab */}
               {activeTab === 'requirements' && (
-                <div className="max-w-5xl space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="w-full space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                   <h2 className="text-2xl font-bold">Entry Requirements</h2>
 
                   {/* 1. Key Metrics Row (Grades, Points - things that are short) */}
@@ -756,7 +756,7 @@ export default function CoursePage({ params }: { params: { id: string } }) {
 
               {/* Assessment Tab */}
               {activeTab === 'assessment' && (
-                <div className="max-w-4xl space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="w-full space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                   <div className="rounded-3xl border border-border/60 bg-card p-8 shadow-sm">
                     <h2 className="text-2xl font-bold mb-6">Assessment Methods</h2>
                     {course.assessment ? (
