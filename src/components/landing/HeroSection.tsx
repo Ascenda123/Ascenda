@@ -226,7 +226,7 @@ export function HeroSection() {
                     </div>
                 </motion.header>
 
-                <div className="w-full px-4 pb-10 pt-10 sm:px-6 lg:px-10">
+                <div className="w-full max-w-6xl px-4 pb-10 pt-10 sm:px-6 lg:px-10 mx-auto">
                     <section className="space-y-12 pb-16 pt-4">
                         <motion.div
                             className="grid items-center gap-10 lg:grid-cols-[0.9fr,1.1fr]"
