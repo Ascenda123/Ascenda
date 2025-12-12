@@ -48,7 +48,7 @@ const fadeIn: Variants = {
 export function ComparisonSection() {
 
     return (
-        <section className="w-full py-24 bg-secondary/20">
+        <section className="w-full bg-secondary/40 py-24 sm:py-32 relative overflow-hidden">
             <motion.div
                 className="max-w-7xl mx-auto px-6"
                 initial="hidden"

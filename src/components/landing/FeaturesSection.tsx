@@ -33,7 +33,7 @@ const fadeIn: Variants = {
 
 export function FeaturesSection() {
     return (
-        <section className="w-full py-24 bg-secondary/20">
+        <section className="w-full py-24 bg-secondary/40 sm:py-32 relative overflow-hidden">
             <div className="max-w-7xl mx-auto px-6 space-y-12">
                 <div className="max-w-3xl space-y-3">
                     <p className="text-sm font-medium uppercase tracking-widest text-primary/80">Why Ascenda</p>
