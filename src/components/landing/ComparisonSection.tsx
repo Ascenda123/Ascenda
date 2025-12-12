@@ -1,6 +1,6 @@
 'use client';
 
-import { motion, type Variants } from 'framer-motion';
+import { motion, type Variants, useReducedMotion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 const comparisons = [
@@ -46,13 +46,14 @@ const fadeIn: Variants = {
 };
 
 export function ComparisonSection() {
+    const shouldReduceMotion = useReducedMotion();
 
     return (
-        <section className="w-full bg-secondary/40 py-24 sm:py-32 relative overflow-hidden">
+        <section className="section-fade w-full bg-secondary/40 py-24 sm:py-32">
             <motion.div
                 className="max-w-7xl mx-auto px-6"
-                initial="hidden"
-                whileInView="visible"
+                initial={shouldReduceMotion ? false : 'hidden'}
+                whileInView={shouldReduceMotion ? undefined : 'visible'}
                 viewport={{ once: true, amount: 0.3 }}
                 variants={fadeIn}
             >

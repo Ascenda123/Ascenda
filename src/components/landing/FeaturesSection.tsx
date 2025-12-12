@@ -1,6 +1,6 @@
 'use client';
 
-import { motion, type Variants } from 'framer-motion';
+import { motion, type Variants, useReducedMotion } from 'framer-motion';
 import { Sparkles, Search, Mail, NotepadText } from 'lucide-react';
 
 const features = [
@@ -32,8 +32,9 @@ const fadeIn: Variants = {
 };
 
 export function FeaturesSection() {
+    const shouldReduceMotion = useReducedMotion();
     return (
-        <section className="w-full py-24 bg-secondary/40 sm:py-32 relative overflow-hidden">
+        <section className="section-fade w-full py-24 bg-secondary/40 sm:py-32">
             <div className="max-w-7xl mx-auto px-6 space-y-12">
                 <div className="max-w-3xl space-y-3">
                     <p className="text-sm font-medium uppercase tracking-widest text-primary/80">Why Ascenda</p>
@@ -48,8 +49,8 @@ export function FeaturesSection() {
                         <motion.div
                             key={feature.title}
                             className="group flex flex-col gap-5 rounded-3xl border border-border/50 bg-background/60 backdrop-blur-sm p-8 shadow-sm hover:shadow-md hover:bg-background/80 transition-all duration-300"
-                            initial="hidden"
-                            whileInView="visible"
+                            initial={shouldReduceMotion ? false : 'hidden'}
+                            whileInView={shouldReduceMotion ? undefined : 'visible'}
                             viewport={{ once: true, amount: 0.3 }}
                             variants={fadeIn}
                         >

@@ -165,6 +165,20 @@
     content: '';
     @apply pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_20%_20%,rgba(37,99,235,0.06),transparent_35%),radial-gradient(circle_at_80%_10%,rgba(13,148,136,0.06),transparent_35%),linear-gradient(180deg,rgba(15,23,42,0.03),transparent_30%)];
   }
+
+  .section-fade {
+    @apply relative overflow-hidden;
+  }
+
+  .section-fade::before {
+    content: '';
+    @apply pointer-events-none absolute inset-x-0 -top-16 h-16 bg-gradient-to-b from-background via-background/70 to-transparent;
+  }
+
+  .section-fade::after {
+    content: '';
+    @apply pointer-events-none absolute inset-x-0 -bottom-16 h-16 bg-gradient-to-t from-background via-background/70 to-transparent;
+  }
 }
 
 /* React Big Calendar Dark Mode Overrides */
