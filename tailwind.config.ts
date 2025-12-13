@@ -34,7 +34,7 @@ const customUtilitiesPlugin = plugin(function ({ addComponents, theme }) {
       '@apply glass-panel': {},
     },
     '.text-glow': {
-      'text-shadow': '0 0 20px rgba(99, 102, 241, 0.5)',
+      'text-shadow': '0 0 20px rgba(90, 88, 238, 0.55)',
     },
     // Form utilities
     '.form-grid': {
