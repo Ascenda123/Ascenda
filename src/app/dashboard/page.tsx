@@ -181,12 +181,22 @@ export default async function DashboardPage() {
 
   const primaryFocus = focusItems[0];
 
+  const priorityHref =
+    primaryFocus?.label === 'Profile'
+      ? '/profile'
+      : primaryFocus?.label === 'Milestone'
+        ? '/applications'
+        : primaryFocus?.label === 'Eligibility flag'
+          ? '/matches'
+          : '/applications';
+
   const highlightCards: HighlightCard[] = [
     {
       id: 'priority',
       label: 'Next priority',
       value: primaryFocus ? primaryFocus.title : 'All clear',
       detail: primaryFocus ? primaryFocus.detail : 'Log progress or add programs to surface new actions.',
+      href: priorityHref,
       tone: primaryFocus && primaryFocus.label === 'Due today' ? 'warning' : !primaryFocus ? 'positive' : undefined
     },
     {
@@ -194,6 +204,7 @@ export default async function DashboardPage() {
       label: 'Profile readiness',
       value: `${completionPercent}%`,
       detail: nextStep ? `${nextStep.title} needs attention` : 'All sections complete',
+      href: '/profile',
       tone: completionPercent === 100 ? 'positive' : undefined
     }
   ];

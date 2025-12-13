@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { cn } from '@/lib/utils';
 
 export type HighlightTone = 'positive' | 'warning' | 'muted' | undefined;
@@ -9,6 +10,7 @@ export type HighlightCard = {
   label: string;
   value: string;
   detail: string;
+  href?: string;
   tone?: HighlightTone;
 };
 
@@ -49,20 +51,35 @@ export const DashboardOverview = ({ data }: { data: OverviewPayload }) => {
         </div>
       </div>
       <div className="space-y-6">
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {data.highlightCards.map((card) => (
-            <div
-              key={card.id}
-              className={cn(
-                'rounded-[20px] border p-5 text-foreground shadow-[0_25px_60px_-40px_rgba(0,0,0,0.35)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_30px_70px_-45px_rgba(0,0,0,0.38)]',
-                toneClass(card.tone)
-              )}
-            >
-              <p className="text-[11px] uppercase tracking-[0.35em] text-muted-foreground">{card.label}</p>
-              <p className="mt-3 text-3xl font-semibold text-foreground">{card.value}</p>
-              <p className="helper-text">{card.detail}</p>
-            </div>
-          ))}
+        <div className="grid gap-4 sm:grid-cols-2">
+          {data.highlightCards.map((card) =>
+            card.href ? (
+              <Link key={card.id} href={card.href} className="group block h-full" aria-label={card.label}>
+                <div
+                  className={cn(
+                    'h-full rounded-[20px] border p-5 text-foreground shadow-[0_25px_60px_-40px_rgba(0,0,0,0.35)] transition-all duration-300 group-hover:-translate-y-0.5 group-hover:shadow-[0_30px_70px_-45px_rgba(0,0,0,0.38)]',
+                    toneClass(card.tone)
+                  )}
+                >
+                  <p className="text-[11px] uppercase tracking-[0.35em] text-muted-foreground">{card.label}</p>
+                  <p className="mt-3 text-3xl font-semibold text-foreground">{card.value}</p>
+                  <p className="helper-text">{card.detail}</p>
+                </div>
+              </Link>
+            ) : (
+              <div
+                key={card.id}
+                className={cn(
+                  'h-full rounded-[20px] border p-5 text-foreground shadow-[0_25px_60px_-40px_rgba(0,0,0,0.35)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_30px_70px_-45px_rgba(0,0,0,0.38)]',
+                  toneClass(card.tone)
+                )}
+              >
+                <p className="text-[11px] uppercase tracking-[0.35em] text-muted-foreground">{card.label}</p>
+                <p className="mt-3 text-3xl font-semibold text-foreground">{card.value}</p>
+                <p className="helper-text">{card.detail}</p>
+              </div>
+            )
+          )}
         </div>
 
         <div className="rounded-[24px] border border-border bg-card/80 p-5 shadow-[0_30px_80px_-60px_rgba(0,0,0,0.4)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_35px_90px_-60px_rgba(0,0,0,0.45)]">
