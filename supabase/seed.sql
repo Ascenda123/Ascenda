@@ -1,13 +1,3 @@
-insert into profiles (id, role, full_name, country)
-values
-  ('11111111-1111-1111-1111-111111111111', 'admin', 'Admin User', 'SG')
-  on conflict (id) do update set role = excluded.role;
-
-insert into profiles (id, role, full_name, country)
-values
-  ('22222222-2222-2222-2222-222222222222', 'student', 'Student One', 'IN')
-  on conflict (id) do update set full_name = excluded.full_name;
-
 insert into universities (id, name, country, region, city, rank_overall, rank_source, website, intl_tuition_low, intl_tuition_high, currency, acceptance_rate, requires_test)
 values
   ('33333333-3333-3333-3333-333333333333', 'Global Tech University', 'United States', 'North America', 'San Francisco', 25, 'QS', 'https://gtech.example.com', 32000, 45000, 'USD', 0.35, true)
