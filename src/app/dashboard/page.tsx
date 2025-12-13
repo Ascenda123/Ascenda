@@ -195,27 +195,19 @@ export default async function DashboardPage() {
       value: `${completionPercent}%`,
       detail: nextStep ? `${nextStep.title} needs attention` : 'All sections complete',
       tone: completionPercent === 100 ? 'positive' : undefined
-    },
-    {
-      id: 'timeline',
-      label: 'Milestones',
-      value: trackedProgramsCount > 0 ? `${trackedProgramsCount} programs` : 'No programs',
-      detail: nextDeadline ? `Next: ${formatShortDate(nextDeadline.deadline_date)}` : 'Track a program to unlock deadlines',
-      tone: trackedProgramsCount === 0 ? 'muted' : dueSoonCount > 0 ? 'warning' : undefined
     }
   ];
 
   const overviewPayload: OverviewPayload = {
     highlightCards,
     focusItems,
-    nextStepTitle: nextStep?.title ?? null,
-    todayFocus
+    nextStepTitle: nextStep?.title ?? null
   };
 
   const heroHighlight = primaryFocus ? primaryFocus.label : 'Systems steady';
   const heroStats = [
-    { label: 'Open tasks', value: openTasks > 0 ? `${openTasks}` : '0', detail: dueSoonCount > 0 ? `${dueSoonCount} due this week` : 'Nothing urgent' },
-    { label: 'Tracked programs', value: trackedProgramsCount > 0 ? `${trackedProgramsCount}` : '0', detail: nextDeadline ? `Next: ${formatShortDate(nextDeadline.deadline_date)}` : 'Add a program to track milestones' },
+    { label: 'Due today', value: todayFocus.tasks > 0 ? `${todayFocus.tasks}` : '0', detail: dueSoonCount > 0 ? `${dueSoonCount} due this week` : 'Nothing urgent' },
+    { label: 'Deadlines', value: deadlines.length > 0 ? `${deadlines.length}` : '0', detail: nextDeadline ? `Next: ${formatShortDate(nextDeadline.deadline_date)}` : 'Add a program to track milestones' },
     { label: 'Match health', value: averageMatchScore !== null ? `${averageMatchScore}%` : '-', detail: matches.length ? `${matches[0].program.name}` : 'Finish profile to unlock' }
   ];
 
