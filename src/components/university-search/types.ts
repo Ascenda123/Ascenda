@@ -5,6 +5,7 @@ export type ProgramSearchResult = {
   universityName: string;
   programName: string;
   location: string;
+  logoUrl?: string | null;
   fitScore?: number | null;
   tier?: MatchTier | null;
   highlights: string[];

@@ -20,6 +20,7 @@ type CourseView = {
   title: string;
   university: string;
   location: string;
+  logoUrl?: string | null;
   level?: string | null;
   duration?: string | null;
   intake?: string | null;
@@ -369,7 +370,8 @@ export default function CoursePage({ params }: { params: { id: string } }) {
               name,
               city,
               region,
-              country
+              country,
+              metadata
             )
           `
           )
@@ -383,6 +385,13 @@ export default function CoursePage({ params }: { params: { id: string } }) {
         }
 
         const uni = (data as any).universities ?? {};
+        const uniMeta = uni && typeof uni.metadata === 'object' && uni.metadata !== null ? (uni.metadata as Record<string, unknown>) : {};
+        const logoUrl =
+          typeof uniMeta.logo_url === 'string'
+            ? (uniMeta.logo_url as string)
+            : typeof uniMeta.logoUrl === 'string'
+              ? (uniMeta.logoUrl as string)
+              : undefined;
         const location = normalizeLocation(uni.city, uni.region, uni.country);
         const duration = data.duration || null;
         const intake = data.start_date || null;
@@ -392,6 +401,7 @@ export default function CoursePage({ params }: { params: { id: string } }) {
           id: data.id,
           title: (data as any).course_name,
           university: uni.name ?? 'University',
+          logoUrl: logoUrl ?? null,
           location,
           level: data.study_level ?? null,
           duration,
@@ -464,9 +474,21 @@ export default function CoursePage({ params }: { params: { id: string } }) {
                 <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
                   <div className="space-y-4">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                        <GraduationCap className="h-6 w-6" />
-                      </div>
+                      {course.logoUrl ? (
+                        <div className="flex h-14 w-14 items-center justify-center rounded-xl border border-border bg-card/70 shadow-sm">
+                          <img
+                            src={course.logoUrl}
+                            alt={`${course.university} logo`}
+                            className="h-full w-full object-contain"
+                            loading="lazy"
+                            decoding="async"
+                          />
+                        </div>
+                      ) : (
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                          <GraduationCap className="h-6 w-6" />
+                        </div>
+                      )}
                       <p className="text-sm font-bold uppercase tracking-widest text-primary">
                         {course.university}
                       </p>

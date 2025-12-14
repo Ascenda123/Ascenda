@@ -45,6 +45,7 @@ type ProgramRow = {
     intl_tuition_low?: number | null;
     intl_tuition_high?: number | null;
     currency?: string | null;
+    metadata?: Record<string, unknown> | null;
   } | null;
 };
 
@@ -248,7 +249,8 @@ export default function UniversitySearchResultsPage() {
               requires_test,
               intl_tuition_low,
               intl_tuition_high,
-              currency
+              currency,
+              metadata
             )
           `,
             { count: 'exact' }
@@ -344,6 +346,14 @@ export default function UniversitySearchResultsPage() {
 
         const mapped: ProgramSearchResult[] = visiblePrograms.map((program: ProgramRow) => {
           const uni = program.universities;
+          const uniMetadata =
+            uni && typeof uni.metadata === 'object' && uni.metadata !== null ? (uni.metadata as Record<string, unknown>) : {};
+          const logoUrl =
+            typeof uniMetadata.logo_url === 'string'
+              ? (uniMetadata.logo_url as string)
+              : typeof uniMetadata.logoUrl === 'string'
+                ? (uniMetadata.logoUrl as string)
+                : undefined;
           const location = [uni?.city, uni?.region, uni?.country].filter(Boolean).join(', ');
           const score = matchScores[program.id];
           const tier = tierFromScore(score);
@@ -356,6 +366,7 @@ export default function UniversitySearchResultsPage() {
             universityName: uni?.name ?? 'University',
             programName,
             location: location || 'Location unavailable',
+            logoUrl: logoUrl ?? null,
             fitScore: score ?? null,
             tier: tier ?? null,
             highlights: [level, duration].filter(Boolean) as string[],
@@ -673,6 +684,7 @@ export default function UniversitySearchResultsPage() {
                 name={result.universityName}
                 program={result.programName}
                 location={result.location}
+                logoUrl={result.logoUrl ?? undefined}
                 fitScore={result.fitScore}
                 tier={result.tier ?? undefined}
                 highlights={result.highlights}

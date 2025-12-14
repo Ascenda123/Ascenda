@@ -98,9 +98,21 @@ export function CompareBar({ selectedItems, onClear, onRemove, onCompare, maxIte
                                 key={item.id}
                                 className="group flex w-full items-center gap-2 rounded-xl border border-border/30 bg-background/50 px-2.5 py-1 text-foreground transition hover:border-foreground/40"
                             >
-                                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted/60 text-xs font-bold text-foreground">
-                                    {item.universityName.charAt(0)}
-                                </div>
+                                {item.logoUrl ? (
+                                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border/50 bg-muted/60">
+                                        <img
+                                            src={item.logoUrl}
+                                            alt={`${item.universityName} logo`}
+                                            className="h-full w-full object-contain"
+                                            loading="lazy"
+                                            decoding="async"
+                                        />
+                                    </div>
+                                ) : (
+                                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted/60 text-xs font-bold text-foreground">
+                                        {item.universityName.charAt(0)}
+                                    </div>
+                                )}
                                 <div className="flex min-w-0 flex-col leading-tight">
                                     <span className="truncate" title={item.universityName}>
                                         {item.universityName}
@@ -124,4 +136,3 @@ export function CompareBar({ selectedItems, onClear, onRemove, onCompare, maxIte
         </div>
     );
 }
-

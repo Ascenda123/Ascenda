@@ -15,6 +15,7 @@ export interface UniversityCardProps {
     name: string;
     program: string;
     location: string;
+    logoUrl?: string | null;
     fitScore?: number | null;
     tier?: MatchTier | null;
     highlights?: string[]; // Optional, as EnrichedMatch might not have this exact field yet
@@ -31,6 +32,7 @@ export function UniversityCard({
     name,
     program,
     location,
+    logoUrl,
     fitScore,
     tier,
     highlights = [],
@@ -82,12 +84,30 @@ export function UniversityCard({
 
             {/* Content */}
             <div className="mt-4 flex-1">
-                <h3 className={cn('font-bold text-foreground line-clamp-1', variant === 'compact' ? 'text-lg' : 'text-xl')} title={name}>
-                    {name}
-                </h3>
-                <p className="text-sm font-medium text-muted-foreground line-clamp-1" title={program}>
-                    {program}
-                </p>
+                <div className="flex items-center gap-3">
+                    {logoUrl ? (
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-border bg-muted/30 shadow-sm">
+                            <img
+                                src={logoUrl}
+                                alt={`${name} logo`}
+                                className="h-full w-full object-contain"
+                                loading="lazy"
+                                decoding="async"
+                            />
+                        </div>
+                    ) : null}
+                    <div className="min-w-0">
+                        <h3
+                            className={cn('font-bold text-foreground line-clamp-1', variant === 'compact' ? 'text-lg' : 'text-xl')}
+                            title={name}
+                        >
+                            {name}
+                        </h3>
+                        <p className="text-sm font-medium text-muted-foreground line-clamp-1" title={program}>
+                            {program}
+                        </p>
+                    </div>
+                </div>
 
                 {/* Highlights */}
                 {highlights.length > 0 && (
