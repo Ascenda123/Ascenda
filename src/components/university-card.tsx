@@ -86,7 +86,7 @@ export function UniversityCard({
             <div className="mt-4 flex-1">
                 <div className="flex items-center gap-3">
                     {logoUrl ? (
-                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-border bg-muted/30 shadow-sm">
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-border bg-black shadow-sm">
                             <img
                                 src={logoUrl}
                                 alt={`${name} logo`}

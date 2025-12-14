@@ -23,6 +23,7 @@ type StudentMatchRow = Database['public']['Tables']['student_matches']['Row'];
 
 type ProgramRow = {
   id: string;
+  university_id?: string | null;
   course_name: string;
   name?: string | null;
   metadata?: Record<string, unknown> | null;
@@ -265,10 +266,19 @@ export default function UniversitySearchResultsPage() {
         const activeProgFilters = selectedPrograms.length > 0 ? selectedPrograms : [];
 
         if (activeUniFilters.length > 0) {
-          query = query.in('universities.name', activeUniFilters);
+          const selectedUniIds = activeUniFilters
+            .map((name) => allUniversities.find((u) => u.name === name)?.id)
+            .filter((id): id is string => Boolean(id));
+
+          if (selectedUniIds.length > 0) {
+            query = query.in('university_id', selectedUniIds);
+          } else {
+            // Fallback to name-based filter if IDs are not yet available.
+            query = query.in('universities.name', activeUniFilters);
+          }
         } else if (universityId && activeUniFilters.length === 0) {
           // Fallback to ID if state not yet synced/empty
-          query = query.eq('universities.id', universityId);
+          query = query.eq('university_id', universityId);
         }
 
         if (activeProgFilters.length > 0) {
@@ -346,6 +356,13 @@ export default function UniversitySearchResultsPage() {
 
         const mapped: ProgramSearchResult[] = visiblePrograms.map((program: ProgramRow) => {
           const uni = program.universities;
+          const uniId = (uni?.id ?? program.university_id) ?? undefined;
+          const uniName =
+            typeof uni?.name === 'string' && uni.name?.trim()
+              ? uni.name.trim()
+              : uniId
+                ? allUniversities.find((u) => u.id === uniId)?.name ?? null
+                : null;
           const uniMetadata =
             uni && typeof uni.metadata === 'object' && uni.metadata !== null ? (uni.metadata as Record<string, unknown>) : {};
           const logoUrl =
@@ -362,8 +379,8 @@ export default function UniversitySearchResultsPage() {
           const duration = program.duration ?? (program.duration_years ? `${program.duration_years} years` : null);
           return {
             id: program.id,
-            universityId: uni?.id ?? undefined,
-            universityName: uni?.name ?? 'University',
+            universityId: uniId,
+            universityName: uniName ?? 'University',
             programName,
             location: location || 'Location unavailable',
             logoUrl: logoUrl ?? null,
@@ -535,6 +552,16 @@ export default function UniversitySearchResultsPage() {
 
   const handleSelectSuggestion = (item: Suggestion) => {
     setSearchQuery(item.name);
+    // Reset previous manual selections so the new choice takes full effect.
+    if (item.type === 'university') {
+      setSelectedUniversities([item.name]);
+      setSelectedPrograms([]);
+    } else {
+      setSelectedPrograms([item.name]);
+      setSelectedUniversities(item.university ? [item.university] : []);
+    }
+    setResults([]);
+    setPage(0);
 
     const params = new URLSearchParams();
     if (item.type === 'program') {
