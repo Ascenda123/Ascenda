@@ -513,9 +513,13 @@ export default function UniversitySearchResultsPage() {
         matchesProgram &&
         (maxBudget === null ||
           (() => {
-            const tuition = result.tuition ?? result.intlTuitionLow ?? result.intlTuitionHigh ?? null;
-            if (tuition === null || tuition === undefined) return true;
-            return tuition <= maxBudget;
+            const firstValue = [result.tuition, result.intlTuitionLow, result.intlTuitionHigh].find(
+              (v) => v !== null && v !== undefined
+            );
+            if (firstValue === undefined || firstValue === null) return false;
+            const numeric = typeof firstValue === 'number' ? firstValue : Number(firstValue);
+            if (!Number.isFinite(numeric)) return false;
+            return numeric <= maxBudget;
           })())
       );
     });
