@@ -14,6 +14,13 @@ import React from 'react';
 
 type Requirement = { label: string; value: string };
 type QuickFact = { label: string; value: string; icon: ElementType };
+type Outcomes = {
+  satisfaction?: string | null;
+  employment?: string | null;
+  outcomes?: string | null;
+  salary?: string | null;
+};
+type OpenDayEvent = { label: string; url?: string | null };
 
 type CourseView = {
   id: string;
@@ -35,6 +42,8 @@ type CourseView = {
   quickFacts: QuickFact[];
   courseUrl?: string | null;
   applyUrl?: string | null;
+  outcomes?: Outcomes | null;
+  openDays?: OpenDayEvent[] | null;
 };
 
 const normalizeLocation = (city?: string | null, region?: string | null, country?: string | null) =>
@@ -52,6 +61,34 @@ const buildRequirements = (raw: any): Requirement[] => {
   if (raw.english_requirements) reqs.push({ label: 'English', value: raw.english_requirements });
   if (raw.contextual_admissions) reqs.push({ label: 'Contextual admissions', value: raw.contextual_admissions });
   return reqs;
+};
+
+const buildOutcomes = (raw: any): Outcomes | null => {
+  const satisfaction = raw.student_satisfaction ?? null;
+  const employment = raw.employment_after_course ?? null;
+  const outcomes = raw.student_outcomes ?? null;
+  const salary = raw.average_salary_after_15m ?? null;
+
+  if (!satisfaction && !employment && !outcomes && !salary) return null;
+
+  return { satisfaction, employment, outcomes, salary };
+};
+
+const parseOpenDays = (raw?: string | null): OpenDayEvent[] => {
+  if (!raw) return [];
+  return raw
+    .split(';')
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .map((entry) => {
+      // Example: "25 Nov - Title [url]"
+      const match = entry.match(/^(.*?)\\s*-\\s*(.*?)(?:\\s*\\[(https?:[^\\]]+)\\])?$/);
+      if (match) {
+        const [, datePart, titlePart, url] = match;
+        return { label: `${datePart.trim()} — ${titlePart.trim()}`, url: url ?? null };
+      }
+      return { label: entry };
+    });
 };
 
 const buildQuickFacts = (course: CourseView): QuickFact[] => {
@@ -354,6 +391,12 @@ export default function CoursePage({ params }: { params: { id: string } }) {
     [course?.modules, course?.duration]
   );
   const visibleModules = showAllFlatModules ? moduleItems : moduleItems.slice(0, 8);
+  const hasOutcomes = Boolean(course?.outcomes && (
+    course.outcomes.satisfaction ||
+    course.outcomes.employment ||
+    course.outcomes.outcomes ||
+    course.outcomes.salary
+  ));
 
   useEffect(() => {
     const fetchCourse = async () => {
@@ -416,7 +459,9 @@ export default function CoursePage({ params }: { params: { id: string } }) {
           requirements: buildRequirements(data),
           quickFacts: [],
           courseUrl: data.provider_course_url ?? null,
-          applyUrl: data.provider_apply_url ?? null
+          applyUrl: data.provider_apply_url ?? null,
+          outcomes: buildOutcomes(data),
+          openDays: parseOpenDays((data as any).open_days)
         };
 
         mapped.quickFacts = buildQuickFacts(mapped);
@@ -518,13 +563,22 @@ export default function CoursePage({ params }: { params: { id: string } }) {
                         </Link>
                       </Button>
                     )}
-                    {course.applyUrl && (
-                      <Button asChild size="lg" className="h-12 px-8 shadow-lg shadow-primary/20">
-                        <Link href={course.applyUrl} target="_blank" rel="noreferrer">
-                          Apply Now
-                        </Link>
-                      </Button>
-                    )}
+                    <div className="flex flex-wrap gap-3">
+                      {course.applyUrl && (
+                        <Button asChild size="lg" className="h-12 px-8 shadow-lg shadow-primary/20">
+                          <Link href={course.applyUrl} target="_blank" rel="noreferrer">
+                            Apply Now
+                          </Link>
+                        </Button>
+                      )}
+                      {course.courseUrl && (
+                        <Button asChild size="lg" variant="outline" className="h-12 px-8">
+                          <Link href={course.courseUrl} target="_blank" rel="noreferrer">
+                            Course Site
+                          </Link>
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -588,6 +642,87 @@ export default function CoursePage({ params }: { params: { id: string } }) {
                       {renderRichText(course.summary)}
                     </div>
                   </div>
+
+                  {/* Outcomes */}
+                  {hasOutcomes && course.outcomes && (
+                    <div className="rounded-3xl border border-border/60 bg-card p-8 shadow-sm">
+                      <div className="flex items-center justify-between mb-6">
+                        <h2 className="text-2xl font-bold flex items-center gap-2">
+                          <CheckCircle2 className="h-5 w-5 text-primary" />
+                          Outcomes & Satisfaction
+                        </h2>
+                      </div>
+                      <div className="grid gap-4 sm:grid-cols-2">
+                        {course.outcomes.satisfaction && (
+                          <Card className="border-border/60 bg-primary/5 border-primary/20">
+                            <CardHeader className="pb-2">
+                              <CardTitle className="text-xs font-bold text-primary uppercase tracking-wider">Student Satisfaction</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                              <p className="text-lg font-semibold text-foreground">{course.outcomes.satisfaction}</p>
+                            </CardContent>
+                          </Card>
+                        )}
+                        {course.outcomes.employment && (
+                          <Card className="border-border/60">
+                            <CardHeader className="pb-2">
+                              <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Employment</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                              <p className="text-lg font-semibold text-foreground">{course.outcomes.employment}</p>
+                            </CardContent>
+                          </Card>
+                        )}
+                        {course.outcomes.outcomes && (
+                          <Card className="border-border/60">
+                            <CardHeader className="pb-2">
+                              <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Outcomes</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                              <p className="text-lg font-semibold text-foreground">{course.outcomes.outcomes}</p>
+                            </CardContent>
+                          </Card>
+                        )}
+                        {course.outcomes.salary && (
+                          <Card className="border-border/60">
+                            <CardHeader className="pb-2">
+                              <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Average Salary (15m)</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                              <p className="text-lg font-semibold text-foreground">{course.outcomes.salary}</p>
+                            </CardContent>
+                          </Card>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Open Days / Events */}
+                  {course.openDays && course.openDays.length > 0 && (
+                    <div className="rounded-3xl border border-border/60 bg-card p-8 shadow-sm">
+                      <h2 className="text-2xl font-bold mb-4">Upcoming Events</h2>
+                      <div className="space-y-3">
+                        {course.openDays.map((event, idx) => (
+                          <div key={idx} className="flex items-start gap-3 rounded-2xl border border-border/40 bg-muted/20 p-4">
+                            <div className="mt-1 h-2 w-2 rounded-full bg-primary" aria-hidden />
+                            <div className="flex flex-col">
+                              <span className="text-sm font-semibold text-foreground">{event.label}</span>
+                              {event.url ? (
+                                <Link
+                                  href={event.url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="text-xs font-semibold text-primary hover:underline"
+                                >
+                                  View details
+                                </Link>
+                              ) : null}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   {/* At a Glance Dashboard */}
                   <div className="grid gap-6 md:grid-cols-2">

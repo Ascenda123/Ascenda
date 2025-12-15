@@ -19,6 +19,10 @@ export type ProgramSearchResult = {
   language?: string | null;
   requiresTest?: boolean | null;
   universityId?: string;
+  studyLevel?: string | null;
+  campus?: string | null;
+  startMonth?: string | null;
+  ucasCode?: string | null;
 };
 
 export const tierFromScore = (score?: number | null): MatchTier | null => {

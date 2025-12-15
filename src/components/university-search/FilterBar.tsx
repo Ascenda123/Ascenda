@@ -25,10 +25,22 @@ interface FilterBarProps {
     onQuickFilterChange?: (key: keyof QuickFilters) => void;
     selectedUniversities?: string[];
     selectedPrograms?: string[];
+    selectedStudyLevels?: string[];
+    selectedCampuses?: string[];
+    selectedStartMonths?: string[];
+    selectedUcasCodes?: string[];
     availableUniversities?: string[];
     availablePrograms?: string[];
+    availableStudyLevels?: string[];
+    availableCampuses?: string[];
+    availableStartMonths?: string[];
+    availableUcasCodes?: string[];
     onUniversityToggle?: (name: string) => void;
     onProgramToggle?: (name: string) => void;
+    onStudyLevelToggle?: (value: string) => void;
+    onCampusToggle?: (value: string) => void;
+    onStartMonthToggle?: (value: string) => void;
+    onUcasCodeToggle?: (value: string) => void;
     onClearFilters?: () => void;
     isSticky?: boolean;
     showViewToggle?: boolean;
@@ -36,7 +48,7 @@ interface FilterBarProps {
 
 const TIERS: MatchTier[] = ['Reach', 'Match', 'Safe'];
 
-type DropdownKind = 'university' | 'program' | null;
+type DropdownKind = 'university' | 'program' | 'studyLevel' | 'campus' | 'startMonth' | 'ucasCode' | null;
 
 function SelectionDropdown({
     id,
@@ -140,10 +152,22 @@ export function FilterBar({
     onQuickFilterChange,
     selectedUniversities = [],
     selectedPrograms = [],
+    selectedStudyLevels = [],
+    selectedCampuses = [],
+    selectedStartMonths = [],
+    selectedUcasCodes = [],
     availableUniversities = [],
     availablePrograms = [],
+    availableStudyLevels = [],
+    availableCampuses = [],
+    availableStartMonths = [],
+    availableUcasCodes = [],
     onUniversityToggle = () => { },
     onProgramToggle = () => { },
+    onStudyLevelToggle = () => { },
+    onCampusToggle = () => { },
+    onStartMonthToggle = () => { },
+    onUcasCodeToggle = () => { },
     onClearFilters,
     isSticky = true,
     showViewToggle = true
@@ -154,7 +178,15 @@ export function FilterBar({
         availableUniversities.length > 0 ||
         availablePrograms.length > 0 ||
         selectedUniversities.length > 0 ||
-        selectedPrograms.length > 0;
+        selectedPrograms.length > 0 ||
+        availableStudyLevels.length > 0 ||
+        availableCampuses.length > 0 ||
+        availableStartMonths.length > 0 ||
+        availableUcasCodes.length > 0 ||
+        selectedStudyLevels.length > 0 ||
+        selectedCampuses.length > 0 ||
+        selectedStartMonths.length > 0 ||
+        selectedUcasCodes.length > 0;
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -305,21 +337,72 @@ export function FilterBar({
                                 isOpen={openDropdown === 'program'}
                                 onOpenChange={setOpenDropdown}
                             />
+                            <SelectionDropdown
+                                id="studyLevel"
+                                label="Study level"
+                                options={availableStudyLevels}
+                                selected={selectedStudyLevels}
+                                onToggle={onStudyLevelToggle}
+                                isOpen={openDropdown === 'studyLevel'}
+                                onOpenChange={setOpenDropdown}
+                            />
+                            <SelectionDropdown
+                                id="campus"
+                                label="Campus"
+                                options={availableCampuses}
+                                selected={selectedCampuses}
+                                onToggle={onCampusToggle}
+                                isOpen={openDropdown === 'campus'}
+                                onOpenChange={setOpenDropdown}
+                            />
+                            <SelectionDropdown
+                                id="startMonth"
+                                label="Start month"
+                                options={availableStartMonths}
+                                selected={selectedStartMonths}
+                                onToggle={onStartMonthToggle}
+                                isOpen={openDropdown === 'startMonth'}
+                                onOpenChange={setOpenDropdown}
+                            />
+                            <SelectionDropdown
+                                id="ucasCode"
+                                label="UCAS code"
+                                options={availableUcasCodes}
+                                selected={selectedUcasCodes}
+                                onToggle={onUcasCodeToggle}
+                                isOpen={openDropdown === 'ucasCode'}
+                                onOpenChange={setOpenDropdown}
+                            />
                         </div>
 
-                        {(selectedUniversities.length > 0 || selectedPrograms.length > 0) && (
+                        {(selectedUniversities.length > 0 ||
+                          selectedPrograms.length > 0 ||
+                          selectedStudyLevels.length > 0 ||
+                          selectedCampuses.length > 0 ||
+                          selectedStartMonths.length > 0 ||
+                          selectedUcasCodes.length > 0) && (
                             <div className="flex flex-wrap items-center gap-2">
-                                {[...selectedUniversities, ...selectedPrograms].map((value) => (
+                                {[
+                                  ...selectedUniversities.map((v) => ({ v, type: 'university' as const })),
+                                  ...selectedPrograms.map((v) => ({ v, type: 'program' as const })),
+                                  ...selectedStudyLevels.map((v) => ({ v, type: 'studyLevel' as const })),
+                                  ...selectedCampuses.map((v) => ({ v, type: 'campus' as const })),
+                                  ...selectedStartMonths.map((v) => ({ v, type: 'startMonth' as const })),
+                                  ...selectedUcasCodes.map((v) => ({ v, type: 'ucasCode' as const }))
+                                ].map((item) => (
                                     <button
-                                        key={value}
-                                        onClick={() =>
-                                            selectedUniversities.includes(value)
-                                                ? onUniversityToggle(value)
-                                                : onProgramToggle(value)
-                                        }
+                                        key={`${item.type}-${item.v}`}
+                                        onClick={() => {
+                                            if (item.type === 'university') return onUniversityToggle(item.v);
+                                            if (item.type === 'program') return onProgramToggle(item.v);
+                                            if (item.type === 'studyLevel') return onStudyLevelToggle(item.v);
+                                            if (item.type === 'campus') return onCampusToggle(item.v);
+                                            if (item.type === 'startMonth') return onStartMonthToggle(item.v);
+                                            return onUcasCodeToggle(item.v);
+                                        }}
                                         className="flex items-center gap-2 rounded-full bg-muted px-3 py-1 text-xs font-medium text-foreground transition-colors hover:bg-muted/80"
                                     >
-                                        <span className="line-clamp-1 max-w-[180px]">{value}</span>
+                                        <span className="line-clamp-1 max-w-[180px]">{item.v}</span>
                                         <X className="h-3 w-3" />
                                     </button>
                                 ))}

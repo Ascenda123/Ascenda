@@ -7,6 +7,7 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const query = url.searchParams.get('q')?.trim() ?? '';
   const trending = url.searchParams.get('trending') === 'true';
+  const limit = trending ? 6 : 6;
 
   const supabase = createRouteHandlerSupabaseClient();
 
@@ -17,8 +18,8 @@ export async function GET(request: Request) {
   const programSelect = 'id,course_name,study_level,universities!inner(name,country,city,region)';
   const universitySelect = 'id,name,country,city,region';
 
-  let programQuery = supabase.from('programs').select(programSelect).limit(trending ? 4 : 5);
-  let universityQuery = supabase.from('universities').select(universitySelect).limit(trending ? 4 : 5);
+  let programQuery = supabase.from('programs').select(programSelect).limit(limit);
+  let universityQuery = supabase.from('universities').select(universitySelect).limit(limit);
 
   if (trending) {
     programQuery = programQuery.order('course_name', { ascending: true });

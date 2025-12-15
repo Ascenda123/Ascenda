@@ -184,7 +184,7 @@ export function IntelligentSearchBar({
         if (debounceRef.current) {
             window.clearTimeout(debounceRef.current);
         }
-        debounceRef.current = window.setTimeout(() => fetchSuggestions(value), 150);
+        debounceRef.current = window.setTimeout(() => fetchSuggestions(value), 250);
 
         return () => {
             if (debounceRef.current) {
