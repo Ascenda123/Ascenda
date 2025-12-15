@@ -465,7 +465,7 @@ export default function UniversitySearchResultsPage() {
     };
 
     fetchResults();
-  }, [page, programId, universityId, selectedUniversities, selectedPrograms, maxBudget, searchQuery, allUniversities]);
+  }, [page, programId, universityId, selectedUniversities, selectedPrograms, searchQuery, allUniversities]);
 
   const availableUniversities = useMemo(() => {
     // Use the full universities list from Supabase (not the capped filterOptions)
