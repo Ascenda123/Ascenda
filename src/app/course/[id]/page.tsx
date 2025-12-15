@@ -82,7 +82,7 @@ const parseOpenDays = (raw?: string | null): OpenDayEvent[] => {
     .filter(Boolean)
     .map((entry) => {
       // Example: "25 Nov - Title [url]"
-      const match = entry.match(/^(.*?)\\s*-\\s*(.*?)(?:\\s*\\[(https?:[^\\]]+)\\])?$/);
+      const match = entry.match(/^(.*?)\s*-\s*(.*?)(?:\s*\[(https?:[^\]]+)\])?$/);
       if (match) {
         const [, datePart, titlePart, url] = match;
         return { label: `${datePart.trim()} — ${titlePart.trim()}`, url: url ?? null };
