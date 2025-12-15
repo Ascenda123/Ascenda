@@ -152,7 +152,15 @@ export async function GET() {
     const requirementMap = new Map<string, ReturnType<typeof mapRequirementRow>>(
       requirements.map((item) => [item.program_id, mapRequirementRow(item)])
     );
-    mappedPrograms = new Map(visiblePrograms.map((program) => [program.id, mapProgramRow(program)]));
+    mappedPrograms = new Map(
+      visiblePrograms.map((program) => {
+        const normalizedProgram = {
+          ...program,
+          metadata: normalizeMetadata(program.metadata)
+        };
+        return [program.id, mapProgramRow(normalizedProgram as any)];
+      })
+    );
     mappedUniversities = new Map(universities.map((item) => [item.id, mapUniversityRow(item)]));
     const inputs = visiblePrograms
       .map((program) => {
