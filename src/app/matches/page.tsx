@@ -31,6 +31,31 @@ export default async function MatchesPage() {
 
   const matchResult = await loadMatchesForProfile(supabase, user.id);
 
+  if (matchResult.error) {
+    return (
+      <DashboardShell>
+        <SectionNav items={EXPLORE_SECTION_ITEMS} />
+        <PageHero
+          eyebrow={MATCHES_TEXT.hero.eyebrow}
+          title="Matches temporarily unavailable"
+          description="We hit an issue loading recommendations. Please try again shortly."
+          highlight="Service issue"
+          stats={[{ label: 'Matches', value: '—' }, { label: 'Programs', value: '—' }, { label: 'Signals', value: '—' }]}
+          breadcrumbs={<Breadcrumbs />}
+          actions={
+            <Button asChild size="sm" variant="outline">
+              <Link href="/dashboard">{ACTION_TEXT.returnToDashboard}</Link>
+            </Button>
+          }
+        />
+        <div className="rounded-[28px] border border-dashed border-border bg-muted/60 p-8 text-center text-muted-foreground">
+          <p className="text-base font-semibold text-foreground">We couldn&apos;t load matches.</p>
+          <p className="mt-2 text-sm">Stage: {matchResult.error.stage}. Please retry or update your profile later.</p>
+        </div>
+      </DashboardShell>
+    );
+  }
+
   if (matchResult.missingSections.length > 0) {
     return (
       <DashboardShell>

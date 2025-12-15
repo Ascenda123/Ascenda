@@ -15,7 +15,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ programs: [], universities: [] }, { status: 200, headers: { 'Cache-Control': 'no-store' } });
   }
 
-  const programSelect = 'id,course_name,study_level,universities!inner(name,country,city,region)';
+  const programSelect = 'id,course_name,name,study_level,universities!inner(name,country,city,region)';
   const universitySelect = 'id,name,country,city,region';
 
   let programQuery = supabase.from('programs').select(programSelect).limit(limit);
@@ -26,7 +26,7 @@ export async function GET(request: Request) {
     universityQuery = universityQuery.order('name', { ascending: true });
   } else {
     const pattern = `%${query}%`;
-    programQuery = programQuery.ilike('course_name', pattern);
+    programQuery = programQuery.or(`course_name.ilike.${pattern},name.ilike.${pattern}`);
     universityQuery = universityQuery.ilike('name', pattern);
   }
 

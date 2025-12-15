@@ -45,9 +45,10 @@ const optionalMoney = z.preprocess(
   (value) => {
     if (value === '' || value === null || value === undefined) return undefined;
     if (typeof value === 'number' && Number.isNaN(value)) return undefined;
+    if (typeof value === 'string' && value.trim() === '') return undefined;
     return value;
   },
-  z.number().nonnegative().optional()
+  z.coerce.number().nonnegative().optional()
 );
 
 export const profilePreferencesSchema = z.object({

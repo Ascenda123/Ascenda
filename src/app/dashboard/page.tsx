@@ -75,7 +75,8 @@ export default async function DashboardPage() {
 
   const checklist = (checklistResponse.data ?? []) as ChecklistRow[];
   const deadlines = (deadlinesResponse.data ?? []) as DeadlineRow[];
-  const matches: EnrichedMatch[] = matchResult.matches;
+  const matchError = Boolean(matchResult.error);
+  const matches: EnrichedMatch[] = matchError ? [] : matchResult.matches;
 
   // Profile Completion Logic
   const profileRecord = profileResponse.data;
@@ -219,7 +220,7 @@ export default async function DashboardPage() {
   const heroStats = [
     { label: 'Due today', value: todayFocus.tasks > 0 ? `${todayFocus.tasks}` : '0', detail: dueSoonCount > 0 ? `${dueSoonCount} due this week` : 'Nothing urgent' },
     { label: 'Deadlines', value: deadlines.length > 0 ? `${deadlines.length}` : '0', detail: nextDeadline ? `Next: ${formatShortDate(nextDeadline.deadline_date)}` : 'Add a program to track milestones' },
-    { label: 'Match health', value: averageMatchScore !== null ? `${averageMatchScore}%` : '-', detail: matches.length ? `${matches[0].program.name}` : 'Finish profile to unlock' }
+    { label: 'Match health', value: matchError ? '—' : averageMatchScore !== null ? `${averageMatchScore}%` : '-', detail: matchError ? 'Service unavailable' : matches.length ? `${matches[0].program.name}` : 'Finish profile to unlock' }
   ];
 
   return (
@@ -274,7 +275,12 @@ export default async function DashboardPage() {
 
         <div className="surface-card surface-card--static space-y-4 overflow-hidden">
           <h2 className="text-2xl font-semibold text-foreground">Recommended programs</h2>
-          {matches.length > 0 ? (
+          {matchError ? (
+            <div className="space-y-3 text-sm text-muted-foreground">
+              <p className="text-base font-semibold text-foreground">Matches are temporarily unavailable</p>
+              <p>We couldn&apos;t load recommendations. Please try again shortly.</p>
+            </div>
+          ) : matches.length > 0 ? (
             <MatchList matches={matches} />
           ) : (
             <div className="space-y-3 text-sm text-muted-foreground">

@@ -1,5 +1,7 @@
 'use client';
 
+import React from 'react';
+
 type CountryOption = {
   code: string;
   label: string;
@@ -38,6 +40,8 @@ const getCountryOptions = (): CountryOption[] => {
 };
 
 const COUNTRY_OPTIONS = getCountryOptions();
+const COUNTRY_CODE_LOOKUP = new Map(COUNTRY_OPTIONS.map((entry) => [entry.code, entry.label]));
+const COUNTRY_LABEL_LOOKUP = new Map(COUNTRY_OPTIONS.map((entry) => [entry.label, entry.code]));
 
 interface HomeCountrySelectProps {
   value: string;
@@ -47,17 +51,27 @@ interface HomeCountrySelectProps {
 }
 
 export const HomeCountrySelect = ({ value, onChange, id, name }: HomeCountrySelectProps) => {
+  const normalizedValue = (() => {
+    if (COUNTRY_CODE_LOOKUP.has(value)) return value;
+    const fallbackCode = COUNTRY_LABEL_LOOKUP.get(value);
+    return fallbackCode ?? '';
+  })();
+
+  const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    onChange(event.target.value);
+  };
+
   return (
     <select
       id={id}
       name={name}
-      value={value}
-      onChange={(event) => onChange(event.target.value)}
+      value={normalizedValue}
+      onChange={handleChange}
       className="form-input"
     >
       <option value="">Select a country</option>
       {COUNTRY_OPTIONS.map((country) => (
-        <option key={country.code} value={country.label}>
+        <option key={country.code} value={country.code}>
           {country.label}
         </option>
       ))}

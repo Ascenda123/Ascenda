@@ -36,6 +36,13 @@ export async function GET(request: NextRequest) {
     weights: safeWeights
   });
 
+  if (matchResult.error) {
+    return NextResponse.json(
+      { error: matchResult.error.message, stage: matchResult.error.stage },
+      { status: 500 }
+    );
+  }
+
   if (matchResult.missingSections.length > 0) {
     return NextResponse.json({ matches: [], missingSections: matchResult.missingSections });
   }

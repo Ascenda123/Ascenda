@@ -42,6 +42,7 @@ export type MatchComputationResult = {
   matches: EnrichedMatch[];
   catalogSize: { programs: number; universities: number };
   missingSections: MissingProfileSection[];
+  error?: { stage: 'programs' | 'universities' | 'requirements'; message: string };
 };
 
 const mapProfileRows = (params: {
@@ -93,7 +94,8 @@ export const loadMatchesForProfile = async (
     return {
       matches: [],
       catalogSize: { programs: 0, universities: 0 },
-      missingSections
+      missingSections,
+      error: { stage: 'programs', message: 'Failed to load programs' }
     };
   }
 
@@ -141,14 +143,18 @@ export const loadMatchesForProfile = async (
           )
           .in('program_id', programIds)
         : Promise.resolve({ data: [] as ProgramRequirementRow[], error: null })
-    ]);
+  ]);
 
   if (universitiesError || requirementsError) {
     console.error('Failed to load catalog data', { universitiesError, requirementsError });
     return {
       matches: [],
       catalogSize: { programs: filteredPrograms.length, universities: 0 },
-      missingSections
+      missingSections,
+      error: {
+        stage: universitiesError ? 'universities' : 'requirements',
+        message: universitiesError ? 'Failed to load universities' : 'Failed to load program requirements'
+      }
     };
   }
 
