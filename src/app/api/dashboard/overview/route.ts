@@ -96,12 +96,27 @@ export async function GET() {
   const preferences = preferencesResponse.data ?? null;
   const aspirations = aspirationsResponse.data ?? null;
   const profileRecord = (profileResponse.data ?? null) as ProfileRow | null;
-  const programs = (programsResponse.data ?? []) as ProgramRow[];
+  const rawPrograms = (programsResponse.data ?? []) as ProgramRow[];
+  const programs = rawPrograms.map((program) => ({
+    ...program,
+    metadata:
+      program.metadata && typeof program.metadata === 'object' && !Array.isArray(program.metadata)
+        ? (program.metadata as Record<string, unknown>)
+        : null
+  }));
   if (programs.length === 0 && applicationProgramIds.length === 0) {
     // Fallback to a small curated sample to avoid empty dashboard while keeping payload tiny.
     const fallbackProgramsResponse = await supabase.from('programs').select('*').limit(8);
     if (!fallbackProgramsResponse.error) {
-      programs.push(...((fallbackProgramsResponse.data ?? []) as ProgramRow[]));
+      programs.push(
+        ...((fallbackProgramsResponse.data ?? []) as ProgramRow[]).map((program) => ({
+          ...program,
+          metadata:
+            program.metadata && typeof program.metadata === 'object' && !Array.isArray(program.metadata)
+              ? (program.metadata as Record<string, unknown>)
+              : null
+        }))
+      );
     }
   }
   const visiblePrograms = filterVisiblePrograms(programs);
