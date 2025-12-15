@@ -300,10 +300,6 @@ export default function UniversitySearchResultsPage() {
           query = query.eq('id', programId);
         }
 
-        if (maxBudget !== null) {
-          query = query.lte('tuition', maxBudget);
-        }
-
         // 2. Text Search
         // Only apply fuzzy text search if we haven't already selected a specific item via ID
         // (If provided by ID, the text query is likely the name of that item, which might not match 'course_name')
@@ -517,7 +513,7 @@ export default function UniversitySearchResultsPage() {
         matchesProgram &&
         (maxBudget === null ||
           (() => {
-            const tuition = result.tuition ?? result.intlTuitionLow ?? null;
+            const tuition = result.tuition ?? result.intlTuitionLow ?? result.intlTuitionHigh ?? null;
             if (tuition === null || tuition === undefined) return true;
             return tuition <= maxBudget;
           })())
