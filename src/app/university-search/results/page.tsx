@@ -558,7 +558,6 @@ export default function UniversitySearchResultsPage() {
     setSelectedTiers(['Reach', 'Match', 'Safe']);
     setSelectedUniversities([]);
     setSelectedPrograms([]);
-    setMaxBudget(null);
     setResults([]);
     setPage(0);
     setHasMore(true);
