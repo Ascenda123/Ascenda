@@ -520,7 +520,8 @@ export default function CoursePage({ params }: { params: { id: string } }) {
                   <div className="space-y-4">
                     <div className="flex items-center gap-3">
                       {course.logoUrl ? (
-                        <div className="flex h-14 w-14 items-center justify-center rounded-xl border border-border bg-black shadow-sm">
+                        <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-xl border border-border bg-black shadow-sm">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={course.logoUrl}
                             alt={`${course.university} logo`}

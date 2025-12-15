@@ -99,7 +99,8 @@ export function CompareBar({ selectedItems, onClear, onRemove, onCompare, maxIte
                                 className="group flex w-full items-center gap-2 rounded-xl border border-border/30 bg-background/50 px-2.5 py-1 text-foreground transition hover:border-foreground/40"
                             >
                                 {item.logoUrl ? (
-                                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border/50 bg-black">
+                                    <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border/50 bg-black">
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
                                         <img
                                             src={item.logoUrl}
                                             alt={`${item.universityName} logo`}
