@@ -10,13 +10,28 @@ type InputRow = {
   ucas_code?: string;
   study_level?: string;
   duration?: string;
+  duration_years?: string;
   start_date?: string;
   campus?: string;
+  course_summary?: string;
+  modules?: string;
+  assessment_methods?: string;
+  provider_course_url?: string;
+  provider_apply_url?: string;
   min_alevel?: string;
   min_ib?: string;
   ucas_points?: string;
   subject_requirements?: string;
+  additional_entry_requirements?: string;
+  subsequent_year_entry_requirements?: string;
   english_requirements?: string;
+  contextual_admissions?: string;
+  additional_fee_info?: string;
+  student_satisfaction?: string;
+  employment_after_course?: string;
+  student_outcomes?: string;
+  average_salary_after_15m?: string;
+  open_days?: string;
   tuition_fees_international?: string;
   tuition_fees_home?: string;
 };
@@ -44,13 +59,37 @@ type ProgramOut = {
   name: string;
   course_name: string;
   field?: string;
+  study_level?: string;
   level?: string;
+  duration?: string;
   duration_years?: number;
+  start_date?: string;
+  campus?: string;
   language?: string;
   mode?: string;
   intake_months?: string[];
   tuition?: number;
   currency?: string;
+  course_summary?: string;
+  modules?: string;
+  assessment_methods?: string;
+  provider_course_url?: string;
+  provider_apply_url?: string;
+  ucas_code?: string;
+  min_alevel?: string;
+  min_ib?: string;
+  ucas_points?: string;
+  subject_requirements?: string;
+  additional_entry_requirements?: string;
+  subsequent_year_entry_requirements?: string;
+  english_requirements?: string;
+  contextual_admissions?: string;
+  additional_fee_info?: string;
+  student_satisfaction?: string;
+  employment_after_course?: string;
+  student_outcomes?: string;
+  average_salary_after_15m?: string;
+  open_days?: string;
   url?: string;
   metadata?: Record<string, unknown>;
 };
@@ -116,6 +155,10 @@ const extractMonth = (value?: string): string | undefined => {
     const monthPart = slashParts[1].padStart(2, '0');
     return monthMap.get(monthPart);
   }
+  const isoMatch = text.match(/^\\d{4}-(\\d{2})/);
+  if (isoMatch) {
+    return monthMap.get(isoMatch[1]);
+  }
   const monthName = Array.from(monthMap.values()).find((month) =>
     text.toLowerCase().includes(month.toLowerCase())
   );
@@ -170,13 +213,28 @@ const readInput = (inputPath: string): InputRow[] => {
         ucas_code: trimOrUndefined(row.ucas_code),
         study_level: trimOrUndefined(row.study_level),
         duration: trimOrUndefined(row.duration),
+        duration_years: trimOrUndefined(row.duration_years),
         start_date: trimOrUndefined(row.start_date),
         campus: trimOrUndefined(row.campus),
+        course_summary: trimOrUndefined(row.course_summary),
+        modules: trimOrUndefined(row.modules),
+        assessment_methods: trimOrUndefined(row.assessment_methods),
+        provider_course_url: trimOrUndefined(row.provider_course_url),
+        provider_apply_url: trimOrUndefined(row.provider_apply_url),
         min_alevel: trimOrUndefined(row.min_alevel),
         min_ib: trimOrUndefined(row.min_ib),
         ucas_points: trimOrUndefined(row.ucas_points),
         subject_requirements: trimOrUndefined(row.subject_requirements),
+        additional_entry_requirements: trimOrUndefined(row.additional_entry_requirements),
+        subsequent_year_entry_requirements: trimOrUndefined(row.subsequent_year_entry_requirements),
         english_requirements: trimOrUndefined(row.english_requirements),
+        contextual_admissions: trimOrUndefined(row.contextual_admissions),
+        additional_fee_info: trimOrUndefined(row.additional_fee_info),
+        student_satisfaction: trimOrUndefined(row.student_satisfaction),
+        employment_after_course: trimOrUndefined(row.employment_after_course),
+        student_outcomes: trimOrUndefined(row.student_outcomes),
+        average_salary_after_15m: trimOrUndefined(row.average_salary_after_15m),
+        open_days: trimOrUndefined(row.open_days),
         tuition_fees_international: trimOrUndefined(row.tuition_fees_international),
         tuition_fees_home: trimOrUndefined(row.tuition_fees_home)
       };
@@ -205,48 +263,67 @@ const buildPrograms = (
   rows: InputRow[],
   uniMap: Map<string, UniversityOut>
 ): { programs: ProgramOut[]; requirements: RequirementOut[] } => {
-  const programs: ProgramOut[] = [];
-  const requirements: RequirementOut[] = [];
+  const programMap = new Map<string, ProgramOut>();
+  const requirementMap = new Map<string, RequirementOut>();
 
   rows.forEach((row: InputRow) => {
     const uni = uniMap.get(row.university.trim());
     if (!uni) return;
 
     const programId = uuidFromString(`program:${uni.id}:${row.course_name}:${row.ucas_code || ''}`);
-    const durationYears = parseDurationYears(row.duration);
+    if (programMap.has(programId)) {
+      return;
+    }
+
+    const durationYears =
+      parseDurationYears(row.duration_years) ?? parseDurationYears(row.duration);
     const intake = extractMonth(row.start_date);
     const tuition =
       parseMoney(row.tuition_fees_international) ?? parseMoney(row.tuition_fees_home);
     const ielts = extractIelts(row.english_requirements);
 
     const programMeta: Record<string, unknown> = {
-      source: 'ucas',
-      ucas_code: row.ucas_code,
-      start_date: row.start_date,
-      campus: row.campus,
-      tuition_fees_home_raw: row.tuition_fees_home,
-      tuition_fees_international_raw: row.tuition_fees_international
+      source: 'ucas'
     };
-    Object.keys(programMeta).forEach((key) => {
-      if (programMeta[key] === undefined || programMeta[key] === null || programMeta[key] === '') {
-        delete programMeta[key];
-      }
-    });
 
-    programs.push({
+    programMap.set(programId, {
       id: programId,
       university_id: uni.id,
       name: row.course_name.trim(),
       course_name: row.course_name.trim(),
       field: undefined,
+      study_level: row.study_level,
       level: row.study_level,
+      duration: row.duration,
       duration_years: durationYears,
+      start_date: row.start_date,
+      campus: row.campus,
       language: 'English',
       mode: row.campus?.toLowerCase().includes('online') ? 'Online' : 'On-campus',
       intake_months: intake ? [intake] : undefined,
       tuition: tuition,
       currency: tuition ? 'GBP' : undefined,
-      url: undefined,
+      course_summary: row.course_summary,
+      modules: row.modules,
+      assessment_methods: row.assessment_methods,
+      provider_course_url: row.provider_course_url,
+      provider_apply_url: row.provider_apply_url,
+      ucas_code: row.ucas_code,
+      min_alevel: row.min_alevel,
+      min_ib: row.min_ib,
+      ucas_points: row.ucas_points,
+      subject_requirements: row.subject_requirements,
+      additional_entry_requirements: row.additional_entry_requirements,
+      subsequent_year_entry_requirements: row.subsequent_year_entry_requirements,
+      english_requirements: row.english_requirements,
+      contextual_admissions: row.contextual_admissions,
+      additional_fee_info: row.additional_fee_info,
+      student_satisfaction: row.student_satisfaction,
+      employment_after_course: row.employment_after_course,
+      student_outcomes: row.student_outcomes,
+      average_salary_after_15m: row.average_salary_after_15m,
+      open_days: row.open_days,
+      url: row.provider_course_url,
       metadata: Object.keys(programMeta).length ? programMeta : undefined
     });
 
@@ -255,7 +332,9 @@ const buildPrograms = (
     if (row.min_ib) reqPieces.push(`IB: ${row.min_ib}`);
     if (row.ucas_points) reqPieces.push(`UCAS points: ${row.ucas_points}`);
     if (row.subject_requirements) reqPieces.push(`Subjects: ${row.subject_requirements}`);
+    if (row.additional_entry_requirements) reqPieces.push(`Additional: ${row.additional_entry_requirements}`);
     if (row.english_requirements) reqPieces.push(`English: ${row.english_requirements}`);
+    if (row.contextual_admissions) reqPieces.push(`Contextual: ${row.contextual_admissions}`);
 
     const minIbTotal = extractNumber(row.min_ib);
 
@@ -266,7 +345,7 @@ const buildPrograms = (
         }
         : undefined;
 
-    requirements.push({
+    requirementMap.set(programId, {
       program_id: programId,
       curriculum: undefined,
       min_gpa: undefined,
@@ -279,7 +358,7 @@ const buildPrograms = (
     });
   });
 
-  return { programs, requirements };
+  return { programs: Array.from(programMap.values()), requirements: Array.from(requirementMap.values()) };
 };
 
 const writeCsv = (filename: string, data: any[], columns: string[]) => {
@@ -308,11 +387,7 @@ const main = () => {
     return process.argv[index + 1];
   };
 
-  const inputPath = getArg('--input');
-  if (!inputPath) {
-    console.error('Provide --input <path-to-ucas-csv>.');
-    process.exit(1);
-  }
+  const inputPath = getArg('--input', '/Users/gregfranck/UCAS Data Scraper/Updated Course List.cleaned.csv') as string;
   const outDir = getArg('--out', 'supabase/imports') as string;
 
   if (!fs.existsSync(inputPath)) {
@@ -360,13 +435,37 @@ const main = () => {
       'name',
       'course_name',
       'field',
+      'study_level',
       'level',
+      'duration',
       'duration_years',
+      'start_date',
+      'campus',
       'language',
       'mode',
       'intake_months',
       'tuition',
       'currency',
+      'course_summary',
+      'modules',
+      'assessment_methods',
+      'provider_course_url',
+      'provider_apply_url',
+      'ucas_code',
+      'min_alevel',
+      'min_ib',
+      'ucas_points',
+      'subject_requirements',
+      'additional_entry_requirements',
+      'subsequent_year_entry_requirements',
+      'english_requirements',
+      'contextual_admissions',
+      'additional_fee_info',
+      'student_satisfaction',
+      'employment_after_course',
+      'student_outcomes',
+      'average_salary_after_15m',
+      'open_days',
       'url',
       'metadata'
     ]

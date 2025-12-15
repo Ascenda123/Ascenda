@@ -86,7 +86,11 @@ const main = async () => {
   const dirFlagIndex = process.argv.indexOf('--dir');
   const dir = dirFlagIndex !== -1 ? process.argv[dirFlagIndex + 1] : 'supabase/imports';
 
-  const universities = readCsv(path.join(dir, 'universities.csv'));
+  const universities = readCsv(path.join(dir, 'universities.csv')).map((row) => {
+    const clone = { ...row };
+    delete (clone as any).course_name;
+    return clone;
+  });
   const programs = uniqueByKey(readCsv(path.join(dir, 'programs.csv')), 'id');
   const requirements = uniqueByKey(readCsv(path.join(dir, 'program_requirements.csv')), 'program_id');
 

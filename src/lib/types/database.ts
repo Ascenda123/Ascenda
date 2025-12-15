@@ -300,15 +300,24 @@ export type Database = {
           course_name: string
           course_summary: string | null
           created_at: string
+          currency: string | null
           duration: string | null
+          duration_years: number | null
           employment_after_course: string | null
           english_requirements: string | null
           entry_requirements_overview: string | null
+          field: string | null
           historic_entry_grades: string | null
           id: string
+          intake_months: string[] | null
+          language: string | null
+          level: string | null
+          metadata: Json | null
           min_alevel: string | null
           min_ib: string | null
+          mode: string | null
           modules: string | null
+          name: string | null
           open_days: string | null
           provider_apply_url: string | null
           provider_course_url: string | null
@@ -318,11 +327,13 @@ export type Database = {
           study_level: string | null
           subject_requirements: string | null
           subsequent_year_entry_requirements: string | null
+          tuition: number | null
           tuition_fees_home: string | null
           tuition_fees_international: string | null
           ucas_code: string | null
           ucas_points: string | null
           university_id: string
+          url: string | null
         }
         Insert: {
           additional_entry_requirements?: string | null
@@ -334,15 +345,24 @@ export type Database = {
           course_name: string
           course_summary?: string | null
           created_at?: string
+          currency?: string | null
           duration?: string | null
+          duration_years?: number | null
           employment_after_course?: string | null
           english_requirements?: string | null
           entry_requirements_overview?: string | null
+          field?: string | null
           historic_entry_grades?: string | null
           id?: string
+          intake_months?: string[] | null
+          language?: string | null
+          level?: string | null
+          metadata?: Json | null
           min_alevel?: string | null
           min_ib?: string | null
+          mode?: string | null
           modules?: string | null
+          name?: string | null
           open_days?: string | null
           provider_apply_url?: string | null
           provider_course_url?: string | null
@@ -352,11 +372,13 @@ export type Database = {
           study_level?: string | null
           subject_requirements?: string | null
           subsequent_year_entry_requirements?: string | null
+          tuition?: number | null
           tuition_fees_home?: string | null
           tuition_fees_international?: string | null
           ucas_code?: string | null
           ucas_points?: string | null
           university_id: string
+          url?: string | null
         }
         Update: {
           additional_entry_requirements?: string | null
@@ -368,15 +390,24 @@ export type Database = {
           course_name?: string
           course_summary?: string | null
           created_at?: string
+          currency?: string | null
           duration?: string | null
+          duration_years?: number | null
           employment_after_course?: string | null
           english_requirements?: string | null
           entry_requirements_overview?: string | null
+          field?: string | null
           historic_entry_grades?: string | null
           id?: string
+          intake_months?: string[] | null
+          language?: string | null
+          level?: string | null
+          metadata?: Json | null
           min_alevel?: string | null
           min_ib?: string | null
+          mode?: string | null
           modules?: string | null
+          name?: string | null
           open_days?: string | null
           provider_apply_url?: string | null
           provider_course_url?: string | null
@@ -386,11 +417,13 @@ export type Database = {
           study_level?: string | null
           subject_requirements?: string | null
           subsequent_year_entry_requirements?: string | null
+          tuition?: number | null
           tuition_fees_home?: string | null
           tuition_fees_international?: string | null
           ucas_code?: string | null
           ucas_points?: string | null
           university_id?: string
+          url?: string | null
         }
         Relationships: [
           {
@@ -398,60 +431,6 @@ export type Database = {
             columns: ["university_id"]
             isOneToOne: false
             referencedRelation: "universities"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      shortlisted_programs: {
-        Row: {
-          due_date: string | null
-          fit_score: number | null
-          location: string | null
-          metadata: Json | null
-          next_action: string | null
-          profile_id: string
-          program_id: string
-          program_name: string | null
-          stage: string | null
-          university_name: string | null
-        }
-        Insert: {
-          due_date?: string | null
-          fit_score?: number | null
-          location?: string | null
-          metadata?: Json | null
-          next_action?: string | null
-          profile_id: string
-          program_id: string
-          program_name?: string | null
-          stage?: string | null
-          university_name?: string | null
-        }
-        Update: {
-          due_date?: string | null
-          fit_score?: number | null
-          location?: string | null
-          metadata?: Json | null
-          next_action?: string | null
-          profile_id?: string
-          program_id?: string
-          program_name?: string | null
-          stage?: string | null
-          university_name?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "shortlisted_programs_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "shortlisted_programs_program_id_fkey"
-            columns: ["program_id"]
-            isOneToOne: false
-            referencedRelation: "programs"
             referencedColumns: ["id"]
           },
         ]
@@ -723,18 +702,18 @@ export type Database = {
     }
     Enums: {
       application_status:
-      | "planning"
-      | "in_progress"
-      | "submitted"
-      | "decision"
-      | "enrolled"
+        | "planning"
+        | "in_progress"
+        | "submitted"
+        | "decision"
+        | "enrolled"
       application_task_category:
-      | "test"
-      | "essay"
-      | "reference"
-      | "visa"
-      | "finance"
-      | "portal"
+        | "test"
+        | "essay"
+        | "reference"
+        | "visa"
+        | "finance"
+        | "portal"
       campus_type: "urban" | "suburban" | "rural" | "online"
       checklist_status: "todo" | "doing" | "done"
       delivery_type: "in_person" | "online" | "hybrid"
@@ -1259,116 +1238,116 @@ type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
-  | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-  | { schema: keyof DatabaseWithoutInternals },
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-  ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-    DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-  : never = never,
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
   ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-    DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
-  ? R
-  : never
+    ? R
+    : never
   : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
-    DefaultSchema["Views"])
-  ? (DefaultSchema["Tables"] &
-    DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
-      Row: infer R
-    }
-  ? R
-  : never
-  : never
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
-  | keyof DefaultSchema["Tables"]
-  | { schema: keyof DatabaseWithoutInternals },
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-  ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-  : never = never,
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-    Insert: infer I
-  }
-  ? I
-  : never
+      Insert: infer I
+    }
+    ? I
+    : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-  ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-    Insert: infer I
-  }
-  ? I
-  : never
-  : never
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
-  | keyof DefaultSchema["Tables"]
-  | { schema: keyof DatabaseWithoutInternals },
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-  ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-  : never = never,
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
   ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-    Update: infer U
-  }
-  ? U
-  : never
+      Update: infer U
+    }
+    ? U
+    : never
   : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-  ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-    Update: infer U
-  }
-  ? U
-  : never
-  : never
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
-  | keyof DefaultSchema["Enums"]
-  | { schema: keyof DatabaseWithoutInternals },
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-  ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-  : never = never,
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
   ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
-  ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
-  : never
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-  | keyof DefaultSchema["CompositeTypes"]
-  | { schema: keyof DatabaseWithoutInternals },
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
-  ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-  : never = never,
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
   ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
-  ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
-  : never
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
 
 export const Constants = {
   public: {
