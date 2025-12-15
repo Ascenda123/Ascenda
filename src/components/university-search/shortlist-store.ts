@@ -21,7 +21,16 @@ const OLD_STORAGE_KEY = 'ascenda-university-shortlist';
 const DEMO_IDS = new Set(['yale-epe', 'melbourne-design', 'hkust-gbus']);
 const TABLE_NAME = 'shortlisted_programs';
 
-type ShortlistRow = Database['public']['Tables']['shortlisted_programs']['Row'];
+type ShortlistRow = {
+  program_id: string;
+  program_name: string | null;
+  university_name: string | null;
+  location: string | null;
+  fit_score: number | string | null;
+  stage: string | null;
+  next_action: string | null;
+  due_date: string | null;
+};
 type Client = SupabaseClient<Database>;
 
 export const useShortlist = () => {
@@ -79,7 +88,7 @@ export const useShortlist = () => {
 
   const upsertRemoteItem = useCallback(
     async (client: Client, userId: string, item: ShortlistItem) => {
-      const payload: Database['public']['Tables']['shortlisted_programs']['Insert'] = {
+      const payload = {
         profile_id: userId,
         program_id: item.id,
         program_name: item.program,
