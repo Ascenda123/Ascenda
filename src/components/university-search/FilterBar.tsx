@@ -29,8 +29,6 @@ interface FilterBarProps {
     availablePrograms?: string[];
     onUniversityToggle?: (name: string) => void;
     onProgramToggle?: (name: string) => void;
-    maxBudget?: number | null;
-    onBudgetChange?: (value: number | null) => void;
     onClearFilters?: () => void;
     isSticky?: boolean;
     showViewToggle?: boolean;
@@ -146,8 +144,6 @@ export function FilterBar({
     availablePrograms = [],
     onUniversityToggle = () => { },
     onProgramToggle = () => { },
-    maxBudget = null,
-    onBudgetChange = () => { },
     onClearFilters,
     isSticky = true,
     showViewToggle = true
@@ -198,22 +194,6 @@ export function FilterBar({
                         <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">
                             {resultCount} result{resultCount !== 1 && 's'}
                         </span>
-                        <div className="flex items-center gap-2">
-                            <Input
-                                type="number"
-                                inputMode="numeric"
-                                min={0}
-                                placeholder="Max tuition"
-                                value={maxBudget ?? ''}
-                                onChange={(e) => {
-                                    const val = e.target.value;
-                                    if (val === '') return onBudgetChange(null);
-                                    const num = Number.parseFloat(val);
-                                    onBudgetChange(Number.isFinite(num) ? num : null);
-                                }}
-                                className="h-9 w-32 rounded-xl"
-                            />
-                        </div>
                         {showViewToggle ? (
                             <div className="flex items-center rounded-xl border border-border bg-background p-1 shadow-sm">
                                 <button

@@ -69,7 +69,6 @@ export default function UniversitySearchResultsPage() {
 
   // State
   const [searchQuery, setSearchQuery] = useState(initialQuery);
-  const [maxBudget, setMaxBudget] = useState<number | null>(null);
   const [selectedTiers, setSelectedTiers] = useState<MatchTier[]>(['Reach', 'Match', 'Safe']);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [selectedForComparison, setSelectedForComparison] = useState<ProgramSearchResult[]>([]);
@@ -202,14 +201,13 @@ export default function UniversitySearchResultsPage() {
     setResults([]);
     setPage(0);
     setHasMore(true);
-  }, [programId, universityId, selectedUniversities, selectedPrograms, maxBudget, searchQuery]);
+  }, [programId, universityId, selectedUniversities, selectedPrograms, searchQuery]);
 
   // If all filters and search are cleared, remove any lingering URL params so we fetch full results.
   useEffect(() => {
     const noSelections =
       selectedPrograms.length === 0 &&
-      selectedUniversities.length === 0 &&
-      maxBudget === null;
+      selectedUniversities.length === 0;
     const noSearch = searchQuery.trim() === '';
     const hasUrlFilters = programId || universityId || searchParams.get('q');
 
@@ -227,7 +225,6 @@ export default function UniversitySearchResultsPage() {
     searchParams,
     selectedPrograms.length,
     selectedUniversities.length,
-    maxBudget,
     searchQuery,
     router
   ]);
@@ -510,17 +507,7 @@ export default function UniversitySearchResultsPage() {
         matchesSearch &&
         matchesTier &&
         matchesUniversity &&
-        matchesProgram &&
-        (maxBudget === null ||
-          (() => {
-            const firstValue = [result.tuition, result.intlTuitionLow, result.intlTuitionHigh].find(
-              (v) => v !== null && v !== undefined
-            );
-            if (firstValue === undefined || firstValue === null) return false;
-            const numeric = typeof firstValue === 'number' ? firstValue : Number(firstValue);
-            if (!Number.isFinite(numeric)) return false;
-            return numeric <= maxBudget;
-          })())
+        matchesProgram
       );
     });
   }, [
@@ -529,7 +516,6 @@ export default function UniversitySearchResultsPage() {
     selectedTiers,
     selectedPrograms,
     selectedUniversities,
-    maxBudget,
     allUniversities,
     programId,
     universityId
@@ -679,8 +665,6 @@ export default function UniversitySearchResultsPage() {
           viewMode={viewMode}
           onViewModeChange={setViewMode}
           resultCount={filteredResults.length}
-          maxBudget={maxBudget}
-          onBudgetChange={(val) => setMaxBudget(val)}
           selectedUniversities={selectedUniversities}
           selectedPrograms={selectedPrograms}
           availableUniversities={availableUniversities}
