@@ -69,10 +69,7 @@ export default function UniversitySearchResultsPage() {
 
   // State
   const [searchQuery, setSearchQuery] = useState(initialQuery);
-  const [selectedStudyLevels, setSelectedStudyLevels] = useState<string[]>([]);
-  const [selectedCampuses, setSelectedCampuses] = useState<string[]>([]);
-  const [selectedStartMonths, setSelectedStartMonths] = useState<string[]>([]);
-  const [selectedUcasCodes, setSelectedUcasCodes] = useState<string[]>([]);
+  const [maxBudget, setMaxBudget] = useState<number | null>(null);
   const [selectedTiers, setSelectedTiers] = useState<MatchTier[]>(['Reach', 'Match', 'Safe']);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [selectedForComparison, setSelectedForComparison] = useState<ProgramSearchResult[]>([]);
@@ -83,10 +80,6 @@ export default function UniversitySearchResultsPage() {
   const [areFiltersLoading, setAreFiltersLoading] = useState(true);
   // Store all unique universities directly from the DB to ensure the filter list is complete
   const [allUniversities, setAllUniversities] = useState<{ id: string; name: string }[]>([]);
-  const [allStudyLevels, setAllStudyLevels] = useState<string[]>([]);
-  const [allCampuses, setAllCampuses] = useState<string[]>([]);
-  const [allStartMonths, setAllStartMonths] = useState<string[]>([]);
-  const [allUcasCodes, setAllUcasCodes] = useState<string[]>([]);
   const [results, setResults] = useState<ProgramSearchResult[]>([]);
   const [resultCount, setResultCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
@@ -127,21 +120,14 @@ export default function UniversitySearchResultsPage() {
         // 2. Fetch Programs (Course Names) with a hard cap to avoid huge downloads
         const { data: programData, error: progError } = await supabase
           .from('programs')
-          .select(`course_name, study_level, campus, start_date, ucas_code, universities (name)`)
+          .select(`course_name, universities (name)`)
           .limit(PROGRAM_FILTER_LIMIT);
 
         if (progError) {
           console.error('Error fetching programs:', progError);
         }
 
-        const allProgramsRaw: {
-          course_name: string;
-          study_level?: string | null;
-          campus?: string | null;
-          start_date?: string | null;
-          ucas_code?: string | null;
-          universities: { name: string } | null;
-        }[] =
+        const allProgramsRaw: { course_name: string; universities: { name: string } | null }[] =
           (programData as any) ?? [];
 
         if (!isActive) return;
@@ -184,28 +170,6 @@ export default function UniversitySearchResultsPage() {
         // So maybe relying on programs fetch is correct.
 
         setFilterOptions(dedupedListeners);
-        // Additional filter sets
-        const uniqueStrings = (values: (string | null | undefined)[]) =>
-          Array.from(new Set(values.filter((v): v is string => Boolean(v && v.trim())).map((v) => v!.trim()))).sort(
-            (a, b) => a.localeCompare(b)
-          );
-
-        const months = uniqueStrings(
-          allProgramsRaw.map((p) => {
-            const raw = p.start_date?.trim();
-            if (!raw || !raw.includes('-')) return null;
-            const monthPart = raw.split('-')[1];
-            if (!monthPart) return null;
-            const monthIdx = Number.parseInt(monthPart, 10);
-            if (!Number.isFinite(monthIdx) || monthIdx < 1 || monthIdx > 12) return null;
-            return new Date(2000, monthIdx - 1, 1).toLocaleString('en-GB', { month: 'long' });
-          })
-        );
-
-        setAllStudyLevels(uniqueStrings(allProgramsRaw.map((p) => p.study_level)));
-        setAllCampuses(uniqueStrings(allProgramsRaw.map((p) => p.campus)));
-        setAllStartMonths(months);
-        setAllUcasCodes(uniqueStrings(allProgramsRaw.map((p) => p.ucas_code)));
       } catch (err) {
         console.error('Failed to fetch filters:', err);
       } finally {
@@ -238,17 +202,14 @@ export default function UniversitySearchResultsPage() {
     setResults([]);
     setPage(0);
     setHasMore(true);
-  }, [programId, universityId, selectedUniversities, selectedPrograms, selectedStudyLevels, selectedCampuses, selectedStartMonths, selectedUcasCodes, searchQuery]);
+  }, [programId, universityId, selectedUniversities, selectedPrograms, maxBudget, searchQuery]);
 
   // If all filters and search are cleared, remove any lingering URL params so we fetch full results.
   useEffect(() => {
     const noSelections =
       selectedPrograms.length === 0 &&
       selectedUniversities.length === 0 &&
-      selectedStudyLevels.length === 0 &&
-      selectedCampuses.length === 0 &&
-      selectedStartMonths.length === 0 &&
-      selectedUcasCodes.length === 0;
+      maxBudget === null;
     const noSearch = searchQuery.trim() === '';
     const hasUrlFilters = programId || universityId || searchParams.get('q');
 
@@ -266,10 +227,7 @@ export default function UniversitySearchResultsPage() {
     searchParams,
     selectedPrograms.length,
     selectedUniversities.length,
-    selectedStudyLevels.length,
-    selectedCampuses.length,
-    selectedStartMonths.length,
-    selectedUcasCodes.length,
+    maxBudget,
     searchQuery,
     router
   ]);
@@ -342,29 +300,8 @@ export default function UniversitySearchResultsPage() {
           query = query.eq('id', programId);
         }
 
-        if (selectedStudyLevels.length > 0) {
-          query = query.in('study_level', selectedStudyLevels);
-        }
-
-        if (selectedCampuses.length > 0) {
-          query = query.in('campus', selectedCampuses);
-        }
-
-        if (selectedUcasCodes.length > 0) {
-          query = query.in('ucas_code', selectedUcasCodes);
-        }
-
-        if (selectedStartMonths.length > 0) {
-          const monthNumbers = selectedStartMonths
-            .map((m) => {
-              const idx = new Date(`${m} 1, 2020`).getMonth();
-              return Number.isFinite(idx) ? String(idx + 1).padStart(2, '0') : null;
-            })
-            .filter((v): v is string => Boolean(v));
-          if (monthNumbers.length > 0) {
-            const orFilters = monthNumbers.map((m) => `start_date.ilike.%-${m}-%`);
-            query = query.or(orFilters.join(','));
-          }
+        if (maxBudget !== null) {
+          query = query.lte('tuition', maxBudget);
         }
 
         // 2. Text Search
@@ -457,16 +394,6 @@ export default function UniversitySearchResultsPage() {
           const programName = program.course_name ?? program.name ?? 'Program';
           const level = program.study_level ?? program.level ?? null;
           const duration = program.duration ?? (program.duration_years ? `${program.duration_years} years` : null);
-          const campus = program.campus ?? null;
-          const startMonth = (() => {
-            const raw = program.start_date?.toString();
-            if (!raw || !raw.includes('-')) return null;
-            const monthPart = raw.split('-')[1];
-            if (!monthPart) return null;
-            const idx = Number.parseInt(monthPart, 10);
-            if (!Number.isFinite(idx) || idx < 1 || idx > 12) return null;
-            return new Date(2000, idx - 1, 1).toLocaleString('en-GB', { month: 'long' });
-          })();
           return {
             id: program.id,
             universityId: uniId,
@@ -476,7 +403,7 @@ export default function UniversitySearchResultsPage() {
             logoUrl: logoUrl ?? null,
             fitScore: score ?? null,
             tier: tier ?? null,
-            highlights: [level, campus, duration].filter(Boolean) as string[],
+            highlights: [level, duration].filter(Boolean) as string[],
             acceptanceRate: uni?.acceptance_rate ?? null,
             duration: duration ?? null,
             intlTuitionLow: uni?.intl_tuition_low ?? null,
@@ -484,10 +411,7 @@ export default function UniversitySearchResultsPage() {
             requiresTest: uni?.requires_test ?? null,
             tuition: program.tuition ?? null,
             currency: program.currency ?? uni?.currency ?? null,
-            studyLevel: level,
-            campus,
-            startMonth,
-            ucasCode: program.ucas_code ?? null
+            studyLevel: level
           };
         });
 
@@ -548,19 +472,7 @@ export default function UniversitySearchResultsPage() {
     };
 
     fetchResults();
-  }, [
-    page,
-    programId,
-    universityId,
-    selectedUniversities,
-    selectedPrograms,
-    selectedStudyLevels,
-    selectedCampuses,
-    selectedStartMonths,
-    selectedUcasCodes,
-    searchQuery,
-    allUniversities
-  ]);
+  }, [page, programId, universityId, selectedUniversities, selectedPrograms, maxBudget, searchQuery, allUniversities]);
 
   const availableUniversities = useMemo(() => {
     // Use the full universities list from Supabase (not the capped filterOptions)
@@ -582,26 +494,6 @@ export default function UniversitySearchResultsPage() {
     return Array.from(programs).sort((a, b) => a.localeCompare(b));
   }, [filterOptions, selectedPrograms, selectedUniversities]);
 
-  const availableStudyLevels = useMemo(
-    () => Array.from(new Set([...allStudyLevels, ...selectedStudyLevels])).sort((a, b) => a.localeCompare(b)),
-    [allStudyLevels, selectedStudyLevels]
-  );
-
-  const availableCampuses = useMemo(
-    () => Array.from(new Set([...allCampuses, ...selectedCampuses])).sort((a, b) => a.localeCompare(b)),
-    [allCampuses, selectedCampuses]
-  );
-
-  const availableStartMonths = useMemo(
-    () => Array.from(new Set([...allStartMonths, ...selectedStartMonths])).sort((a, b) => a.localeCompare(b)),
-    [allStartMonths, selectedStartMonths]
-  );
-
-  const availableUcasCodes = useMemo(
-    () => Array.from(new Set([...allUcasCodes, ...selectedUcasCodes])).sort((a, b) => a.localeCompare(b)),
-    [allUcasCodes, selectedUcasCodes]
-  );
-
   const filteredResults = useMemo(() => {
     const normalizedQuery = searchQuery.toLowerCase();
     const hasExplicitIdFilter = Boolean(programId || universityId);
@@ -618,23 +510,17 @@ export default function UniversitySearchResultsPage() {
         selectedUniversities.length === 0 || selectedUniversities.includes(result.universityName);
       const matchesProgram =
         selectedPrograms.length === 0 || selectedPrograms.includes(result.programName);
-      const matchesStudyLevel =
-        selectedStudyLevels.length === 0 || selectedStudyLevels.includes(result.studyLevel ?? '');
-      const matchesCampus =
-        selectedCampuses.length === 0 || selectedCampuses.includes(result.campus ?? '');
-      const matchesStartMonth =
-        selectedStartMonths.length === 0 || selectedStartMonths.includes(result.startMonth ?? '');
-      const matchesUcas =
-        selectedUcasCodes.length === 0 || selectedUcasCodes.includes(result.ucasCode ?? '');
       return (
         matchesSearch &&
         matchesTier &&
         matchesUniversity &&
         matchesProgram &&
-        matchesStudyLevel &&
-        matchesCampus &&
-        matchesStartMonth &&
-        matchesUcas
+        (maxBudget === null ||
+          (() => {
+            const tuition = result.tuition ?? result.intlTuitionLow ?? null;
+            if (tuition === null || tuition === undefined) return true;
+            return tuition <= maxBudget;
+          })())
       );
     });
   }, [
@@ -643,10 +529,7 @@ export default function UniversitySearchResultsPage() {
     selectedTiers,
     selectedPrograms,
     selectedUniversities,
-    selectedStudyLevels,
-    selectedCampuses,
-    selectedStartMonths,
-    selectedUcasCodes,
+    maxBudget,
     allUniversities,
     programId,
     universityId
@@ -684,39 +567,12 @@ export default function UniversitySearchResultsPage() {
     );
   };
 
-  const handleToggleStudyLevel = (level: string) => {
-    setSelectedStudyLevels((prev) =>
-      prev.includes(level) ? prev.filter((item) => item !== level) : [...prev, level]
-    );
-  };
-
-  const handleToggleCampus = (campus: string) => {
-    setSelectedCampuses((prev) =>
-      prev.includes(campus) ? prev.filter((item) => item !== campus) : [...prev, campus]
-    );
-  };
-
-  const handleToggleStartMonth = (month: string) => {
-    setSelectedStartMonths((prev) =>
-      prev.includes(month) ? prev.filter((item) => item !== month) : [...prev, month]
-    );
-  };
-
-  const handleToggleUcasCode = (code: string) => {
-    setSelectedUcasCodes((prev) =>
-      prev.includes(code) ? prev.filter((item) => item !== code) : [...prev, code]
-    );
-  };
-
   const handleResetFilters = () => {
     setSearchQuery('');
     setSelectedTiers(['Reach', 'Match', 'Safe']);
     setSelectedUniversities([]);
     setSelectedPrograms([]);
-    setSelectedStudyLevels([]);
-    setSelectedCampuses([]);
-    setSelectedStartMonths([]);
-    setSelectedUcasCodes([]);
+    setMaxBudget(null);
     setResults([]);
     setPage(0);
     setHasMore(true);
@@ -823,24 +679,14 @@ export default function UniversitySearchResultsPage() {
           viewMode={viewMode}
           onViewModeChange={setViewMode}
           resultCount={filteredResults.length}
+          maxBudget={maxBudget}
+          onBudgetChange={(val) => setMaxBudget(val)}
           selectedUniversities={selectedUniversities}
           selectedPrograms={selectedPrograms}
-          selectedStudyLevels={selectedStudyLevels}
-          selectedCampuses={selectedCampuses}
-          selectedStartMonths={selectedStartMonths}
-          selectedUcasCodes={selectedUcasCodes}
           availableUniversities={availableUniversities}
           availablePrograms={availablePrograms}
-          availableStudyLevels={availableStudyLevels}
-          availableCampuses={availableCampuses}
-          availableStartMonths={availableStartMonths}
-          availableUcasCodes={availableUcasCodes}
           onUniversityToggle={handleToggleUniversity}
           onProgramToggle={handleToggleProgram}
-          onStudyLevelToggle={handleToggleStudyLevel}
-          onCampusToggle={handleToggleCampus}
-          onStartMonthToggle={handleToggleStartMonth}
-          onUcasCodeToggle={handleToggleUcasCode}
           onClearFilters={handleResetFilters}
         />
 
