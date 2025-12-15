@@ -100,7 +100,7 @@ export const useShortlist = () => {
         due_date: item.due ?? null,
         metadata: null
       };
-      const { error } = await client.from(TABLE_NAME).upsert(payload, { onConflict: 'profile_id,program_id' });
+      const { error } = await (client as any).from(TABLE_NAME).upsert(payload, { onConflict: 'profile_id,program_id' });
       if (error) {
         console.warn('Failed to upsert shortlist item', error);
       }
@@ -110,7 +110,7 @@ export const useShortlist = () => {
 
   const deleteRemoteItem = useCallback(
     async (client: Client, userId: string, programId: string) => {
-      const { error } = await client.from(TABLE_NAME).delete().eq('profile_id', userId).eq('program_id', programId);
+      const { error } = await (client as any).from(TABLE_NAME).delete().eq('profile_id', userId).eq('program_id', programId);
       if (error) {
         console.warn('Failed to remove shortlist item', error);
       }
@@ -143,7 +143,7 @@ export const useShortlist = () => {
         window.localStorage.removeItem(OLD_STORAGE_KEY);
       }
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from(TABLE_NAME)
         .select('program_id,program_name,university_name,location,fit_score,stage,next_action,due_date')
         .eq('profile_id', userId);
