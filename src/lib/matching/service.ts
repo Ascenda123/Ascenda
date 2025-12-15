@@ -97,8 +97,22 @@ export const loadMatchesForProfile = async (
     };
   }
 
-  const filteredPrograms = filterVisiblePrograms((programsData ?? []) as ProgramRow[]);
-  const programs: Program[] = filteredPrograms.map(mapProgramRow);
+  const normalizeMetadata = (value: unknown): Record<string, unknown> | null => {
+    if (value && typeof value === 'object' && !Array.isArray(value)) {
+      return value as Record<string, unknown>;
+    }
+    return null;
+  };
+
+  const visibilityCheck = (programsData ?? []).map((p) => ({
+    id: p.id,
+    metadata: normalizeMetadata((p as any).metadata)
+  }));
+  const visibleIds = new Set(filterVisiblePrograms(visibilityCheck).map((p) => p.id));
+  const filteredPrograms = (programsData ?? []).filter((p) => visibleIds.has(p.id));
+  const programs: Program[] = filteredPrograms.map((program) =>
+    mapProgramRow({ ...program, metadata: normalizeMetadata((program as any).metadata) } as any)
+  );
 
   if (!programs.length) {
     return {
