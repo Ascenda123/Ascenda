@@ -96,15 +96,31 @@ export async function GET() {
   const preferences = preferencesResponse.data ?? null;
   const aspirations = aspirationsResponse.data ?? null;
   const profileRecord = (profileResponse.data ?? null) as ProfileRow | null;
+  const normalizeMetadata = (value: unknown): Record<string, unknown> | null => {
+    if (value && typeof value === 'object' && !Array.isArray(value)) {
+      return value as Record<string, unknown>;
+    }
+    return null;
+  };
+
   const programs = (programsResponse.data ?? []) as ProgramRow[];
   if (programs.length === 0 && applicationProgramIds.length === 0) {
     // Fallback to a small curated sample to avoid empty dashboard while keeping payload tiny.
     const fallbackProgramsResponse = await supabase.from('programs').select('*').limit(8);
     if (!fallbackProgramsResponse.error) {
-      programs.push(...((fallbackProgramsResponse.data ?? []) as ProgramRow[]));
+      programs.push(
+        ...((fallbackProgramsResponse.data ?? []) as ProgramRow[]).map((program) => ({
+          ...program,
+          metadata: normalizeMetadata(program.metadata)
+        }))
+      );
     }
   }
-  const visiblePrograms = filterVisiblePrograms(programs);
+  const normalizedPrograms = programs.map((program) => ({
+    ...program,
+    metadata: normalizeMetadata(program.metadata)
+  }));
+  const visiblePrograms = filterVisiblePrograms(normalizedPrograms);
   const programIds = visiblePrograms.map((program) => program.id);
   const universityIds = visiblePrograms.map((program) => program.university_id);
 
