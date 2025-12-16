@@ -57,6 +57,27 @@ type FilterOption = {
 
 const PROGRAM_FILTER_LIMIT = 2000;
 
+const getFlaggedProgramIds = () => {
+  const fromEnv =
+    process.env.NEXT_PUBLIC_FLAGGED_PROGRAM_IDS ??
+    process.env.NEXT_PUBLIC_DEMO_PROGRAM_IDS ??
+    process.env.DEMO_PROGRAM_IDS ??
+    '';
+  return fromEnv
+    .split(',')
+    .map((value) => value.trim().toLowerCase())
+    .filter(Boolean);
+};
+
+const applyProgramVisibilityFilters = (
+  query: ReturnType<ReturnType<typeof getBrowserSupabaseClient>['from']>,
+  flaggedIds: string[]
+) => {
+  if (!flaggedIds.length) return query;
+  const formatted = flaggedIds.map((id) => `"${id}"`).join(',');
+  return query.not('id', 'in', `(${formatted})`);
+};
+
 export default function UniversitySearchResultsPage() {
   const MAX_COMPARE_ITEMS = 5;
   const PAGE_SIZE = 50;
@@ -99,54 +120,27 @@ export default function UniversitySearchResultsPage() {
 
     const fetchFilters = async () => {
       try {
-        const supabase = getBrowserSupabaseClient();
-
-        // 1. Fetch Universities separately (FAST & COMPLETE)
-        // We get all distinct simplified university names AND IDs
-        const { data: uniData, error: uniError } = await supabase
-          .from('universities')
-          .select('id, name')
-          .order('name');
-
-        if (uniError) console.error('Error fetching universities:', uniError);
-
-        const allUnis = (uniData as { id: string; name: string }[])?.filter(u => u.name) || [];
-
-        if (isActive) {
-          setAllUniversities(allUnis);
+        const response = await fetch('/api/search/filters', { cache: 'no-store' });
+        if (!response.ok) {
+          throw new Error(`Failed to load filters (${response.status})`);
         }
-
-        // 2. Fetch Programs (Course Names) with a hard cap to avoid huge downloads
-        const { data: programData, error: progError } = await supabase
-          .from('programs')
-          .select(`course_name, universities (name)`)
-          .limit(PROGRAM_FILTER_LIMIT);
-
-        if (progError) {
-          console.error('Error fetching programs:', progError);
-        }
-
-        const allProgramsRaw: { course_name: string; universities: { name: string } | null }[] =
-          (programData as any) ?? [];
+        const body: { programs: { programName: string; universityId?: string | null }[]; universities: { id: string; name: string }[] } = await response.json();
 
         if (!isActive) return;
 
-        // Map to FilterOption
-        // We link them so selecting a Uni can still filter programs if the UI supports it
-        // and we have the link from the program fetch.
-        const mapped: FilterOption[] = allProgramsRaw
-          .map((p) => {
-            const uName = p.universities?.name;
-            const pName = p.course_name;
-            if (!uName || !pName) return null;
-            return { universityName: uName, programName: pName };
-          })
-          .filter((item): item is FilterOption => Boolean(item));
+        const universities = (body.universities ?? []).filter((u) => u.name);
+        setAllUniversities(universities);
 
-        // Deduplicate
-        // Use a Map for O(1) lookups
+        const mapped: FilterOption[] = (body.programs ?? [])
+          .filter((entry) => entry.programName && entry.universityId)
+          .map((entry) => {
+            const universityName =
+              universities.find((u) => u.id === entry.universityId)?.name ?? 'University';
+            return { universityName, programName: entry.programName };
+          });
+
         const uniqueMap = new Map<string, FilterOption>();
-        mapped.forEach(item => {
+        mapped.forEach((item) => {
           const key = `${item.universityName}|${item.programName}`;
           if (!uniqueMap.has(key)) {
             uniqueMap.set(key, item);
@@ -154,19 +148,6 @@ export default function UniversitySearchResultsPage() {
         });
 
         const dedupedListeners = Array.from(uniqueMap.values());
-
-        // Use the separately fetched Uni list for the absolute source of truth for Unis
-        // This ensures even if a Uni has no programs (edge case) or pagination missed it, it appears if in DB.
-        // But FilterBar expects 'availableUniversities' derived?
-        // Actually FilterBar usually takes passed lists.
-        // We'll merge the knowledge.
-
-        // Ideally we pass `allUnis` to availableUniversities if possible,
-        // but the current logic derives `availableUniversities` from `filterOptions`.
-        // So we need to make sure `filterOptions` contains entries for ALL universities.
-        // If a uni has no program, it won't be in `dedupedListeners`.
-        // But for "Search Results" context, filtering by a Uni with no programs is useless?
-        // So maybe relying on programs fetch is correct.
 
         setFilterOptions(dedupedListeners);
       } catch (err) {
@@ -241,11 +222,13 @@ export default function UniversitySearchResultsPage() {
       }
       try {
         const supabase = getBrowserSupabaseClient();
+        const flaggedIds = getFlaggedProgramIds();
 
         // Base query
         // We always use the 'universities' inner join to get location/tuition details
         // and to allow filtering by university name.
-        let query = supabase
+        let query = applyProgramVisibilityFilters(
+          supabase
           .from('programs')
           .select(
             `
@@ -265,7 +248,9 @@ export default function UniversitySearchResultsPage() {
             )
           `,
             { count: 'exact' }
-          );
+          ),
+          flaggedIds
+        );
 
         // 1. URL ID Filters (Initial Load priority, but often synced to state)
         // If we have selectedUniversities/Programs state, that takes precedence over raw IDs

@@ -19,7 +19,7 @@ import {
   mapRequirementRow,
   mapUniversityRow
 } from './transform';
-import { filterVisiblePrograms } from '../catalog/visibility';
+import { filterVisiblePrograms, getFlaggedProgramIds } from '../catalog/visibility';
 import type { Database } from '../types/database';
 import type { EnrichedMatch, MissingProfileSection } from './types';
 
@@ -42,7 +42,7 @@ export type MatchComputationResult = {
   matches: EnrichedMatch[];
   catalogSize: { programs: number; universities: number };
   missingSections: MissingProfileSection[];
-  error?: { stage: 'programs' | 'universities' | 'requirements'; message: string };
+  error?: { stage: 'profile' | 'programs' | 'universities' | 'requirements'; message: string };
 };
 
 const mapProfileRows = (params: {
@@ -56,22 +56,44 @@ const mapProfileRows = (params: {
   return { academics, preferences, aspirations };
 };
 
+const PROGRAM_PAGE_SIZE = 200;
+
+const applyProgramVisibilityFilters = (query: ReturnType<Client['from']>) => {
+  const flagged = getFlaggedProgramIds();
+  if (!flagged.length) return query.order('id', { ascending: true });
+
+  const formatted = flagged.map((id) => `"${id}"`).join(',');
+  return query.not('id', 'in', `(${formatted})`).order('id', { ascending: true });
+};
+
 export const loadMatchesForProfile = async (
   supabase: Client,
   profileId: string,
   options: LoadMatchesOptions = {}
 ): Promise<MatchComputationResult> => {
-  const programLimit = options.programLimit ?? 500;
+  const programLimit = options.programLimit ?? 800;
 
   const [
-    { data: academicsData },
-    { data: preferencesData },
-    { data: aspirationsData }
+    { data: academicsData, error: academicsError },
+    { data: preferencesData, error: preferencesError },
+    { data: aspirationsData, error: aspirationsError }
   ] = await Promise.all([
-    supabase.from('student_academics').select('*').eq('profile_id', profileId).single(),
-    supabase.from('student_preferences').select('*').eq('profile_id', profileId).single(),
-    supabase.from('student_aspirations').select('*').eq('profile_id', profileId).single()
+    supabase.from('student_academics').select('*').eq('profile_id', profileId).maybeSingle(),
+    supabase.from('student_preferences').select('*').eq('profile_id', profileId).maybeSingle(),
+    supabase.from('student_aspirations').select('*').eq('profile_id', profileId).maybeSingle()
   ]);
+
+  const profileErrors = [academicsError, preferencesError, aspirationsError].filter(
+    (err) => err && err.code !== 'PGRST116'
+  );
+  if (profileErrors.length > 0) {
+    return {
+      matches: [],
+      catalogSize: { programs: 0, universities: 0 },
+      missingSections: [],
+      error: { stage: 'profile', message: 'Failed to load profile data' }
+    };
+  }
 
   const missingSections: MissingProfileSection[] = [];
   if (!academicsData) missingSections.push('academics');
@@ -86,16 +108,34 @@ export const loadMatchesForProfile = async (
     };
   }
 
-  const programQuery = supabase.from('programs').select('*').limit(programLimit);
-  const { data: programsData, error: programsError } = await programQuery;
+  const programsData: ProgramRow[] = [];
+  let offset = 0;
+  while (programsData.length < programLimit) {
+    const rangeFrom = offset;
+    const rangeTo = Math.min(offset + PROGRAM_PAGE_SIZE - 1, programLimit - 1);
+    let programQuery = supabase.from('programs').select('*');
+    programQuery = applyProgramVisibilityFilters(programQuery).range(rangeFrom, rangeTo);
+    const { data, error: programsError } = await programQuery;
+    if (programsError) {
+      console.error('Failed to load catalog data', { programsError });
+      return {
+        matches: [],
+        catalogSize: { programs: 0, universities: 0 },
+        missingSections,
+        error: { stage: 'programs', message: 'Failed to load programs' }
+      };
+    }
+    if (!data || data.length === 0) break;
+    programsData.push(...data);
+    if (data.length < PROGRAM_PAGE_SIZE) break;
+    offset += PROGRAM_PAGE_SIZE;
+  }
 
-  if (programsError) {
-    console.error('Failed to load catalog data', { programsError });
+  if (programsData.length === 0) {
     return {
       matches: [],
       catalogSize: { programs: 0, universities: 0 },
-      missingSections,
-      error: { stage: 'programs', message: 'Failed to load programs' }
+      missingSections
     };
   }
 

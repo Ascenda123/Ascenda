@@ -37,3 +37,5 @@ export const isProgramFlagged = (program: ProgramLike) => {
 
 export const filterVisiblePrograms = <T extends ProgramLike>(programs: T[]): T[] =>
   programs.filter((program) => !isProgramFlagged(program));
+
+export const getFlaggedProgramIds = () => Array.from(flaggedProgramIds);

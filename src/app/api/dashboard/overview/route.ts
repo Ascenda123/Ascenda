@@ -14,7 +14,7 @@ import {
 } from '@/lib/matching/transform';
 import type { EnrichedMatch } from '@/lib/matching/types';
 import type { Database } from '@/lib/types/database';
-import { filterVisiblePrograms } from '@/lib/catalog/visibility';
+import { filterVisiblePrograms, getFlaggedProgramIds } from '@/lib/catalog/visibility';
 
 type ApplicationRow = Database['public']['Tables']['applications']['Row'];
 type ChecklistRow = Database['public']['Tables']['application_checklist']['Row'];
@@ -38,6 +38,13 @@ const formatShortDate = (value?: string | null) => {
     return 'TBD';
   }
   return shortDateFormatter.format(new Date(timestamp));
+};
+
+const applyProgramVisibilityFilters = (query: ReturnType<ReturnType<typeof createServerSupabaseClient>['from']>) => {
+  const flagged = getFlaggedProgramIds();
+  if (!flagged.length) return query;
+  const formatted = flagged.map((id) => `"${id}"`).join(',');
+  return query.not('id', 'in', `(${formatted})`);
 };
 
 export async function GET() {
@@ -71,7 +78,7 @@ export async function GET() {
   ] = await Promise.all([
     applicationIds.length
       ? supabase.from('application_checklist').select('*').in('application_id', applicationIds).order('due_date', { ascending: true }).limit(5)
-      : Promise.resolve({ data: [] }),
+      : Promise.resolve({ data: [] as ChecklistRow[] }),
     applicationProgramIds.length
       ? supabase
         .from('deadlines')
@@ -80,15 +87,29 @@ export async function GET() {
         .gte('deadline_date', today)
         .order('deadline_date', { ascending: true })
         .limit(5)
-      : Promise.resolve({ data: [] }),
-    supabase.from('student_academics').select('*').eq('profile_id', user.id).single(),
-    supabase.from('student_preferences').select('*').eq('profile_id', user.id).single(),
-    supabase.from('student_aspirations').select('*').eq('profile_id', user.id).single(),
-    supabase.from('profiles').select('full_name,country,time_zone').eq('id', user.id).single(),
+      : Promise.resolve({ data: [] as DeadlineRow[] }),
+    supabase.from('student_academics').select('*').eq('profile_id', user.id).maybeSingle(),
+    supabase.from('student_preferences').select('*').eq('profile_id', user.id).maybeSingle(),
+    supabase.from('student_aspirations').select('*').eq('profile_id', user.id).maybeSingle(),
+    supabase.from('profiles').select('full_name,country,time_zone').eq('id', user.id).maybeSingle(),
     applicationProgramIds.length
-      ? supabase.from('programs').select('*').in('id', applicationProgramIds).limit(25)
-      : supabase.from('programs').select('*').limit(25)
+      ? applyProgramVisibilityFilters(supabase.from('programs').select('*').in('id', applicationProgramIds)).limit(25)
+      : applyProgramVisibilityFilters(supabase.from('programs').select('*')).limit(25)
   ]);
+
+  const queryErrors = [
+    checklistResponse.error,
+    deadlinesResponse.error,
+    academicsResponse.error,
+    preferencesResponse.error,
+    aspirationsResponse.error,
+    profileResponse.error,
+    programsResponse.error
+  ].filter(Boolean);
+
+  if (queryErrors.length > 0) {
+    return NextResponse.json({ error: 'Failed to load dashboard data' }, { status: 500 });
+  }
 
   const checklist = (checklistResponse.data ?? []) as ChecklistRow[];
   const deadlines = (deadlinesResponse.data ?? []) as DeadlineRow[];
@@ -99,7 +120,9 @@ export async function GET() {
   const programs = (programsResponse.data ?? []) as ProgramRow[];
   if (programs.length === 0 && applicationProgramIds.length === 0) {
     // Fallback to a small curated sample to avoid empty dashboard while keeping payload tiny.
-    const fallbackProgramsResponse = await supabase.from('programs').select('*').limit(8);
+    const fallbackProgramsResponse = await applyProgramVisibilityFilters(
+      supabase.from('programs').select('*')
+    ).limit(8);
     if (!fallbackProgramsResponse.error) {
       programs.push(...((fallbackProgramsResponse.data ?? []) as ProgramRow[]));
     }
