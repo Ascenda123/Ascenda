@@ -4,7 +4,50 @@ import { CALENDAR_FEED_CONFIG, type CalendarFeedEvent, type CalendarFeedResponse
 
 const unfoldIcs = (ics: string) => ics.replace(/\r?\n[ \t]/g, '\n');
 
-const toIsoDate = (candidate: string) => {
+const getOffsetMinutes = (date: Date, timeZone: string) => {
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    hour12: false,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  });
+
+  const parts = formatter.formatToParts(date).reduce<Record<string, number>>((acc, part) => {
+    if (part.type !== 'literal') {
+      acc[part.type] = Number.parseInt(part.value, 10);
+    }
+    return acc;
+  }, {});
+
+  const asUtc = Date.UTC(
+    parts.year,
+    (parts.month ?? 1) - 1,
+    parts.day ?? 1,
+    parts.hour ?? 0,
+    parts.minute ?? 0,
+    parts.second ?? 0
+  );
+
+  return (asUtc - date.getTime()) / 60000;
+};
+
+const toZonedIso = (
+  { year, month, day, hour = 0, minute = 0, second = 0 }: { year: number; month: number; day: number; hour?: number; minute?: number; second?: number },
+  timeZone: string
+) => {
+  const initialUtc = Date.UTC(year, month - 1, day, hour, minute, second);
+  const offset = getOffsetMinutes(new Date(initialUtc), timeZone);
+  const adjusted = initialUtc - offset * 60_000;
+  const finalOffset = getOffsetMinutes(new Date(adjusted), timeZone);
+  const finalUtc = initialUtc - finalOffset * 60_000;
+  return new Date(finalUtc).toISOString();
+};
+
+const toIsoDate = (candidate: string, tzid?: string) => {
   const trimmed = candidate.trim();
   const dateTimeZ = trimmed.match(/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z$/);
   const dateTimeNoZ = trimmed.match(/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})$/);
@@ -15,11 +58,43 @@ const toIsoDate = (candidate: string) => {
   }
 
   if (dateTimeNoZ) {
-    return `${dateTimeNoZ[1]}-${dateTimeNoZ[2]}-${dateTimeNoZ[3]}T${dateTimeNoZ[4]}:${dateTimeNoZ[5]}:${dateTimeNoZ[6]}Z`;
+    const parts = {
+      year: Number.parseInt(dateTimeNoZ[1], 10),
+      month: Number.parseInt(dateTimeNoZ[2], 10),
+      day: Number.parseInt(dateTimeNoZ[3], 10),
+      hour: Number.parseInt(dateTimeNoZ[4], 10),
+      minute: Number.parseInt(dateTimeNoZ[5], 10),
+      second: Number.parseInt(dateTimeNoZ[6], 10)
+    };
+    if (tzid) {
+      try {
+        return toZonedIso(parts, tzid);
+      } catch {
+        // fall through to local formatting
+      }
+    }
+    return `${dateTimeNoZ[1]}-${dateTimeNoZ[2]}-${dateTimeNoZ[3]}T${dateTimeNoZ[4]}:${dateTimeNoZ[5]}:${dateTimeNoZ[6]}`;
   }
 
   if (dateOnly) {
-    return `${dateOnly[1]}-${dateOnly[2]}-${dateOnly[3]}T00:00:00Z`;
+    if (tzid) {
+      try {
+        return toZonedIso(
+          {
+            year: Number.parseInt(dateOnly[1], 10),
+            month: Number.parseInt(dateOnly[2], 10),
+            day: Number.parseInt(dateOnly[3], 10),
+            hour: 0,
+            minute: 0,
+            second: 0
+          },
+          tzid
+        );
+      } catch {
+        // fall through to local formatting
+      }
+    }
+    return `${dateOnly[1]}-${dateOnly[2]}-${dateOnly[3]}T00:00:00`;
   }
 
   const parsed = new Date(trimmed);
@@ -48,20 +123,24 @@ const parseIcsEvents = (data: string, source: (typeof CALENDAR_FEED_CONFIG)[numb
         const colonIndex = line.indexOf(':');
         if (colonIndex === -1) continue;
 
-        const key = line.substring(0, colonIndex);
+        const rawKey = line.substring(0, colonIndex);
         const value = line.substring(colonIndex + 1);
+        const [baseKey, ...params] = rawKey.split(';');
+        const tzid = params
+          .map((param) => param.trim())
+          .find((param) => param.toUpperCase().startsWith('TZID='))?.split('=')[1];
 
-        if (key.startsWith('UID')) {
+        if (baseKey.startsWith('UID')) {
           event.id = value;
-        } else if (key.startsWith('SUMMARY')) {
+        } else if (baseKey.startsWith('SUMMARY')) {
           event.title = value.replace(/\\n/g, ' ').trim();
-        } else if (key.startsWith('DTSTART')) {
-          event.start = toIsoDate(value);
-        } else if (key.startsWith('DTEND')) {
-          event.end = toIsoDate(value);
-        } else if (key.startsWith('DESCRIPTION')) {
+        } else if (baseKey.startsWith('DTSTART')) {
+          event.start = toIsoDate(value, tzid);
+        } else if (baseKey.startsWith('DTEND')) {
+          event.end = toIsoDate(value, tzid);
+        } else if (baseKey.startsWith('DESCRIPTION')) {
           event.description = value.replace(/\\n/g, ' ').trim();
-        } else if (key.startsWith('LOCATION')) {
+        } else if (baseKey.startsWith('LOCATION')) {
           event.location = value.replace(/\\n/g, ' ').trim();
         }
       }

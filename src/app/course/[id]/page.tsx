@@ -377,6 +377,14 @@ export default function CoursePage({ params }: { params: { id: string } }) {
   const [error, setError] = useState<string | null>(null);
   const [showAllFlatModules, setShowAllFlatModules] = useState(false);
   const [expandedYears, setExpandedYears] = useState<Record<string, boolean>>({});
+  type ActionButton = {
+    key: string;
+    href: string;
+    label: string;
+    variant: 'outline' | 'default';
+    className: string;
+    priority: number;
+  };
 
   const backHref = useMemo(() => {
     const from = searchParams.get('from');
@@ -397,6 +405,53 @@ export default function CoursePage({ params }: { params: { id: string } }) {
     course.outcomes.outcomes ||
     course.outcomes.salary
   ));
+  const actionButtons = useMemo(() => {
+    if (!course) return [];
+
+    const buttons: ActionButton[] = [];
+
+    if (course.applyUrl) {
+      buttons.push({
+        key: 'apply',
+        href: course.applyUrl.trim(),
+        label: 'Apply Now',
+        variant: 'default',
+        className: 'h-12 px-8 shadow-lg shadow-primary/20',
+        priority: 3
+      });
+    }
+
+    if (course.courseUrl) {
+      buttons.push({
+        key: 'visit',
+        href: course.courseUrl.trim(),
+        label: 'Visit Website',
+        variant: 'outline',
+        className: 'h-12 px-6',
+        priority: 2
+      });
+
+      buttons.push({
+        key: 'course',
+        href: course.courseUrl.trim(),
+        label: 'Course Site',
+        variant: 'outline',
+        className: 'h-12 px-8',
+        priority: 1
+      });
+    }
+
+    // Remove duplicate hrefs while keeping the highest priority label (Apply > Visit > Course)
+    const seen = new Map<string, ActionButton>();
+    buttons.forEach((btn) => {
+      const existing = seen.get(btn.href);
+      if (!existing || btn.priority > existing.priority) {
+        seen.set(btn.href, btn);
+      }
+    });
+
+    return Array.from(seen.values());
+  }, [course]);
 
   useEffect(() => {
     const fetchCourse = async () => {
@@ -556,30 +611,20 @@ export default function CoursePage({ params }: { params: { id: string } }) {
                     </div>
                   </div>
 
-                  <div className="flex gap-3">
-                    {course.courseUrl && (
-                      <Button asChild variant="outline" size="lg" className="h-12 px-6">
-                        <Link href={course.courseUrl} target="_blank" rel="noreferrer">
-                          Visit Website
+                  <div className="flex flex-wrap gap-3 md:justify-end">
+                    {actionButtons.map((action) => (
+                      <Button
+                        key={action.key}
+                        asChild
+                        size="lg"
+                        variant={action.variant}
+                        className={action.className}
+                      >
+                        <Link href={action.href} target="_blank" rel="noreferrer">
+                          {action.label}
                         </Link>
                       </Button>
-                    )}
-                    <div className="flex flex-wrap gap-3">
-                      {course.applyUrl && (
-                        <Button asChild size="lg" className="h-12 px-8 shadow-lg shadow-primary/20">
-                          <Link href={course.applyUrl} target="_blank" rel="noreferrer">
-                            Apply Now
-                          </Link>
-                        </Button>
-                      )}
-                      {course.courseUrl && (
-                        <Button asChild size="lg" variant="outline" className="h-12 px-8">
-                          <Link href={course.courseUrl} target="_blank" rel="noreferrer">
-                            Course Site
-                          </Link>
-                        </Button>
-                      )}
-                    </div>
+                    ))}
                   </div>
                 </div>
 
