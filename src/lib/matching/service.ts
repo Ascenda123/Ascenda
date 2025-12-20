@@ -14,6 +14,7 @@ type StudentSubjectRow = Database['public']['Tables']['student_subjects']['Row']
 type StudentAdmissionsTestRow = Database['public']['Tables']['student_admissions_tests']['Row'];
 type ProgramRow = Database['public']['Tables']['programs']['Row'];
 type UniversityRow = Database['public']['Tables']['universities']['Row'];
+type ProgramRequirementRow = Database['public']['Tables']['program_requirements']['Row'];
 
 type Client = SupabaseClient<Database>;
 
@@ -66,6 +67,44 @@ const extractAdmissionTests = (value: string | null): string | null => {
   const upper = value.toUpperCase();
   const tests = ['LNAT', 'UCAT', 'TMUA', 'MAT', 'STEP', 'ESAT', 'TSA'].filter((test) => upper.includes(test));
   return tests.length ? tests.join(', ') : null;
+};
+
+const gradeValueMap: Record<string, number> = {
+  'A*': 7,
+  A: 6,
+  B: 5,
+  C: 4,
+  D: 3,
+  E: 2,
+  U: 1
+};
+
+const extractALevelProfiles = (value: string | null): string[] => {
+  if (!value) return [];
+  const matches = value.toUpperCase().match(/A\*AA|AAA|AAB|ABB|BBB|BBC|BCC|CCC|CCD|DDD|EEE/g);
+  return matches ?? [];
+};
+
+const profileToScore = (profile: string) =>
+  (profile.match(/A\*|A|B|C|D|E|U/g) ?? [])
+    .slice(0, 3)
+    .reduce((sum, grade) => sum + (gradeValueMap[grade] ?? 0), 0);
+
+const selectLenientALevel = (value: string | null): string | null => {
+  const profiles = extractALevelProfiles(value);
+  if (!profiles.length) return null;
+  return profiles.reduce((lowest, current) => (profileToScore(current) < profileToScore(lowest) ? current : lowest));
+};
+
+const extractIbTotal = (value: string | null): number | null => {
+  if (!value) return null;
+  const match = value.match(/(\d{2})/);
+  if (!match) return null;
+  const parsed = Number(match[1]);
+  if (!Number.isFinite(parsed)) return null;
+  if (/higher level|hl/i.test(value) && parsed <= 21) return null;
+  if (parsed < 24 || parsed > 45) return null;
+  return parsed;
 };
 
 type CourseSource = CourseRecord & {
@@ -159,10 +198,13 @@ const buildStudentPayload = (params: {
 const buildCourseRecords = (params: {
   programs: ProgramRow[];
   universities: UniversityRow[];
+  requirements: ProgramRequirementRow[];
 }): CourseSource[] => {
   const universityMap = new Map(params.universities.map((uni) => [uni.id, uni]));
+  const requirementMap = new Map(params.requirements.map((req) => [req.program_id, req]));
   return params.programs.map((program) => {
     const university = universityMap.get(program.university_id);
+    const requirement = requirementMap.get(program.id);
     const universityMetadata = (university?.metadata ?? null) as Record<string, unknown> | null;
     const programMetadata = (program.metadata ?? null) as Record<string, unknown> | null;
     const qsRank = asNumber(universityMetadata?.qs_uk_rank ?? universityMetadata?.qs_rank ?? universityMetadata?.qs);
@@ -174,8 +216,9 @@ const buildCourseRecords = (params: {
     const internationalRatio = asNumber(programMetadata?.international_students_ratio_pct);
     const costOfLife = asCostOfLife(universityMetadata?.cost_of_life ?? programMetadata?.cost_of_life);
 
-    const minIbScore = asNumber(program.min_ib);
-    const minALevelScore = asString(program.min_alevel);
+    const minIbScore =
+      asNumber(requirement?.min_ib_total) ?? extractIbTotal(asString(program.min_ib));
+    const minALevelScore = selectLenientALevel(asString(program.min_alevel));
 
     const admissionTest = extractAdmissionTests(program.additional_entry_requirements ?? program.entry_requirements_overview ?? null);
 
@@ -340,23 +383,30 @@ export const loadMatchesForProfile = async (
   }
 
   const universityIds = filteredPrograms.map((program) => program.university_id);
+  const programIds = filteredPrograms.map((program) => program.id);
 
-  const { data: universitiesData, error: universitiesError } = await (universityIds.length
-    ? supabase
-      .from('universities')
-      .select('id,name,country,region,rank_overall,rank_source,acceptance_rate,requires_test,metadata,city')
-      .in('id', universityIds)
-    : Promise.resolve({ data: [] as UniversityRow[], error: null }));
+  const [{ data: universitiesData, error: universitiesError }, { data: requirementsData, error: requirementsError }] =
+    await Promise.all([
+      universityIds.length
+        ? supabase
+          .from('universities')
+          .select('id,name,country,region,rank_overall,rank_source,acceptance_rate,requires_test,metadata,city')
+          .in('id', universityIds)
+        : Promise.resolve({ data: [] as UniversityRow[], error: null }),
+      programIds.length
+        ? supabase.from('program_requirements').select('program_id,min_ib_total').in('program_id', programIds)
+        : Promise.resolve({ data: [] as ProgramRequirementRow[], error: null })
+    ]);
 
-  if (universitiesError) {
-    console.error('Failed to load catalog data', { universitiesError });
+  if (universitiesError || requirementsError) {
+    console.error('Failed to load catalog data', { universitiesError, requirementsError });
     return {
       matches: [],
       catalogSize: { programs: filteredPrograms.length, universities: 0 },
       missingSections,
       error: {
-        stage: 'universities',
-        message: 'Failed to load universities'
+        stage: universitiesError ? 'universities' : 'requirements',
+        message: universitiesError ? 'Failed to load universities' : 'Failed to load program requirements'
       }
     };
   }
@@ -371,7 +421,8 @@ export const loadMatchesForProfile = async (
 
   const courseRecords = buildCourseRecords({
     programs: filteredPrograms,
-    universities: universitiesData ?? []
+    universities: universitiesData ?? [],
+    requirements: (requirementsData ?? []) as ProgramRequirementRow[]
   });
   const enrichedCourses = enrichCourseRecords(courseRecords).map((course, index) => ({
     ...courseRecords[index],
