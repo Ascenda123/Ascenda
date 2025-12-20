@@ -462,46 +462,122 @@ export type Database = {
         }
         Relationships: []
       }
-      student_academics: {
+      student_academic_input: {
         Row: {
-          act: number | null
-          curriculum: string | null
-          gpa: number | null
-          ib_total: number | null
-          ielts: number | null
+          a_level_predicted_grades: Json | null
+          career_aspiration: string | null
+          desired_start_date: string | null
+          ee_subject: string | null
+          ee_summary: string | null
+          ee_title: string | null
+          english_required: boolean | null
+          english_score_overall: number | null
+          english_status: Database["public"]["Enums"]["english_status"] | null
+          english_test_type:
+            | Database["public"]["Enums"]["english_test_type"]
+            | null
+          graduation_year: number | null
+          ib_core_points: number | null
+          ib_ee_grade: Database["public"]["Enums"]["ib_grade"] | null
+          ib_math_pathway: Database["public"]["Enums"]["ib_math_pathway"] | null
+          ib_tok_grade: Database["public"]["Enums"]["ib_grade"] | null
+          ib_total_points: number | null
+          intended_clusters:
+            | Database["public"]["Enums"]["intended_cluster"][]
+            | null
+          language_of_instruction:
+            | Database["public"]["Enums"]["language_of_instruction"]
+            | null
           profile_id: string
-          sat: number | null
-          subject_grades: Json | null
-          toefl: number | null
+          programme_type: Database["public"]["Enums"]["programme_type"] | null
+          school_city: string | null
+          school_country: string | null
+          school_name: string | null
+          school_type: Database["public"]["Enums"]["school_type"] | null
+          secondary_clusters:
+            | Database["public"]["Enums"]["intended_cluster"][]
+            | null
           updated_at: string
         }
         Insert: {
-          act?: number | null
-          curriculum?: string | null
-          gpa?: number | null
-          ib_total?: number | null
-          ielts?: number | null
+          a_level_predicted_grades?: Json | null
+          career_aspiration?: string | null
+          desired_start_date?: string | null
+          ee_subject?: string | null
+          ee_summary?: string | null
+          ee_title?: string | null
+          english_required?: boolean | null
+          english_score_overall?: number | null
+          english_status?: Database["public"]["Enums"]["english_status"] | null
+          english_test_type?:
+            | Database["public"]["Enums"]["english_test_type"]
+            | null
+          graduation_year?: number | null
+          ib_core_points?: number | null
+          ib_ee_grade?: Database["public"]["Enums"]["ib_grade"] | null
+          ib_math_pathway?:
+            | Database["public"]["Enums"]["ib_math_pathway"]
+            | null
+          ib_tok_grade?: Database["public"]["Enums"]["ib_grade"] | null
+          ib_total_points?: number | null
+          intended_clusters?:
+            | Database["public"]["Enums"]["intended_cluster"][]
+            | null
+          language_of_instruction?:
+            | Database["public"]["Enums"]["language_of_instruction"]
+            | null
           profile_id: string
-          sat?: number | null
-          subject_grades?: Json | null
-          toefl?: number | null
+          programme_type?: Database["public"]["Enums"]["programme_type"] | null
+          school_city?: string | null
+          school_country?: string | null
+          school_name?: string | null
+          school_type?: Database["public"]["Enums"]["school_type"] | null
+          secondary_clusters?:
+            | Database["public"]["Enums"]["intended_cluster"][]
+            | null
           updated_at?: string
         }
         Update: {
-          act?: number | null
-          curriculum?: string | null
-          gpa?: number | null
-          ib_total?: number | null
-          ielts?: number | null
+          a_level_predicted_grades?: Json | null
+          career_aspiration?: string | null
+          desired_start_date?: string | null
+          ee_subject?: string | null
+          ee_summary?: string | null
+          ee_title?: string | null
+          english_required?: boolean | null
+          english_score_overall?: number | null
+          english_status?: Database["public"]["Enums"]["english_status"] | null
+          english_test_type?:
+            | Database["public"]["Enums"]["english_test_type"]
+            | null
+          graduation_year?: number | null
+          ib_core_points?: number | null
+          ib_ee_grade?: Database["public"]["Enums"]["ib_grade"] | null
+          ib_math_pathway?:
+            | Database["public"]["Enums"]["ib_math_pathway"]
+            | null
+          ib_tok_grade?: Database["public"]["Enums"]["ib_grade"] | null
+          ib_total_points?: number | null
+          intended_clusters?:
+            | Database["public"]["Enums"]["intended_cluster"][]
+            | null
+          language_of_instruction?:
+            | Database["public"]["Enums"]["language_of_instruction"]
+            | null
           profile_id?: string
-          sat?: number | null
-          subject_grades?: Json | null
-          toefl?: number | null
+          programme_type?: Database["public"]["Enums"]["programme_type"] | null
+          school_city?: string | null
+          school_country?: string | null
+          school_name?: string | null
+          school_type?: Database["public"]["Enums"]["school_type"] | null
+          secondary_clusters?:
+            | Database["public"]["Enums"]["intended_cluster"][]
+            | null
           updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "student_academics_profile_id_fkey"
+            foreignKeyName: "student_academic_input_profile_id_fkey"
             columns: ["profile_id"]
             isOneToOne: true
             referencedRelation: "profiles"
@@ -509,31 +585,87 @@ export type Database = {
           },
         ]
       }
-      student_aspirations: {
+      student_admissions_tests: {
         Row: {
-          job_titles: string[] | null
-          notes: string | null
+          created_at: string
+          id: string
+          percentile: number | null
           profile_id: string
-          target_fields: string[] | null
+          score_numeric: number | null
+          status: Database["public"]["Enums"]["admissions_status"] | null
+          test_type: Database["public"]["Enums"]["admissions_test_type"] | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          percentile?: number | null
+          profile_id: string
+          score_numeric?: number | null
+          status?: Database["public"]["Enums"]["admissions_status"] | null
+          test_type?: Database["public"]["Enums"]["admissions_test_type"] | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          percentile?: number | null
+          profile_id?: string
+          score_numeric?: number | null
+          status?: Database["public"]["Enums"]["admissions_status"] | null
+          test_type?: Database["public"]["Enums"]["admissions_test_type"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_admissions_tests_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_lifestyle_preference: {
+        Row: {
+          campus_size:
+            | Database["public"]["Enums"]["campus_size_preference"]
+            | null
+          desired_location_type:
+            | Database["public"]["Enums"]["location_type"]
+            | null
+          extracurricular_interests: string[] | null
+          other_extracurriculars: string | null
+          profile_id: string
+          teaching_style: Database["public"]["Enums"]["teaching_style"] | null
           updated_at: string
         }
         Insert: {
-          job_titles?: string[] | null
-          notes?: string | null
+          campus_size?:
+            | Database["public"]["Enums"]["campus_size_preference"]
+            | null
+          desired_location_type?:
+            | Database["public"]["Enums"]["location_type"]
+            | null
+          extracurricular_interests?: string[] | null
+          other_extracurriculars?: string | null
           profile_id: string
-          target_fields?: string[] | null
+          teaching_style?: Database["public"]["Enums"]["teaching_style"] | null
           updated_at?: string
         }
         Update: {
-          job_titles?: string[] | null
-          notes?: string | null
+          campus_size?:
+            | Database["public"]["Enums"]["campus_size_preference"]
+            | null
+          desired_location_type?:
+            | Database["public"]["Enums"]["location_type"]
+            | null
+          extracurricular_interests?: string[] | null
+          other_extracurriculars?: string | null
           profile_id?: string
-          target_fields?: string[] | null
+          teaching_style?: Database["public"]["Enums"]["teaching_style"] | null
           updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "student_aspirations_profile_id_fkey"
+            foreignKeyName: "student_lifestyle_preference_profile_id_fkey"
             columns: ["profile_id"]
             isOneToOne: true
             referencedRelation: "profiles"
@@ -583,57 +715,127 @@ export type Database = {
           },
         ]
       }
-      student_preferences: {
+      student_personal_information: {
         Row: {
-          aid_needed: boolean | null
-          budget_max: number | null
-          budget_min: number | null
-          campus_type: Database["public"]["Enums"]["campus_type"] | null
-          constraints: Json | null
-          countries: string[] | null
-          delivery: Database["public"]["Enums"]["delivery_type"] | null
-          languages: string[] | null
+          age: number | null
+          current_location_city: string | null
+          email: string | null
+          first_name: string | null
+          gender: Database["public"]["Enums"]["gender_type"] | null
+          last_name: string | null
+          nationality: string | null
+          phone: string | null
           profile_id: string
-          program_levels: string[] | null
-          setting: Database["public"]["Enums"]["setting_type"] | null
-          size: Database["public"]["Enums"]["size_type"] | null
+          resident_country: string | null
+          time_zone: string | null
           updated_at: string
         }
         Insert: {
-          aid_needed?: boolean | null
-          budget_max?: number | null
-          budget_min?: number | null
-          campus_type?: Database["public"]["Enums"]["campus_type"] | null
-          constraints?: Json | null
-          countries?: string[] | null
-          delivery?: Database["public"]["Enums"]["delivery_type"] | null
-          languages?: string[] | null
+          age?: number | null
+          current_location_city?: string | null
+          email?: string | null
+          first_name?: string | null
+          gender?: Database["public"]["Enums"]["gender_type"] | null
+          last_name?: string | null
+          nationality?: string | null
+          phone?: string | null
           profile_id: string
-          program_levels?: string[] | null
-          setting?: Database["public"]["Enums"]["setting_type"] | null
-          size?: Database["public"]["Enums"]["size_type"] | null
+          resident_country?: string | null
+          time_zone?: string | null
           updated_at?: string
         }
         Update: {
-          aid_needed?: boolean | null
-          budget_max?: number | null
-          budget_min?: number | null
-          campus_type?: Database["public"]["Enums"]["campus_type"] | null
-          constraints?: Json | null
-          countries?: string[] | null
-          delivery?: Database["public"]["Enums"]["delivery_type"] | null
-          languages?: string[] | null
+          age?: number | null
+          current_location_city?: string | null
+          email?: string | null
+          first_name?: string | null
+          gender?: Database["public"]["Enums"]["gender_type"] | null
+          last_name?: string | null
+          nationality?: string | null
+          phone?: string | null
           profile_id?: string
-          program_levels?: string[] | null
-          setting?: Database["public"]["Enums"]["setting_type"] | null
-          size?: Database["public"]["Enums"]["size_type"] | null
+          resident_country?: string | null
+          time_zone?: string | null
           updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "student_preferences_profile_id_fkey"
+            foreignKeyName: "student_personal_information_profile_id_fkey"
             columns: ["profile_id"]
             isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_scores: {
+        Row: {
+          breakdown: Json | null
+          eligibility_flags: string[] | null
+          profile_id: string
+          readiness_flags: string[] | null
+          student_band: string | null
+          total_score: number | null
+          updated_at: string
+        }
+        Insert: {
+          breakdown?: Json | null
+          eligibility_flags?: string[] | null
+          profile_id: string
+          readiness_flags?: string[] | null
+          student_band?: string | null
+          total_score?: number | null
+          updated_at?: string
+        }
+        Update: {
+          breakdown?: Json | null
+          eligibility_flags?: string[] | null
+          profile_id?: string
+          readiness_flags?: string[] | null
+          student_band?: string | null
+          total_score?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_scores_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_subjects: {
+        Row: {
+          created_at: string
+          grade_value: string | null
+          id: string
+          level: Database["public"]["Enums"]["subject_level"] | null
+          profile_id: string
+          subject_name: string | null
+        }
+        Insert: {
+          created_at?: string
+          grade_value?: string | null
+          id?: string
+          level?: Database["public"]["Enums"]["subject_level"] | null
+          profile_id: string
+          subject_name?: string | null
+        }
+        Update: {
+          created_at?: string
+          grade_value?: string | null
+          id?: string
+          level?: Database["public"]["Enums"]["subject_level"] | null
+          profile_id?: string
+          subject_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_subjects_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -699,8 +901,20 @@ export type Database = {
     }
     Functions: {
       auth_role: { Args: never; Returns: string }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
     }
     Enums: {
+      admissions_status: "taken" | "booked" | "missing"
+      admissions_test_type:
+        | "LNAT"
+        | "UCAT"
+        | "TMUA"
+        | "MAT"
+        | "STEP"
+        | "ESAT"
+        | "TSA"
+        | "NONE"
       application_status:
         | "planning"
         | "in_progress"
@@ -714,12 +928,51 @@ export type Database = {
         | "visa"
         | "finance"
         | "portal"
+      campus_size_preference: "small" | "medium" | "large" | "no_preference"
       campus_type: "urban" | "suburban" | "rural" | "online"
       checklist_status: "todo" | "doing" | "done"
       delivery_type: "in_person" | "online" | "hybrid"
+      english_status:
+        | "met"
+        | "exceeds"
+        | "exceptional"
+        | "booked"
+        | "missing"
+        | "failed"
+      english_test_type: "IELTS" | "TOEFL" | "DUOLINGO" | "WAIVER" | "NONE"
+      gender_type: "female" | "male" | "non_binary" | "prefer_not_to_say"
+      ib_grade: "A" | "B" | "C" | "D" | "E"
+      ib_math_pathway: "AA_HL" | "AA_SL" | "AI_HL" | "AI_SL"
+      intended_cluster:
+        | "computer_science"
+        | "maths"
+        | "engineering"
+        | "life_sciences_biochem"
+        | "medicine_dentistry"
+        | "economics_quant"
+        | "business_non_quant"
+        | "law"
+        | "humanities"
+        | "creative"
+      language_of_instruction: "english" | "bilingual" | "non_english"
+      location_type:
+        | "london"
+        | "major_city"
+        | "smaller_city"
+        | "suburban"
+        | "no_preference"
+      programme_type: "IB" | "A_LEVEL"
+      school_type:
+        | "international_school"
+        | "local_private"
+        | "state_public"
+        | "boarding"
+        | "other"
       setting_type: "public" | "private" | "international" | "other"
       size_type: "small" | "medium" | "large" | "mega"
       source_health: "ok" | "stale" | "error"
+      subject_level: "HL" | "SL" | "A_LEVEL"
+      teaching_style: "academic" | "practical" | "mixed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1352,6 +1605,17 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      admissions_status: ["taken", "booked", "missing"],
+      admissions_test_type: [
+        "LNAT",
+        "UCAT",
+        "TMUA",
+        "MAT",
+        "STEP",
+        "ESAT",
+        "TSA",
+        "NONE",
+      ],
       application_status: [
         "planning",
         "in_progress",
@@ -1367,12 +1631,55 @@ export const Constants = {
         "finance",
         "portal",
       ],
+      campus_size_preference: ["small", "medium", "large", "no_preference"],
       campus_type: ["urban", "suburban", "rural", "online"],
       checklist_status: ["todo", "doing", "done"],
       delivery_type: ["in_person", "online", "hybrid"],
+      english_status: [
+        "met",
+        "exceeds",
+        "exceptional",
+        "booked",
+        "missing",
+        "failed",
+      ],
+      english_test_type: ["IELTS", "TOEFL", "DUOLINGO", "WAIVER", "NONE"],
+      gender_type: ["female", "male", "non_binary", "prefer_not_to_say"],
+      ib_grade: ["A", "B", "C", "D", "E"],
+      ib_math_pathway: ["AA_HL", "AA_SL", "AI_HL", "AI_SL"],
+      intended_cluster: [
+        "computer_science",
+        "maths",
+        "engineering",
+        "life_sciences_biochem",
+        "medicine_dentistry",
+        "economics_quant",
+        "business_non_quant",
+        "law",
+        "humanities",
+        "creative",
+      ],
+      language_of_instruction: ["english", "bilingual", "non_english"],
+      location_type: [
+        "london",
+        "major_city",
+        "smaller_city",
+        "suburban",
+        "no_preference",
+      ],
+      programme_type: ["IB", "A_LEVEL"],
+      school_type: [
+        "international_school",
+        "local_private",
+        "state_public",
+        "boarding",
+        "other",
+      ],
       setting_type: ["public", "private", "international", "other"],
       size_type: ["small", "medium", "large", "mega"],
       source_health: ["ok", "stale", "error"],
+      subject_level: ["HL", "SL", "A_LEVEL"],
+      teaching_style: ["academic", "practical", "mixed"],
     },
   },
   storage: {

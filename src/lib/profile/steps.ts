@@ -1,23 +1,23 @@
 export const PROFILE_STEPS = [
   {
-    key: 'personal',
-    title: 'Personal details',
-    description: 'Tell us about yourself so we can personalize guidance.'
+    key: 'personal_information',
+    title: 'Personal information',
+    description: 'Share contact details so we can personalise guidance.'
   },
   {
-    key: 'academics',
-    title: 'Academic profile',
-    description: 'Share grades and test scores to assess eligibility.'
+    key: 'academic_input',
+    title: 'Academic input',
+    description: 'Outline your school details and intended subject areas.'
   },
   {
-    key: 'preferences',
-    title: 'Preferences',
-    description: 'Where do you want to study and under what conditions?'
+    key: 'academic_details',
+    title: 'Academic details',
+    description: 'Add subjects, grades, and test information.'
   },
   {
-    key: 'aspirations',
-    title: 'Aspirations',
-    description: 'Help us understand your goals and target outcomes.'
+    key: 'lifestyle_preferences',
+    title: 'Lifestyle preferences',
+    description: 'Tell us how you want to study and live.'
   }
 ] as const;
 

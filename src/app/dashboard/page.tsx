@@ -55,10 +55,10 @@ export default async function DashboardPage() {
     checklistResponse,
     deadlinesResponse,
     matchResult,
-    profileResponse,
-    academicsResponse,
-    preferencesResponse,
-    aspirationsResponse
+    personalResponse,
+    academicResponse,
+    lifestyleResponse,
+    subjectsResponse
   ] = await Promise.all([
     applicationIds.length
       ? supabase.from('application_checklist').select('*').in('application_id', applicationIds).order('due_date', { ascending: true }).limit(5)
@@ -67,10 +67,18 @@ export default async function DashboardPage() {
       ? supabase.from('deadlines').select('*').in('program_id', applicationProgramIds).gte('deadline_date', today).order('deadline_date', { ascending: true }).limit(5)
       : Promise.resolve({ data: [] }),
     loadMatchesForProfile(supabase, user.id, { programLimit: 10, resultLimit: 3 }),
-    supabase.from('profiles').select('full_name,country,time_zone').eq('id', user.id).single(),
-    supabase.from('student_academics').select('*').eq('profile_id', user.id).single(),
-    supabase.from('student_preferences').select('*').eq('profile_id', user.id).single(),
-    supabase.from('student_aspirations').select('*').eq('profile_id', user.id).single()
+    supabase
+      .from('student_personal_information')
+      .select('first_name,last_name,email,nationality,resident_country')
+      .eq('profile_id', user.id)
+      .single(),
+    supabase
+      .from('student_academic_input')
+      .select('programme_type,school_name,school_country,graduation_year,intended_clusters,english_required')
+      .eq('profile_id', user.id)
+      .single(),
+    supabase.from('student_lifestyle_preference').select('extracurricular_interests').eq('profile_id', user.id).single(),
+    supabase.from('student_subjects').select('id').eq('profile_id', user.id)
   ]);
 
   const checklist = (checklistResponse.data ?? []) as ChecklistRow[];
@@ -79,16 +87,15 @@ export default async function DashboardPage() {
   const matches: EnrichedMatch[] = matchError ? [] : matchResult.matches;
 
   // Profile Completion Logic
-  const profileRecord = profileResponse.data;
-  const academics = academicsResponse.data;
-  const preferences = preferencesResponse.data;
-  const aspirations = aspirationsResponse.data;
+  const personal = personalResponse.data;
+  const academicInput = academicResponse.data;
+  const lifestyle = lifestyleResponse.data;
 
   const records: ProfileRecordGroup = {
-    profile: profileRecord,
-    academics: academics,
-    preferences: preferences,
-    aspirations: aspirations
+    personal: personal ?? null,
+    academicInput: academicInput ?? null,
+    subjectCount: subjectsResponse.data?.length ?? 0,
+    lifestyle: lifestyle ?? null
   };
 
   const stepCompletion = buildStepCompletion(records);

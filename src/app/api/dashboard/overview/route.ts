@@ -19,10 +19,7 @@ import { filterVisiblePrograms, getFlaggedProgramIds } from '@/lib/catalog/visib
 type ApplicationRow = Database['public']['Tables']['applications']['Row'];
 type ChecklistRow = Database['public']['Tables']['application_checklist']['Row'];
 type DeadlineRow = Database['public']['Tables']['deadlines']['Row'];
-type AcademicsRow = Database['public']['Tables']['student_academics']['Row'];
-type PreferencesRow = Database['public']['Tables']['student_preferences']['Row'];
-type AspirationsRow = Database['public']['Tables']['student_aspirations']['Row'];
-type ProfileRow = Database['public']['Tables']['profiles']['Row'];
+type SubjectRow = Database['public']['Tables']['student_subjects']['Row'];
 type ProgramRow = Database['public']['Tables']['programs']['Row'];
 type UniversityRow = Database['public']['Tables']['universities']['Row'];
 type ProgramRequirementRow = Database['public']['Tables']['program_requirements']['Row'];
@@ -70,10 +67,10 @@ export async function GET() {
   const [
     checklistResponse,
     deadlinesResponse,
-    academicsResponse,
-    preferencesResponse,
-    aspirationsResponse,
-    profileResponse,
+    personalResponse,
+    academicResponse,
+    lifestyleResponse,
+    subjectsResponse,
     programsResponse
   ] = await Promise.all([
     applicationIds.length
@@ -88,10 +85,10 @@ export async function GET() {
         .order('deadline_date', { ascending: true })
         .limit(5)
       : Promise.resolve({ data: [] as DeadlineRow[] }),
-    supabase.from('student_academics').select('*').eq('profile_id', user.id).maybeSingle(),
-    supabase.from('student_preferences').select('*').eq('profile_id', user.id).maybeSingle(),
-    supabase.from('student_aspirations').select('*').eq('profile_id', user.id).maybeSingle(),
-    supabase.from('profiles').select('full_name,country,time_zone').eq('id', user.id).maybeSingle(),
+    supabase.from('student_personal_information').select('*').eq('profile_id', user.id).maybeSingle(),
+    supabase.from('student_academic_input').select('*').eq('profile_id', user.id).maybeSingle(),
+    supabase.from('student_lifestyle_preference').select('*').eq('profile_id', user.id).maybeSingle(),
+    supabase.from('student_subjects').select('*').eq('profile_id', user.id),
     applicationProgramIds.length
       ? applyProgramVisibilityFilters(supabase.from('programs').select('*').in('id', applicationProgramIds)).limit(25)
       : applyProgramVisibilityFilters(supabase.from('programs').select('*')).limit(25)
@@ -100,10 +97,10 @@ export async function GET() {
   const queryErrors = [
     checklistResponse.error,
     deadlinesResponse.error,
-    academicsResponse.error,
-    preferencesResponse.error,
-    aspirationsResponse.error,
-    profileResponse.error,
+    personalResponse.error,
+    academicResponse.error,
+    lifestyleResponse.error,
+    subjectsResponse.error,
     programsResponse.error
   ].filter(Boolean);
 
@@ -113,10 +110,10 @@ export async function GET() {
 
   const checklist = (checklistResponse.data ?? []) as ChecklistRow[];
   const deadlines = (deadlinesResponse.data ?? []) as DeadlineRow[];
-  const academics = academicsResponse.data ?? null;
-  const preferences = preferencesResponse.data ?? null;
-  const aspirations = aspirationsResponse.data ?? null;
-  const profileRecord = (profileResponse.data ?? null) as ProfileRow | null;
+  const personal = personalResponse.data ?? null;
+  const academicInput = academicResponse.data ?? null;
+  const lifestyle = lifestyleResponse.data ?? null;
+  const subjects = (subjectsResponse.data ?? []) as SubjectRow[];
   const programs = (programsResponse.data ?? []) as ProgramRow[];
   if (programs.length === 0 && applicationProgramIds.length === 0) {
     // Fallback to a small curated sample to avoid empty dashboard while keeping payload tiny.
@@ -168,10 +165,10 @@ export async function GET() {
   let matchResults = [] as Awaited<ReturnType<typeof rankMatches>>;
   let mappedPrograms = new Map<string, ReturnType<typeof mapProgramRow>>();
   let mappedUniversities = new Map<string, ReturnType<typeof mapUniversityRow>>();
-  if (academics && preferences && aspirations && visiblePrograms.length > 0 && universities.length > 0) {
-    const mappedAcademics = mapAcademicsRow(academics);
-    const mappedPreferences = mapPreferencesRow(preferences);
-    const mappedAspirations = mapAspirationsRow(aspirations);
+  if (academicInput && visiblePrograms.length > 0 && universities.length > 0) {
+    const mappedAcademics = mapAcademicsRow(academicInput, subjects);
+    const mappedPreferences = mapPreferencesRow(lifestyle);
+    const mappedAspirations = mapAspirationsRow(academicInput);
     const requirementMap = new Map<string, ReturnType<typeof mapRequirementRow>>(
       requirements.map((item) => [item.program_id, mapRequirementRow(item)])
     );
@@ -234,10 +231,10 @@ export async function GET() {
     : null;
 
   const stepCompletion = buildStepCompletion({
-    profile: profileRecord,
-    academics,
-    preferences,
-    aspirations
+    personal,
+    academicInput,
+    subjectCount: subjects.length,
+    lifestyle
   });
   const completedSteps = PROFILE_STEPS.filter((step) => stepCompletion[step.key]).length;
   const completionPercent = Math.round((completedSteps / PROFILE_STEPS.length) * 100);

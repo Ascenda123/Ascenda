@@ -10,6 +10,32 @@ create type application_task_category as enum ('test', 'essay', 'reference', 'vi
 create type application_status as enum ('planning', 'in_progress', 'submitted', 'decision', 'enrolled');
 create type checklist_status as enum ('todo', 'doing', 'done');
 create type source_health as enum ('ok', 'stale', 'error');
+create type programme_type as enum ('IB', 'A_LEVEL');
+create type intended_cluster as enum (
+  'computer_science',
+  'maths',
+  'engineering',
+  'life_sciences_biochem',
+  'medicine_dentistry',
+  'economics_quant',
+  'business_non_quant',
+  'law',
+  'humanities',
+  'creative'
+);
+create type english_test_type as enum ('IELTS', 'TOEFL', 'DUOLINGO', 'WAIVER', 'NONE');
+create type english_status as enum ('met', 'exceeds', 'exceptional', 'booked', 'missing', 'failed');
+create type admissions_test_type as enum ('LNAT', 'UCAT', 'TMUA', 'MAT', 'STEP', 'ESAT', 'TSA', 'NONE');
+create type admissions_status as enum ('taken', 'booked', 'missing');
+create type gender_type as enum ('female', 'male', 'non_binary', 'prefer_not_to_say');
+create type school_type as enum ('international_school', 'local_private', 'state_public', 'boarding', 'other');
+create type language_of_instruction as enum ('english', 'bilingual', 'non_english');
+create type ib_grade as enum ('A', 'B', 'C', 'D', 'E');
+create type ib_math_pathway as enum ('AA_HL', 'AA_SL', 'AI_HL', 'AI_SL');
+create type subject_level as enum ('HL', 'SL', 'A_LEVEL');
+create type teaching_style as enum ('academic', 'practical', 'mixed');
+create type location_type as enum ('london', 'major_city', 'smaller_city', 'suburban', 'no_preference');
+create type campus_size_preference as enum ('small', 'medium', 'large', 'no_preference');
 
 -- Profiles
 create table if not exists profiles (
@@ -22,43 +48,92 @@ create table if not exists profiles (
   created_at timestamptz not null default timezone('utc', now())
 );
 
--- Academics
-create table if not exists student_academics (
+-- Personal information
+create table if not exists student_personal_information (
   profile_id uuid primary key references profiles(id) on delete cascade,
-  curriculum text,
-  gpa numeric,
-  ib_total int,
-  sat int,
-  act int,
-  toefl int,
-  ielts numeric,
-  subject_grades jsonb,
+  first_name text,
+  last_name text,
+  email text,
+  phone text,
+  nationality text,
+  age int,
+  gender gender_type,
+  resident_country text,
+  current_location_city text,
+  time_zone text,
   updated_at timestamptz not null default timezone('utc', now())
 );
 
--- Preferences
-create table if not exists student_preferences (
+-- Academic input
+create table if not exists student_academic_input (
   profile_id uuid primary key references profiles(id) on delete cascade,
-  budget_min numeric,
-  budget_max numeric,
-  aid_needed boolean default false,
-  countries text[],
-  languages text[],
-  campus_type campus_type,
-  setting setting_type,
-  size size_type,
-  program_levels text[],
-  delivery delivery_type,
-  constraints jsonb,
+  programme_type programme_type,
+  school_name text,
+  school_country text,
+  school_city text,
+  school_type school_type,
+  language_of_instruction language_of_instruction,
+  graduation_year int,
+  desired_start_date date,
+  intended_clusters intended_cluster[],
+  secondary_clusters intended_cluster[],
+  career_aspiration text,
+  ib_total_points int,
+  ib_core_points int,
+  ib_tok_grade ib_grade,
+  ib_ee_grade ib_grade,
+  ib_math_pathway ib_math_pathway,
+  ee_subject text,
+  ee_title text,
+  ee_summary text,
+  a_level_predicted_grades jsonb,
+  english_required boolean,
+  english_test_type english_test_type,
+  english_status english_status,
+  english_score_overall numeric,
   updated_at timestamptz not null default timezone('utc', now())
 );
 
--- Aspirations
-create table if not exists student_aspirations (
+-- Subjects
+create table if not exists student_subjects (
+  id uuid primary key default gen_random_uuid(),
+  profile_id uuid not null references profiles(id) on delete cascade,
+  subject_name text,
+  level subject_level,
+  grade_value text,
+  created_at timestamptz not null default timezone('utc', now())
+);
+
+-- Admissions tests
+create table if not exists student_admissions_tests (
+  id uuid primary key default gen_random_uuid(),
+  profile_id uuid not null references profiles(id) on delete cascade,
+  test_type admissions_test_type,
+  status admissions_status,
+  score_numeric numeric,
+  percentile numeric,
+  created_at timestamptz not null default timezone('utc', now())
+);
+
+-- Lifestyle preferences
+create table if not exists student_lifestyle_preference (
   profile_id uuid primary key references profiles(id) on delete cascade,
-  target_fields text[],
-  job_titles text[],
-  notes text,
+  teaching_style teaching_style,
+  desired_location_type location_type,
+  campus_size campus_size_preference,
+  extracurricular_interests text[],
+  other_extracurriculars text,
+  updated_at timestamptz not null default timezone('utc', now())
+);
+
+-- Student scores
+create table if not exists student_scores (
+  profile_id uuid primary key references profiles(id) on delete cascade,
+  total_score int,
+  student_band text,
+  eligibility_flags text[],
+  readiness_flags text[],
+  breakdown jsonb,
   updated_at timestamptz not null default timezone('utc', now())
 );
 
@@ -242,9 +317,12 @@ create index if not exists idx_shortlisted_profile on shortlisted_programs(profi
 
 -- Row Level Security
 alter table profiles enable row level security;
-alter table student_academics enable row level security;
-alter table student_preferences enable row level security;
-alter table student_aspirations enable row level security;
+alter table student_personal_information enable row level security;
+alter table student_academic_input enable row level security;
+alter table student_subjects enable row level security;
+alter table student_admissions_tests enable row level security;
+alter table student_lifestyle_preference enable row level security;
+alter table student_scores enable row level security;
 alter table universities enable row level security;
 alter table programs enable row level security;
 alter table program_requirements enable row level security;
@@ -273,28 +351,52 @@ create policy profiles_self_access on profiles
 create policy profiles_admin_view on profiles
   for select using (auth_role() = 'admin');
 
--- Academics policies
-drop policy if exists academics_self on student_academics;
-drop policy if exists academics_admin on student_academics;
-create policy academics_self on student_academics
+-- Student personal policies
+drop policy if exists personal_self on student_personal_information;
+drop policy if exists personal_admin on student_personal_information;
+create policy personal_self on student_personal_information
   using (auth.uid() = profile_id) with check (auth.uid() = profile_id);
-create policy academics_admin on student_academics
+create policy personal_admin on student_personal_information
   using (auth_role() = 'admin');
 
--- Preferences policies
-drop policy if exists preferences_self on student_preferences;
-drop policy if exists preferences_admin on student_preferences;
-create policy preferences_self on student_preferences
+-- Student academic input policies
+drop policy if exists academic_input_self on student_academic_input;
+drop policy if exists academic_input_admin on student_academic_input;
+create policy academic_input_self on student_academic_input
   using (auth.uid() = profile_id) with check (auth.uid() = profile_id);
-create policy preferences_admin on student_preferences
+create policy academic_input_admin on student_academic_input
   using (auth_role() = 'admin');
 
--- Aspirations policies
-drop policy if exists aspirations_self on student_aspirations;
-drop policy if exists aspirations_admin on student_aspirations;
-create policy aspirations_self on student_aspirations
+-- Student subjects policies
+drop policy if exists subjects_self on student_subjects;
+drop policy if exists subjects_admin on student_subjects;
+create policy subjects_self on student_subjects
   using (auth.uid() = profile_id) with check (auth.uid() = profile_id);
-create policy aspirations_admin on student_aspirations
+create policy subjects_admin on student_subjects
+  using (auth_role() = 'admin');
+
+-- Admissions tests policies
+drop policy if exists admissions_self on student_admissions_tests;
+drop policy if exists admissions_admin on student_admissions_tests;
+create policy admissions_self on student_admissions_tests
+  using (auth.uid() = profile_id) with check (auth.uid() = profile_id);
+create policy admissions_admin on student_admissions_tests
+  using (auth_role() = 'admin');
+
+-- Lifestyle preferences policies
+drop policy if exists lifestyle_self on student_lifestyle_preference;
+drop policy if exists lifestyle_admin on student_lifestyle_preference;
+create policy lifestyle_self on student_lifestyle_preference
+  using (auth.uid() = profile_id) with check (auth.uid() = profile_id);
+create policy lifestyle_admin on student_lifestyle_preference
+  using (auth_role() = 'admin');
+
+-- Student scores policies
+drop policy if exists scores_self on student_scores;
+drop policy if exists scores_admin on student_scores;
+create policy scores_self on student_scores
+  using (auth.uid() = profile_id) with check (auth.uid() = profile_id);
+create policy scores_admin on student_scores
   using (auth_role() = 'admin');
 
 -- Catalog policies

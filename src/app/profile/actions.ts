@@ -3,16 +3,9 @@
 import { revalidatePath } from 'next/cache';
 import { cookies } from 'next/headers';
 import { createServerActionSupabaseClient } from '@/lib/supabase/server';
-import {
-  profilePersonalSchema,
-  profileAcademicsSchema,
-  profilePreferencesSchema,
-  profileAspirationsSchema,
-  type ProfilePersonalValues,
-  type ProfileAcademicsValues,
-  type ProfilePreferencesValues,
-  type ProfileAspirationsValues
-} from '@/lib/validation/profile';
+import type { StudentProfilePayload } from '@/lib/profile/intake-types';
+import { scoreStudentProfile } from '@/lib/scoring/student_scoring';
+import { buildStudentProfilePayload } from '@/lib/scoring/student_score_loader';
 
 const ensureUser = async () => {
   const supabase = createServerActionSupabaseClient();
@@ -40,94 +33,176 @@ const clearOnboardingCache = () => {
   });
 };
 
-export const savePersonalStep = async (values: ProfilePersonalValues) => {
-  const parsed = profilePersonalSchema.parse(values);
+export const saveStudentIntake = async (payload: StudentProfilePayload) => {
+  try {
+    const { supabase, userId } = await ensureUser();
+    const { personal_information, academic_input, lifestyle_preference } = payload;
+
+    const fullName = [personal_information.first_name, personal_information.last_name].filter(Boolean).join(' ');
+    const { error: profileError } = await supabase.from('profiles').upsert({
+      id: userId,
+      full_name: fullName || null,
+      country: personal_information.resident_country || null,
+      time_zone: personal_information.time_zone || null
+    });
+    if (profileError) {
+      throw new Error(profileError.message);
+    }
+
+    const { error: personalError } = await supabase.from('student_personal_information').upsert({
+      profile_id: userId,
+      first_name: personal_information.first_name,
+      last_name: personal_information.last_name,
+      email: personal_information.email,
+      phone: personal_information.phone,
+      nationality: personal_information.nationality,
+      age: personal_information.age,
+      gender: personal_information.gender,
+      resident_country: personal_information.resident_country,
+      current_location_city: personal_information.current_location_city,
+      time_zone: personal_information.time_zone
+    });
+    if (personalError) {
+      throw new Error(personalError.message);
+    }
+
+    const { error: academicError } = await supabase.from('student_academic_input').upsert({
+      profile_id: userId,
+      programme_type: academic_input.programme_type,
+      school_name: academic_input.school_name,
+      school_country: academic_input.school_country,
+      school_city: academic_input.school_city,
+      school_type: academic_input.school_type,
+      language_of_instruction: academic_input.language_of_instruction,
+      graduation_year: academic_input.graduation_year,
+      desired_start_date: academic_input.desired_start_date,
+      intended_clusters: academic_input.intended_clusters,
+      secondary_clusters: academic_input.secondary_clusters,
+      career_aspiration: academic_input.career_aspiration,
+      ib_total_points: academic_input.ib_total_points,
+      ib_core_points: academic_input.ib_core_points,
+      ib_tok_grade: academic_input.ib_tok_grade,
+      ib_ee_grade: academic_input.ib_ee_grade,
+      ib_math_pathway: academic_input.ib_math_pathway,
+      ee_subject: academic_input.ee_subject,
+      ee_title: academic_input.ee_title,
+      ee_summary: academic_input.ee_summary,
+      a_level_predicted_grades: academic_input.a_level_predicted_grades,
+      english_required: academic_input.english_required,
+      english_test_type: academic_input.english_test_type,
+      english_status: academic_input.english_status,
+      english_score_overall: academic_input.english_score_overall
+    });
+    if (academicError) {
+      throw new Error(academicError.message);
+    }
+
+    const { error: lifestyleError } = await supabase.from('student_lifestyle_preference').upsert({
+      profile_id: userId,
+      teaching_style: lifestyle_preference.teaching_style,
+      desired_location_type: lifestyle_preference.desired_location_type,
+      campus_size: lifestyle_preference.campus_size,
+      extracurricular_interests: lifestyle_preference.extracurricular_interests,
+      other_extracurriculars: lifestyle_preference.other_extracurriculars
+    });
+    if (lifestyleError) {
+      throw new Error(lifestyleError.message);
+    }
+
+    const { error: subjectDeleteError } = await supabase.from('student_subjects').delete().eq('profile_id', userId);
+    if (subjectDeleteError) {
+      throw new Error(subjectDeleteError.message);
+    }
+    if (academic_input.subject_list.length > 0) {
+      const subjectRows = academic_input.subject_list.map((subject) => ({
+        profile_id: userId,
+        subject_name: subject.subject_name,
+        level: subject.level,
+        grade_value: subject.grade_value === null ? null : String(subject.grade_value)
+      }));
+      const { error: subjectInsertError } = await supabase.from('student_subjects').insert(subjectRows);
+      if (subjectInsertError) {
+        throw new Error(subjectInsertError.message);
+      }
+    }
+
+    const { error: testsDeleteError } = await supabase
+      .from('student_admissions_tests')
+      .delete()
+      .eq('profile_id', userId);
+    if (testsDeleteError) {
+      throw new Error(testsDeleteError.message);
+    }
+    if (academic_input.admissions_tests.length > 0) {
+      const testRows = academic_input.admissions_tests.map((test) => ({
+        profile_id: userId,
+        test_type: test.test_type,
+        status: test.status,
+        score_numeric: test.score_numeric,
+        percentile: test.percentile
+      }));
+      const { error: testInsertError } = await supabase.from('student_admissions_tests').insert(testRows);
+      if (testInsertError) {
+        throw new Error(testInsertError.message);
+      }
+    }
+
+    try {
+      const scoring = scoreStudentProfile(payload);
+      const { error: scoreError } = await supabase.from('student_scores').upsert({
+        profile_id: userId,
+        total_score: scoring.total_score,
+        student_band: scoring.student_band,
+        eligibility_flags: scoring.eligibility_flags,
+        readiness_flags: scoring.readiness_flags,
+        breakdown: scoring.breakdown
+      });
+      if (scoreError) {
+        throw new Error(scoreError.message);
+      }
+    } catch (error) {
+      console.error('Score computation failed', error);
+    }
+
+    clearOnboardingCache();
+    revalidatePath('/profile');
+    revalidatePath('/dashboard');
+    return { success: true };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unable to save profile.';
+    console.error('Profile intake save failed', error);
+    return { success: false, message };
+  }
+};
+
+export const recalculateStudentScore = async () => {
   const { supabase, userId } = await ensureUser();
-
-  const { error } = await supabase.from('profiles').upsert({
-    id: userId,
-    full_name: parsed.fullName,
-    country: parsed.country,
-    locale: parsed.locale,
-    time_zone: parsed.timeZone
+  const payload = await buildStudentProfilePayload(supabase, userId);
+  if (!payload) {
+    throw new Error('Profile intake data is incomplete');
+  }
+  const scoring = scoreStudentProfile(payload);
+  const { error } = await supabase.from('student_scores').upsert({
+    profile_id: userId,
+    total_score: scoring.total_score,
+    student_band: scoring.student_band,
+    eligibility_flags: scoring.eligibility_flags,
+    readiness_flags: scoring.readiness_flags,
+    breakdown: scoring.breakdown
   });
-
   if (error) {
     throw new Error(error.message);
   }
-
-  clearOnboardingCache();
   revalidatePath('/profile');
+  revalidatePath('/dashboard');
   return { success: true };
 };
 
-export const saveAcademicsStep = async (values: ProfileAcademicsValues) => {
-  const parsed = profileAcademicsSchema.parse(values);
+export const resubmitStudentProfile = async () => {
   const { supabase, userId } = await ensureUser();
-
-  const { error } = await supabase.from('student_academics').upsert({
-    profile_id: userId,
-    curriculum: parsed.curriculum,
-    gpa: parsed.gpa,
-    ib_total: parsed.ibTotal,
-    sat: parsed.sat,
-    act: parsed.act,
-    toefl: parsed.toefl,
-    ielts: parsed.ielts,
-    subject_grades: parsed.subjectGrades
-  });
-
-  if (error) {
-    throw new Error(error.message);
+  const payload = await buildStudentProfilePayload(supabase, userId);
+  if (!payload) {
+    return { success: false, message: 'Profile intake data is incomplete.' };
   }
-
-  clearOnboardingCache();
-  revalidatePath('/profile');
-  return { success: true };
-};
-
-export const savePreferencesStep = async (values: ProfilePreferencesValues) => {
-  const parsed = profilePreferencesSchema.parse(values);
-  const { supabase, userId } = await ensureUser();
-
-  const { error } = await supabase.from('student_preferences').upsert({
-    profile_id: userId,
-    budget_min: parsed.budgetMin ?? null,
-    budget_max: parsed.budgetMax ?? null,
-    aid_needed: parsed.aidNeeded,
-    countries: parsed.countries,
-    campus_type: parsed.campusType,
-    setting: parsed.setting,
-    size: parsed.size,
-    program_levels: parsed.programLevels,
-    delivery: parsed.delivery
-  });
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  clearOnboardingCache();
-  revalidatePath('/profile');
-  return { success: true };
-};
-
-export const saveAspirationsStep = async (values: ProfileAspirationsValues) => {
-  const parsed = profileAspirationsSchema.parse(values);
-  const { supabase, userId } = await ensureUser();
-
-  const { error } = await supabase.from('student_aspirations').upsert({
-    profile_id: userId,
-    target_fields: parsed.targetFields,
-    job_titles: parsed.jobTitles,
-    notes: parsed.notes
-  });
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  clearOnboardingCache();
-  revalidatePath('/profile');
-  return { success: true };
+  return saveStudentIntake(payload);
 };

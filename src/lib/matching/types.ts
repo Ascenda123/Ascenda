@@ -31,4 +31,4 @@ export interface EnrichedMatch {
   tier: MatchTier;
 }
 
-export type MissingProfileSection = 'academics' | 'preferences' | 'aspirations';
+export type MissingProfileSection = 'academic_input' | 'academic_details' | 'lifestyle_preferences';

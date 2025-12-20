@@ -65,7 +65,7 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
     return `${normalizedBase}/auth/callback?next=${encodeURIComponent(nextPath)}`;
   };
 
-  const onboardingRedirectUrl = buildAuthCallbackUrl('/profile?onboarding=true');
+  const onboardingRedirectUrl = buildAuthCallbackUrl('/profile/wizard');
   const dashboardRedirectUrl = buildAuthCallbackUrl('/dashboard');
 
   const determineRedirectTarget = async (userId?: string | null) => {
@@ -77,19 +77,22 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
       return '/dashboard';
     }
 
-    const [profileResponse, academicsResponse, preferencesResponse, aspirationsResponse] = await Promise.all([
-      supabase.from('profiles').select('full_name,country,time_zone').eq('id', userId).maybeSingle(),
-      supabase.from('student_academics').select('curriculum').eq('profile_id', userId).maybeSingle(),
-      supabase.from('student_preferences').select('countries').eq('profile_id', userId).maybeSingle(),
-      supabase.from('student_aspirations').select('target_fields').eq('profile_id', userId).maybeSingle()
+    const [personalResponse, academicResponse, lifestyleResponse, subjectResponse] = await Promise.all([
+      supabase
+        .from('student_personal_information')
+        .select('first_name,last_name,email,nationality,resident_country')
+        .eq('profile_id', userId)
+        .maybeSingle(),
+      supabase
+        .from('student_academic_input')
+        .select('programme_type,school_name,school_country,graduation_year,intended_clusters,english_required')
+        .eq('profile_id', userId)
+        .maybeSingle(),
+      supabase.from('student_lifestyle_preference').select('extracurricular_interests').eq('profile_id', userId).maybeSingle(),
+      supabase.from('student_subjects').select('id').eq('profile_id', userId)
     ]);
 
-    const firstError = [
-      profileResponse.error,
-      academicsResponse.error,
-      preferencesResponse.error,
-      aspirationsResponse.error
-    ].find(Boolean);
+    const firstError = [personalResponse.error, academicResponse.error, lifestyleResponse.error, subjectResponse.error].find(Boolean);
 
     if (firstError) {
       console.error('Unable to determine onboarding status', firstError);
@@ -97,12 +100,12 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
     }
 
     const needsOnboarding = !isProfileComplete({
-      profile: profileResponse.data ?? null,
-      academics: academicsResponse.data ?? null,
-      preferences: preferencesResponse.data ?? null,
-      aspirations: aspirationsResponse.data ?? null
+      personal: personalResponse.data ?? null,
+      academicInput: academicResponse.data ?? null,
+      subjectCount: subjectResponse.data?.length ?? 0,
+      lifestyle: lifestyleResponse.data ?? null
     });
-    return needsOnboarding ? '/profile?onboarding=true' : '/dashboard';
+    return needsOnboarding ? '/profile/wizard' : '/dashboard';
   };
 
   const formatAuthError = (authError: AuthError) => {
@@ -170,7 +173,7 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
 
       if (shouldRedirect) {
         router.refresh();
-        const target = mode === 'signup' ? '/profile?onboarding=true' : redirectTarget;
+        const target = mode === 'signup' ? '/profile/wizard' : redirectTarget;
         router.push(target);
       }
     });

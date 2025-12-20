@@ -78,7 +78,7 @@ export function ProfileProgressCard({
           return (
             <Link
               key={step.key}
-              href={`/profile?onboarding=true&step=${step.key}`}
+              href={`/profile/wizard?step=${step.key}`}
               className={cn(
                 'group relative overflow-hidden rounded-2xl border px-4 py-4 shadow-[0_12px_30px_rgba(15,23,42,0.12)] backdrop-blur-sm transition-colors hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
                 complete

@@ -23,9 +23,9 @@ import { filterVisiblePrograms, getFlaggedProgramIds } from '../catalog/visibili
 import type { Database } from '../types/database';
 import type { EnrichedMatch, MissingProfileSection } from './types';
 
-type StudentAcademicsRow = Database['public']['Tables']['student_academics']['Row'];
-type StudentPreferencesRow = Database['public']['Tables']['student_preferences']['Row'];
-type StudentAspirationsRow = Database['public']['Tables']['student_aspirations']['Row'];
+type StudentAcademicInputRow = Database['public']['Tables']['student_academic_input']['Row'];
+type StudentLifestyleRow = Database['public']['Tables']['student_lifestyle_preference']['Row'];
+type StudentSubjectRow = Database['public']['Tables']['student_subjects']['Row'];
 type ProgramRow = Database['public']['Tables']['programs']['Row'];
 type UniversityRow = Database['public']['Tables']['universities']['Row'];
 type ProgramRequirementRow = Database['public']['Tables']['program_requirements']['Row'];
@@ -46,13 +46,13 @@ export type MatchComputationResult = {
 };
 
 const mapProfileRows = (params: {
-  academics: StudentAcademicsRow;
-  preferences: StudentPreferencesRow;
-  aspirations: StudentAspirationsRow;
+  academicInput: StudentAcademicInputRow;
+  lifestyle: StudentLifestyleRow | null;
+  subjects: StudentSubjectRow[];
 }) => {
-  const academics: StudentAcademics = mapAcademicsRow(params.academics);
-  const preferences: StudentPreferences = mapPreferencesRow(params.preferences);
-  const aspirations: StudentAspirations = mapAspirationsRow(params.aspirations);
+  const academics: StudentAcademics = mapAcademicsRow(params.academicInput, params.subjects);
+  const preferences: StudentPreferences = mapPreferencesRow(params.lifestyle);
+  const aspirations: StudentAspirations = mapAspirationsRow(params.academicInput);
   return { academics, preferences, aspirations };
 };
 
@@ -74,18 +74,16 @@ export const loadMatchesForProfile = async (
   const programLimit = options.programLimit ?? 800;
 
   const [
-    { data: academicsData, error: academicsError },
-    { data: preferencesData, error: preferencesError },
-    { data: aspirationsData, error: aspirationsError }
+    { data: academicData, error: academicError },
+    { data: lifestyleData, error: lifestyleError },
+    { data: subjectsData, error: subjectsError }
   ] = await Promise.all([
-    supabase.from('student_academics').select('*').eq('profile_id', profileId).maybeSingle(),
-    supabase.from('student_preferences').select('*').eq('profile_id', profileId).maybeSingle(),
-    supabase.from('student_aspirations').select('*').eq('profile_id', profileId).maybeSingle()
+    supabase.from('student_academic_input').select('*').eq('profile_id', profileId).maybeSingle(),
+    supabase.from('student_lifestyle_preference').select('*').eq('profile_id', profileId).maybeSingle(),
+    supabase.from('student_subjects').select('*').eq('profile_id', profileId)
   ]);
 
-  const profileErrors = [academicsError, preferencesError, aspirationsError].filter(
-    (err) => err && err.code !== 'PGRST116'
-  );
+  const profileErrors = [academicError, lifestyleError, subjectsError].filter((err) => err && err.code !== 'PGRST116');
   if (profileErrors.length > 0) {
     return {
       matches: [],
@@ -96,9 +94,9 @@ export const loadMatchesForProfile = async (
   }
 
   const missingSections: MissingProfileSection[] = [];
-  if (!academicsData) missingSections.push('academics');
-  if (!preferencesData) missingSections.push('preferences');
-  if (!aspirationsData) missingSections.push('aspirations');
+  if (!academicData) missingSections.push('academic_input');
+  if (!subjectsData || subjectsData.length === 0) missingSections.push('academic_details');
+  if (!lifestyleData) missingSections.push('lifestyle_preferences');
 
   if (missingSections.length > 0) {
     return {
@@ -212,9 +210,9 @@ export const loadMatchesForProfile = async (
   const requirementMap = new Map(requirements.map((item) => [item.programId, item]));
   const universityMap = new Map(universities.map((item) => [item.id, item]));
   const { academics, preferences, aspirations } = mapProfileRows({
-    academics: academicsData!,
-    preferences: preferencesData!,
-    aspirations: aspirationsData!
+    academicInput: academicData!,
+    lifestyle: lifestyleData ?? null,
+    subjects: (subjectsData ?? []) as StudentSubjectRow[]
   });
 
   const inputs: MatchInput[] = programs
