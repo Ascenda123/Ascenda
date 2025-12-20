@@ -3,7 +3,7 @@
 import { type FormEvent, useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, ChevronRight, ChevronLeft, Globe, GraduationCap, User, Heart, Settings, Layout, Search, Sparkles, Send, GraduationCap as School, Moon, Sun, Pencil } from 'lucide-react';
+import { Check, ChevronRight, ChevronLeft, Globe, GraduationCap, User, Heart, Settings, Layout, Search, Sparkles, Send, GraduationCap as School, Moon, Sun, Pencil, Trash2, PlusCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme/theme-toggle';
 import { PROFILE_STEPS } from '@/lib/profile/steps';
@@ -948,35 +948,32 @@ export const StudentIntakeForm = ({
               </button>
             )}
 
-            <div className="mt-8 pt-8 border-t border-border/50">
-              <div className="flex items-center justify-between px-1">
-                <span className="text-[10px] uppercase tracking-widest text-foreground/40 font-bold">Theme</span>
-                <ThemeToggle compact />
-              </div>
-            </div>
           </div>
         </aside>
 
         <div className="flex-1 min-w-0">
           {/* Top Horizontal Navigation */}
-          <nav className="mb-8 flex items-center justify-between gap-2 p-2 bg-muted/30 rounded-2xl border border-border/50 overflow-x-auto scrollbar-hide">
-            {stepItems.map((item) => (
-              <button
-                key={`top-nav-${item.step}`}
-                onClick={() => goToStep(item.step)}
-                className={cn(
-                  "flex-1 min-w-[40px] h-10 rounded-xl flex items-center justify-center transition-all duration-200",
-                  item.step === currentStep
-                    ? "bg-primary text-white shadow-lg shadow-primary/20"
-                    : stepCompletion[item.step]
-                      ? "bg-success/20 text-success"
-                      : "text-foreground/40 hover:bg-muted"
-                )}
-              >
-                {stepCompletion[item.step] && item.step !== currentStep ? <Check className="w-4 h-4" /> : renderStepIcon(item.step)}
-              </button>
-            ))}
-          </nav>
+          <div className="mb-8 flex items-center gap-4">
+            <nav className="flex-1 min-w-0 flex items-center justify-between gap-2 p-2 bg-muted/30 rounded-2xl border border-border/50 overflow-x-auto scrollbar-hide">
+              {stepItems.map((item) => (
+                <button
+                  key={`top-nav-${item.step}`}
+                  onClick={() => goToStep(item.step)}
+                  className={cn(
+                    "flex-1 min-w-[40px] h-10 rounded-xl flex items-center justify-center transition-all duration-200",
+                    item.step === currentStep
+                      ? "bg-primary text-white shadow-lg shadow-primary/20"
+                      : stepCompletion[item.step]
+                        ? "bg-success/20 text-success"
+                        : "text-foreground/40 hover:bg-muted"
+                  )}
+                >
+                  {stepCompletion[item.step] && item.step !== currentStep ? <Check className="w-4 h-4" /> : renderStepIcon(item.step)}
+                </button>
+              ))}
+            </nav>
+            <ThemeToggle compact />
+          </div>
 
           <div className="mb-10 lg:mb-12">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-[10px] font-semibold text-primary uppercase tracking-widest mb-4">
@@ -1032,7 +1029,7 @@ export const StudentIntakeForm = ({
                     </label>
                   </div>
 
-                  <div className="p-6 rounded-[24px] border border-white/10 bg-white/5 backdrop-blur-sm space-y-6">
+                  <div className="p-6 rounded-[24px] border border-border/50 bg-muted/30 backdrop-blur-sm space-y-6">
                     <div className="flex justify-between items-start gap-3">
                       <div>
                         <span className="text-base font-semibold text-foreground">Nationality</span>
@@ -1080,7 +1077,7 @@ export const StudentIntakeForm = ({
                           { value: 'non_binary', label: 'Non-binary' },
                           { value: 'prefer_not_to_say', label: 'Prefer not to say' }
                         ].map((option) => (
-                          <label key={option.value} className="relative flex items-center gap-3 p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 cursor-pointer transition-all duration-200 text-sm">
+                          <label key={option.value} className="relative flex items-center gap-3 p-4 rounded-xl border border-border/50 bg-muted/30 hover:bg-muted/50 cursor-pointer transition-all duration-200 text-sm">
                             <input
                               type="radio"
                               name="gender"
@@ -1126,7 +1123,7 @@ export const StudentIntakeForm = ({
                         { value: 'IB', label: 'IB Diploma' },
                         { value: 'A_LEVEL', label: 'A-levels' }
                       ].map((option) => (
-                        <label key={option.value} className="relative flex items-center gap-3 p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 cursor-pointer transition-all duration-200 text-sm">
+                        <label key={option.value} className="relative flex items-center gap-3 p-4 rounded-xl border border-border/50 bg-muted/30 hover:bg-muted/50 cursor-pointer transition-all duration-200 text-sm">
                           <input
                             type="radio"
                             name="programme_type"
@@ -1210,19 +1207,19 @@ export const StudentIntakeForm = ({
                     </label>
                   </div>
 
-                  <div className="p-6 rounded-[24px] border border-white/10 bg-white/5 backdrop-blur-sm space-y-6">
+                  <div className="p-6 rounded-[24px] border border-border/50 bg-muted/30 backdrop-blur-sm space-y-6">
                     <div className="flex justify-between items-start gap-3">
                       <div>
                         <span className="text-base font-semibold text-foreground">What do you want to study?</span>
                         <p className="text-xs text-muted-foreground mt-1">Select one primary focus.</p>
                       </div>
-                      <span className="text-xs underline cursor-help text-white/70" title="We use this to shortlist the most relevant programmes.">
+                      <span className="text-xs underline cursor-help text-foreground/60" title="We use this to shortlist the most relevant programmes.">
                         Why we ask this
                       </span>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {CLUSTER_OPTIONS.map((option) => (
-                        <label key={option.value} className="relative flex items-center gap-3 p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 cursor-pointer transition-all duration-200 text-sm">
+                        <label key={option.value} className="relative flex items-center gap-3 p-4 rounded-xl border border-border/50 bg-muted/30 hover:bg-muted/50 cursor-pointer transition-all duration-200 text-sm">
                           <input
                             type="checkbox"
                             checked={academicInput.intended_clusters.includes(option.value)}
@@ -1239,7 +1236,7 @@ export const StudentIntakeForm = ({
                     {errors['academic_input.intended_clusters'] ? <em>{errors['academic_input.intended_clusters']}</em> : null}
                   </div>
 
-                  <div className="p-6 rounded-[24px] border border-white/10 bg-white/5 backdrop-blur-sm space-y-6">
+                  <div className="p-6 rounded-[24px] border border-border/50 bg-muted/30 backdrop-blur-sm space-y-6">
                     <div className="flex justify-between items-start gap-3">
                       <div>
                         <span className="text-base font-semibold text-foreground">Any secondary interests? (optional)</span>
@@ -1248,7 +1245,7 @@ export const StudentIntakeForm = ({
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {CLUSTER_OPTIONS.map((option) => (
-                        <label key={`secondary-${option.value}`} className="relative flex items-center gap-3 p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 cursor-pointer transition-all duration-200 text-sm">
+                        <label key={`secondary-${option.value}`} className="relative flex items-center gap-3 p-4 rounded-xl border border-border/50 bg-muted/30 hover:bg-muted/50 cursor-pointer transition-all duration-200 text-sm">
                           <input
                             type="checkbox"
                             checked={academicInput.secondary_clusters.includes(option.value)}
@@ -1280,84 +1277,97 @@ export const StudentIntakeForm = ({
                 <section className="space-y-6 lg:space-y-8">
                   <h3>Academic details</h3>
 
-                  <div className="p-6 rounded-[24px] border border-white/10 bg-white/5 backdrop-blur-sm space-y-6">
+                  <div className="p-6 rounded-[24px] border border-border/50 bg-muted/30 backdrop-blur-sm space-y-6">
                     <div className="flex justify-between items-start gap-3">
                       <div>
                         <span className="text-base font-semibold text-foreground">Your subjects and predicted grades</span>
                         <p className="text-xs text-muted-foreground mt-1">IB requires exactly 6 subjects with 3 HL.</p>
                       </div>
-                      <button type="button" className="text-xs font-semibold text-primary hover:text-primary/80 transition-colors uppercase tracking-wider bg-transparent border-none cursor-pointer" onClick={addSubject}>
+                      <button
+                        type="button"
+                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 transition-all duration-200 text-xs font-bold uppercase tracking-wider border-none cursor-pointer"
+                        onClick={addSubject}
+                      >
+                        <PlusCircle className="w-4 h-4" />
                         Add subject
                       </button>
                     </div>
 
-                    <div className="subject-grid">
+                    <div className="subject-grid space-y-4">
+                      {/* Desktop Header */}
+                      <div className="hidden md:grid md:grid-cols-12 gap-6 px-6 py-2">
+                        <div className="md:col-span-5 text-[10px] uppercase tracking-[0.2em] font-bold text-foreground/40">Subject</div>
+                        <div className="md:col-span-3 text-[10px] uppercase tracking-[0.2em] font-bold text-foreground/40">Level</div>
+                        <div className="md:col-span-3 text-[10px] uppercase tracking-[0.2em] font-bold text-foreground/40">Predicted Grade</div>
+                        <div className="md:col-span-1"></div>
+                      </div>
                       {subjects.map((subject, index) => (
                         <div key={`subject-${index}`} className="subject-row">
-                          <div>
-                            <label>
-                              Subject
-                              <input
-                                list="subject-options"
-                                value={subject.subject_name}
-                                onChange={(event) => updateSubject(index, 'subject_name', event.target.value)}
-                              />
-                            </label>
+                          <div className="md:col-span-5">
+                            <label className="md:hidden">Subject</label>
+                            <input
+                              list="subject-options"
+                              value={subject.subject_name}
+                              onChange={(event) => updateSubject(index, 'subject_name', event.target.value)}
+                              placeholder="Enter subject name"
+                            />
                             {errors[`academic_input.subject_list.${index}.subject_name`] ? (
-                              <em>{errors[`academic_input.subject_list.${index}.subject_name`]}</em>
+                              <em className="text-destructive mt-1 block">{errors[`academic_input.subject_list.${index}.subject_name`]}</em>
                             ) : null}
                           </div>
-                          <div>
-                            <label>
-                              Level
-                              <select
-                                value={subject.level}
-                                onChange={(event) => updateSubject(index, 'level', event.target.value)}
-                                disabled={programmeType === 'A_LEVEL'}
-                              >
-                                {programmeType === 'IB' ? (
-                                  <>
-                                    <option value="HL">HL</option>
-                                    <option value="SL">SL</option>
-                                  </>
-                                ) : (
-                                  <option value="A_LEVEL">A-level</option>
-                                )}
-                              </select>
-                            </label>
-                          </div>
-                          <div>
-                            <label>
-                              Predicted grade
+                          <div className="md:col-span-3">
+                            <label className="md:hidden">Level</label>
+                            <select
+                              value={subject.level}
+                              onChange={(event) => updateSubject(index, 'level', event.target.value)}
+                              disabled={programmeType === 'A_LEVEL'}
+                            >
                               {programmeType === 'IB' ? (
-                                <input
-                                  type="number"
-                                  min={1}
-                                  max={7}
-                                  value={subject.grade_value}
-                                  onChange={(event) => updateSubject(index, 'grade_value', event.target.value)}
-                                />
+                                <>
+                                  <option value="HL">HL</option>
+                                  <option value="SL">SL</option>
+                                </>
                               ) : (
-                                <select
-                                  value={subject.grade_value}
-                                  onChange={(event) => updateSubject(index, 'grade_value', event.target.value)}
-                                >
-                                  <option value="">Select</option>
-                                  {A_LEVEL_GRADES.map((grade) => (
-                                    <option key={grade} value={grade}>
-                                      {grade}
-                                    </option>
-                                  ))}
-                                </select>
+                                <option value="A_LEVEL">A-level</option>
                               )}
-                            </label>
+                            </select>
+                          </div>
+                          <div className="md:col-span-3">
+                            <label className="md:hidden">Predicted grade</label>
+                            {programmeType === 'IB' ? (
+                              <input
+                                type="number"
+                                min={1}
+                                max={7}
+                                value={subject.grade_value}
+                                onChange={(event) => updateSubject(index, 'grade_value', event.target.value)}
+                                placeholder="Grade"
+                              />
+                            ) : (
+                              <select
+                                value={subject.grade_value}
+                                onChange={(event) => updateSubject(index, 'grade_value', event.target.value)}
+                              >
+                                <option value="">Select</option>
+                                {A_LEVEL_GRADES.map((grade) => (
+                                  <option key={grade} value={grade}>
+                                    {grade}
+                                  </option>
+                                ))}
+                              </select>
+                            )}
                             {errors[`academic_input.subject_list.${index}.grade_value`] ? (
-                              <em>{errors[`academic_input.subject_list.${index}.grade_value`]}</em>
+                              <em className="text-destructive mt-1 block">{errors[`academic_input.subject_list.${index}.grade_value`]}</em>
                             ) : null}
                           </div>
-                          <div className="flex items-end">
-                            <button type="button" className="text-xs font-semibold text-primary hover:text-primary/80 transition-colors uppercase tracking-wider bg-transparent border-none cursor-pointer" onClick={() => removeSubject(index)}>
-                              Remove
+                          <div className="md:col-span-1 flex items-end justify-center pb-2">
+                            <button
+                              type="button"
+                              className="p-3 rounded-xl text-foreground/40 hover:text-destructive hover:bg-destructive/10 transition-all duration-200 border-none bg-transparent cursor-pointer"
+                              onClick={() => removeSubject(index)}
+                              title="Remove subject"
+                            >
+                              <Trash2 className="w-5 h-5" />
                             </button>
                           </div>
                         </div>
@@ -1378,7 +1388,7 @@ export const StudentIntakeForm = ({
                             { value: 'AI_HL', label: 'AI HL' },
                             { value: 'AI_SL', label: 'AI SL' }
                           ].map((option) => (
-                            <label key={option.value} className="relative flex items-center gap-3 p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 cursor-pointer transition-all duration-200 text-sm">
+                            <label key={option.value} className="relative flex items-center gap-3 p-4 rounded-xl border border-border/50 bg-muted/30 hover:bg-muted/50 cursor-pointer transition-all duration-200 text-sm">
                               <input
                                 type="radio"
                                 name="ib_math_pathway"
@@ -1478,13 +1488,13 @@ export const StudentIntakeForm = ({
                     </>
                   ) : null}
 
-                  <div className="p-6 rounded-[24px] border border-white/10 bg-white/5 backdrop-blur-sm space-y-6">
+                  <div className="p-6 rounded-[24px] border border-border/50 bg-muted/30 backdrop-blur-sm space-y-6">
                     <div className="flex justify-between items-start gap-3">
                       <div>
                         <span className="text-base font-semibold text-foreground">English proficiency</span>
                         <p className="text-xs text-muted-foreground mt-1">Some universities require a formal test score.</p>
                       </div>
-                      <span className="text-xs underline cursor-help text-white/70" title="We use this to flag whether a language test is still needed.">
+                      <span className="text-xs underline cursor-help text-foreground/60" title="We use this to flag whether a language test is still needed.">
                         Why we ask this
                       </span>
                     </div>
@@ -1496,7 +1506,7 @@ export const StudentIntakeForm = ({
                           { value: 'no', label: 'No' },
                           { value: 'not_sure', label: 'Not sure' }
                         ].map((option) => (
-                          <label key={option.value} className="relative flex items-center gap-3 p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 cursor-pointer transition-all duration-200 text-sm">
+                          <label key={option.value} className="relative flex items-center gap-3 p-4 rounded-xl border border-border/50 bg-muted/30 hover:bg-muted/50 cursor-pointer transition-all duration-200 text-sm">
                             <input
                               type="radio"
                               name="english_required"
@@ -1528,7 +1538,7 @@ export const StudentIntakeForm = ({
                           <span>English test status</span>
                           <div className="flex flex-wrap gap-3">
                             {ENGLISH_STATUS_OPTIONS.map((option) => (
-                              <label key={option.value} className="relative flex items-center gap-3 p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 cursor-pointer transition-all duration-200 text-sm">
+                              <label key={option.value} className="relative flex items-center gap-3 p-4 rounded-xl border border-border/50 bg-muted/30 hover:bg-muted/50 cursor-pointer transition-all duration-200 text-sm">
                                 <input
                                   type="radio"
                                   name="english_status"
@@ -1558,19 +1568,19 @@ export const StudentIntakeForm = ({
                   </div>
 
                   {showAdmissionsTests ? (
-                    <div className="p-6 rounded-[24px] border border-white/10 bg-white/5 backdrop-blur-sm space-y-6">
+                    <div className="p-6 rounded-[24px] border border-border/50 bg-muted/30 backdrop-blur-sm space-y-6">
                       <div className="flex justify-between items-start gap-3">
                         <div>
                           <span className="text-base font-semibold text-foreground">Admissions tests</span>
                           <p className="text-xs text-muted-foreground mt-1">Select the tests you have taken or booked.</p>
                         </div>
-                        <span className="text-xs underline cursor-help text-white/70" title="Some subjects require admissions tests for eligibility.">
+                        <span className="text-xs underline cursor-help text-foreground/60" title="Some subjects require admissions tests for eligibility.">
                           Why we ask this
                         </span>
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {ADMISSIONS_TEST_OPTIONS.map((option) => (
-                          <label key={option.value} className="relative flex items-center gap-3 p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 cursor-pointer transition-all duration-200 text-sm">
+                          <label key={option.value} className="relative flex items-center gap-3 p-4 rounded-xl border border-border/50 bg-muted/30 hover:bg-muted/50 cursor-pointer transition-all duration-200 text-sm">
                             <input
                               type="checkbox"
                               checked={admissionsTests.some((test) => test.test_type === option.value)}
@@ -1582,58 +1592,58 @@ export const StudentIntakeForm = ({
                       </div>
 
                       {admissionsTests.filter((test) => test.test_type !== 'NONE').map((test, index) => (
-                        <div key={`${test.test_type}-${index}`} className="p-5 rounded-2xl border border-white/10 bg-white/5 grid grid-cols-1 md:grid-cols-12 gap-4 items-start relative overflow-hidden">
-                          <div>
+                        <div key={`${test.test_type}-${index}`} className="p-5 rounded-2xl border border-border/50 bg-muted/30 grid grid-cols-1 md:grid-cols-12 gap-6 items-start relative overflow-hidden">
+                          <div className="md:col-span-3">
                             <label>
                               Test
-                              <input type="text" value={test.test_type} disabled />
+                              <input type="text" value={test.test_type} disabled className="opacity-70" />
                             </label>
                           </div>
-                          <div>
-                            <label>
-                              Status
-                              <div className="flex flex-wrap gap-3">
-                                {[
-                                  { value: 'taken', label: 'Taken' },
-                                  { value: 'booked', label: 'Booked' },
-                                  { value: 'missing', label: 'Missing' }
-                                ].map((option) => (
-                                  <label key={`${test.test_type}-${option.value}`} className="relative flex items-center gap-3 p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 cursor-pointer transition-all duration-200 text-sm">
-                                    <input
-                                      type="radio"
-                                      name={`admissions-status-${index}`}
-                                      value={option.value}
-                                      checked={test.status === option.value}
-                                      onChange={(event) => updateAdmissionsTest(index, 'status', event.target.value)}
-                                    />
-                                    {option.label}
-                                  </label>
-                                ))}
-                              </div>
-                            </label>
+                          <div className="md:col-span-5">
+                            <label>Status</label>
+                            <div className="flex flex-wrap gap-2">
+                              {[
+                                { value: 'taken', label: 'Taken' },
+                                { value: 'booked', label: 'Booked' },
+                                { value: 'missing', label: 'Missing' }
+                              ].map((option) => (
+                                <label key={`${test.test_type}-${option.value}`} className="flex-1 min-w-[100px] relative flex items-center gap-3 p-3 rounded-xl border border-border/50 bg-muted/30 hover:bg-muted/50 cursor-pointer transition-all duration-200 text-xs">
+                                  <input
+                                    type="radio"
+                                    name={`admissions-status-${index}`}
+                                    value={option.value}
+                                    checked={test.status === option.value}
+                                    onChange={(event) => updateAdmissionsTest(index, 'status', event.target.value)}
+                                  />
+                                  {option.label}
+                                </label>
+                              ))}
+                            </div>
                             {errors[`academic_input.admissions_tests.${index}.status`] ? (
-                              <em>{errors[`academic_input.admissions_tests.${index}.status`]}</em>
+                              <em className="text-destructive mt-1 block">{errors[`academic_input.admissions_tests.${index}.status`]}</em>
                             ) : null}
                           </div>
-                          <div>
+                          <div className="md:col-span-2">
                             <label>
-                              Score (optional)
+                              Score
                               <input
                                 type="number"
                                 value={test.score_numeric}
                                 onChange={(event) => updateAdmissionsTest(index, 'score_numeric', event.target.value)}
+                                placeholder="Value"
                               />
                             </label>
                           </div>
-                          <div>
+                          <div className="md:col-span-2">
                             <label>
-                              Percentile (optional)
+                              Percentile
                               <input
                                 type="number"
                                 min={0}
                                 max={100}
                                 value={test.percentile}
                                 onChange={(event) => updateAdmissionsTest(index, 'percentile', event.target.value)}
+                                placeholder="0-100"
                               />
                             </label>
                           </div>
@@ -1656,7 +1666,7 @@ export const StudentIntakeForm = ({
                         { value: 'mixed', label: 'Mixed' },
                         { value: '', label: 'No preference' }
                       ].map((option) => (
-                        <label key={option.value} className="relative flex items-center gap-3 p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 cursor-pointer transition-all duration-200 text-sm">
+                        <label key={option.value} className="relative flex items-center gap-3 p-4 rounded-xl border border-border/50 bg-muted/30 hover:bg-muted/50 cursor-pointer transition-all duration-200 text-sm">
                           <input
                             type="radio"
                             name="teaching_style"
@@ -1679,7 +1689,7 @@ export const StudentIntakeForm = ({
                         { value: 'suburban', label: 'Suburban' },
                         { value: 'no_preference', label: 'No preference' }
                       ].map((option) => (
-                        <label key={option.value} className="relative flex items-center gap-3 p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 cursor-pointer transition-all duration-200 text-sm">
+                        <label key={option.value} className="relative flex items-center gap-3 p-4 rounded-xl border border-border/50 bg-muted/30 hover:bg-muted/50 cursor-pointer transition-all duration-200 text-sm">
                           <input
                             type="radio"
                             name="desired_location_type"
@@ -1701,7 +1711,7 @@ export const StudentIntakeForm = ({
                         { value: 'large', label: 'Large' },
                         { value: 'no_preference', label: 'No preference' }
                       ].map((option) => (
-                        <label key={option.value} className="relative flex items-center gap-3 p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 cursor-pointer transition-all duration-200 text-sm">
+                        <label key={option.value} className="relative flex items-center gap-3 p-4 rounded-xl border border-border/50 bg-muted/30 hover:bg-muted/50 cursor-pointer transition-all duration-200 text-sm">
                           <input
                             type="radio"
                             name="campus_size"
@@ -1714,7 +1724,7 @@ export const StudentIntakeForm = ({
                       ))}
                     </div>
                   </div>
-                  <div className="p-6 rounded-[24px] border border-white/10 bg-white/5 backdrop-blur-sm space-y-6">
+                  <div className="p-6 rounded-[24px] border border-border/50 bg-muted/30 backdrop-blur-sm space-y-6">
                     <div className="flex justify-between items-start gap-3">
                       <div>
                         <span className="text-base font-semibold text-foreground">Extracurricular interests</span>
@@ -1723,7 +1733,7 @@ export const StudentIntakeForm = ({
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {EXTRACURRICULAR_OPTIONS.map((option) => (
-                        <label key={option} className="relative flex items-center gap-3 p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 cursor-pointer transition-all duration-200 text-sm">
+                        <label key={option} className="relative flex items-center gap-3 p-4 rounded-xl border border-border/50 bg-muted/30 hover:bg-muted/50 cursor-pointer transition-all duration-200 text-sm">
                           <input
                             type="checkbox"
                             checked={lifestylePreference.extracurricular_interests.includes(option)}
@@ -1748,8 +1758,8 @@ export const StudentIntakeForm = ({
               {currentStep === 5 ? (
                 <section className="space-y-6 lg:space-y-8 items-center text-center">
                   <h3>Review & submit</h3>
-                  <p className="mt-1 text-muted-foreground/60">Check everything below before submitting your profile.</p>
-                  <div className="w-full max-w-[920px] mx-auto text-left rounded-2xl p-4 border border-white/10 bg-white/5">
+                  <p className="mt-1 text-foreground/60">Check everything below before submitting your profile.</p>
+                  <div className="w-full max-w-[920px] mx-auto text-left rounded-2xl p-4 border border-border/50 bg-muted/30">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       {[
                         { label: 'Name', value: `${personalInfo.first_name || '—'} ${personalInfo.last_name || ''}`, step: 1 },
@@ -1771,7 +1781,7 @@ export const StudentIntakeForm = ({
                         { label: 'Career aspiration', value: academicInput.career_aspiration, step: 2 },
                         { label: 'Subjects', value: subjects.filter((s) => s.subject_name.trim()).map((s) => `${s.subject_name} (${s.level}) ${s.grade_value || ''}`.trim()).join(', '), step: 3 }
                       ].map((item, idx) => (
-                        <div key={idx} className="group p-4 rounded-2xl bg-white/5 border border-white/10 flex flex-col gap-1 hover:bg-white/[0.07] transition-all duration-200 relative">
+                        <div key={idx} className="group p-4 rounded-2xl bg-muted/30 border border-border/50 flex flex-col gap-1 hover:bg-muted/40 transition-all duration-200 relative">
                           <button
                             type="button"
                             onClick={() => goToStep(item.step)}
@@ -1797,15 +1807,15 @@ export const StudentIntakeForm = ({
                             { label: 'EE title', value: academicInput.ee_title },
                             { label: 'EE summary', value: academicInput.ee_summary }
                           ].map((item, idx) => (
-                            <div key={`ib-${idx}`} className="p-4 rounded-2xl bg-white/5 border border-white/10 flex flex-col gap-1 hover:bg-white/[0.07] transition-colors duration-200">
-                              <span className="text-[10px] uppercase tracking-widest text-muted-foreground/60 font-semibold">{item.label}</span>
+                            <div key={`ib-${idx}`} className="p-4 rounded-2xl bg-muted/30 border border-border/50 flex flex-col gap-1 hover:bg-muted/40 transition-colors duration-200">
+                              <span className="text-[10px] uppercase tracking-widest text-foreground/60 font-semibold">{item.label}</span>
                               <p className="text-sm font-semibold text-foreground">{item.value || '—'}</p>
                             </div>
                           ))}
                         </>
                       ) : (
-                        <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex flex-col gap-1 hover:bg-white/[0.07] transition-colors duration-200">
-                          <span className="text-[10px] uppercase tracking-widest text-muted-foreground/60 font-semibold">A-level predicted grades</span>
+                        <div className="p-4 rounded-2xl bg-muted/30 border border-border/50 flex flex-col gap-1 hover:bg-muted/40 transition-colors duration-200">
+                          <span className="text-[10px] uppercase tracking-widest text-foreground/60 font-semibold">A-level predicted grades</span>
                           <p className="text-sm font-semibold text-foreground">
                             {subjects
                               .filter(s => programmeType === 'A_LEVEL' && s.grade_value)
@@ -1815,16 +1825,16 @@ export const StudentIntakeForm = ({
                         </div>
                       )}
 
-                      <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex flex-col gap-1 hover:bg-white/[0.07] transition-colors duration-200">
-                        <span className="text-[10px] uppercase tracking-widest text-muted-foreground/60 font-semibold">English requirement</span>
+                      <div className="p-4 rounded-2xl bg-muted/30 border border-border/50 flex flex-col gap-1 hover:bg-muted/40 transition-colors duration-200">
+                        <span className="text-[10px] uppercase tracking-widest text-foreground/60 font-semibold">English requirement</span>
                         <p className="text-sm font-semibold text-foreground">{englishRequiredLabel || '—'}</p>
                       </div>
-                      <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex flex-col gap-1 hover:bg-white/[0.07] transition-colors duration-200">
-                        <span className="text-[10px] uppercase tracking-widest text-muted-foreground/60 font-semibold">English test</span>
+                      <div className="p-4 rounded-2xl bg-muted/30 border border-border/50 flex flex-col gap-1 hover:bg-muted/40 transition-colors duration-200">
+                        <span className="text-[10px] uppercase tracking-widest text-foreground/60 font-semibold">English test</span>
                         <p className="text-sm font-semibold text-foreground">{englishTestType || '—'} • {englishStatus || '—'}</p>
                       </div>
-                      <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex flex-col gap-1 hover:bg-white/[0.07] transition-colors duration-200">
-                        <span className="text-[10px] uppercase tracking-widest text-muted-foreground/60 font-semibold">Admissions tests</span>
+                      <div className="p-4 rounded-2xl bg-muted/30 border border-border/50 flex flex-col gap-1 hover:bg-muted/40 transition-colors duration-200">
+                        <span className="text-[10px] uppercase tracking-widest text-foreground/60 font-semibold">Admissions tests</span>
                         <p className="text-sm font-semibold text-foreground">
                           {admissionsTests.filter((test) => test.test_type !== 'NONE').length
                             ? admissionsTests
@@ -1834,8 +1844,8 @@ export const StudentIntakeForm = ({
                             : '—'}
                         </p>
                       </div>
-                      <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex flex-col gap-1 hover:bg-white/[0.07] transition-colors duration-200">
-                        <span className="text-[10px] uppercase tracking-widest text-muted-foreground/60 font-semibold">Lifestyle</span>
+                      <div className="p-4 rounded-2xl bg-muted/30 border border-border/50 flex flex-col gap-1 hover:bg-muted/40 transition-colors duration-200">
+                        <span className="text-[10px] uppercase tracking-widest text-foreground/60 font-semibold">Lifestyle</span>
                         <p className="text-sm font-semibold text-foreground">
                           {[
                             lifestylePreference.teaching_style,
@@ -1846,8 +1856,8 @@ export const StudentIntakeForm = ({
                             .join(' • ') || '—'}
                         </p>
                       </div>
-                      <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex flex-col gap-1 hover:bg-white/[0.07] transition-colors duration-200">
-                        <span className="text-[10px] uppercase tracking-widest text-muted-foreground/60 font-semibold">Extracurriculars</span>
+                      <div className="p-4 rounded-2xl bg-muted/30 border border-border/50 flex flex-col gap-1 hover:bg-muted/40 transition-colors duration-200">
+                        <span className="text-[10px] uppercase tracking-widest text-foreground/60 font-semibold">Extracurriculars</span>
                         <p className="text-sm font-semibold text-foreground">{lifestylePreference.extracurricular_interests.join(', ') || '—'}</p>
                       </div>
                     </div>
@@ -1858,13 +1868,13 @@ export const StudentIntakeForm = ({
             </motion.div>
           </AnimatePresence>
 
-          <div className="mt-12 flex items-center justify-between gap-4 p-6 surface-card bg-background/40 backdrop-blur-md rounded-[24px] border-white/10 shadow-xl">
+          <div className="mt-12 flex items-center justify-between gap-4 p-6 surface-card bg-background/40 backdrop-blur-md rounded-[24px] border-border/50 shadow-xl">
             <Button
               type="button"
               variant="outline"
               onClick={goBack}
               disabled={currentStep === 1}
-              className="h-12 px-6 rounded-xl border-white/10 hover:bg-white/5 disabled:opacity-30"
+              className="h-12 px-6 rounded-xl border-border/50 hover:bg-muted/30 disabled:opacity-30"
             >
               <ChevronLeft className="w-4 h-4 mr-2" />
               Back
@@ -1932,78 +1942,82 @@ export const StudentIntakeForm = ({
           font-family: var(--font-outfit), sans-serif;
         }
 
-        /* High Contrast Inputs for Light Mode */
+        /* Premium Input Styles */
         :global(input), :global(select), :global(textarea) {
-          @apply w-full h-12 px-4 rounded-xl bg-white border-2 border-slate-200 focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all duration-200 outline-none placeholder:text-slate-400 text-slate-900 shadow-sm font-medium;
+          @apply w-full h-12 px-4 rounded-xl bg-slate-50 border border-slate-200 focus:border-primary focus:bg-white focus:ring-4 focus:ring-primary/5 transition-all duration-300 outline-none placeholder:text-slate-400 text-slate-900 shadow-inner font-medium;
         }
 
         :global(.dark input), :global(.dark select), :global(.dark textarea) {
-          @apply bg-slate-900 border-slate-800 text-slate-100 placeholder:text-slate-500;
+          @apply bg-slate-950/50 border-white/5 text-slate-100 placeholder:text-slate-600 focus:bg-slate-900 focus:border-primary/40 focus:ring-primary/10;
         }
 
+        /* Field Groups (The main sections) */
         :global(.field-group) {
-          @apply p-8 rounded-[32px] border-2 border-slate-100 bg-white shadow-soft-xl space-y-8;
+          @apply p-8 rounded-[40px] border border-slate-200/60 bg-white/70 backdrop-blur-sm shadow-[0_8px_30px_rgb(0,0,0,0.04)] space-y-8 transition-all duration-500;
         }
 
         :global(.dark .field-group) {
-          @apply border-white/5 bg-white/5 shadow-none backdrop-blur-sm;
+          @apply border-white/5 bg-slate-900/40 shadow-none backdrop-blur-xl;
         }
 
-        :global(.label) {
-          @apply text-sm font-bold text-slate-900 tracking-tight;
+        :global(label) {
+          @apply text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2 block px-1;
         }
 
-        :global(.dark .label) {
-          @apply text-white;
+        :global(.dark label) {
+          @apply text-foreground/40;
         }
 
         :global(.helper) {
-          @apply text-xs text-slate-500 mt-1.5 font-medium;
+          @apply text-[11px] text-slate-500 mt-2 px-1 font-medium italic;
         }
 
         :global(.dark .helper) {
-          @apply text-slate-400;
+          @apply text-slate-500;
         }
 
+        /* Interactive Cards (Radio/Checkbox) */
         :global(.radio), :global(.checkbox) {
-          @apply relative flex items-center gap-3 p-5 rounded-2xl border-2 border-slate-100 bg-white hover:border-primary/30 hover:bg-primary/[0.02] cursor-pointer transition-all duration-200 shadow-sm;
+          @apply relative flex items-center gap-3 p-5 rounded-2xl border border-slate-200/60 bg-slate-50/50 hover:border-primary/40 hover:bg-primary/[0.03] hover:scale-[1.01] hover:shadow-md cursor-pointer transition-all duration-300;
         }
 
         :global(.dark .radio), :global(.dark .checkbox) {
-          @apply border-white/5 bg-white/5 hover:bg-white/10;
+          @apply border-white/10 bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/20 hover:shadow-none;
         }
 
         :global(.radio input), :global(.checkbox input) {
-          @apply w-5 h-5 rounded-full border-2 border-slate-300 bg-transparent text-primary transition-all duration-200 focus:ring-offset-0 focus:ring-4 focus:ring-primary/10;
+          @apply w-5 h-5 rounded-full border border-slate-300 bg-white text-primary transition-all duration-300 focus:ring-offset-0 focus:ring-4 focus:ring-primary/10;
         }
 
         :global(.dark .radio input), :global(.dark .checkbox input) {
-          @apply border-white/20;
+          @apply border-white/20 bg-transparent;
         }
 
+        /* Subject Rows */
         :global(.subject-row) {
-          @apply p-6 rounded-[24px] border-2 border-slate-100 bg-white grid grid-cols-1 md:grid-cols-12 gap-6 items-start shadow-sm;
+          @apply p-6 rounded-[28px] border border-slate-200/60 bg-white grid grid-cols-1 md:grid-cols-12 gap-6 items-start shadow-sm hover:shadow-md transition-all duration-300;
         }
 
         :global(.dark .subject-row) {
-          @apply border-white/5 bg-white/5;
+          @apply border-white/10 bg-white/[0.02] shadow-none;
         }
 
+        /* Review Summary Items */
         :global(.review-item) {
-          @apply p-5 rounded-3xl bg-white border-2 border-slate-100 shadow-sm flex flex-col gap-2 hover:border-primary/20 transition-all duration-200;
+          @apply p-5 rounded-3xl bg-slate-50/50 border border-slate-200/60 shadow-sm flex flex-col gap-2 hover:border-primary/30 hover:bg-primary/[0.02] hover:scale-[1.01] transition-all duration-300;
         }
 
         :global(.dark .review-item) {
-          @apply bg-white/5 border-white/10;
+          @apply bg-white/[0.02] border-white/10 hover:bg-white/[0.05] hover:border-white/20;
         }
 
-        /* Sidebar Glassmorphism */
+        /* Sidebar Glassmorphism Fixes */
         :global(.surface-card) {
-          @apply border-2 border-slate-100 shadow-2xl;
+          @apply border border-slate-200/50 shadow-2xl bg-white/80 backdrop-blur-xl;
         }
 
         :global(.dark .surface-card) {
-          @apply border-white/10;
+          @apply border-white/10 bg-slate-900/60 shadow-none;
         }
       `}</style>
     </form>

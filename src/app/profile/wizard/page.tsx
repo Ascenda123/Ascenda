@@ -8,6 +8,7 @@ import { buildStepCompletion, isProfileComplete, type ProfileRecordGroup } from 
 import { AnimatedBlobBanner } from '@/components/animated-blob-banner';
 import { Button } from '@/components/ui/button';
 import { buildStudentProfilePayload } from '@/lib/scoring/student_score_loader';
+import { ArrowLeft, Home, LayoutDashboard, User, Download } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'Profile wizard | Ascenda'
@@ -72,18 +73,26 @@ export default async function ProfileWizardPage({ searchParams }: ProfileWizardP
     <div className="relative min-h-screen overflow-hidden bg-background text-foreground">
       <AnimatedBlobBanner className="opacity-60" variant="cool" />
       <div className="relative z-10 mx-auto flex w-full max-w-none flex-col gap-6 px-4 pb-16 pt-20 sm:px-6 lg:px-10">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-3">
-            <Button asChild size="sm" variant="outline">
-              <Link href="/profile">Back to profile</Link>
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <Button asChild size="sm" variant="ghost" className="gap-2 rounded-xl text-muted-foreground hover:text-foreground">
+              <Link href="/dashboard">
+                <Home className="w-4 h-4" />
+                Dashboard
+              </Link>
             </Button>
-            <Button asChild size="sm" variant="ghost">
-              <Link href="/dashboard">Dashboard</Link>
+            <div className="w-px h-4 bg-border/50" />
+            <Button asChild size="sm" variant="ghost" className="gap-2 rounded-xl text-muted-foreground hover:text-foreground">
+              <Link href="/profile">
+                <User className="w-4 h-4" />
+                Back to profile
+              </Link>
             </Button>
           </div>
-          <Button asChild size="sm" variant="secondary">
+          <Button asChild size="sm" variant="secondary" className="gap-2 rounded-xl shadow-sm">
             <a href="/api/profile/export" download>
-              Download profile CSV
+              <Download className="w-4 h-4" />
+              Download CSV
             </a>
           </Button>
         </div>
