@@ -216,9 +216,13 @@ const buildCourseRecords = (params: {
     const internationalRatio = asNumber(programMetadata?.international_students_ratio_pct);
     const costOfLife = asCostOfLife(universityMetadata?.cost_of_life ?? programMetadata?.cost_of_life);
 
+    const ibFromProgram = extractIbTotal(asString(program.min_ib));
+    const ibFromOverview = extractIbTotal(asString(program.entry_requirements_overview));
     const minIbScore =
-      asNumber(requirement?.min_ib_total) ?? extractIbTotal(asString(program.min_ib));
-    const minALevelScore = selectLenientALevel(asString(program.min_alevel));
+      asNumber(requirement?.min_ib_total) ?? ibFromProgram ?? ibFromOverview;
+    const minALevelScore =
+      selectLenientALevel(asString(program.min_alevel)) ??
+      selectLenientALevel(asString(program.entry_requirements_overview));
 
     const admissionTest = extractAdmissionTests(program.additional_entry_requirements ?? program.entry_requirements_overview ?? null);
 
@@ -283,6 +287,14 @@ const buildCourseRecords = (params: {
       university_requires_test: university?.requires_test ?? null
     };
   });
+};
+
+const chunk = <T,>(items: T[], size: number): T[][] => {
+  const batches: T[][] = [];
+  for (let i = 0; i < items.length; i += size) {
+    batches.push(items.slice(i, i + size));
+  }
+  return batches;
 };
 
 export const loadMatchesForProfile = async (
@@ -385,44 +397,61 @@ export const loadMatchesForProfile = async (
   const universityIds = filteredPrograms.map((program) => program.university_id);
   const programIds = filteredPrograms.map((program) => program.id);
 
-  const [{ data: universitiesData, error: universitiesError }, { data: requirementsData, error: requirementsError }] =
-    await Promise.all([
-      universityIds.length
-        ? supabase
-          .from('universities')
-          .select('id,name,country,region,rank_overall,rank_source,acceptance_rate,requires_test,metadata,city')
-          .in('id', universityIds)
-        : Promise.resolve({ data: [] as UniversityRow[], error: null }),
-      programIds.length
-        ? supabase.from('program_requirements').select('program_id,min_ib_total').in('program_id', programIds)
-        : Promise.resolve({ data: [] as ProgramRequirementRow[], error: null })
-    ]);
+  const universitiesData: UniversityRow[] = [];
+  for (const batch of chunk(Array.from(new Set(universityIds)), 500)) {
+    const { data, error } = await supabase
+      .from('universities')
+      .select('id,name,country,region,rank_overall,rank_source,acceptance_rate,requires_test,metadata,city')
+      .in('id', batch);
+    if (error) {
+      console.error('Failed to load catalog data', { universitiesError: error });
+      return {
+        matches: [],
+        catalogSize: { programs: filteredPrograms.length, universities: 0 },
+        missingSections,
+        error: {
+          stage: 'universities',
+          message: 'Failed to load universities'
+        }
+      };
+    }
+    universitiesData.push(...(data ?? []));
+  }
 
-  if (universitiesError || requirementsError) {
-    console.error('Failed to load catalog data', { universitiesError, requirementsError });
+  const requirementsData: ProgramRequirementRow[] = [];
+  for (const batch of chunk(programIds, 500)) {
+    const { data, error } = await supabase
+      .from('program_requirements')
+      .select('program_id,min_ib_total')
+      .in('program_id', batch);
+    if (error) {
+      console.warn('Requirements lookup failed, continuing without requirements data', error.message);
+      break;
+    }
+    requirementsData.push(...(data ?? []));
+  }
+
+  if (!universitiesData.length) {
     return {
       matches: [],
       catalogSize: { programs: filteredPrograms.length, universities: 0 },
       missingSections,
-      error: {
-        stage: universitiesError ? 'universities' : 'requirements',
-        message: universitiesError ? 'Failed to load universities' : 'Failed to load program requirements'
-      }
+      error: { stage: 'universities', message: 'Failed to load universities' }
     };
   }
 
-  if (!filteredPrograms.length || !(universitiesData ?? []).length) {
+  if (!filteredPrograms.length) {
     return {
       matches: [],
-      catalogSize: { programs: filteredPrograms.length, universities: universitiesData?.length ?? 0 },
+      catalogSize: { programs: filteredPrograms.length, universities: universitiesData.length },
       missingSections
     };
   }
 
   const courseRecords = buildCourseRecords({
     programs: filteredPrograms,
-    universities: universitiesData ?? [],
-    requirements: (requirementsData ?? []) as ProgramRequirementRow[]
+    universities: universitiesData,
+    requirements: requirementsData
   });
   const enrichedCourses = enrichCourseRecords(courseRecords).map((course, index) => ({
     ...courseRecords[index],
@@ -442,10 +471,13 @@ export const loadMatchesForProfile = async (
   const toKey = (value: { university: string; course: string; ucas_code?: string | null }) =>
     `${value.university}::${value.course}::${value.ucas_code ?? ''}`;
   const courseLookup = new Map(enrichedCourses.map((course) => [toKey(course), course]));
+  const courseByProgramId = new Map(enrichedCourses.map((course) => [course.program_id, course]));
 
   const matches: EnrichedMatch[] = limited
     .map((match) => {
-      const course = courseLookup.get(toKey(match));
+      const course =
+        (match.program_id ? courseByProgramId.get(match.program_id) : null) ??
+        courseLookup.get(toKey(match));
       if (!course) return null;
       const tier =
         match.tier_fit === 'Safety'

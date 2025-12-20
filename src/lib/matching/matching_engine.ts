@@ -19,6 +19,8 @@ export interface RankedCourseMatch {
   university: string;
   course: string;
   ucas_code: string | null;
+  program_id?: string;
+  university_id?: string;
   course_tier: 1 | 2 | 3 | 4 | 5;
   tier_fit: 'Safety' | 'Target' | 'Reach' | 'Harder-than-reach';
   chance_percent: number;
@@ -264,6 +266,8 @@ export const rankCourseMatches = (
       university: course.university,
       course: course.course,
       ucas_code: course.ucas_code ?? null,
+      program_id: (course as { program_id?: string }).program_id,
+      university_id: (course as { university_id?: string }).university_id,
       course_tier: course.course_tier,
       tier_fit,
       chance_percent,
