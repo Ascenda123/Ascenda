@@ -30,13 +30,13 @@ export interface RankedCourseMatch {
 }
 
 const gradeValueMap: Record<string, number> = {
-  'A*': 7,
-  A: 6,
-  B: 5,
+  'A*': 10,
+  A: 8,
+  B: 6,
   C: 4,
-  D: 3,
-  E: 2,
-  U: 1
+  D: 2,
+  E: 1,
+  U: 0
 };
 
 const parseALevelProfile = (value: string | null): string[] | null => {
@@ -70,11 +70,14 @@ const compareGradeProfiles = (studentGrades: string[] | null, requiredGrades: st
   const studentValues = studentGrades.map((grade) => gradeValueMap[grade] ?? 0).sort((a, b) => b - a);
   const requiredValues = requiredGrades.map((grade) => gradeValueMap[grade] ?? 0).sort((a, b) => b - a);
   const length = Math.min(studentValues.length, requiredValues.length);
+
+  let studentIsBetter = false;
   for (let i = 0; i < length; i += 1) {
+    // If student grade is lower than required grade at any position, they fail the profile requirement
     if (studentValues[i] < requiredValues[i]) return -1;
-    if (studentValues[i] > requiredValues[i]) return 1;
+    if (studentValues[i] > requiredValues[i]) studentIsBetter = true;
   }
-  return 0;
+  return studentIsBetter ? 1 : 0;
 };
 
 const filterCourses = (courses: EnrichedCourseRecord[], filters?: PreferencesFilters) => {
@@ -116,19 +119,35 @@ const tierFitMap: Record<
   StudentScoreResult['student_band'],
   { reach: Array<1 | 2 | 3 | 4 | 5>; target: Array<1 | 2 | 3 | 4 | 5>; safety: Array<1 | 2 | 3 | 4 | 5> }
 > = {
-  Exceptional: { reach: [1], target: [1, 2], safety: [3] },
-  'Very strong': { reach: [1], target: [2], safety: [3, 4] },
-  Strong: { reach: [2], target: [3], safety: [4] },
+  Exceptional: { reach: [1], target: [1, 2], safety: [3, 4, 5] },
+  'Very strong': { reach: [1], target: [2], safety: [3, 4, 5] },
+  Strong: { reach: [1, 2], target: [3], safety: [4, 5] },
   Solid: { reach: [2], target: [3, 4], safety: [5] },
   Borderline: { reach: [3], target: [4], safety: [5] },
-  Weak: { reach: [4], target: [5], safety: [5] }
+  Weak: { reach: [4], target: [5], safety: [] }
 };
 
-const resolveTierFit = (band: StudentScoreResult['student_band'], tier: 1 | 2 | 3 | 4 | 5) => {
+const resolveTierFit = (band: StudentScoreResult['student_band'], tier: 1 | 2 | 3 | 4 | 5, academicScore: number): RankedCourseMatch['tier_fit'] => {
   const mapping = tierFitMap[band];
+
+  // Heavily weigh academic score for high-performing students
+  // If academic performance alone is elite (>90 pts), treat Tier 1/2 as Target and Tier 3+ as Safety
+  if (academicScore >= 90) {
+    if (tier <= 2) return 'Target';
+    return 'Safety';
+  }
+
   if (mapping.safety.includes(tier)) return 'Safety';
   if (mapping.target.includes(tier)) return 'Target';
   if (mapping.reach.includes(tier)) return 'Reach';
+
+  // Fallback: If it's not explicitly mapped, check if it's "easier" than Safety or "harder" than Reach
+  const maxSafety = mapping.safety.length > 0 ? Math.max(...mapping.safety) : 0;
+  if (tier > maxSafety && maxSafety > 0) return 'Safety';
+
+  const minReach = mapping.reach.length > 0 ? Math.min(...mapping.reach) : 6;
+  if (tier < minReach) return 'Harder-than-reach';
+
   return 'Harder-than-reach';
 };
 
@@ -171,6 +190,8 @@ export const rankCourseMatches = (
       } else if (studentIbTotal < course.min_ib_score) {
         excluded = true;
         reasons.push(`IB total ${studentIbTotal} below requirement ${course.min_ib_score}.`);
+      } else {
+        reasons.push(`Meets IB requirement (${studentIbTotal}/${course.min_ib_score}).`);
       }
     }
 
@@ -183,6 +204,8 @@ export const rankCourseMatches = (
       } else if (comparison === -1) {
         excluded = true;
         reasons.push(`A-level profile ${bestALevelProfile ?? 'N/A'} below requirement ${course.min_a_level_score}.`);
+      } else {
+        reasons.push(`Meets A-level requirement (${bestALevelProfile}/${course.min_a_level_score}).`);
       }
     }
 
@@ -192,7 +215,7 @@ export const rankCourseMatches = (
         admissionRequirement.includes(test)
       );
       requiredTests.forEach((test) => {
-        const status = studentTestsByType.get(test);
+        const status = studentTestsByType.get(test as any);
         if (!status || status === 'missing') {
           excluded = true;
           reasons.push(`${test} required but not booked or taken.`);
@@ -208,7 +231,7 @@ export const rankCourseMatches = (
       }
     }
 
-    const tier_fit = resolveTierFit(score.student_band, course.course_tier);
+    const tier_fit = resolveTierFit(score.student_band, course.course_tier, score.breakdown.academic_performance);
     let chance = baselineChance[tier_fit];
 
     if (studentProgramme === 'IB' && studentIbTotal !== null && course.min_ib_score !== null) {
@@ -251,7 +274,7 @@ export const rankCourseMatches = (
     }
 
     const chance_percent = clampChance(chance);
-    const chance_category =
+    const chance_category: RankedCourseMatch['chance_category'] =
       chance_percent >= 80
         ? 'Very likely'
         : chance_percent >= 65

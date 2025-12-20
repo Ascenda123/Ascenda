@@ -18,6 +18,7 @@ export interface UniversityCardProps {
     logoUrl?: string | null;
     fitScore?: number | null;
     tier?: MatchTier | null;
+    reasons?: string[];
     highlights?: string[]; // Optional, as EnrichedMatch might not have this exact field yet
     isSelected?: boolean;
     onToggleSelect?: () => void;
@@ -35,6 +36,7 @@ export function UniversityCard({
     logoUrl,
     fitScore,
     tier,
+    reasons = [],
     highlights = [],
     isSelected = false,
     onToggleSelect,
@@ -126,6 +128,28 @@ export function UniversityCard({
                                 +{highlights.length - 3}
                             </span>
                         )}
+                    </div>
+                )}
+
+                {/* Eligibility Reasons */}
+                {reasons.length > 0 && (
+                    <div className="mt-3 flex flex-col gap-1.5">
+                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground/70 font-semibold px-1">Eligibility Details</p>
+                        <div className="flex flex-col gap-1">
+                            {reasons.map((reason, idx) => (
+                                <div
+                                    key={idx}
+                                    className={cn(
+                                        "text-[11px] px-2 py-1 rounded-lg border",
+                                        reason.includes("below requirement") || reason.includes("missing")
+                                            ? "bg-red-500/5 border-red-500/20 text-red-600 dark:text-red-400"
+                                            : "bg-emerald-500/5 border-emerald-500/20 text-emerald-600 dark:text-emerald-400"
+                                    )}
+                                >
+                                    {reason}
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 )}
             </div>

@@ -93,7 +93,7 @@ export default async function MatchesPage() {
 
   const heroStats = [
     { label: 'Programs', value: `${matchResult.catalogSize.programs}`, detail: 'in catalog' },
-    { label: 'Live matches', value: `${enriched.length}`, detail: 'Ranked for you' },
+    { label: 'Eligible matches', value: `${enriched.length}`, detail: 'Ranked for you' },
     { label: 'Top fit', value: enriched[0] ? `${enriched[0].score}%` : '—', detail: 'Highest score' }
   ];
   const topMatch = enriched[0];

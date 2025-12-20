@@ -3,6 +3,7 @@ import type { MatchingWeights } from './config';
 import { filterVisiblePrograms, getFlaggedProgramIds } from '../catalog/visibility';
 import type { Database } from '../types/database';
 import type { EnrichedMatch, MissingProfileSection } from './types';
+import type { MatchTier } from './engine';
 import type { StudentProfilePayload } from '@/lib/profile/intake-types';
 import { scoreStudentProfile } from '@/lib/scoring/student_scoring';
 import { enrichCourseRecords, type CourseRecord } from '@/lib/tiering/course_tiering';
@@ -465,7 +466,8 @@ export const loadMatchesForProfile = async (
     admissionsTests: (admissionsData ?? []) as StudentAdmissionsTestRow[]
   });
   const studentScore = scoreStudentProfile(studentPayload);
-  const ranked = rankCourseMatches(studentPayload, studentScore, enrichedCourses);
+  const ranked = rankCourseMatches(studentPayload, studentScore, enrichedCourses)
+    .filter((match) => !match.excluded);
   const limited = options.resultLimit ? ranked.slice(0, options.resultLimit) : ranked;
 
   const toKey = (value: { university: string; course: string; ucas_code?: string | null }) =>
@@ -479,7 +481,7 @@ export const loadMatchesForProfile = async (
         (match.program_id ? courseByProgramId.get(match.program_id) : null) ??
         courseLookup.get(toKey(match));
       if (!course) return null;
-      const tier =
+      const tier: MatchTier =
         match.tier_fit === 'Safety'
           ? 'Safe'
           : match.tier_fit === 'Target'
@@ -514,7 +516,7 @@ export const loadMatchesForProfile = async (
         },
         blockingReasons: match.reasons,
         tier
-      };
+      } as EnrichedMatch;
     })
     .filter((value): value is EnrichedMatch => value !== null);
 
