@@ -68,7 +68,7 @@ export default async function MatchesPage() {
           stats={[{ label: 'Matches', value: '—' }, { label: 'Programs', value: '0' }, { label: 'Signals', value: '—' }]}
           actions={
             <Button asChild size="sm">
-              <Link href="/profile">{ACTION_TEXT.finishProfile}</Link>
+              <Link href="/profile/wizard">{ACTION_TEXT.finishProfile}</Link>
             </Button>
           }
         />
@@ -175,10 +175,10 @@ export default async function MatchesPage() {
           </p>
           <div className="mt-4 flex flex-wrap justify-center gap-2">
             <Button asChild size="sm">
-              <Link href="/profile?step=preferences">{ACTION_TEXT.adjustPreferences}</Link>
+              <Link href="/profile/wizard?step=lifestyle_preferences">{ACTION_TEXT.adjustPreferences}</Link>
             </Button>
             <Button asChild size="sm" variant="outline">
-              <Link href="/profile?step=academics">{ACTION_TEXT.updateAcademics}</Link>
+              <Link href="/profile/wizard?step=academic_details">{ACTION_TEXT.updateAcademics}</Link>
             </Button>
           </div>
         </div>

@@ -1,34 +1,19 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { defaultWeights, type MatchingWeights } from './config';
-import {
-  rankMatches,
-  type MatchInput,
-  type Program,
-  type ProgramRequirement,
-  type StudentAcademics,
-  type StudentAspirations,
-  type StudentPreferences,
-  type University
-} from './engine';
-import {
-  buildMatchInput,
-  mapAcademicsRow,
-  mapAspirationsRow,
-  mapPreferencesRow,
-  mapProgramRow,
-  mapRequirementRow,
-  mapUniversityRow
-} from './transform';
+import type { MatchingWeights } from './config';
 import { filterVisiblePrograms, getFlaggedProgramIds } from '../catalog/visibility';
 import type { Database } from '../types/database';
 import type { EnrichedMatch, MissingProfileSection } from './types';
+import type { StudentProfilePayload } from '@/lib/profile/intake-types';
+import { scoreStudentProfile } from '@/lib/scoring/student_scoring';
+import { enrichCourseRecords, type CourseRecord } from '@/lib/tiering/course_tiering';
+import { rankCourseMatches } from '@/lib/matching/matching_engine';
 
 type StudentAcademicInputRow = Database['public']['Tables']['student_academic_input']['Row'];
 type StudentLifestyleRow = Database['public']['Tables']['student_lifestyle_preference']['Row'];
 type StudentSubjectRow = Database['public']['Tables']['student_subjects']['Row'];
+type StudentAdmissionsTestRow = Database['public']['Tables']['student_admissions_tests']['Row'];
 type ProgramRow = Database['public']['Tables']['programs']['Row'];
 type UniversityRow = Database['public']['Tables']['universities']['Row'];
-type ProgramRequirementRow = Database['public']['Tables']['program_requirements']['Row'];
 
 type Client = SupabaseClient<Database>;
 
@@ -45,17 +30,6 @@ export type MatchComputationResult = {
   error?: { stage: 'profile' | 'programs' | 'universities' | 'requirements'; message: string };
 };
 
-const mapProfileRows = (params: {
-  academicInput: StudentAcademicInputRow;
-  lifestyle: StudentLifestyleRow | null;
-  subjects: StudentSubjectRow[];
-}) => {
-  const academics: StudentAcademics = mapAcademicsRow(params.academicInput, params.subjects);
-  const preferences: StudentPreferences = mapPreferencesRow(params.lifestyle);
-  const aspirations: StudentAspirations = mapAspirationsRow(params.academicInput);
-  return { academics, preferences, aspirations };
-};
-
 const PROGRAM_PAGE_SIZE = 200;
 
 const applyProgramVisibilityFilters = (query: ReturnType<Client['from']>) => {
@@ -64,6 +38,208 @@ const applyProgramVisibilityFilters = (query: ReturnType<Client['from']>) => {
 
   const formatted = flagged.map((id) => `"${id}"`).join(',');
   return query.not('id', 'in', `(${formatted})`).order('id', { ascending: true });
+};
+
+const asNumber = (value: unknown): number | null => {
+  if (value === null || value === undefined) return null;
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (typeof value === 'string') {
+    const cleaned = value.replace(/[^0-9.-]/g, '');
+    if (!cleaned) return null;
+    const parsed = Number(cleaned);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  return null;
+};
+
+const asString = (value: unknown): string | null => (typeof value === 'string' && value.trim() ? value.trim() : null);
+
+const asCostOfLife = (value: unknown): CourseRecord['cost_of_life'] => {
+  if (!value) return null;
+  const normalized = String(value).toUpperCase();
+  if (normalized === 'HIGH' || normalized === 'MEDIUM' || normalized === 'LOW') return normalized;
+  return null;
+};
+
+const extractAdmissionTests = (value: string | null): string | null => {
+  if (!value) return null;
+  const upper = value.toUpperCase();
+  const tests = ['LNAT', 'UCAT', 'TMUA', 'MAT', 'STEP', 'ESAT', 'TSA'].filter((test) => upper.includes(test));
+  return tests.length ? tests.join(', ') : null;
+};
+
+type CourseSource = CourseRecord & {
+  program_id: string;
+  university_id: string;
+  program_level: string | null;
+  program_language: string | null;
+  program_mode: string | null;
+  program_tuition: number | null;
+  program_currency: string | null;
+  program_url: string | null;
+  university_country: string;
+  university_rank_overall: number | null;
+  university_rank_source: string | null;
+  university_requires_test: boolean | null;
+};
+
+const buildStudentPayload = (params: {
+  academic: StudentAcademicInputRow;
+  lifestyle: StudentLifestyleRow | null;
+  subjects: StudentSubjectRow[];
+  admissionsTests: StudentAdmissionsTestRow[];
+}): StudentProfilePayload => {
+  const programmeType = params.academic.programme_type ?? 'IB';
+  const subjectList = params.subjects.map((subject) => {
+    const rawGrade = subject.grade_value ?? '';
+    const numericGrade = programmeType === 'IB' ? asNumber(rawGrade) : null;
+    return {
+      subject_name: subject.subject_name ?? '',
+      level: subject.level ?? (programmeType === 'IB' ? 'HL' : 'A_LEVEL'),
+      grade_value: programmeType === 'IB' ? numericGrade : rawGrade
+    };
+  });
+
+  return {
+    personal_information: {
+      first_name: '',
+      last_name: '',
+      email: '',
+      phone: null,
+      nationality: '',
+      age: null,
+      gender: null,
+      resident_country: '',
+      current_location_city: null,
+      time_zone: null
+    },
+    academic_input: {
+      programme_type: programmeType,
+      school_name: params.academic.school_name ?? '',
+      school_country: params.academic.school_country ?? '',
+      school_city: params.academic.school_city ?? null,
+      school_type: params.academic.school_type ?? null,
+      language_of_instruction: params.academic.language_of_instruction ?? null,
+      graduation_year: params.academic.graduation_year ?? new Date().getFullYear(),
+      desired_start_date: params.academic.desired_start_date ?? null,
+      intended_clusters: (params.academic.intended_clusters ?? []) as StudentProfilePayload['academic_input']['intended_clusters'],
+      secondary_clusters: (params.academic.secondary_clusters ?? []) as StudentProfilePayload['academic_input']['secondary_clusters'],
+      career_aspiration: params.academic.career_aspiration ?? null,
+      subject_list: subjectList,
+      ib_total_points: params.academic.ib_total_points ?? null,
+      ib_core_points: params.academic.ib_core_points ?? null,
+      ib_tok_grade: params.academic.ib_tok_grade ?? null,
+      ib_ee_grade: params.academic.ib_ee_grade ?? null,
+      ib_math_pathway: params.academic.ib_math_pathway ?? null,
+      ee_subject: params.academic.ee_subject ?? null,
+      ee_title: params.academic.ee_title ?? null,
+      ee_summary: params.academic.ee_summary ?? null,
+      a_level_predicted_grades: (params.academic.a_level_predicted_grades ?? null) as StudentProfilePayload['academic_input']['a_level_predicted_grades'],
+      english_required: params.academic.english_required ?? null,
+      english_test_type: params.academic.english_test_type ?? 'NONE',
+      english_status: params.academic.english_status ?? 'missing',
+      english_score_overall: params.academic.english_score_overall ?? null,
+      admissions_tests: params.admissionsTests.map((test) => ({
+        test_type: test.test_type ?? 'NONE',
+        status: test.status ?? 'missing',
+        score_numeric: test.score_numeric ?? null,
+        percentile: test.percentile ?? null
+      }))
+    },
+    lifestyle_preference: {
+      teaching_style: params.lifestyle?.teaching_style ?? null,
+      desired_location_type: params.lifestyle?.desired_location_type ?? null,
+      campus_size: params.lifestyle?.campus_size ?? null,
+      extracurricular_interests: params.lifestyle?.extracurricular_interests ?? [],
+      other_extracurriculars: params.lifestyle?.other_extracurriculars ?? null
+    }
+  };
+};
+
+const buildCourseRecords = (params: {
+  programs: ProgramRow[];
+  universities: UniversityRow[];
+}): CourseSource[] => {
+  const universityMap = new Map(params.universities.map((uni) => [uni.id, uni]));
+  return params.programs.map((program) => {
+    const university = universityMap.get(program.university_id);
+    const universityMetadata = (university?.metadata ?? null) as Record<string, unknown> | null;
+    const programMetadata = (program.metadata ?? null) as Record<string, unknown> | null;
+    const qsRank = asNumber(universityMetadata?.qs_uk_rank ?? universityMetadata?.qs_rank ?? universityMetadata?.qs);
+    const timesRank = asNumber(universityMetadata?.times_sunday_rank ?? universityMetadata?.times_rank);
+    const guardianRank = asNumber(universityMetadata?.guardian_rank);
+    const nssScore = asNumber(programMetadata?.nss_score_pct ?? program.student_satisfaction);
+    const intakeSize = asNumber(programMetadata?.intake_size);
+    const studentToStaff = asNumber(programMetadata?.student_to_staff_ratio);
+    const internationalRatio = asNumber(programMetadata?.international_students_ratio_pct);
+    const costOfLife = asCostOfLife(universityMetadata?.cost_of_life ?? programMetadata?.cost_of_life);
+
+    const minIbScore = asNumber(program.min_ib);
+    const minALevelScore = asString(program.min_alevel);
+
+    const admissionTest = extractAdmissionTests(program.additional_entry_requirements ?? program.entry_requirements_overview ?? null);
+
+    const duration = asString(program.duration) ?? (program.duration_years ? `${program.duration_years} years` : null);
+    const tuition = asNumber(program.tuition ?? program.tuition_fees_international);
+
+    return {
+      university: university?.name ?? 'University',
+      city: university?.city ?? '',
+      level: program.study_level ?? program.level ?? 'Undergraduate',
+      degree_type: program.name ?? program.course_name ?? 'Undergraduate degree',
+      field_of_study: program.field ?? null,
+      course: program.course_name ?? program.name ?? 'Course',
+      duration,
+      qs_uk_rank: qsRank,
+      times_sunday_rank: timesRank,
+      guardian_rank: guardianRank,
+      acceptance_rate_pct: asNumber(university?.acceptance_rate),
+      nss_score_pct: nssScore,
+      intake_size: intakeSize,
+      gender_ratio_pct: asString(programMetadata?.gender_ratio_pct) ?? null,
+      international_students_ratio_pct: internationalRatio,
+      student_to_staff_ratio: studentToStaff,
+      yearly_international_tuition_fee_gbp: tuition,
+      student_dorm_cost_gbp_per_year: asNumber(universityMetadata?.student_dorm_cost_gbp_per_year ?? programMetadata?.student_dorm_cost_gbp_per_year),
+      average_rent_outside_campus_gbp_per_month: asNumber(
+        universityMetadata?.average_rent_outside_campus_gbp_per_month ?? programMetadata?.average_rent_outside_campus_gbp_per_month
+      ),
+      cost_of_life: costOfLife,
+      min_ib_score: minIbScore,
+      min_a_level_score: minALevelScore,
+      preferred_subjects: asString(program.subject_requirements),
+      english_score_requirement: asString(program.english_requirements),
+      course_online_page: program.provider_course_url ?? program.url ?? null,
+      ucas_code: program.ucas_code ?? null,
+      ucas_deadline: asString(program.start_date),
+      admission_test: admissionTest,
+      interview: asString(programMetadata?.interview),
+      university_life: asString(programMetadata?.university_life),
+      number_of_students: asNumber(universityMetadata?.number_of_students),
+      transport_accessibility: asString(universityMetadata?.transport_accessibility),
+      cultural_social_environment: asString(universityMetadata?.cultural_social_environment),
+      city_life: asString(universityMetadata?.city_life),
+      climate: asString(universityMetadata?.climate),
+      safety_index: asString(universityMetadata?.safety_index),
+      study_abroad_option: asString(programMetadata?.study_abroad_option),
+      graduate_employment_rate_pct: asNumber(programMetadata?.graduate_employment_rate_pct ?? program.employment_after_course),
+      average_starting_salary_gbp: asNumber(program.average_salary_after_15m),
+      top_industries: asString(programMetadata?.top_industries),
+      placement_year: asString(programMetadata?.placement_year),
+      program_id: program.id,
+      university_id: university?.id ?? '',
+      program_level: program.study_level ?? program.level ?? null,
+      program_language: program.language ?? null,
+      program_mode: program.mode ?? null,
+      program_tuition: tuition,
+      program_currency: program.currency ?? null,
+      program_url: program.provider_course_url ?? program.url ?? null,
+      university_country: university?.country ?? 'United Kingdom',
+      university_rank_overall: university?.rank_overall ?? null,
+      university_rank_source: university?.rank_source ?? null,
+      university_requires_test: university?.requires_test ?? null
+    };
+  });
 };
 
 export const loadMatchesForProfile = async (
@@ -76,14 +252,18 @@ export const loadMatchesForProfile = async (
   const [
     { data: academicData, error: academicError },
     { data: lifestyleData, error: lifestyleError },
-    { data: subjectsData, error: subjectsError }
+    { data: subjectsData, error: subjectsError },
+    { data: admissionsData, error: admissionsError }
   ] = await Promise.all([
     supabase.from('student_academic_input').select('*').eq('profile_id', profileId).maybeSingle(),
     supabase.from('student_lifestyle_preference').select('*').eq('profile_id', profileId).maybeSingle(),
-    supabase.from('student_subjects').select('*').eq('profile_id', profileId)
+    supabase.from('student_subjects').select('*').eq('profile_id', profileId),
+    supabase.from('student_admissions_tests').select('*').eq('profile_id', profileId)
   ]);
 
-  const profileErrors = [academicError, lifestyleError, subjectsError].filter((err) => err && err.code !== 'PGRST116');
+  const profileErrors = [academicError, lifestyleError, subjectsError, admissionsError].filter(
+    (err) => err && err.code !== 'PGRST116'
+  );
   if (profileErrors.length > 0) {
     return {
       matches: [],
@@ -150,11 +330,8 @@ export const loadMatchesForProfile = async (
   }));
   const visibleIds = new Set(filterVisiblePrograms(visibilityCheck).map((p) => p.id));
   const filteredPrograms = (programsData ?? []).filter((p) => visibleIds.has(p.id));
-  const programs: Program[] = filteredPrograms.map((program) =>
-    mapProgramRow({ ...program, metadata: normalizeMetadata((program as any).metadata) } as any)
-  );
 
-  if (!programs.length) {
+  if (!filteredPrograms.length) {
     return {
       matches: [],
       catalogSize: { programs: filteredPrograms.length, universities: 0 },
@@ -162,94 +339,105 @@ export const loadMatchesForProfile = async (
     };
   }
 
-  const programIds = programs.map((program) => program.id);
-  const universityIds = programs.map((program) => program.universityId);
+  const universityIds = filteredPrograms.map((program) => program.university_id);
 
-  const [{ data: universitiesData, error: universitiesError }, { data: requirementsData, error: requirementsError }] =
-    await Promise.all([
-      universityIds.length
-        ? supabase
-          .from('universities')
-          .select('id,name,country,region,rank_overall,rank_source,acceptance_rate,requires_test,metadata')
-          .in('id', universityIds)
-        : Promise.resolve({ data: [] as UniversityRow[], error: null }),
-      programIds.length
-        ? supabase
-          .from('program_requirements')
-          .select(
-            'program_id,curriculum,min_gpa,min_ib_total,min_sat,min_act,required_subjects,language_tests,other_requirements'
-          )
-          .in('program_id', programIds)
-        : Promise.resolve({ data: [] as ProgramRequirementRow[], error: null })
-  ]);
+  const { data: universitiesData, error: universitiesError } = await (universityIds.length
+    ? supabase
+      .from('universities')
+      .select('id,name,country,region,rank_overall,rank_source,acceptance_rate,requires_test,metadata,city')
+      .in('id', universityIds)
+    : Promise.resolve({ data: [] as UniversityRow[], error: null }));
 
-  if (universitiesError || requirementsError) {
-    console.error('Failed to load catalog data', { universitiesError, requirementsError });
+  if (universitiesError) {
+    console.error('Failed to load catalog data', { universitiesError });
     return {
       matches: [],
       catalogSize: { programs: filteredPrograms.length, universities: 0 },
       missingSections,
       error: {
-        stage: universitiesError ? 'universities' : 'requirements',
-        message: universitiesError ? 'Failed to load universities' : 'Failed to load program requirements'
+        stage: 'universities',
+        message: 'Failed to load universities'
       }
     };
   }
 
-  const universities: University[] = (universitiesData ?? []).map((u) => mapUniversityRow(u));
-  const requirements: ProgramRequirement[] = (requirementsData ?? []).map((r) => mapRequirementRow(r));
-
-  if (!programs.length || !universities.length) {
+  if (!filteredPrograms.length || !(universitiesData ?? []).length) {
     return {
       matches: [],
-      catalogSize: { programs: filteredPrograms.length, universities: universities.length },
+      catalogSize: { programs: filteredPrograms.length, universities: universitiesData?.length ?? 0 },
       missingSections
     };
   }
 
-  const requirementMap = new Map(requirements.map((item) => [item.programId, item]));
-  const universityMap = new Map(universities.map((item) => [item.id, item]));
-  const { academics, preferences, aspirations } = mapProfileRows({
-    academicInput: academicData!,
-    lifestyle: lifestyleData ?? null,
-    subjects: (subjectsData ?? []) as StudentSubjectRow[]
+  const courseRecords = buildCourseRecords({
+    programs: filteredPrograms,
+    universities: universitiesData ?? []
   });
+  const enrichedCourses = enrichCourseRecords(courseRecords).map((course, index) => ({
+    ...courseRecords[index],
+    ...course
+  }));
 
-  const inputs: MatchInput[] = programs
-    .map((program) => {
-      const university = universityMap.get(program.universityId);
-      if (!university) return null;
-      return buildMatchInput({
-        academics,
-        preferences,
-        aspirations,
-        program,
-        university,
-        requirement: requirementMap.get(program.id)
-      });
-    })
-    .filter((value): value is MatchInput => value !== null);
-
-  const weights = options.weights ?? defaultWeights;
-  const ranked = rankMatches(inputs, weights);
+  const studentPayload = buildStudentPayload({
+    academic: academicData!,
+    lifestyle: lifestyleData ?? null,
+    subjects: (subjectsData ?? []) as StudentSubjectRow[],
+    admissionsTests: (admissionsData ?? []) as StudentAdmissionsTestRow[]
+  });
+  const studentScore = scoreStudentProfile(studentPayload);
+  const ranked = rankCourseMatches(studentPayload, studentScore, enrichedCourses);
   const limited = options.resultLimit ? ranked.slice(0, options.resultLimit) : ranked;
 
-  const matches: EnrichedMatch[] = limited.map((result) => {
-    const program = programs.find((item) => item.id === result.programId)!;
-    const university = universityMap.get(result.universityId)!;
-    return {
-      program,
-      university: { ...university, requiresTest: university.requiresTest },
-      score: result.score,
-      breakdown: result.breakdown,
-      blockingReasons: result.blockingReasons,
-      tier: result.tier
-    };
-  });
+  const toKey = (value: { university: string; course: string; ucas_code?: string | null }) =>
+    `${value.university}::${value.course}::${value.ucas_code ?? ''}`;
+  const courseLookup = new Map(enrichedCourses.map((course) => [toKey(course), course]));
+
+  const matches: EnrichedMatch[] = limited
+    .map((match) => {
+      const course = courseLookup.get(toKey(match));
+      if (!course) return null;
+      const tier =
+        match.tier_fit === 'Safety'
+          ? 'Safe'
+          : match.tier_fit === 'Target'
+            ? 'Match'
+            : 'Reach';
+      return {
+        program: {
+          id: course.program_id,
+          name: course.course,
+          field: course.field_of_study ?? null,
+          level: course.program_level ?? course.level ?? null,
+          language: course.program_language ?? null,
+          mode: course.program_mode ?? null,
+          tuition: course.program_tuition ?? null,
+          currency: course.program_currency ?? null,
+          url: course.program_url ?? null
+        },
+        university: {
+          id: course.university_id,
+          name: course.university,
+          country: course.university_country,
+          rankOverall: course.university_rank_overall,
+          rankSource: course.university_rank_source,
+          requiresTest: course.university_requires_test ?? null
+        },
+        score: match.chance_percent,
+        breakdown: {
+          eligibility: match.excluded ? 0 : 100,
+          academicFit: Math.min(100, Math.round(studentScore.total_score / 2)),
+          preferenceFit: 0,
+          outcomes: course.total_course_score
+        },
+        blockingReasons: match.reasons,
+        tier
+      };
+    })
+    .filter((value): value is EnrichedMatch => value !== null);
 
   return {
     matches,
-    catalogSize: { programs: filteredPrograms.length, universities: universities.length },
+    catalogSize: { programs: filteredPrograms.length, universities: universitiesData?.length ?? 0 },
     missingSections
   };
 };

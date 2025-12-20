@@ -130,6 +130,9 @@ create table if not exists student_scores (
   updated_at timestamptz not null default timezone('utc', now())
 );
 
+create index if not exists student_subjects_profile_id_idx on student_subjects(profile_id);
+create index if not exists student_admissions_tests_profile_id_idx on student_admissions_tests(profile_id);
+
 alter table student_personal_information enable row level security;
 alter table student_academic_input enable row level security;
 alter table student_subjects enable row level security;
