@@ -58,8 +58,8 @@ const computeBestALevelGrades = (student: StudentProfilePayload): string[] | nul
         .filter((subject) => subject.level === 'A_LEVEL')
         .map((subject) => (typeof subject.grade_value === 'string' ? subject.grade_value : ''));
   const normalized = gradeValues
-    .map((grade) => grade.toUpperCase())
-    .filter((grade) => gradeValueMap[grade]);
+    .map((grade) => (grade ? grade.toUpperCase() : ''))
+    .filter((grade) => gradeValueMap[grade] !== undefined);
   if (normalized.length === 0) return null;
   const sorted = normalized.sort((a, b) => gradeValueMap[b] - gradeValueMap[a]);
   return sorted.slice(0, 3);
@@ -73,7 +73,6 @@ const compareGradeProfiles = (studentGrades: string[] | null, requiredGrades: st
 
   let studentIsBetter = false;
   for (let i = 0; i < length; i += 1) {
-    // If student grade is lower than required grade at any position, they fail the profile requirement
     if (studentValues[i] < requiredValues[i]) return -1;
     if (studentValues[i] > requiredValues[i]) studentIsBetter = true;
   }
@@ -121,27 +120,18 @@ const tierFitMap: Record<
 > = {
   Exceptional: { reach: [1], target: [1, 2], safety: [3, 4, 5] },
   'Very strong': { reach: [1], target: [2], safety: [3, 4, 5] },
-  Strong: { reach: [1, 2], target: [3], safety: [4, 5] },
+  Strong: { reach: [2], target: [3], safety: [4, 5] },
   Solid: { reach: [2], target: [3, 4], safety: [5] },
   Borderline: { reach: [3], target: [4], safety: [5] },
-  Weak: { reach: [4], target: [5], safety: [] }
+  Weak: { reach: [4], target: [5], safety: [5] }
 };
 
-const resolveTierFit = (band: StudentScoreResult['student_band'], tier: 1 | 2 | 3 | 4 | 5, academicScore: number): RankedCourseMatch['tier_fit'] => {
+const resolveTierFit = (band: StudentScoreResult['student_band'], tier: 1 | 2 | 3 | 4 | 5): RankedCourseMatch['tier_fit'] => {
   const mapping = tierFitMap[band];
-
-  // Heavily weigh academic score for high-performing students
-  // If academic performance alone is elite (>90 pts), treat Tier 1/2 as Target and Tier 3+ as Safety
-  if (academicScore >= 90) {
-    if (tier <= 2) return 'Target';
-    return 'Safety';
-  }
-
   if (mapping.safety.includes(tier)) return 'Safety';
   if (mapping.target.includes(tier)) return 'Target';
   if (mapping.reach.includes(tier)) return 'Reach';
 
-  // Fallback: If it's not explicitly mapped, check if it's "easier" than Safety or "harder" than Reach
   const maxSafety = mapping.safety.length > 0 ? Math.max(...mapping.safety) : 0;
   if (tier > maxSafety && maxSafety > 0) return 'Safety';
 
@@ -183,15 +173,14 @@ export const rankCourseMatches = (
     const reasons: string[] = [];
     let excluded = false;
 
+    // Hard Rules
     if (studentProgramme === 'IB' && course.min_ib_score !== null) {
       if (studentIbTotal === null) {
         excluded = true;
-        reasons.push('Missing IB total points for entry requirements.');
+        reasons.push('Missing IB total points.');
       } else if (studentIbTotal < course.min_ib_score) {
         excluded = true;
         reasons.push(`IB total ${studentIbTotal} below requirement ${course.min_ib_score}.`);
-      } else {
-        reasons.push(`Meets IB requirement (${studentIbTotal}/${course.min_ib_score}).`);
       }
     }
 
@@ -200,25 +189,23 @@ export const rankCourseMatches = (
       const comparison = compareGradeProfiles(bestALevelGrades, required);
       if (!bestALevelGrades) {
         excluded = true;
-        reasons.push('Missing A-level grades for entry requirements.');
+        reasons.push('Missing A-level grades.');
       } else if (comparison === -1) {
         excluded = true;
         reasons.push(`A-level profile ${bestALevelProfile ?? 'N/A'} below requirement ${course.min_a_level_score}.`);
-      } else {
-        reasons.push(`Meets A-level requirement (${bestALevelProfile}/${course.min_a_level_score}).`);
       }
     }
 
     const admissionRequirement = normalizeTestRequirement(course.admission_test);
     if (admissionRequirement) {
-      const requiredTests = ['LNAT', 'UCAT', 'TMUA', 'MAT', 'STEP', 'ESAT', 'TSA'].filter((test) =>
-        admissionRequirement.includes(test)
-      );
-      requiredTests.forEach((test) => {
-        const status = studentTestsByType.get(test as any);
-        if (!status || status === 'missing') {
-          excluded = true;
-          reasons.push(`${test} required but not booked or taken.`);
+      const testsToMatch = ['LNAT', 'UCAT', 'TMUA', 'MAT', 'STEP', 'ESAT', 'TSA'];
+      testsToMatch.forEach((test) => {
+        if (admissionRequirement.includes(test)) {
+          const status = studentTestsByType.get(test as any);
+          if (!status || status === 'missing') {
+            excluded = true;
+            reasons.push(`${test} required but missing.`);
+          }
         }
       });
     }
@@ -227,13 +214,15 @@ export const rankCourseMatches = (
     if (course.english_score_requirement && studentEnglishRequired) {
       if (studentEnglishStatus === 'missing' || studentEnglishStatus === 'failed') {
         englishPenalty = -25;
-        reasons.push('Not ready: English test missing.');
+        reasons.push('Not ready: English');
       }
     }
 
-    const tier_fit = resolveTierFit(score.student_band, course.course_tier, score.breakdown.academic_performance);
+    // Heuristic
+    const tier_fit = resolveTierFit(score.student_band, course.course_tier);
     let chance = baselineChance[tier_fit];
 
+    // Margin Adjustment
     if (studentProgramme === 'IB' && studentIbTotal !== null && course.min_ib_score !== null) {
       const margin = studentIbTotal - course.min_ib_score;
       if (margin >= 4) chance += 15;
@@ -255,18 +244,10 @@ export const rankCourseMatches = (
       else if (margin <= -2) chance -= 25;
     }
 
-    if (score.breakdown.preferred_subjects_alignment >= 15) {
-      chance += 8;
-      reasons.push('Strong subject alignment.');
-    }
-    if (score.breakdown.rigour_score >= 12) {
-      chance += 6;
-      reasons.push('High subject rigour.');
-    }
-    if (score.breakdown.tests_and_english >= 16) {
-      chance += 8;
-      reasons.push('Strong test/English readiness.');
-    }
+    // Academic Fit adjustments from score breakdown
+    if (score.breakdown.preferred_subjects_alignment >= 15) chance += 8;
+    if (score.breakdown.rigour_score >= 12) chance += 6;
+    if (score.breakdown.tests_and_english >= 16) chance += 8;
 
     chance += englishPenalty;
     if (excluded) {
@@ -289,8 +270,8 @@ export const rankCourseMatches = (
       university: course.university,
       course: course.course,
       ucas_code: course.ucas_code ?? null,
-      program_id: (course as { program_id?: string }).program_id,
-      university_id: (course as { university_id?: string }).university_id,
+      program_id: (course as any).program_id,
+      university_id: (course as any).university_id,
       course_tier: course.course_tier,
       tier_fit,
       chance_percent,

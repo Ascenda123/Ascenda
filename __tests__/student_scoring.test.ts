@@ -139,8 +139,8 @@ describe('student scoring', () => {
 
     const result = scoreStudentProfile(daniel);
     console.log('Daniel breakdown', result.breakdown);
-    expect(result.total_score).toBe(107);
-    expect(result.student_band).toBe('Borderline');
+    expect(result.total_score).toBe(111);
+    expect(result.student_band).toBe('Solid');
     expect(result.readiness_flags.length).toBe(0);
   });
 

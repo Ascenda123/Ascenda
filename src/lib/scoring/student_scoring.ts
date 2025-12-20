@@ -56,7 +56,12 @@ const SUBJECT_ALIASES: Record<string, string> = {
   'english language': 'english language',
   'computer science': 'computer science',
   'design technology': 'design technology',
-  'government and politics': 'government and politics'
+  'government and politics': 'government and politics',
+  politics: 'government and politics',
+  economics: 'economics',
+  biology: 'biology',
+  chemistry: 'chemistry',
+  physics: 'physics'
 };
 
 const canonicalSubject = (value: string) => {
@@ -405,16 +410,16 @@ const calculateKeySubjectGrades = (
 const calculateIbTotalScore = (totalPoints: number | null) => {
   if (!totalPoints) return 0;
   if (totalPoints <= 24) return 0;
-  if (totalPoints <= 27) return 15;
-  if (totalPoints <= 29) return 25;
-  if (totalPoints <= 31) return 40;
-  if (totalPoints <= 33) return 55;
-  if (totalPoints <= 35) return 70;
-  if (totalPoints <= 37) return 82;
-  if (totalPoints <= 39) return 90;
-  if (totalPoints <= 41) return 96;
-  if (totalPoints <= 43) return 98;
-  return 100;
+  if (totalPoints <= 27) return 10;
+  if (totalPoints <= 29) return 20;
+  if (totalPoints <= 31) return 32;
+  if (totalPoints <= 33) return 42;
+  if (totalPoints <= 35) return 52;
+  if (totalPoints <= 37) return 60;
+  if (totalPoints <= 39) return 68;
+  if (totalPoints <= 41) return 74;
+  if (totalPoints <= 43) return 78;
+  return 80;
 };
 
 const calculateALevelProfileScore = (academic_input: StudentProfilePayload['academic_input']) => {
@@ -426,14 +431,23 @@ const calculateALevelProfileScore = (academic_input: StudentProfilePayload['acad
   if (grades && Object.keys(grades).length >= 3) {
     gradeValues = Object.values(grades).filter(Boolean);
   } else {
-    // Fallback to subject list if explicit grades are missing
     gradeValues = subjects
       .filter((s) => s.level === 'A_LEVEL')
       .map((s) => (typeof s.grade_value === 'string' ? s.grade_value : ''))
       .filter(Boolean);
   }
 
-  if (gradeValues.length < 3) return 0;
+  if (gradeValues.length < 3) {
+    if (gradeValues.length === 0) return 0;
+    // Map partial profiles
+    const sorted = gradeValues
+      .map((grade) => grade.toUpperCase())
+      .sort((a, b) => mapAlevelGradeToRank(b) - mapAlevelGradeToRank(a));
+    const signature = sorted.join('');
+    if (signature === 'DDD') return 10;
+    if (signature.includes('E')) return 5;
+    return 0;
+  }
 
   const sorted = gradeValues
     .map((grade) => grade.toUpperCase())
@@ -442,33 +456,21 @@ const calculateALevelProfileScore = (academic_input: StudentProfilePayload['acad
 
   const signature = sorted.join('');
 
-  // High-end signatures
   if (signature === 'A*A*A*' || signature === 'A*A*A') return 80;
   if (signature === 'A*AA') return 76;
   if (signature === 'AAA') return 70;
   if (signature === 'AAB') return 60;
   if (signature === 'ABB') return 52;
+  if (signature === 'ABC') return 46;
+  if (signature === 'BBB') return 44;
+  if (signature === 'BBC') return 36;
+  if (signature === 'BCC') return 30;
+  if (signature === 'CCC') return 24;
+  if (signature === 'CCD') return 16;
+  if (signature === 'DDD') return 10;
+  if (signature === 'EEE' || signature.includes('DEE')) return 5;
 
-  // Mathematical scoring for other combinations
-  // A*=10, A=8, B=6, C=4, D=2, E=1
-  const pointMap: Record<string, number> = { 'A*': 10, A: 8, B: 6, C: 4, D: 2, E: 1, U: 0 };
-  const totalPoints = sorted.reduce((sum, g) => sum + (pointMap[g] ?? 0), 0);
-
-  // Max points (A*A*A*) = 30 -> 80 score
-  // ABB = 10+8+6 = 24 -> 52 score (already handled above)
-  // BBB = 6+6+6 = 18 -> 44 score
-  // CCC = 4+4+4 = 12 -> 24 score
-  // EEE = 1+1+1 = 3 -> 5 score
-
-  if (totalPoints >= 18) return 44; // BBB or equivalent
-  if (totalPoints >= 16) return 36; // BBC or equivalent
-  if (totalPoints >= 14) return 30; // BCC or equivalent
-  if (totalPoints >= 12) return 24; // CCC or equivalent
-  if (totalPoints >= 9) return 16;  // CCD or equivalent
-  if (totalPoints >= 6) return 10;  // DDD or equivalent
-  if (totalPoints >= 3) return 5;   // EEE or equivalent
-
-  return 8;
+  return 8; // Below CCC
 };
 
 const calculateIbHlStrength = (subjects: StudentSubject[]) => {
