@@ -3,6 +3,7 @@
 import { type FormEvent, useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { PROFILE_STEPS } from '@/lib/profile/steps';
 import type {
   AdmissionsStatus,
   AdmissionsTestType,
@@ -796,7 +797,47 @@ export const StudentIntakeForm = ({
     });
   };
 
+  const stepItems = useMemo(
+    () => [
+      ...PROFILE_STEPS.map((step, index) => ({ step: index + 1, label: step.title })),
+      { step: 5, label: 'Review' }
+    ],
+    []
+  );
+
+  const stepCompletion = useMemo<Record<number, boolean>>(() => {
+    const step1Complete = Object.keys(validateStep1()).length === 0;
+    const step2Complete = Object.keys(validateStep2()).length === 0;
+    const step3Complete = Object.keys(validateStep3()).length === 0;
+    const step4Complete =
+      !!lifestylePreference.teaching_style ||
+      !!lifestylePreference.desired_location_type ||
+      !!lifestylePreference.campus_size ||
+      lifestylePreference.extracurricular_interests.length > 0 ||
+      !!lifestylePreference.other_extracurriculars.trim();
+    return {
+      1: step1Complete,
+      2: step2Complete,
+      3: step3Complete,
+      4: step4Complete,
+      5: step1Complete && step2Complete && step3Complete && step4Complete
+    };
+  }, [
+    academicInput,
+    admissionsTests,
+    englishRequired,
+    englishScoreOverall,
+    englishStatus,
+    englishTestType,
+    formattedNationalities,
+    lifestylePreference,
+    personalInfo,
+    programmeType,
+    subjects
+  ]);
+
   const progressLabel = `Step ${currentStep} of 5`;
+  const currentStepLabel = stepItems.find((item) => item.step === currentStep)?.label ?? 'Profile';
   const englishRequiredLabel =
     englishRequired === 'yes'
       ? 'Yes'
@@ -813,22 +854,28 @@ export const StudentIntakeForm = ({
           <div className="sidebar-card">
             <p className="step-indicator">{progressLabel}</p>
             <h3 className="sidebar-title">Navigation</h3>
+            <p className="muted">Current: {currentStepLabel}</p>
             <p className="muted">Jump to any section of your profile.</p>
             <div className="step-nav">
-              {[
-                { step: 1, label: 'Personal' },
-                { step: 2, label: 'Academic input' },
-                { step: 3, label: 'Academics' },
-                { step: 4, label: 'Lifestyle' },
-                { step: 5, label: 'Review' }
-              ].map((item) => (
+              {stepItems.map((item) => (
                 <button
                   key={item.step}
                   type="button"
-                  className={item.step === currentStep ? 'step-chip active' : 'step-chip'}
+                  className={[
+                    'step-chip',
+                    item.step === currentStep ? 'active' : '',
+                    stepCompletion[item.step] ? 'complete' : ''
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
                   onClick={() => goToStep(item.step)}
                 >
-                  {item.step}. {item.label}
+                  <span className="step-chip-label">
+                    {item.step}. {item.label}
+                  </span>
+                  <span className="step-chip-status">
+                    {stepCompletion[item.step] ? 'Done' : '—'}
+                  </span>
                 </button>
               ))}
               {initialPayload ? (
@@ -1883,13 +1930,30 @@ export const StudentIntakeForm = ({
           cursor: pointer;
           text-align: left;
           width: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
         }
         .step-chip.active {
           background: rgba(99, 102, 241, 0.2);
           border-color: rgba(99, 102, 241, 0.45);
         }
+        .step-chip.complete {
+          border-color: rgba(16, 185, 129, 0.4);
+          background: rgba(16, 185, 129, 0.15);
+        }
         .step-chip.ghost {
           background: rgba(255, 255, 255, 0.12);
+        }
+        .step-chip-label {
+          font-weight: 600;
+        }
+        .step-chip-status {
+          font-size: 10px;
+          letter-spacing: 0.2em;
+          text-transform: uppercase;
+          color: rgba(255, 255, 255, 0.6);
         }
         .intake-section {
           display: flex;

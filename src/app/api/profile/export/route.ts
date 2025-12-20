@@ -24,8 +24,16 @@ const buildCsv = (rows: CsvRow[]) => {
     .join('\n');
 };
 
-export async function GET() {
+const slugify = (value: string) =>
+  value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)+/g, '');
+
+export async function GET(request: Request) {
   const supabase = createRouteHandlerSupabaseClient();
+  const url = new URL(request.url);
+  const format = url.searchParams.get('format');
   const {
     data: { user }
   } = await supabase.auth.getUser();
@@ -34,7 +42,8 @@ export async function GET() {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
   }
 
-  const [personalResult, academicResult, lifestyleResult, subjectsResult, testsResult] = await Promise.all([
+  const [profileResult, personalResult, academicResult, lifestyleResult, subjectsResult, testsResult] = await Promise.all([
+    supabase.from('profiles').select('full_name').eq('id', user.id).single(),
     supabase.from('student_personal_information').select('*').eq('profile_id', user.id).single(),
     supabase.from('student_academic_input').select('*').eq('profile_id', user.id).single(),
     supabase.from('student_lifestyle_preference').select('*').eq('profile_id', user.id).single(),
@@ -43,10 +52,23 @@ export async function GET() {
   ]);
 
   const rows: CsvRow[] = [];
+  const warnings: string[] = [];
   const pushRow = (section: string, field: string, value: unknown) => {
     rows.push([section, field, stringifyValue(value)]);
   };
 
+  if (profileResult.error) warnings.push('Profile name was unavailable.');
+  if (personalResult.error) warnings.push('Personal information was unavailable.');
+  if (academicResult.error) warnings.push('Academic input was unavailable.');
+  if (lifestyleResult.error) warnings.push('Lifestyle preferences were unavailable.');
+  if (subjectsResult.error) warnings.push('Subject list was unavailable.');
+  if (testsResult.error) warnings.push('Admissions tests were unavailable.');
+
+  warnings.forEach((warning, index) => {
+    pushRow('meta', `warning_${index + 1}`, warning);
+  });
+
+  const profileName = profileResult.data?.full_name?.trim() || '';
   const personal = personalResult.data;
   if (personal) {
     pushRow('personal_information', 'first_name', personal.first_name);
@@ -100,24 +122,50 @@ export async function GET() {
 
   const subjects = subjectsResult.data ?? [];
   subjects.forEach((subject, index) => {
-    const summary = [subject.subject_name, subject.level, subject.grade_value].filter(Boolean).join(' | ');
-    pushRow('subjects', `subject_${index + 1}`, summary);
+    const prefix = `subject_${index + 1}`;
+    pushRow('subjects', `${prefix}_name`, subject.subject_name);
+    pushRow('subjects', `${prefix}_level`, subject.level);
+    pushRow('subjects', `${prefix}_grade`, subject.grade_value);
   });
 
   const tests = testsResult.data ?? [];
   tests.forEach((test, index) => {
-    const summary = [test.test_type, test.status, test.score_numeric, test.percentile].filter(Boolean).join(' | ');
-    pushRow('admissions_tests', `test_${index + 1}`, summary);
+    const prefix = `test_${index + 1}`;
+    pushRow('admissions_tests', `${prefix}_type`, test.test_type);
+    pushRow('admissions_tests', `${prefix}_status`, test.status);
+    pushRow('admissions_tests', `${prefix}_score_numeric`, test.score_numeric);
+    pushRow('admissions_tests', `${prefix}_percentile`, test.percentile);
   });
 
+  const dateStamp = new Date().toISOString().slice(0, 10);
+  const safeName = profileName ? slugify(profileName) : '';
+  const filenameBase = safeName ? `ascenda-${safeName}-${dateStamp}` : `ascenda-profile-${user.id}-${dateStamp}`;
+
+  if (format === 'json') {
+    return NextResponse.json(
+      {
+        meta: { profile_id: user.id, profile_name: profileName || null, exported_at: new Date().toISOString(), warnings },
+        personal_information: personal ?? null,
+        academic_input: academic ?? null,
+        lifestyle_preference: lifestyle ?? null,
+        subjects,
+        admissions_tests: tests
+      },
+      {
+        headers: {
+          'Content-Disposition': `attachment; filename="${filenameBase}.json"`
+        }
+      }
+    );
+  }
+
   const csvContent = buildCsv(rows);
-  const filename = `ascenda-profile-${user.id}.csv`;
 
   return new NextResponse(csvContent, {
     status: 200,
     headers: {
       'Content-Type': 'text/csv; charset=utf-8',
-      'Content-Disposition': `attachment; filename="${filename}"`
+      'Content-Disposition': `attachment; filename="${filenameBase}.csv"`
     }
   });
 }
