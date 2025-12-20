@@ -148,8 +148,8 @@ export default async function ProfilePage() {
           </>
         }
       />
-      <div className="mt-6 grid gap-6 lg:grid-cols-2">
-        <div className="relative overflow-hidden rounded-[28px] glass-panel p-6 shadow-soft transition-colors">
+      <div className="mt-8 grid gap-8 lg:grid-cols-2">
+        <div className="relative overflow-hidden rounded-[32px] glass-panel p-8 shadow-2xl transition-all duration-300 hover:shadow-primary/5 group border border-white/10">
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/5 via-primary/5 to-emerald-400/5 opacity-50" aria-hidden />
           <div className="relative z-10 flex items-start justify-between gap-4">
             <div className="space-y-1">
@@ -216,85 +216,79 @@ export default async function ProfilePage() {
               ) : null}
             </div>
           </div>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <Button size="sm" variant="outline" asChild>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Button size="sm" variant="outline" asChild className="rounded-xl px-6">
               <Link href="/profile/wizard?step=personal_information">Edit profile</Link>
             </Button>
             <form action={resubmitStudentProfile}>
-              <Button size="sm" variant="outline" type="submit">
-                Resubmit latest profile
+              <Button size="sm" variant="ghost" type="submit" className="rounded-xl">
+                Resubmit
               </Button>
             </form>
             <form action={recalculateStudentScore}>
-              <Button size="sm" variant="secondary" type="submit">
+              <Button size="sm" variant="secondary" type="submit" className="rounded-xl px-6 bg-primary/10 text-primary hover:bg-primary/20 border-none">
                 Recalculate score
               </Button>
             </form>
-            <Button size="sm" asChild>
-              <Link href="/matches">Preview matches</Link>
-            </Button>
           </div>
         </div>
-        <div className="space-y-6">
-            <div className="relative overflow-hidden rounded-[24px] glass-card p-5 shadow-soft">
-              <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/5 via-primary/5 to-emerald-400/5 opacity-50" aria-hidden />
-              <div className="relative z-10 flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Lifestyle</p>
-                  <p className="text-lg font-semibold text-foreground">Study setup</p>
-                  <p className="text-sm text-muted-foreground">Teaching style and campus feel</p>
-                </div>
-                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/20">
-                  <Target className="h-5 w-5" />
-                </div>
+        <div className="space-y-8">
+          <div className="relative overflow-hidden rounded-[32px] glass-panel p-6 shadow-xl border border-white/10 hover:shadow-primary/5 transition-all duration-300">
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/5 via-primary/5 to-emerald-400/5 opacity-50" aria-hidden />
+            <div className="relative z-10 flex items-start justify-between gap-4">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Lifestyle</p>
+                <p className="text-lg font-semibold text-foreground">Study setup</p>
+                <p className="text-sm text-muted-foreground">Teaching style and campus feel</p>
               </div>
-              <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                <div className="rounded-xl border border-white/10 bg-white/5 p-3">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Teaching style</p>
-                  <p className="text-sm font-semibold text-foreground">
-                    {lifestyle?.teaching_style ? formatClusterLabel(lifestyle.teaching_style) : 'Add preference'}
-                  </p>
-                </div>
-                <div className="rounded-xl border border-white/10 bg-white/5 p-3">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Location type</p>
-                  <p className="text-sm font-semibold text-foreground">
-                    {lifestyle?.desired_location_type ? formatClusterLabel(lifestyle.desired_location_type) : 'Add preference'}
-                  </p>
-                </div>
-              </div>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {(lifestyle?.extracurricular_interests ?? []).slice(0, 3).map((interest) => (
-                  <span
-                    key={interest}
-                    className="rounded-full bg-white/5 px-3 py-1 text-xs font-semibold text-foreground ring-1 ring-white/10"
-                  >
-                    {interest}
-                  </span>
-                ))}
-              </div>
-              <div className="mt-4 flex flex-wrap gap-2">
-                <Button size="sm" variant="outline" asChild>
-                  <Link href="/profile/wizard?step=lifestyle_preferences">Edit preferences</Link>
-                </Button>
-                <Button size="sm" variant="secondary" asChild>
-                  <Link href="/profile/wizard?step=lifestyle_preferences">Update lifestyle</Link>
-                </Button>
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/20">
+                <Target className="h-5 w-5" />
               </div>
             </div>
-            <div className="relative overflow-hidden rounded-[24px] glass-card p-5 shadow-soft">
-              <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/6 via-primary/5 to-emerald-400/6 opacity-50" aria-hidden />
-              <div className="relative z-10 flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Academics</p>
-                  <p className="text-lg font-semibold text-foreground">Snapshot</p>
-                  <p className="text-sm text-muted-foreground">
-                  {academicInput?.programme_type ? academicInput.programme_type : 'Add qualification and grades'}
-                  </p>
-                </div>
-                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/20">
-                  <GraduationCap className="h-5 w-5" />
-                </div>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Teaching style</p>
+                <p className="text-sm font-semibold text-foreground">
+                  {lifestyle?.teaching_style ? formatClusterLabel(lifestyle.teaching_style) : 'Add preference'}
+                </p>
               </div>
+              <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Location type</p>
+                <p className="text-sm font-semibold text-foreground">
+                  {lifestyle?.desired_location_type ? formatClusterLabel(lifestyle.desired_location_type) : 'Add preference'}
+                </p>
+              </div>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {(lifestyle?.extracurricular_interests ?? []).slice(0, 3).map((interest) => (
+                <span
+                  key={interest}
+                  className="rounded-full bg-white/5 px-3 py-1 text-xs font-semibold text-foreground ring-1 ring-white/10"
+                >
+                  {interest}
+                </span>
+              ))}
+            </div>
+            <div className="mt-6 flex flex-wrap gap-2">
+              <Button size="sm" variant="outline" asChild className="rounded-xl">
+                <Link href="/profile/wizard?step=lifestyle_preferences">Edit preferences</Link>
+              </Button>
+            </div>
+          </div>
+          <div className="relative overflow-hidden rounded-[32px] glass-panel p-6 shadow-xl border border-white/10 hover:shadow-primary/5 transition-all duration-300">
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/6 via-primary/5 to-emerald-400/6 opacity-50" aria-hidden />
+            <div className="relative z-10 flex items-start justify-between gap-4">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Academics</p>
+                <p className="text-lg font-semibold text-foreground">Snapshot</p>
+                <p className="text-sm text-muted-foreground">
+                  {academicInput?.programme_type ? academicInput.programme_type : 'Add qualification and grades'}
+                </p>
+              </div>
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/20">
+                <GraduationCap className="h-5 w-5" />
+              </div>
+            </div>
             <div className="mt-3 flex flex-wrap gap-2">
               {academicSignals.length ? (
                 academicSignals.map((signal) => (
@@ -337,18 +331,15 @@ export default async function ProfilePage() {
                 <p className="text-sm font-semibold text-foreground">{admissionsLabel}</p>
               </div>
             </div>
-            <div className="mt-4 flex flex-wrap gap-2">
-              <Button size="sm" variant="outline" asChild>
+            <div className="mt-6 flex flex-wrap gap-2">
+              <Button size="sm" variant="outline" asChild className="rounded-xl">
                 <Link href="/profile/wizard?step=academic_details">Edit academics</Link>
-              </Button>
-              <Button size="sm" variant="secondary" asChild>
-                <Link href="/profile/wizard?step=academic_details">Add scores</Link>
               </Button>
             </div>
           </div>
         </div>
       </div>
-      <div className="mt-6 grid gap-6 lg:grid-cols-[2fr,1fr]">
+      <div className="mt-8 grid gap-8 lg:grid-cols-[2fr,1fr]">
         <ProfileProgressCard
           completionPercent={completionPercent}
           completedCount={completedCount}
@@ -356,7 +347,7 @@ export default async function ProfilePage() {
           nextStepTitle={nextStep?.title}
           stepCompletion={stepCompletion}
         />
-        <div className="relative overflow-hidden rounded-[28px] glass-panel p-6 text-sm text-muted-foreground shadow-soft transition-colors">
+        <div className="relative overflow-hidden rounded-[32px] glass-panel p-8 text-sm text-muted-foreground shadow-xl border border-white/10 transition-all duration-300">
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/5 via-primary/5 to-emerald-400/5 opacity-60" aria-hidden />
           <div className="relative z-10">
             <p className="text-base font-semibold text-foreground">Why it matters</p>
@@ -372,8 +363,8 @@ export default async function ProfilePage() {
           </div>
         </div>
       </div>
-      <div className="mt-6">
-        <div className="relative overflow-hidden rounded-[28px] glass-panel p-6 text-sm text-muted-foreground shadow-soft transition-colors">
+      <div className="mt-8">
+        <div className="relative overflow-hidden rounded-[32px] glass-panel p-8 text-sm text-muted-foreground shadow-xl border border-white/10 transition-all duration-300">
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/6 via-primary/8 to-emerald-400/8 opacity-60" aria-hidden />
           <div className="relative z-10 space-y-4">
             <div className="flex items-start justify-between gap-3">
@@ -414,12 +405,12 @@ export default async function ProfilePage() {
           </div>
         </div>
       </div>
-      <div className="mt-6 rounded-[28px] border border-border bg-card p-6 text-muted-foreground shadow-[0_18px_50px_rgba(15,23,42,0.08)] transition-colors">
+      <div className="mt-8 rounded-[32px] border border-border bg-card p-8 text-muted-foreground shadow-2xl transition-all duration-300">
         <p className="text-base font-semibold text-foreground">Profile complete</p>
         <p className="mt-2 text-sm">
           You&apos;ve already finished onboarding. You can revisit the wizard anytime if you need to update details.
         </p>
-        <Button className="mt-4" size="sm" asChild>
+        <Button className="mt-6 rounded-xl px-8" size="sm" asChild>
           <Link href="/profile/wizard">Open profile wizard</Link>
         </Button>
       </div>

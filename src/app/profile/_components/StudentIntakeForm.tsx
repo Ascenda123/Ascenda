@@ -2,8 +2,12 @@
 
 import { type FormEvent, useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Check, ChevronRight, ChevronLeft, Globe, GraduationCap, User, Heart, Settings, Layout, Search, Sparkles, Send, GraduationCap as School, Moon, Sun, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ThemeToggle } from '@/components/theme/theme-toggle';
 import { PROFILE_STEPS } from '@/lib/profile/steps';
+import { cn } from '@/lib/utils';
 import type {
   AdmissionsStatus,
   AdmissionsTestType,
@@ -275,9 +279,9 @@ export const StudentIntakeForm = ({
     setNationalities(
       personal_information.nationality
         ? personal_information.nationality
-            .split(',')
-            .map((item) => item.trim())
-            .filter(Boolean)
+          .split(',')
+          .map((item) => item.trim())
+          .filter(Boolean)
         : ['']
     );
     setAcademicInput({
@@ -505,18 +509,18 @@ export const StudentIntakeForm = ({
     setNationalities((prev) => prev.filter((_, rowIndex) => rowIndex !== index));
   };
 
-  const parseNumber = (value: string) => {
+  const parseNumber = useCallback((value: string) => {
     if (!value.trim()) return null;
     const parsed = Number(value);
     return Number.isFinite(parsed) ? parsed : null;
-  };
+  }, []);
 
   const formattedNationalities = useMemo(
     () => nationalities.map((item) => item.trim()).filter(Boolean),
     [nationalities]
   );
 
-  const buildPayload = (): StudentProfilePayload => {
+  const buildPayload = useCallback((): StudentProfilePayload => {
     const subjectList: StudentSubject[] = subjects.map((subject) => ({
       subject_name: subject.subject_name.trim(),
       level: subject.level,
@@ -609,9 +613,13 @@ export const StudentIntakeForm = ({
         other_extracurriculars: lifestylePreference.other_extracurriculars.trim() || null
       }
     };
-  };
+  }, [
+    subjects, programmeType, parseNumber, admissionsTests, personalInfo,
+    formattedNationalities, academicInput, englishRequired, englishTestType,
+    englishStatus, showEnglishScore, englishScoreOverall, lifestylePreference
+  ]);
 
-  const validateStep1 = () => {
+  const validateStep1 = useCallback(() => {
     const nextErrors: Record<string, string> = {};
     if (!personalInfo.first_name.trim()) nextErrors['personal_information.first_name'] = 'First name is required.';
     if (!personalInfo.last_name.trim()) nextErrors['personal_information.last_name'] = 'Last name is required.';
@@ -623,9 +631,9 @@ export const StudentIntakeForm = ({
     if (!formattedNationalities.length) nextErrors['personal_information.nationality'] = 'Add at least one nationality.';
     if (!personalInfo.resident_country.trim()) nextErrors['personal_information.resident_country'] = 'Country of residence is required.';
     return nextErrors;
-  };
+  }, [personalInfo.first_name, personalInfo.last_name, personalInfo.email, formattedNationalities, personalInfo.resident_country]);
 
-  const validateStep2 = () => {
+  const validateStep2 = useCallback(() => {
     const nextErrors: Record<string, string> = {};
     if (!programmeType) nextErrors['academic_input.programme_type'] = 'Select IB or A-levels.';
     if (!academicInput.school_name.trim()) nextErrors['academic_input.school_name'] = 'School name is required.';
@@ -633,9 +641,9 @@ export const StudentIntakeForm = ({
     if (!academicInput.graduation_year) nextErrors['academic_input.graduation_year'] = 'Graduation year is required.';
     if (!academicInput.intended_clusters.length) nextErrors['academic_input.intended_clusters'] = 'Select at least one subject cluster.';
     return nextErrors;
-  };
+  }, [programmeType, academicInput.school_name, academicInput.school_country, academicInput.graduation_year, academicInput.intended_clusters]);
 
-  const validateSubjects = (nextErrors: Record<string, string>) => {
+  const validateSubjects = useCallback((nextErrors: Record<string, string>) => {
     const filledSubjects = subjects.filter((subject) => subject.subject_name.trim());
     if (programmeType === 'IB') {
       if (filledSubjects.length !== 6) {
@@ -668,9 +676,9 @@ export const StudentIntakeForm = ({
         }
       }
     });
-  };
+  }, [subjects, programmeType, parseNumber]);
 
-  const validateStep3 = () => {
+  const validateStep3 = useCallback(() => {
     const nextErrors: Record<string, string> = {};
     validateSubjects(nextErrors);
     if (programmeType === 'IB') {
@@ -705,11 +713,11 @@ export const StudentIntakeForm = ({
     });
 
     return nextErrors;
-  };
+  }, [validateSubjects, programmeType, academicInput, parseNumber, englishRequired, englishTestType, englishStatus, admissionsTests]);
 
-  const validateStep4 = () => {
+  const validateStep4 = useCallback(() => {
     return {} as Record<string, string>;
-  };
+  }, []);
 
   const validateCurrentStep = () => {
     switch (currentStep) {
@@ -737,13 +745,18 @@ export const StudentIntakeForm = ({
 
   const goToStep = (targetStep: number) => {
     if (targetStep === currentStep) return;
+    // For better UX, we allow moving back freely. 
+    // Moving forward still requires validation to maintain data integrity.
     if (targetStep < currentStep) {
       setCurrentStep(targetStep);
       return;
     }
+
+    // Validate current step before allowing forward movement
     const nextErrors = validateCurrentStep();
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
+
     setCurrentStep(Math.min(5, Math.max(1, targetStep)));
   };
 
@@ -755,18 +768,14 @@ export const StudentIntakeForm = ({
     applyPayload(initialPayload);
   };
 
-  const goBack = () => {
-    setCurrentStep((prev) => Math.max(1, prev - 1));
-  };
-
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const handleFinalSubmit = useCallback(() => {
     const step1Errors = validateStep1();
     const step2Errors = validateStep2();
     const step3Errors = validateStep3();
     const step4Errors = validateStep4();
     const nextErrors = { ...step1Errors, ...step2Errors, ...step3Errors, ...step4Errors };
     setErrors(nextErrors);
+
     if (Object.keys(nextErrors).length > 0) {
       if (Object.keys(step1Errors).length > 0) {
         setCurrentStep(1);
@@ -779,9 +788,10 @@ export const StudentIntakeForm = ({
       }
       return;
     }
+
     const payload = buildPayload();
     setStatusMessage('Saving profile...');
-    console.log('Student intake payload', payload);
+
     startTransition(async () => {
       try {
         const result = await saveStudentIntake(payload);
@@ -789,12 +799,28 @@ export const StudentIntakeForm = ({
           setStatusMessage(result?.message ?? 'Save failed.');
           return;
         }
-        router.push('/matches');
+        setStatusMessage('Profile saved successfully!');
+        // Small delay to show success before redirect
+        setTimeout(() => {
+          router.push('/matches');
+        }, 1500);
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Save failed.';
         setStatusMessage(message);
       }
     });
+  }, [
+    validateStep1, validateStep2, validateStep3, validateStep4,
+    buildPayload, router
+  ]);
+
+  const goBack = () => {
+    setCurrentStep((prev) => Math.max(1, prev - 1));
+  };
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    handleFinalSubmit();
   };
 
   const stepItems = useMemo(
@@ -822,19 +848,7 @@ export const StudentIntakeForm = ({
       4: step4Complete,
       5: step1Complete && step2Complete && step3Complete && step4Complete
     };
-  }, [
-    academicInput,
-    admissionsTests,
-    englishRequired,
-    englishScoreOverall,
-    englishStatus,
-    englishTestType,
-    formattedNationalities,
-    lifestylePreference,
-    personalInfo,
-    programmeType,
-    subjects
-  ]);
+  }, [validateStep1, validateStep2, validateStep3, lifestylePreference.teaching_style, lifestylePreference.desired_location_type, lifestylePreference.campus_size, lifestylePreference.extracurricular_interests.length, lifestylePreference.other_extracurriculars]);
 
   const progressLabel = `Step ${currentStep} of 5`;
   const currentStepLabel = stepItems.find((item) => item.step === currentStep)?.label ?? 'Profile';
@@ -847,996 +861,1056 @@ export const StudentIntakeForm = ({
           ? 'Not sure'
           : '';
 
+  const fadeInUp = {
+    initial: { opacity: 0, y: 20 },
+    animate: { opacity: 1, y: 0 },
+    exit: { opacity: 0, y: -20 },
+    transition: { duration: 0.4, ease: "easeOut" }
+  };
+
+  const staggerContainer = {
+    animate: {
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const renderStepIcon = (step: number) => {
+    switch (step) {
+      case 1: return <User className="w-4 h-4" />;
+      case 2: return <GraduationCap className="w-4 h-4" />;
+      case 3: return <Layout className="w-4 h-4" />;
+      case 4: return <Heart className="w-4 h-4" />;
+      case 5: return <Check className="w-4 h-4" />;
+      default: return null;
+    }
+  };
+
   return (
-    <form className="intake-form" onSubmit={handleSubmit}>
-      <div className="intake-layout">
-        <aside className="intake-sidebar">
-          <div className="sidebar-card">
-            <p className="step-indicator">{progressLabel}</p>
-            <h3 className="sidebar-title">Navigation</h3>
-            <p className="muted">Current: {currentStepLabel}</p>
-            <p className="muted">Jump to any section of your profile.</p>
-            <div className="step-nav">
+    <form className="relative font-sans" style={{ fontFamily: 'var(--font-outfit), sans-serif' }} onSubmit={handleSubmit}>
+      <div className="flex flex-col lg:flex-row gap-8">
+        <aside className="w-full lg:w-72 lg:sticky lg:top-24 h-fit">
+          <div className="surface-card p-6 bg-background/60 backdrop-blur-xl rounded-[32px] border-border/50 shadow-2xl">
+            <div className="mb-8">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                <p className="text-[10px] uppercase tracking-[0.3em] text-foreground/50 font-bold">{progressLabel}</p>
+              </div>
+              <h3 className="text-2xl font-bold tracking-tight mb-1">Your Journey</h3>
+              <p className="text-xs text-muted-foreground font-medium">{currentStepLabel}</p>
+            </div>
+
+            <div className="space-y-3">
               {stepItems.map((item) => (
                 <button
                   key={item.step}
                   type="button"
-                  className={[
-                    'step-chip',
-                    item.step === currentStep ? 'active' : '',
-                    stepCompletion[item.step] ? 'complete' : ''
-                  ]
-                    .filter(Boolean)
-                    .join(' ')}
+                  className={cn(
+                    "w-full group relative flex items-center gap-4 p-3.5 rounded-2xl transition-all duration-300",
+                    item.step === currentStep
+                      ? "bg-primary/10 border border-primary/20 text-primary shadow-sm"
+                      : "hover:bg-muted/50 border border-transparent text-foreground/60 hover:text-foreground",
+                    stepCompletion[item.step] && item.step !== currentStep && "text-success/80"
+                  )}
                   onClick={() => goToStep(item.step)}
                 >
-                  <span className="step-chip-label">
-                    {item.step}. {item.label}
-                  </span>
-                  <span className="step-chip-status">
-                    {stepCompletion[item.step] ? 'Done' : '—'}
-                  </span>
+                  <div className={cn(
+                    "flex items-center justify-center w-9 h-9 rounded-xl transition-all duration-300",
+                    item.step === currentStep
+                      ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-110"
+                      : stepCompletion[item.step]
+                        ? "bg-success/15 text-success"
+                        : "bg-muted/80 text-foreground/40 group-hover:bg-muted group-hover:text-foreground/70"
+                  )}>
+                    {stepCompletion[item.step] && item.step !== currentStep ? <Check className="w-4 h-4" /> : renderStepIcon(item.step)}
+                  </div>
+                  <div className="flex flex-col items-start overflow-hidden">
+                    <span className="text-xs font-medium whitespace-nowrap">{item.label}</span>
+                  </div>
+                  {item.step === currentStep && (
+                    <motion.div
+                      layoutId="active-nav-indicator"
+                      className="absolute right-3 w-1.5 h-1.5 rounded-full bg-primary"
+                    />
+                  )}
                 </button>
               ))}
-              {initialPayload ? (
-                <button type="button" className="step-chip ghost" onClick={restoreSavedProfile}>
-                  Load last submission
-                </button>
-              ) : null}
+            </div>
+
+            {initialPayload && (
+              <button
+                type="button"
+                className="w-full mt-8 py-3.5 px-4 rounded-2xl bg-muted/50 hover:bg-muted border border-border/50 text-xs font-bold transition-all duration-200 text-foreground/70 hover:text-foreground"
+                onClick={restoreSavedProfile}
+              >
+                Restore Last Progress
+              </button>
+            )}
+
+            <div className="mt-8 pt-8 border-t border-border/50">
+              <div className="flex items-center justify-between px-1">
+                <span className="text-[10px] uppercase tracking-widest text-foreground/40 font-bold">Theme</span>
+                <ThemeToggle compact />
+              </div>
             </div>
           </div>
         </aside>
 
-        <div className="intake-main">
-          <header className="intake-header">
-            <div>
-              <p className="step-indicator">{progressLabel}</p>
-              <h2>Student profile wizard</h2>
-              <p className="muted">Fast, focused questions so we can tailor UK admissions guidance.</p>
-            </div>
-            <div className="progress-pill">{progressLabel}</div>
-          </header>
-
-          {currentStep === 1 ? (
-            <section className="intake-section">
-              <h3>Personal information</h3>
-          <div className="grid two">
-            <label className="field">
-              <span>First name</span>
-              <input
-                type="text"
-                value={personalInfo.first_name}
-                onChange={(event) => updatePersonalInfo('first_name', event.target.value)}
-              />
-              {errors['personal_information.first_name'] ? <em>{errors['personal_information.first_name']}</em> : null}
-            </label>
-            <label className="field">
-              <span>Last name</span>
-              <input
-                type="text"
-                value={personalInfo.last_name}
-                onChange={(event) => updatePersonalInfo('last_name', event.target.value)}
-              />
-              {errors['personal_information.last_name'] ? <em>{errors['personal_information.last_name']}</em> : null}
-            </label>
-            <label className="field">
-              <span>Email</span>
-              <input
-                type="email"
-                value={personalInfo.email}
-                onChange={(event) => updatePersonalInfo('email', event.target.value)}
-              />
-              {errors['personal_information.email'] ? <em>{errors['personal_information.email']}</em> : null}
-            </label>
-          </div>
-
-          <div className="field-group">
-            <div className="field-group-header">
-              <div>
-                <span className="label">Nationality</span>
-                <p className="helper">Add more than one if needed.</p>
-              </div>
-              <button type="button" className="link-button" onClick={addNationality}>
-                Add another
+        <div className="flex-1 min-w-0">
+          {/* Top Horizontal Navigation */}
+          <nav className="mb-8 flex items-center justify-between gap-2 p-2 bg-muted/30 rounded-2xl border border-border/50 overflow-x-auto scrollbar-hide">
+            {stepItems.map((item) => (
+              <button
+                key={`top-nav-${item.step}`}
+                onClick={() => goToStep(item.step)}
+                className={cn(
+                  "flex-1 min-w-[40px] h-10 rounded-xl flex items-center justify-center transition-all duration-200",
+                  item.step === currentStep
+                    ? "bg-primary text-white shadow-lg shadow-primary/20"
+                    : stepCompletion[item.step]
+                      ? "bg-success/20 text-success"
+                      : "text-foreground/40 hover:bg-muted"
+                )}
+              >
+                {stepCompletion[item.step] && item.step !== currentStep ? <Check className="w-4 h-4" /> : renderStepIcon(item.step)}
               </button>
-            </div>
-            {nationalities.map((value, index) => (
-              <div key={`nationality-${index}`} className="row">
-                <input
-                  list="country-options"
-                  value={value}
-                  onChange={(event) => updateNationality(index, event.target.value)}
-                  placeholder="Select nationality"
-                />
-                {nationalities.length > 1 ? (
-                  <button type="button" className="link-button" onClick={() => removeNationality(index)}>
-                    Remove
-                  </button>
-                ) : null}
-              </div>
             ))}
-            {errors['personal_information.nationality'] ? <em>{errors['personal_information.nationality']}</em> : null}
+          </nav>
+
+          <div className="mb-10 lg:mb-12">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-[10px] font-semibold text-primary uppercase tracking-widest mb-4">
+              <Sparkles className="w-3 h-3" />
+              <span>Step {currentStep} Profile Wizard</span>
+            </div>
+            <h2 className="text-3xl md:text-4xl font-semibold mb-3">Let&apos;s personalize your experience</h2>
+            <p className="text-muted-foreground text-sm max-w-xl">
+              Tell us a bit about yourself so we can tailor our UK admissions guidance and match you with the best-fit programs.
+            </p>
           </div>
 
-          <div className="grid two">
-            <label className="field">
-              <span>Age (optional)</span>
-              <input
-                type="number"
-                min={10}
-                max={60}
-                value={personalInfo.age}
-                onChange={(event) => updatePersonalInfo('age', event.target.value)}
-              />
-            </label>
-            <div className="field">
-              <span>Gender (optional)</span>
-              <div className="inline-options">
-                {[
-                  { value: 'female', label: 'Female' },
-                  { value: 'male', label: 'Male' },
-                  { value: 'non_binary', label: 'Non-binary' },
-                  { value: 'prefer_not_to_say', label: 'Prefer not to say' }
-                ].map((option) => (
-                  <label key={option.value} className="radio">
-                    <input
-                      type="radio"
-                      name="gender"
-                      value={option.value}
-                      checked={personalInfo.gender === option.value}
-                      onChange={(event) => updatePersonalInfo('gender', event.target.value)}
-                    />
-                    {option.label}
-                  </label>
-                ))}
-              </div>
-            </div>
-            <label className="field">
-              <span>Country of residence</span>
-              <input
-                list="country-options"
-                value={personalInfo.resident_country}
-                onChange={(event) => updatePersonalInfo('resident_country', event.target.value)}
-              />
-              {errors['personal_information.resident_country'] ? (
-                <em>{errors['personal_information.resident_country']}</em>
-              ) : null}
-            </label>
-            <label className="field">
-              <span>Current city (optional)</span>
-              <input
-                type="text"
-                value={personalInfo.current_location_city}
-                onChange={(event) => updatePersonalInfo('current_location_city', event.target.value)}
-              />
-            </label>
-          </div>
-        </section>
-      ) : null}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentStep}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              variants={fadeInUp}
+              className="space-y-8"
+            >
 
-          {currentStep === 2 ? (
-            <section className="intake-section">
-              <h3>Academic input</h3>
-          <div className="field">
-            <span>Which qualification are you taking?</span>
-            <div className="inline-options">
-              {[
-                { value: 'IB', label: 'IB Diploma' },
-                { value: 'A_LEVEL', label: 'A-levels' }
-              ].map((option) => (
-                <label key={option.value} className="radio">
-                  <input
-                    type="radio"
-                    name="programme_type"
-                    value={option.value}
-                    checked={programmeType === option.value}
-                    onChange={(event) => setProgrammeType(event.target.value as ProgrammeType)}
-                  />
-                  {option.label}
-                </label>
-              ))}
-            </div>
-            {errors['academic_input.programme_type'] ? <em>{errors['academic_input.programme_type']}</em> : null}
-          </div>
-
-          <div className="grid two">
-            <label className="field">
-              <span>School name</span>
-              <input
-                type="text"
-                value={academicInput.school_name}
-                onChange={(event) => updateAcademicInput('school_name', event.target.value)}
-              />
-              {errors['academic_input.school_name'] ? <em>{errors['academic_input.school_name']}</em> : null}
-            </label>
-            <label className="field">
-              <span>School country</span>
-              <input
-                list="country-options"
-                value={academicInput.school_country}
-                onChange={(event) => updateAcademicInput('school_country', event.target.value)}
-              />
-              {errors['academic_input.school_country'] ? <em>{errors['academic_input.school_country']}</em> : null}
-            </label>
-            <label className="field">
-              <span>School city (optional)</span>
-              <input
-                type="text"
-                value={academicInput.school_city}
-                onChange={(event) => updateAcademicInput('school_city', event.target.value)}
-              />
-            </label>
-            <label className="field">
-              <span>School type (optional)</span>
-              <select
-                value={academicInput.school_type}
-                onChange={(event) => updateAcademicInput('school_type', event.target.value)}
-              >
-                <option value="">Select</option>
-                {SCHOOL_TYPE_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-
-          <div className="grid two">
-            <label className="field">
-              <span>Graduation year</span>
-              <select
-                value={academicInput.graduation_year}
-                onChange={(event) => updateAcademicInput('graduation_year', event.target.value)}
-              >
-                <option value="">Select</option>
-                {GRADUATION_YEARS.map((year) => (
-                  <option key={year} value={year}>
-                    {year}
-                  </option>
-                ))}
-              </select>
-              {errors['academic_input.graduation_year'] ? <em>{errors['academic_input.graduation_year']}</em> : null}
-            </label>
-            <label className="field">
-              <span>Desired UK start date (optional)</span>
-              <input
-                type="date"
-                value={academicInput.desired_start_date}
-                onChange={(event) => updateAcademicInput('desired_start_date', event.target.value)}
-              />
-            </label>
-          </div>
-
-          <div className="field-group">
-            <div className="field-group-header">
-              <div>
-                <span className="label">What do you want to study?</span>
-                <p className="helper">Select one primary focus.</p>
-              </div>
-              <span className="tooltip" title="We use this to shortlist the most relevant programmes.">
-                Why we ask this
-              </span>
-            </div>
-            <div className="checkbox-grid">
-              {CLUSTER_OPTIONS.map((option) => (
-                <label key={option.value} className="checkbox">
-                  <input
-                    type="checkbox"
-                    checked={academicInput.intended_clusters.includes(option.value)}
-                    disabled={
-                      !academicInput.intended_clusters.includes(option.value) &&
-                      academicInput.intended_clusters.length >= 1
-                    }
-                    onChange={() => toggleCluster(option.value, 'intended_clusters')}
-                  />
-                  {option.label}
-                </label>
-              ))}
-            </div>
-            {errors['academic_input.intended_clusters'] ? <em>{errors['academic_input.intended_clusters']}</em> : null}
-          </div>
-
-          <div className="field-group">
-            <div className="field-group-header">
-              <div>
-                <span className="label">Any secondary interests? (optional)</span>
-                <p className="helper">Choose up to two.</p>
-              </div>
-            </div>
-            <div className="checkbox-grid">
-              {CLUSTER_OPTIONS.map((option) => (
-                <label key={`secondary-${option.value}`} className="checkbox">
-                  <input
-                    type="checkbox"
-                    checked={academicInput.secondary_clusters.includes(option.value)}
-                    disabled={
-                      !academicInput.secondary_clusters.includes(option.value) &&
-                      academicInput.secondary_clusters.length >= 2
-                    }
-                    onChange={() => toggleCluster(option.value, 'secondary_clusters')}
-                  />
-                  {option.label}
-                </label>
-              ))}
-            </div>
-          </div>
-
-          <label className="field">
-            <span>Career aspiration (optional)</span>
-            <input
-              type="text"
-              placeholder="Investment banking, Software engineer"
-              value={academicInput.career_aspiration}
-              onChange={(event) => updateAcademicInput('career_aspiration', event.target.value)}
-            />
-          </label>
-        </section>
-      ) : null}
-
-          {currentStep === 3 ? (
-            <section className="intake-section">
-              <h3>Academic details</h3>
-
-          <div className="field-group">
-            <div className="field-group-header">
-              <div>
-                <span className="label">Your subjects and predicted grades</span>
-                <p className="helper">IB requires exactly 6 subjects with 3 HL.</p>
-              </div>
-              <button type="button" className="link-button" onClick={addSubject}>
-                Add subject
-              </button>
-            </div>
-
-            <div className="subject-grid">
-              {subjects.map((subject, index) => (
-                <div key={`subject-${index}`} className="subject-row">
-                  <div>
-                    <label>
-                      Subject
+              {currentStep === 1 ? (
+                <section className="space-y-6 lg:space-y-8">
+                  <h3>Personal information</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <label className="space-y-2 flex flex-col">
+                      <span>First name</span>
                       <input
-                        list="subject-options"
-                        value={subject.subject_name}
-                        onChange={(event) => updateSubject(index, 'subject_name', event.target.value)}
+                        type="text"
+                        value={personalInfo.first_name}
+                        onChange={(event) => updatePersonalInfo('first_name', event.target.value)}
+                      />
+                      {errors['personal_information.first_name'] ? <em>{errors['personal_information.first_name']}</em> : null}
+                    </label>
+                    <label className="space-y-2 flex flex-col">
+                      <span>Last name</span>
+                      <input
+                        type="text"
+                        value={personalInfo.last_name}
+                        onChange={(event) => updatePersonalInfo('last_name', event.target.value)}
+                      />
+                      {errors['personal_information.last_name'] ? <em>{errors['personal_information.last_name']}</em> : null}
+                    </label>
+                    <label className="space-y-2 flex flex-col">
+                      <span>Email</span>
+                      <input
+                        type="email"
+                        value={personalInfo.email}
+                        onChange={(event) => updatePersonalInfo('email', event.target.value)}
+                      />
+                      {errors['personal_information.email'] ? <em>{errors['personal_information.email']}</em> : null}
+                    </label>
+                  </div>
+
+                  <div className="p-6 rounded-[24px] border border-white/10 bg-white/5 backdrop-blur-sm space-y-6">
+                    <div className="flex justify-between items-start gap-3">
+                      <div>
+                        <span className="text-base font-semibold text-foreground">Nationality</span>
+                        <p className="text-xs text-muted-foreground mt-1">Add more than one if needed.</p>
+                      </div>
+                      <button type="button" className="text-xs font-semibold text-primary hover:text-primary/80 transition-colors uppercase tracking-wider bg-transparent border-none cursor-pointer" onClick={addNationality}>
+                        Add another
+                      </button>
+                    </div>
+                    {nationalities.map((value, index) => (
+                      <div key={`nationality-${index}`} className="flex gap-3 items-center">
+                        <input
+                          list="country-options"
+                          value={value}
+                          onChange={(event) => updateNationality(index, event.target.value)}
+                          placeholder="Select nationality"
+                        />
+                        {nationalities.length > 1 ? (
+                          <button type="button" className="text-xs font-semibold text-primary hover:text-primary/80 transition-colors uppercase tracking-wider bg-transparent border-none cursor-pointer" onClick={() => removeNationality(index)}>
+                            Remove
+                          </button>
+                        ) : null}
+                      </div>
+                    ))}
+                    {errors['personal_information.nationality'] ? <em>{errors['personal_information.nationality']}</em> : null}
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <label className="space-y-2 flex flex-col">
+                      <span>Age (optional)</span>
+                      <input
+                        type="number"
+                        min={10}
+                        max={60}
+                        value={personalInfo.age}
+                        onChange={(event) => updatePersonalInfo('age', event.target.value)}
                       />
                     </label>
-                    {errors[`academic_input.subject_list.${index}.subject_name`] ? (
-                      <em>{errors[`academic_input.subject_list.${index}.subject_name`]}</em>
-                    ) : null}
-                  </div>
-                  <div>
-                    <label>
-                      Level
-                      <select
-                        value={subject.level}
-                        onChange={(event) => updateSubject(index, 'level', event.target.value)}
-                        disabled={programmeType === 'A_LEVEL'}
-                      >
-                        {programmeType === 'IB' ? (
-                          <>
-                            <option value="HL">HL</option>
-                            <option value="SL">SL</option>
-                          </>
-                        ) : (
-                          <option value="A_LEVEL">A-level</option>
-                        )}
-                      </select>
-                    </label>
-                  </div>
-                  <div>
-                    <label>
-                      Predicted grade
-                      {programmeType === 'IB' ? (
-                        <input
-                          type="number"
-                          min={1}
-                          max={7}
-                          value={subject.grade_value}
-                          onChange={(event) => updateSubject(index, 'grade_value', event.target.value)}
-                        />
-                      ) : (
-                        <select
-                          value={subject.grade_value}
-                          onChange={(event) => updateSubject(index, 'grade_value', event.target.value)}
-                        >
-                          <option value="">Select</option>
-                          {A_LEVEL_GRADES.map((grade) => (
-                            <option key={grade} value={grade}>
-                              {grade}
-                            </option>
-                          ))}
-                        </select>
-                      )}
-                    </label>
-                    {errors[`academic_input.subject_list.${index}.grade_value`] ? (
-                      <em>{errors[`academic_input.subject_list.${index}.grade_value`]}</em>
-                    ) : null}
-                  </div>
-                  <div className="subject-actions">
-                    <button type="button" className="link-button" onClick={() => removeSubject(index)}>
-                      Remove
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-            {errors['academic_input.subject_list'] ? <em>{errors['academic_input.subject_list']}</em> : null}
-            {errors['academic_input.subject_list.hl'] ? <em>{errors['academic_input.subject_list.hl']}</em> : null}
-          </div>
-
-          {programmeType === 'IB' ? (
-            <>
-              <div className="field">
-                <span>Maths pathway</span>
-                <div className="inline-options">
-                  {[
-                    { value: 'AA_HL', label: 'AA HL' },
-                    { value: 'AA_SL', label: 'AA SL' },
-                    { value: 'AI_HL', label: 'AI HL' },
-                    { value: 'AI_SL', label: 'AI SL' }
-                  ].map((option) => (
-                    <label key={option.value} className="radio">
-                      <input
-                        type="radio"
-                        name="ib_math_pathway"
-                        value={option.value}
-                        checked={academicInput.ib_math_pathway === option.value}
-                        onChange={(event) => updateAcademicInput('ib_math_pathway', event.target.value)}
-                      />
-                      {option.label}
-                    </label>
-                  ))}
-                </div>
-                {errors['academic_input.ib_math_pathway'] ? <em>{errors['academic_input.ib_math_pathway']}</em> : null}
-              </div>
-
-              <div className="grid two">
-                <label className="field">
-                  <span>Predicted total IB points</span>
-                  <input
-                    type="number"
-                    min={24}
-                    max={45}
-                    value={academicInput.ib_total_points}
-                    onChange={(event) => updateAcademicInput('ib_total_points', event.target.value)}
-                  />
-                  {errors['academic_input.ib_total_points'] ? <em>{errors['academic_input.ib_total_points']}</em> : null}
-                </label>
-                <label className="field">
-                  <span>Core points (optional)</span>
-                  <input
-                    type="number"
-                    min={0}
-                    max={3}
-                    value={academicInput.ib_core_points}
-                    onChange={(event) => updateAcademicInput('ib_core_points', event.target.value)}
-                  />
-                  {errors['academic_input.ib_core_points'] ? <em>{errors['academic_input.ib_core_points']}</em> : null}
-                </label>
-                <label className="field">
-                  <span>TOK grade (optional)</span>
-                  <select
-                    value={academicInput.ib_tok_grade}
-                    onChange={(event) => updateAcademicInput('ib_tok_grade', event.target.value)}
-                  >
-                    <option value="">Select</option>
-                    {IB_GRADES.map((grade) => (
-                      <option key={grade} value={grade}>
-                        {grade}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="field">
-                  <span>EE grade (optional)</span>
-                  <select
-                    value={academicInput.ib_ee_grade}
-                    onChange={(event) => updateAcademicInput('ib_ee_grade', event.target.value)}
-                  >
-                    <option value="">Select</option>
-                    {IB_GRADES.map((grade) => (
-                      <option key={grade} value={grade}>
-                        {grade}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              </div>
-
-              <div className="grid two">
-                <label className="field">
-                  <span>Extended Essay subject (optional)</span>
-                  <input
-                    type="text"
-                    value={academicInput.ee_subject}
-                    onChange={(event) => updateAcademicInput('ee_subject', event.target.value)}
-                  />
-                </label>
-                <label className="field">
-                  <span>Extended Essay title (optional)</span>
-                  <input
-                    type="text"
-                    value={academicInput.ee_title}
-                    onChange={(event) => updateAcademicInput('ee_title', event.target.value)}
-                  />
-                </label>
-              </div>
-              <label className="field">
-                <span>Extended Essay summary (optional)</span>
-                <textarea
-                  rows={3}
-                  maxLength={350}
-                  value={academicInput.ee_summary}
-                  onChange={(event) => updateAcademicInput('ee_summary', event.target.value)}
-                  placeholder="1–3 sentences max"
-                />
-                {errors['academic_input.ee_summary'] ? <em>{errors['academic_input.ee_summary']}</em> : null}
-              </label>
-            </>
-          ) : null}
-
-          <div className="field-group">
-            <div className="field-group-header">
-              <div>
-                <span className="label">English proficiency</span>
-                <p className="helper">Some universities require a formal test score.</p>
-              </div>
-              <span className="tooltip" title="We use this to flag whether a language test is still needed.">
-                Why we ask this
-              </span>
-            </div>
-            <div className="field">
-              <span>Will you need to prove English proficiency?</span>
-              <div className="inline-options">
-                {[
-                  { value: 'yes', label: 'Yes' },
-                  { value: 'no', label: 'No' },
-                  { value: 'not_sure', label: 'Not sure' }
-                ].map((option) => (
-                  <label key={option.value} className="radio">
-                    <input
-                      type="radio"
-                      name="english_required"
-                      value={option.value}
-                      checked={englishRequired === option.value}
-                      onChange={(event) => setEnglishRequired(event.target.value as EnglishRequiredState)}
-                    />
-                    {option.label}
-                  </label>
-                ))}
-              </div>
-              {errors['academic_input.english_required'] ? <em>{errors['academic_input.english_required']}</em> : null}
-            </div>
-
-            {englishRequired !== 'no' ? (
-              <div className="grid two">
-                <label className="field">
-                  <span>English test type</span>
-                  <select value={englishTestType} onChange={(event) => setEnglishTestType(event.target.value as EnglishTestType)}>
-                    {ENGLISH_TEST_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                  {errors['academic_input.english_test_type'] ? <em>{errors['academic_input.english_test_type']}</em> : null}
-                </label>
-                <div className="field">
-                  <span>English test status</span>
-                  <div className="inline-options">
-                    {ENGLISH_STATUS_OPTIONS.map((option) => (
-                      <label key={option.value} className="radio">
-                        <input
-                          type="radio"
-                          name="english_status"
-                          value={option.value}
-                          checked={englishStatus === option.value}
-                          onChange={(event) => setEnglishStatus(event.target.value as EnglishStatus)}
-                        />
-                        {option.label}
-                      </label>
-                    ))}
-                  </div>
-                  {errors['academic_input.english_status'] ? <em>{errors['academic_input.english_status']}</em> : null}
-                </div>
-              </div>
-            ) : null}
-
-            {showEnglishScore ? (
-              <label className="field">
-                <span>English overall score (optional)</span>
-                <input
-                  type="number"
-                  value={englishScoreOverall}
-                  onChange={(event) => setEnglishScoreOverall(event.target.value)}
-                />
-              </label>
-            ) : null}
-          </div>
-
-          {showAdmissionsTests ? (
-            <div className="field-group">
-              <div className="field-group-header">
-                <div>
-                  <span className="label">Admissions tests</span>
-                  <p className="helper">Select the tests you have taken or booked.</p>
-                </div>
-                <span className="tooltip" title="Some subjects require admissions tests for eligibility.">
-                  Why we ask this
-                </span>
-              </div>
-              <div className="checkbox-grid">
-                {ADMISSIONS_TEST_OPTIONS.map((option) => (
-                  <label key={option.value} className="checkbox">
-                    <input
-                      type="checkbox"
-                      checked={admissionsTests.some((test) => test.test_type === option.value)}
-                      onChange={() => toggleAdmissionsTest(option.value)}
-                    />
-                    {option.label}
-                  </label>
-                ))}
-              </div>
-
-              {admissionsTests.filter((test) => test.test_type !== 'NONE').map((test, index) => (
-                <div key={`${test.test_type}-${index}`} className="subject-row">
-                  <div>
-                    <label>
-                      Test
-                      <input type="text" value={test.test_type} disabled />
-                    </label>
-                  </div>
-                  <div>
-                    <label>
-                      Status
-                      <div className="inline-options">
+                    <div className="space-y-2 flex flex-col">
+                      <span>Gender (optional)</span>
+                      <div className="flex flex-wrap gap-3">
                         {[
-                          { value: 'taken', label: 'Taken' },
-                          { value: 'booked', label: 'Booked' },
-                          { value: 'missing', label: 'Missing' }
+                          { value: 'female', label: 'Female' },
+                          { value: 'male', label: 'Male' },
+                          { value: 'non_binary', label: 'Non-binary' },
+                          { value: 'prefer_not_to_say', label: 'Prefer not to say' }
                         ].map((option) => (
-                          <label key={`${test.test_type}-${option.value}`} className="radio">
+                          <label key={option.value} className="relative flex items-center gap-3 p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 cursor-pointer transition-all duration-200 text-sm">
                             <input
                               type="radio"
-                              name={`admissions-status-${index}`}
+                              name="gender"
                               value={option.value}
-                              checked={test.status === option.value}
-                              onChange={(event) => updateAdmissionsTest(index, 'status', event.target.value)}
+                              checked={personalInfo.gender === option.value}
+                              onChange={(event) => updatePersonalInfo('gender', event.target.value)}
                             />
                             {option.label}
                           </label>
                         ))}
                       </div>
+                    </div>
+                    <label className="space-y-2 flex flex-col">
+                      <span>Country of residence</span>
+                      <input
+                        list="country-options"
+                        value={personalInfo.resident_country}
+                        onChange={(event) => updatePersonalInfo('resident_country', event.target.value)}
+                      />
+                      {errors['personal_information.resident_country'] ? (
+                        <em>{errors['personal_information.resident_country']}</em>
+                      ) : null}
                     </label>
-                    {errors[`academic_input.admissions_tests.${index}.status`] ? (
-                      <em>{errors[`academic_input.admissions_tests.${index}.status`]}</em>
+                    <label className="space-y-2 flex flex-col">
+                      <span>Current city (optional)</span>
+                      <input
+                        type="text"
+                        value={personalInfo.current_location_city}
+                        onChange={(event) => updatePersonalInfo('current_location_city', event.target.value)}
+                      />
+                    </label>
+                  </div>
+                </section>
+              ) : null}
+
+              {currentStep === 2 ? (
+                <section className="space-y-6 lg:space-y-8">
+                  <h3>Academic input</h3>
+                  <div className="space-y-2 flex flex-col">
+                    <span>Which qualification are you taking?</span>
+                    <div className="flex flex-wrap gap-3">
+                      {[
+                        { value: 'IB', label: 'IB Diploma' },
+                        { value: 'A_LEVEL', label: 'A-levels' }
+                      ].map((option) => (
+                        <label key={option.value} className="relative flex items-center gap-3 p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 cursor-pointer transition-all duration-200 text-sm">
+                          <input
+                            type="radio"
+                            name="programme_type"
+                            value={option.value}
+                            checked={programmeType === option.value}
+                            onChange={(event) => setProgrammeType(event.target.value as ProgrammeType)}
+                          />
+                          {option.label}
+                        </label>
+                      ))}
+                    </div>
+                    {errors['academic_input.programme_type'] ? <em>{errors['academic_input.programme_type']}</em> : null}
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <label className="space-y-2 flex flex-col">
+                      <span>School name</span>
+                      <input
+                        type="text"
+                        value={academicInput.school_name}
+                        onChange={(event) => updateAcademicInput('school_name', event.target.value)}
+                      />
+                      {errors['academic_input.school_name'] ? <em>{errors['academic_input.school_name']}</em> : null}
+                    </label>
+                    <label className="space-y-2 flex flex-col">
+                      <span>School country</span>
+                      <input
+                        list="country-options"
+                        value={academicInput.school_country}
+                        onChange={(event) => updateAcademicInput('school_country', event.target.value)}
+                      />
+                      {errors['academic_input.school_country'] ? <em>{errors['academic_input.school_country']}</em> : null}
+                    </label>
+                    <label className="space-y-2 flex flex-col">
+                      <span>School city (optional)</span>
+                      <input
+                        type="text"
+                        value={academicInput.school_city}
+                        onChange={(event) => updateAcademicInput('school_city', event.target.value)}
+                      />
+                    </label>
+                    <label className="space-y-2 flex flex-col">
+                      <span>School type (optional)</span>
+                      <select
+                        value={academicInput.school_type}
+                        onChange={(event) => updateAcademicInput('school_type', event.target.value)}
+                      >
+                        <option value="">Select</option>
+                        {SCHOOL_TYPE_OPTIONS.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <label className="space-y-2 flex flex-col">
+                      <span>Graduation year</span>
+                      <select
+                        value={academicInput.graduation_year}
+                        onChange={(event) => updateAcademicInput('graduation_year', event.target.value)}
+                      >
+                        <option value="">Select</option>
+                        {GRADUATION_YEARS.map((year) => (
+                          <option key={year} value={year}>
+                            {year}
+                          </option>
+                        ))}
+                      </select>
+                      {errors['academic_input.graduation_year'] ? <em>{errors['academic_input.graduation_year']}</em> : null}
+                    </label>
+                    <label className="space-y-2 flex flex-col">
+                      <span>Desired UK start date (optional)</span>
+                      <input
+                        type="date"
+                        value={academicInput.desired_start_date}
+                        onChange={(event) => updateAcademicInput('desired_start_date', event.target.value)}
+                      />
+                    </label>
+                  </div>
+
+                  <div className="p-6 rounded-[24px] border border-white/10 bg-white/5 backdrop-blur-sm space-y-6">
+                    <div className="flex justify-between items-start gap-3">
+                      <div>
+                        <span className="text-base font-semibold text-foreground">What do you want to study?</span>
+                        <p className="text-xs text-muted-foreground mt-1">Select one primary focus.</p>
+                      </div>
+                      <span className="text-xs underline cursor-help text-white/70" title="We use this to shortlist the most relevant programmes.">
+                        Why we ask this
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {CLUSTER_OPTIONS.map((option) => (
+                        <label key={option.value} className="relative flex items-center gap-3 p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 cursor-pointer transition-all duration-200 text-sm">
+                          <input
+                            type="checkbox"
+                            checked={academicInput.intended_clusters.includes(option.value)}
+                            disabled={
+                              !academicInput.intended_clusters.includes(option.value) &&
+                              academicInput.intended_clusters.length >= 1
+                            }
+                            onChange={() => toggleCluster(option.value, 'intended_clusters')}
+                          />
+                          {option.label}
+                        </label>
+                      ))}
+                    </div>
+                    {errors['academic_input.intended_clusters'] ? <em>{errors['academic_input.intended_clusters']}</em> : null}
+                  </div>
+
+                  <div className="p-6 rounded-[24px] border border-white/10 bg-white/5 backdrop-blur-sm space-y-6">
+                    <div className="flex justify-between items-start gap-3">
+                      <div>
+                        <span className="text-base font-semibold text-foreground">Any secondary interests? (optional)</span>
+                        <p className="text-xs text-muted-foreground mt-1">Choose up to two.</p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {CLUSTER_OPTIONS.map((option) => (
+                        <label key={`secondary-${option.value}`} className="relative flex items-center gap-3 p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 cursor-pointer transition-all duration-200 text-sm">
+                          <input
+                            type="checkbox"
+                            checked={academicInput.secondary_clusters.includes(option.value)}
+                            disabled={
+                              !academicInput.secondary_clusters.includes(option.value) &&
+                              academicInput.secondary_clusters.length >= 2
+                            }
+                            onChange={() => toggleCluster(option.value, 'secondary_clusters')}
+                          />
+                          {option.label}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  <label className="space-y-2 flex flex-col">
+                    <span>Career aspiration (optional)</span>
+                    <input
+                      type="text"
+                      placeholder="Investment banking, Software engineer"
+                      value={academicInput.career_aspiration}
+                      onChange={(event) => updateAcademicInput('career_aspiration', event.target.value)}
+                    />
+                  </label>
+                </section>
+              ) : null}
+
+              {currentStep === 3 ? (
+                <section className="space-y-6 lg:space-y-8">
+                  <h3>Academic details</h3>
+
+                  <div className="p-6 rounded-[24px] border border-white/10 bg-white/5 backdrop-blur-sm space-y-6">
+                    <div className="flex justify-between items-start gap-3">
+                      <div>
+                        <span className="text-base font-semibold text-foreground">Your subjects and predicted grades</span>
+                        <p className="text-xs text-muted-foreground mt-1">IB requires exactly 6 subjects with 3 HL.</p>
+                      </div>
+                      <button type="button" className="text-xs font-semibold text-primary hover:text-primary/80 transition-colors uppercase tracking-wider bg-transparent border-none cursor-pointer" onClick={addSubject}>
+                        Add subject
+                      </button>
+                    </div>
+
+                    <div className="subject-grid">
+                      {subjects.map((subject, index) => (
+                        <div key={`subject-${index}`} className="subject-row">
+                          <div>
+                            <label>
+                              Subject
+                              <input
+                                list="subject-options"
+                                value={subject.subject_name}
+                                onChange={(event) => updateSubject(index, 'subject_name', event.target.value)}
+                              />
+                            </label>
+                            {errors[`academic_input.subject_list.${index}.subject_name`] ? (
+                              <em>{errors[`academic_input.subject_list.${index}.subject_name`]}</em>
+                            ) : null}
+                          </div>
+                          <div>
+                            <label>
+                              Level
+                              <select
+                                value={subject.level}
+                                onChange={(event) => updateSubject(index, 'level', event.target.value)}
+                                disabled={programmeType === 'A_LEVEL'}
+                              >
+                                {programmeType === 'IB' ? (
+                                  <>
+                                    <option value="HL">HL</option>
+                                    <option value="SL">SL</option>
+                                  </>
+                                ) : (
+                                  <option value="A_LEVEL">A-level</option>
+                                )}
+                              </select>
+                            </label>
+                          </div>
+                          <div>
+                            <label>
+                              Predicted grade
+                              {programmeType === 'IB' ? (
+                                <input
+                                  type="number"
+                                  min={1}
+                                  max={7}
+                                  value={subject.grade_value}
+                                  onChange={(event) => updateSubject(index, 'grade_value', event.target.value)}
+                                />
+                              ) : (
+                                <select
+                                  value={subject.grade_value}
+                                  onChange={(event) => updateSubject(index, 'grade_value', event.target.value)}
+                                >
+                                  <option value="">Select</option>
+                                  {A_LEVEL_GRADES.map((grade) => (
+                                    <option key={grade} value={grade}>
+                                      {grade}
+                                    </option>
+                                  ))}
+                                </select>
+                              )}
+                            </label>
+                            {errors[`academic_input.subject_list.${index}.grade_value`] ? (
+                              <em>{errors[`academic_input.subject_list.${index}.grade_value`]}</em>
+                            ) : null}
+                          </div>
+                          <div className="flex items-end">
+                            <button type="button" className="text-xs font-semibold text-primary hover:text-primary/80 transition-colors uppercase tracking-wider bg-transparent border-none cursor-pointer" onClick={() => removeSubject(index)}>
+                              Remove
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    {errors['academic_input.subject_list'] ? <em>{errors['academic_input.subject_list']}</em> : null}
+                    {errors['academic_input.subject_list.hl'] ? <em>{errors['academic_input.subject_list.hl']}</em> : null}
+                  </div>
+
+                  {programmeType === 'IB' ? (
+                    <>
+                      <div className="space-y-2 flex flex-col">
+                        <span>Maths pathway</span>
+                        <div className="flex flex-wrap gap-3">
+                          {[
+                            { value: 'AA_HL', label: 'AA HL' },
+                            { value: 'AA_SL', label: 'AA SL' },
+                            { value: 'AI_HL', label: 'AI HL' },
+                            { value: 'AI_SL', label: 'AI SL' }
+                          ].map((option) => (
+                            <label key={option.value} className="relative flex items-center gap-3 p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 cursor-pointer transition-all duration-200 text-sm">
+                              <input
+                                type="radio"
+                                name="ib_math_pathway"
+                                value={option.value}
+                                checked={academicInput.ib_math_pathway === option.value}
+                                onChange={(event) => updateAcademicInput('ib_math_pathway', event.target.value)}
+                              />
+                              {option.label}
+                            </label>
+                          ))}
+                        </div>
+                        {errors['academic_input.ib_math_pathway'] ? <em>{errors['academic_input.ib_math_pathway']}</em> : null}
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <label className="space-y-2 flex flex-col">
+                          <span>Predicted total IB points</span>
+                          <input
+                            type="number"
+                            min={24}
+                            max={45}
+                            value={academicInput.ib_total_points}
+                            onChange={(event) => updateAcademicInput('ib_total_points', event.target.value)}
+                          />
+                          {errors['academic_input.ib_total_points'] ? <em>{errors['academic_input.ib_total_points']}</em> : null}
+                        </label>
+                        <label className="space-y-2 flex flex-col">
+                          <span>Core points (optional)</span>
+                          <input
+                            type="number"
+                            min={0}
+                            max={3}
+                            value={academicInput.ib_core_points}
+                            onChange={(event) => updateAcademicInput('ib_core_points', event.target.value)}
+                          />
+                          {errors['academic_input.ib_core_points'] ? <em>{errors['academic_input.ib_core_points']}</em> : null}
+                        </label>
+                        <label className="space-y-2 flex flex-col">
+                          <span>TOK grade (optional)</span>
+                          <select
+                            value={academicInput.ib_tok_grade}
+                            onChange={(event) => updateAcademicInput('ib_tok_grade', event.target.value)}
+                          >
+                            <option value="">Select</option>
+                            {IB_GRADES.map((grade) => (
+                              <option key={grade} value={grade}>
+                                {grade}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                        <label className="space-y-2 flex flex-col">
+                          <span>EE grade (optional)</span>
+                          <select
+                            value={academicInput.ib_ee_grade}
+                            onChange={(event) => updateAcademicInput('ib_ee_grade', event.target.value)}
+                          >
+                            <option value="">Select</option>
+                            {IB_GRADES.map((grade) => (
+                              <option key={grade} value={grade}>
+                                {grade}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <label className="space-y-2 flex flex-col">
+                          <span>Extended Essay subject (optional)</span>
+                          <input
+                            type="text"
+                            value={academicInput.ee_subject}
+                            onChange={(event) => updateAcademicInput('ee_subject', event.target.value)}
+                          />
+                        </label>
+                        <label className="space-y-2 flex flex-col">
+                          <span>Extended Essay title (optional)</span>
+                          <input
+                            type="text"
+                            value={academicInput.ee_title}
+                            onChange={(event) => updateAcademicInput('ee_title', event.target.value)}
+                          />
+                        </label>
+                      </div>
+                      <label className="space-y-2 flex flex-col">
+                        <span>Extended Essay summary (optional)</span>
+                        <textarea
+                          rows={3}
+                          maxLength={350}
+                          value={academicInput.ee_summary}
+                          onChange={(event) => updateAcademicInput('ee_summary', event.target.value)}
+                          placeholder="1–3 sentences max"
+                        />
+                        {errors['academic_input.ee_summary'] ? <em>{errors['academic_input.ee_summary']}</em> : null}
+                      </label>
+                    </>
+                  ) : null}
+
+                  <div className="p-6 rounded-[24px] border border-white/10 bg-white/5 backdrop-blur-sm space-y-6">
+                    <div className="flex justify-between items-start gap-3">
+                      <div>
+                        <span className="text-base font-semibold text-foreground">English proficiency</span>
+                        <p className="text-xs text-muted-foreground mt-1">Some universities require a formal test score.</p>
+                      </div>
+                      <span className="text-xs underline cursor-help text-white/70" title="We use this to flag whether a language test is still needed.">
+                        Why we ask this
+                      </span>
+                    </div>
+                    <div className="space-y-2 flex flex-col">
+                      <span>Will you need to prove English proficiency?</span>
+                      <div className="flex flex-wrap gap-3">
+                        {[
+                          { value: 'yes', label: 'Yes' },
+                          { value: 'no', label: 'No' },
+                          { value: 'not_sure', label: 'Not sure' }
+                        ].map((option) => (
+                          <label key={option.value} className="relative flex items-center gap-3 p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 cursor-pointer transition-all duration-200 text-sm">
+                            <input
+                              type="radio"
+                              name="english_required"
+                              value={option.value}
+                              checked={englishRequired === option.value}
+                              onChange={(event) => setEnglishRequired(event.target.value as EnglishRequiredState)}
+                            />
+                            {option.label}
+                          </label>
+                        ))}
+                      </div>
+                      {errors['academic_input.english_required'] ? <em>{errors['academic_input.english_required']}</em> : null}
+                    </div>
+
+                    {englishRequired !== 'no' ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <label className="space-y-2 flex flex-col">
+                          <span>English test type</span>
+                          <select value={englishTestType} onChange={(event) => setEnglishTestType(event.target.value as EnglishTestType)}>
+                            {ENGLISH_TEST_OPTIONS.map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                          {errors['academic_input.english_test_type'] ? <em>{errors['academic_input.english_test_type']}</em> : null}
+                        </label>
+                        <div className="space-y-2 flex flex-col">
+                          <span>English test status</span>
+                          <div className="flex flex-wrap gap-3">
+                            {ENGLISH_STATUS_OPTIONS.map((option) => (
+                              <label key={option.value} className="relative flex items-center gap-3 p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 cursor-pointer transition-all duration-200 text-sm">
+                                <input
+                                  type="radio"
+                                  name="english_status"
+                                  value={option.value}
+                                  checked={englishStatus === option.value}
+                                  onChange={(event) => setEnglishStatus(event.target.value as EnglishStatus)}
+                                />
+                                {option.label}
+                              </label>
+                            ))}
+                          </div>
+                          {errors['academic_input.english_status'] ? <em>{errors['academic_input.english_status']}</em> : null}
+                        </div>
+                      </div>
+                    ) : null}
+
+                    {showEnglishScore ? (
+                      <label className="space-y-2 flex flex-col">
+                        <span>English overall score (optional)</span>
+                        <input
+                          type="number"
+                          value={englishScoreOverall}
+                          onChange={(event) => setEnglishScoreOverall(event.target.value)}
+                        />
+                      </label>
                     ) : null}
                   </div>
-                  <div>
-                    <label>
-                      Score (optional)
-                      <input
-                        type="number"
-                        value={test.score_numeric}
-                        onChange={(event) => updateAdmissionsTest(index, 'score_numeric', event.target.value)}
-                      />
-                    </label>
-                  </div>
-                  <div>
-                    <label>
-                      Percentile (optional)
-                      <input
-                        type="number"
-                        min={0}
-                        max={100}
-                        value={test.percentile}
-                        onChange={(event) => updateAdmissionsTest(index, 'percentile', event.target.value)}
-                      />
-                    </label>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : null}
-        </section>
-      ) : null}
 
-      {currentStep === 4 ? (
-        <section className="intake-section">
-          <h3>Lifestyle preferences</h3>
-          <div className="field">
-            <span>Teaching style preference</span>
-            <div className="inline-options">
-              {[
-                { value: 'academic', label: 'Academic' },
-                { value: 'practical', label: 'Practical' },
-                { value: 'mixed', label: 'Mixed' },
-                { value: '', label: 'No preference' }
-              ].map((option) => (
-                <label key={option.value} className="radio">
-                  <input
-                    type="radio"
-                    name="teaching_style"
-                    value={option.value}
-                    checked={lifestylePreference.teaching_style === option.value}
-                    onChange={(event) => updateLifestylePreference('teaching_style', event.target.value)}
-                  />
-                  {option.label}
-                </label>
-              ))}
-            </div>
-          </div>
-          <div className="field">
-            <span>Preferred location type</span>
-            <div className="inline-options">
-              {[
-                { value: 'london', label: 'London' },
-                { value: 'major_city', label: 'Major city' },
-                { value: 'smaller_city', label: 'Smaller city' },
-                { value: 'suburban', label: 'Suburban' },
-                { value: 'no_preference', label: 'No preference' }
-              ].map((option) => (
-                <label key={option.value} className="radio">
-                  <input
-                    type="radio"
-                    name="desired_location_type"
-                    value={option.value}
-                    checked={lifestylePreference.desired_location_type === option.value}
-                    onChange={(event) => updateLifestylePreference('desired_location_type', event.target.value)}
-                  />
-                  {option.label}
-                </label>
-              ))}
-            </div>
-          </div>
-          <div className="field">
-            <span>Campus size preference</span>
-            <div className="inline-options">
-              {[
-                { value: 'small', label: 'Small' },
-                { value: 'medium', label: 'Medium' },
-                { value: 'large', label: 'Large' },
-                { value: 'no_preference', label: 'No preference' }
-              ].map((option) => (
-                <label key={option.value} className="radio">
-                  <input
-                    type="radio"
-                    name="campus_size"
-                    value={option.value}
-                    checked={lifestylePreference.campus_size === option.value}
-                    onChange={(event) => updateLifestylePreference('campus_size', event.target.value)}
-                  />
-                  {option.label}
-                </label>
-              ))}
-            </div>
-          </div>
-          <div className="field-group">
-            <div className="field-group-header">
-              <div>
-                <span className="label">Extracurricular interests</span>
-                <p className="helper">Select any that matter to your university experience.</p>
-              </div>
-            </div>
-            <div className="checkbox-grid">
-              {EXTRACURRICULAR_OPTIONS.map((option) => (
-                <label key={option} className="checkbox">
-                  <input
-                    type="checkbox"
-                    checked={lifestylePreference.extracurricular_interests.includes(option)}
-                    onChange={() => toggleExtracurricular(option)}
-                  />
-                  {option}
-                </label>
-              ))}
-            </div>
-          </div>
-          <label className="field">
-            <span>Other extracurriculars (optional)</span>
-            <input
-              type="text"
-              value={lifestylePreference.other_extracurriculars}
-              onChange={(event) => updateLifestylePreference('other_extracurriculars', event.target.value)}
-            />
-          </label>
-        </section>
-      ) : null}
+                  {showAdmissionsTests ? (
+                    <div className="p-6 rounded-[24px] border border-white/10 bg-white/5 backdrop-blur-sm space-y-6">
+                      <div className="flex justify-between items-start gap-3">
+                        <div>
+                          <span className="text-base font-semibold text-foreground">Admissions tests</span>
+                          <p className="text-xs text-muted-foreground mt-1">Select the tests you have taken or booked.</p>
+                        </div>
+                        <span className="text-xs underline cursor-help text-white/70" title="Some subjects require admissions tests for eligibility.">
+                          Why we ask this
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {ADMISSIONS_TEST_OPTIONS.map((option) => (
+                          <label key={option.value} className="relative flex items-center gap-3 p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 cursor-pointer transition-all duration-200 text-sm">
+                            <input
+                              type="checkbox"
+                              checked={admissionsTests.some((test) => test.test_type === option.value)}
+                              onChange={() => toggleAdmissionsTest(option.value)}
+                            />
+                            {option.label}
+                          </label>
+                        ))}
+                      </div>
 
-      {currentStep === 5 ? (
-        <section className="intake-section review-step">
-          <h3>Review & submit</h3>
-          <p className="muted">Check everything below before submitting your profile.</p>
-          <div className="review-panel">
-            <div className="review-grid">
-              <div>
-                <span className="label">Name</span>
-                <p>{personalInfo.first_name || '—'} {personalInfo.last_name || ''}</p>
-              </div>
-              <div>
-                <span className="label">Email</span>
-                <p>{personalInfo.email || '—'}</p>
-              </div>
-              <div>
-                <span className="label">Nationality</span>
-                <p>{formattedNationalities.join(', ') || '—'}</p>
-              </div>
-              <div>
-                <span className="label">Age</span>
-                <p>{personalInfo.age || '—'}</p>
-              </div>
-              <div>
-                <span className="label">Gender</span>
-                <p>{personalInfo.gender || '—'}</p>
-              </div>
-              <div>
-                <span className="label">Residence</span>
-                <p>{personalInfo.resident_country || '—'}</p>
-              </div>
-              <div>
-                <span className="label">Current city</span>
-                <p>{personalInfo.current_location_city || '—'}</p>
-              </div>
-              <div>
-                <span className="label">Programme</span>
-                <p>{programmeType || '—'}</p>
-              </div>
-              <div>
-                <span className="label">School</span>
-                <p>{academicInput.school_name || '—'}</p>
-              </div>
-              <div>
-                <span className="label">School country</span>
-                <p>{academicInput.school_country || '—'}</p>
-              </div>
-              <div>
-                <span className="label">School city</span>
-                <p>{academicInput.school_city || '—'}</p>
-              </div>
-              <div>
-                <span className="label">School type</span>
-                <p>{academicInput.school_type || '—'}</p>
-              </div>
-              <div>
-                <span className="label">Graduation year</span>
-                <p>{academicInput.graduation_year || '—'}</p>
-              </div>
-              <div>
-                <span className="label">Start date</span>
-                <p>{academicInput.desired_start_date || '—'}</p>
-              </div>
-              <div>
-                <span className="label">Primary subject</span>
-                <p>
-                  {academicInput.intended_clusters.length
-                    ? academicInput.intended_clusters.map((cluster) => clusterLabelMap.get(cluster)).join(', ')
-                    : '—'}
-                </p>
-              </div>
-              <div>
-                <span className="label">Secondary interests</span>
-                <p>
-                  {academicInput.secondary_clusters.length
-                    ? academicInput.secondary_clusters.map((cluster) => clusterLabelMap.get(cluster)).join(', ')
-                    : '—'}
-                </p>
-              </div>
-              <div>
-                <span className="label">Career aspiration</span>
-                <p>{academicInput.career_aspiration || '—'}</p>
-              </div>
-              <div>
-                <span className="label">Subjects</span>
-                <p>
-                  {subjects
-                    .filter((subject) => subject.subject_name.trim())
-                    .map((subject) => `${subject.subject_name} (${subject.level}) ${subject.grade_value || ''}`.trim())
-                    .join(', ') || '—'}
-                </p>
-              </div>
-              {programmeType === 'IB' ? (
-                <>
-                  <div>
-                    <span className="label">IB total points</span>
-                    <p>{academicInput.ib_total_points || '—'}</p>
+                      {admissionsTests.filter((test) => test.test_type !== 'NONE').map((test, index) => (
+                        <div key={`${test.test_type}-${index}`} className="p-5 rounded-2xl border border-white/10 bg-white/5 grid grid-cols-1 md:grid-cols-12 gap-4 items-start relative overflow-hidden">
+                          <div>
+                            <label>
+                              Test
+                              <input type="text" value={test.test_type} disabled />
+                            </label>
+                          </div>
+                          <div>
+                            <label>
+                              Status
+                              <div className="flex flex-wrap gap-3">
+                                {[
+                                  { value: 'taken', label: 'Taken' },
+                                  { value: 'booked', label: 'Booked' },
+                                  { value: 'missing', label: 'Missing' }
+                                ].map((option) => (
+                                  <label key={`${test.test_type}-${option.value}`} className="relative flex items-center gap-3 p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 cursor-pointer transition-all duration-200 text-sm">
+                                    <input
+                                      type="radio"
+                                      name={`admissions-status-${index}`}
+                                      value={option.value}
+                                      checked={test.status === option.value}
+                                      onChange={(event) => updateAdmissionsTest(index, 'status', event.target.value)}
+                                    />
+                                    {option.label}
+                                  </label>
+                                ))}
+                              </div>
+                            </label>
+                            {errors[`academic_input.admissions_tests.${index}.status`] ? (
+                              <em>{errors[`academic_input.admissions_tests.${index}.status`]}</em>
+                            ) : null}
+                          </div>
+                          <div>
+                            <label>
+                              Score (optional)
+                              <input
+                                type="number"
+                                value={test.score_numeric}
+                                onChange={(event) => updateAdmissionsTest(index, 'score_numeric', event.target.value)}
+                              />
+                            </label>
+                          </div>
+                          <div>
+                            <label>
+                              Percentile (optional)
+                              <input
+                                type="number"
+                                min={0}
+                                max={100}
+                                value={test.percentile}
+                                onChange={(event) => updateAdmissionsTest(index, 'percentile', event.target.value)}
+                              />
+                            </label>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
+                </section>
+              ) : null}
+
+              {currentStep === 4 ? (
+                <section className="space-y-6 lg:space-y-8">
+                  <h3>Lifestyle preferences</h3>
+                  <div className="space-y-2 flex flex-col">
+                    <span>Teaching style preference</span>
+                    <div className="flex flex-wrap gap-3">
+                      {[
+                        { value: 'academic', label: 'Academic' },
+                        { value: 'practical', label: 'Practical' },
+                        { value: 'mixed', label: 'Mixed' },
+                        { value: '', label: 'No preference' }
+                      ].map((option) => (
+                        <label key={option.value} className="relative flex items-center gap-3 p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 cursor-pointer transition-all duration-200 text-sm">
+                          <input
+                            type="radio"
+                            name="teaching_style"
+                            value={option.value}
+                            checked={lifestylePreference.teaching_style === option.value}
+                            onChange={(event) => updateLifestylePreference('teaching_style', event.target.value)}
+                          />
+                          {option.label}
+                        </label>
+                      ))}
+                    </div>
                   </div>
-                  <div>
-                    <span className="label">IB core points</span>
-                    <p>{academicInput.ib_core_points || '—'}</p>
+                  <div className="space-y-2 flex flex-col">
+                    <span>Preferred location type</span>
+                    <div className="flex flex-wrap gap-3">
+                      {[
+                        { value: 'london', label: 'London' },
+                        { value: 'major_city', label: 'Major city' },
+                        { value: 'smaller_city', label: 'Smaller city' },
+                        { value: 'suburban', label: 'Suburban' },
+                        { value: 'no_preference', label: 'No preference' }
+                      ].map((option) => (
+                        <label key={option.value} className="relative flex items-center gap-3 p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 cursor-pointer transition-all duration-200 text-sm">
+                          <input
+                            type="radio"
+                            name="desired_location_type"
+                            value={option.value}
+                            checked={lifestylePreference.desired_location_type === option.value}
+                            onChange={(event) => updateLifestylePreference('desired_location_type', event.target.value)}
+                          />
+                          {option.label}
+                        </label>
+                      ))}
+                    </div>
                   </div>
-                  <div>
-                    <span className="label">TOK grade</span>
-                    <p>{academicInput.ib_tok_grade || '—'}</p>
+                  <div className="space-y-2 flex flex-col">
+                    <span>Campus size preference</span>
+                    <div className="flex flex-wrap gap-3">
+                      {[
+                        { value: 'small', label: 'Small' },
+                        { value: 'medium', label: 'Medium' },
+                        { value: 'large', label: 'Large' },
+                        { value: 'no_preference', label: 'No preference' }
+                      ].map((option) => (
+                        <label key={option.value} className="relative flex items-center gap-3 p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 cursor-pointer transition-all duration-200 text-sm">
+                          <input
+                            type="radio"
+                            name="campus_size"
+                            value={option.value}
+                            checked={lifestylePreference.campus_size === option.value}
+                            onChange={(event) => updateLifestylePreference('campus_size', event.target.value)}
+                          />
+                          {option.label}
+                        </label>
+                      ))}
+                    </div>
                   </div>
-                  <div>
-                    <span className="label">EE grade</span>
-                    <p>{academicInput.ib_ee_grade || '—'}</p>
+                  <div className="p-6 rounded-[24px] border border-white/10 bg-white/5 backdrop-blur-sm space-y-6">
+                    <div className="flex justify-between items-start gap-3">
+                      <div>
+                        <span className="text-base font-semibold text-foreground">Extracurricular interests</span>
+                        <p className="text-xs text-muted-foreground mt-1">Select any that matter to your university experience.</p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {EXTRACURRICULAR_OPTIONS.map((option) => (
+                        <label key={option} className="relative flex items-center gap-3 p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 cursor-pointer transition-all duration-200 text-sm">
+                          <input
+                            type="checkbox"
+                            checked={lifestylePreference.extracurricular_interests.includes(option)}
+                            onChange={() => toggleExtracurricular(option)}
+                          />
+                          {option}
+                        </label>
+                      ))}
+                    </div>
                   </div>
-                  <div>
-                    <span className="label">Maths pathway</span>
-                    <p>{academicInput.ib_math_pathway || '—'}</p>
+                  <label className="space-y-2 flex flex-col">
+                    <span>Other extracurriculars (optional)</span>
+                    <input
+                      type="text"
+                      value={lifestylePreference.other_extracurriculars}
+                      onChange={(event) => updateLifestylePreference('other_extracurriculars', event.target.value)}
+                    />
+                  </label>
+                </section>
+              ) : null}
+
+              {currentStep === 5 ? (
+                <section className="space-y-6 lg:space-y-8 items-center text-center">
+                  <h3>Review & submit</h3>
+                  <p className="mt-1 text-muted-foreground/60">Check everything below before submitting your profile.</p>
+                  <div className="w-full max-w-[920px] mx-auto text-left rounded-2xl p-4 border border-white/10 bg-white/5">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {[
+                        { label: 'Name', value: `${personalInfo.first_name || '—'} ${personalInfo.last_name || ''}`, step: 1 },
+                        { label: 'Email', value: personalInfo.email, step: 1 },
+                        { label: 'Nationality', value: formattedNationalities.join(', '), step: 1 },
+                        { label: 'Age', value: personalInfo.age, step: 1 },
+                        { label: 'Gender', value: personalInfo.gender, step: 1 },
+                        { label: 'Residence', value: personalInfo.resident_country, step: 1 },
+                        { label: 'Current city', value: personalInfo.current_location_city, step: 1 },
+                        { label: 'Programme', value: programmeType, step: 2 },
+                        { label: 'School', value: academicInput.school_name, step: 2 },
+                        { label: 'School country', value: academicInput.school_country, step: 2 },
+                        { label: 'School city', value: academicInput.school_city, step: 2 },
+                        { label: 'School type', value: academicInput.school_type, step: 2 },
+                        { label: 'Graduation year', value: academicInput.graduation_year, step: 2 },
+                        { label: 'Start date', value: academicInput.desired_start_date, step: 2 },
+                        { label: 'Primary subject', value: academicInput.intended_clusters.length ? academicInput.intended_clusters.map((cluster) => clusterLabelMap.get(cluster)).join(', ') : '', step: 2 },
+                        { label: 'Secondary interests', value: academicInput.secondary_clusters.length ? academicInput.secondary_clusters.map((cluster) => clusterLabelMap.get(cluster)).join(', ') : '', step: 2 },
+                        { label: 'Career aspiration', value: academicInput.career_aspiration, step: 2 },
+                        { label: 'Subjects', value: subjects.filter((s) => s.subject_name.trim()).map((s) => `${s.subject_name} (${s.level}) ${s.grade_value || ''}`.trim()).join(', '), step: 3 }
+                      ].map((item, idx) => (
+                        <div key={idx} className="group p-4 rounded-2xl bg-white/5 border border-white/10 flex flex-col gap-1 hover:bg-white/[0.07] transition-all duration-200 relative">
+                          <button
+                            type="button"
+                            onClick={() => goToStep(item.step)}
+                            className="absolute top-3 right-3 p-2 rounded-lg bg-primary/10 text-primary opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                            title="Edit this section"
+                          >
+                            <Pencil className="w-3 h-3" />
+                          </button>
+                          <span className="text-[10px] uppercase tracking-widest text-foreground/50 font-bold">{item.label}</span>
+                          <p className="text-sm font-semibold text-foreground pr-8">{item.value || '—'}</p>
+                        </div>
+                      ))}
+
+                      {programmeType === 'IB' ? (
+                        <>
+                          {[
+                            { label: 'IB total points', value: academicInput.ib_total_points },
+                            { label: 'IB core points', value: academicInput.ib_core_points },
+                            { label: 'TOK grade', value: academicInput.ib_tok_grade },
+                            { label: 'EE grade', value: academicInput.ib_ee_grade },
+                            { label: 'Maths pathway', value: academicInput.ib_math_pathway },
+                            { label: 'EE subject', value: academicInput.ee_subject },
+                            { label: 'EE title', value: academicInput.ee_title },
+                            { label: 'EE summary', value: academicInput.ee_summary }
+                          ].map((item, idx) => (
+                            <div key={`ib-${idx}`} className="p-4 rounded-2xl bg-white/5 border border-white/10 flex flex-col gap-1 hover:bg-white/[0.07] transition-colors duration-200">
+                              <span className="text-[10px] uppercase tracking-widest text-muted-foreground/60 font-semibold">{item.label}</span>
+                              <p className="text-sm font-semibold text-foreground">{item.value || '—'}</p>
+                            </div>
+                          ))}
+                        </>
+                      ) : (
+                        <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex flex-col gap-1 hover:bg-white/[0.07] transition-colors duration-200">
+                          <span className="text-[10px] uppercase tracking-widest text-muted-foreground/60 font-semibold">A-level predicted grades</span>
+                          <p className="text-sm font-semibold text-foreground">
+                            {subjects
+                              .filter(s => programmeType === 'A_LEVEL' && s.grade_value)
+                              .map(s => `${s.subject_name}: ${s.grade_value}`)
+                              .join(', ') || '—'}
+                          </p>
+                        </div>
+                      )}
+
+                      <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex flex-col gap-1 hover:bg-white/[0.07] transition-colors duration-200">
+                        <span className="text-[10px] uppercase tracking-widest text-muted-foreground/60 font-semibold">English requirement</span>
+                        <p className="text-sm font-semibold text-foreground">{englishRequiredLabel || '—'}</p>
+                      </div>
+                      <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex flex-col gap-1 hover:bg-white/[0.07] transition-colors duration-200">
+                        <span className="text-[10px] uppercase tracking-widest text-muted-foreground/60 font-semibold">English test</span>
+                        <p className="text-sm font-semibold text-foreground">{englishTestType || '—'} • {englishStatus || '—'}</p>
+                      </div>
+                      <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex flex-col gap-1 hover:bg-white/[0.07] transition-colors duration-200">
+                        <span className="text-[10px] uppercase tracking-widest text-muted-foreground/60 font-semibold">Admissions tests</span>
+                        <p className="text-sm font-semibold text-foreground">
+                          {admissionsTests.filter((test) => test.test_type !== 'NONE').length
+                            ? admissionsTests
+                              .filter((test) => test.test_type !== 'NONE')
+                              .map((test) => `${test.test_type} (${test.status || 'missing'})`)
+                              .join(', ')
+                            : '—'}
+                        </p>
+                      </div>
+                      <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex flex-col gap-1 hover:bg-white/[0.07] transition-colors duration-200">
+                        <span className="text-[10px] uppercase tracking-widest text-muted-foreground/60 font-semibold">Lifestyle</span>
+                        <p className="text-sm font-semibold text-foreground">
+                          {[
+                            lifestylePreference.teaching_style,
+                            lifestylePreference.desired_location_type,
+                            lifestylePreference.campus_size
+                          ]
+                            .filter(Boolean)
+                            .join(' • ') || '—'}
+                        </p>
+                      </div>
+                      <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex flex-col gap-1 hover:bg-white/[0.07] transition-colors duration-200">
+                        <span className="text-[10px] uppercase tracking-widest text-muted-foreground/60 font-semibold">Extracurriculars</span>
+                        <p className="text-sm font-semibold text-foreground">{lifestylePreference.extracurricular_interests.join(', ') || '—'}</p>
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <span className="label">EE subject</span>
-                    <p>{academicInput.ee_subject || '—'}</p>
-                  </div>
-                  <div>
-                    <span className="label">EE title</span>
-                    <p>{academicInput.ee_title || '—'}</p>
-                  </div>
-                  <div>
-                    <span className="label">EE summary</span>
-                    <p>{academicInput.ee_summary || '—'}</p>
-                  </div>
-                </>
+                </section>
+              ) : null}
+
+            </motion.div>
+          </AnimatePresence>
+
+          <div className="mt-12 flex items-center justify-between gap-4 p-6 surface-card bg-background/40 backdrop-blur-md rounded-[24px] border-white/10 shadow-xl">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={goBack}
+              disabled={currentStep === 1}
+              className="h-12 px-6 rounded-xl border-white/10 hover:bg-white/5 disabled:opacity-30"
+            >
+              <ChevronLeft className="w-4 h-4 mr-2" />
+              Back
+            </Button>
+
+            <div className="flex gap-3">
+              {currentStep < 5 ? (
+                <Button
+                  type="button"
+                  onClick={goNext}
+                  className="h-12 px-8 rounded-xl bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20"
+                >
+                  Next Step
+                  <ChevronRight className="w-4 h-4 ml-2" />
+                </Button>
               ) : (
-                <div>
-                  <span className="label">A-level predicted grades</span>
-                  <p>
-                    {academicInput.a_level_predicted_grades
-                      ? Object.entries(academicInput.a_level_predicted_grades)
-                          .map(([subject, grade]) => `${subject}: ${grade}`)
-                          .join(', ')
-                      : '—'}
-                  </p>
-                </div>
+                <Button
+                  type="submit"
+                  disabled={isSaving}
+                  className="h-12 px-8 rounded-xl bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20"
+                >
+                  {isSaving ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      Saving...
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <Send className="w-4 h-4" />
+                      Complete Profile
+                    </div>
+                  )}
+                </Button>
               )}
-              <div>
-                <span className="label">English requirement</span>
-                <p>{englishRequiredLabel || '—'}</p>
-              </div>
-              <div>
-                <span className="label">English test</span>
-                <p>{englishTestType || '—'} • {englishStatus || '—'}</p>
-              </div>
-              <div>
-                <span className="label">Admissions tests</span>
-                <p>
-                  {admissionsTests.filter((test) => test.test_type !== 'NONE').length
-                    ? admissionsTests
-                        .filter((test) => test.test_type !== 'NONE')
-                        .map((test) => `${test.test_type} (${test.status || 'missing'})`)
-                        .join(', ')
-                    : '—'}
-                </p>
-              </div>
-              <div>
-                <span className="label">Lifestyle</span>
-                <p>
-                  {[
-                    lifestylePreference.teaching_style,
-                    lifestylePreference.desired_location_type,
-                    lifestylePreference.campus_size
-                  ]
-                    .filter(Boolean)
-                    .join(' • ') || '—'}
-                </p>
-              </div>
-              <div>
-                <span className="label">Extracurriculars</span>
-                <p>{lifestylePreference.extracurricular_interests.join(', ') || '—'}</p>
-              </div>
             </div>
           </div>
-        </section>
-      ) : null}
 
-      <div className="button-row">
-        <Button type="button" variant="outline" onClick={goBack} disabled={currentStep === 1}>
-          Back
-        </Button>
-        {currentStep < 5 ? (
-          <Button type="button" onClick={goNext}>
-            Next
-          </Button>
-        ) : (
-              <Button type="submit" disabled={isSaving}>
-                {isSaving ? 'Saving…' : 'Submit'}
-              </Button>
-            )}
-          </div>
-
-      {statusMessage ? <p className="status">{statusMessage}</p> : null}
+          {statusMessage && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-4 p-4 rounded-xl bg-primary/10 border border-primary/20 text-primary text-sm text-center"
+            >
+              {statusMessage}
+            </motion.div>
+          )}
         </div>
       </div>
 
@@ -1851,286 +1925,85 @@ export const StudentIntakeForm = ({
         ))}
       </datalist>
 
+
       <style jsx>{`
-        .intake-form {
-          display: flex;
-          flex-direction: column;
-          gap: 24px;
-          padding: 24px;
-          border-radius: 24px;
-          background: rgba(255, 255, 255, 0.06);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          backdrop-filter: blur(16px);
+        /* Global Reset & Typography */
+        :global(form) {
+          font-family: var(--font-outfit), sans-serif;
         }
-        .intake-layout {
-          display: flex;
-          flex-direction: column;
-          gap: 24px;
+
+        /* High Contrast Inputs for Light Mode */
+        :global(input), :global(select), :global(textarea) {
+          @apply w-full h-12 px-4 rounded-xl bg-white border-2 border-slate-200 focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all duration-200 outline-none placeholder:text-slate-400 text-slate-900 shadow-sm font-medium;
         }
-        .intake-sidebar {
-          width: 100%;
+
+        :global(.dark input), :global(.dark select), :global(.dark textarea) {
+          @apply bg-slate-900 border-slate-800 text-slate-100 placeholder:text-slate-500;
         }
-        .sidebar-card {
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-          padding: 16px;
-          border-radius: 18px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(7, 10, 24, 0.45);
+
+        :global(.field-group) {
+          @apply p-8 rounded-[32px] border-2 border-slate-100 bg-white shadow-soft-xl space-y-8;
         }
-        .sidebar-title {
-          margin: 0;
-          font-size: 18px;
+
+        :global(.dark .field-group) {
+          @apply border-white/5 bg-white/5 shadow-none backdrop-blur-sm;
         }
-        .intake-main {
-          display: flex;
-          flex-direction: column;
-          gap: 24px;
+
+        :global(.label) {
+          @apply text-sm font-bold text-slate-900 tracking-tight;
         }
-        .intake-header {
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-          justify-content: space-between;
+
+        :global(.dark .label) {
+          @apply text-white;
         }
-        .intake-header h2 {
-          font-size: 28px;
-          margin: 0;
+
+        :global(.helper) {
+          @apply text-xs text-slate-500 mt-1.5 font-medium;
         }
-        .muted {
-          margin: 4px 0 0;
-          color: rgba(255, 255, 255, 0.6);
+
+        :global(.dark .helper) {
+          @apply text-slate-400;
         }
-        .step-indicator {
-          text-transform: uppercase;
-          letter-spacing: 0.25em;
-          font-size: 11px;
-          color: rgba(255, 255, 255, 0.5);
+
+        :global(.radio), :global(.checkbox) {
+          @apply relative flex items-center gap-3 p-5 rounded-2xl border-2 border-slate-100 bg-white hover:border-primary/30 hover:bg-primary/[0.02] cursor-pointer transition-all duration-200 shadow-sm;
         }
-        .progress-pill {
-          align-self: flex-start;
-          padding: 6px 12px;
-          border-radius: 999px;
-          background: rgba(255, 255, 255, 0.12);
-          font-size: 12px;
+
+        :global(.dark .radio), :global(.dark .checkbox) {
+          @apply border-white/5 bg-white/5 hover:bg-white/10;
         }
-        .step-nav {
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
+
+        :global(.radio input), :global(.checkbox input) {
+          @apply w-5 h-5 rounded-full border-2 border-slate-300 bg-transparent text-primary transition-all duration-200 focus:ring-offset-0 focus:ring-4 focus:ring-primary/10;
         }
-        .step-chip {
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          border-radius: 999px;
-          padding: 6px 12px;
-          font-size: 12px;
-          background: rgba(255, 255, 255, 0.06);
-          color: inherit;
-          cursor: pointer;
-          text-align: left;
-          width: 100%;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 12px;
+
+        :global(.dark .radio input), :global(.dark .checkbox input) {
+          @apply border-white/20;
         }
-        .step-chip.active {
-          background: rgba(99, 102, 241, 0.2);
-          border-color: rgba(99, 102, 241, 0.45);
+
+        :global(.subject-row) {
+          @apply p-6 rounded-[24px] border-2 border-slate-100 bg-white grid grid-cols-1 md:grid-cols-12 gap-6 items-start shadow-sm;
         }
-        .step-chip.complete {
-          border-color: rgba(16, 185, 129, 0.4);
-          background: rgba(16, 185, 129, 0.15);
+
+        :global(.dark .subject-row) {
+          @apply border-white/5 bg-white/5;
         }
-        .step-chip.ghost {
-          background: rgba(255, 255, 255, 0.12);
+
+        :global(.review-item) {
+          @apply p-5 rounded-3xl bg-white border-2 border-slate-100 shadow-sm flex flex-col gap-2 hover:border-primary/20 transition-all duration-200;
         }
-        .step-chip-label {
-          font-weight: 600;
+
+        :global(.dark .review-item) {
+          @apply bg-white/5 border-white/10;
         }
-        .step-chip-status {
-          font-size: 10px;
-          letter-spacing: 0.2em;
-          text-transform: uppercase;
-          color: rgba(255, 255, 255, 0.6);
+
+        /* Sidebar Glassmorphism */
+        :global(.surface-card) {
+          @apply border-2 border-slate-100 shadow-2xl;
         }
-        .intake-section {
-          display: flex;
-          flex-direction: column;
-          gap: 16px;
-        }
-        .review-step {
-          align-items: center;
-          text-align: center;
-        }
-        .review-step .review-panel {
-          width: min(100%, 920px);
-          margin: 0 auto;
-          text-align: left;
-        }
-        .intake-section h3 {
-          margin: 0;
-          font-size: 22px;
-        }
-        .grid.two {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-          gap: 16px;
-        }
-        .field {
-          display: flex;
-          flex-direction: column;
-          gap: 6px;
-        }
-        .field span {
-          font-weight: 600;
-        }
-        input,
-        select,
-        textarea {
-          border-radius: 12px;
-          border: 1px solid rgba(255, 255, 255, 0.16);
-          padding: 10px 12px;
-          background: rgba(7, 10, 24, 0.5);
-          color: inherit;
-        }
-        input:disabled,
-        select:disabled {
-          opacity: 0.7;
-        }
-        em {
-          color: #ffb4a2;
-          font-size: 12px;
-          font-style: normal;
-        }
-        .inline-options {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 12px;
-        }
-        .radio,
-        .checkbox {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          font-size: 14px;
-        }
-        .field-group {
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-          padding: 16px;
-          border-radius: 16px;
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          background: rgba(255, 255, 255, 0.04);
-        }
-        .field-group-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-          gap: 12px;
-        }
-        .label {
-          font-weight: 600;
-        }
-        .helper {
-          font-size: 12px;
-          color: rgba(255, 255, 255, 0.6);
-          margin: 4px 0 0;
-        }
-        .tooltip {
-          font-size: 12px;
-          text-decoration: underline;
-          cursor: help;
-          color: rgba(255, 255, 255, 0.7);
-        }
-        .checkbox-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-          gap: 10px;
-        }
-        .subject-grid {
-          display: grid;
-          gap: 12px;
-        }
-        .subject-row {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-          gap: 12px;
-          padding: 12px;
-          border-radius: 12px;
-          background: rgba(7, 10, 24, 0.4);
-          border: 1px solid rgba(255, 255, 255, 0.08);
-        }
-        .subject-actions {
-          display: flex;
-          align-items: flex-end;
-        }
-        .row {
-          display: flex;
-          gap: 12px;
-          align-items: center;
-        }
-        .link-button {
-          background: none;
-          border: none;
-          color: inherit;
-          font-size: 12px;
-          cursor: pointer;
-          text-decoration: underline;
-        }
-        .button-row {
-          display: flex;
-          justify-content: space-between;
-          gap: 12px;
-        }
-        .review-panel {
-          border-radius: 16px;
-          padding: 16px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(255, 255, 255, 0.05);
-        }
-        .review-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-          gap: 12px;
-          margin-top: 12px;
-        }
-        .status {
-          font-size: 13px;
-          color: rgba(255, 255, 255, 0.8);
-        }
-        .output {
-          padding: 16px;
-          border-radius: 16px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          background: rgba(7, 10, 24, 0.45);
-        }
-        pre {
-          white-space: pre-wrap;
-          word-break: break-word;
-          font-size: 12px;
-        }
-        @media (min-width: 768px) {
-          .intake-header {
-            flex-direction: row;
-            align-items: center;
-          }
-        }
-        @media (min-width: 1024px) {
-          .intake-layout {
-            flex-direction: row;
-            align-items: flex-start;
-          }
-          .intake-sidebar {
-            width: 260px;
-            position: sticky;
-            top: 24px;
-          }
-          .intake-main {
-            flex: 1;
-          }
+
+        :global(.dark .surface-card) {
+          @apply border-white/10;
         }
       `}</style>
     </form>
