@@ -3,7 +3,7 @@ import type { MatchingWeights } from './config';
 import { filterVisiblePrograms, getFlaggedProgramIds } from '../catalog/visibility';
 import type { Database } from '../types/database';
 import type { EnrichedMatch, MissingProfileSection } from './types';
-import type { MatchTier } from './engine';
+import type { MatchTier } from './match-tier';
 import type { StudentProfilePayload } from '@/lib/profile/intake-types';
 import { scoreStudentProfile } from '@/lib/scoring/student_scoring';
 import { enrichCourseRecords, type CourseRecord } from '@/lib/tiering/course_tiering';
@@ -466,6 +466,17 @@ export const loadMatchesForProfile = async (
     admissionsTests: (admissionsData ?? []) as StudentAdmissionsTestRow[]
   });
   const studentScore = scoreStudentProfile(studentPayload);
+  const { error: scorePersistError } = await supabase.from('student_scores').upsert({
+    profile_id: profileId,
+    total_score: studentScore.total_score,
+    student_band: studentScore.student_band,
+    eligibility_flags: studentScore.eligibility_flags,
+    readiness_flags: studentScore.readiness_flags,
+    breakdown: studentScore.breakdown
+  });
+  if (scorePersistError) {
+    console.warn('Failed to persist student score', scorePersistError);
+  }
   const ranked = rankCourseMatches(studentPayload, studentScore, enrichedCourses)
     .filter((match) => !match.excluded);
   const limited = options.resultLimit ? ranked.slice(0, options.resultLimit) : ranked;
@@ -486,7 +497,11 @@ export const loadMatchesForProfile = async (
           ? 'Safe'
           : match.tier_fit === 'Target'
             ? 'Match'
-            : 'Reach';
+            : match.chance_category === 'Very likely'
+              ? 'Safe'
+              : match.chance_category === 'Likely' || match.chance_category === 'Possible'
+                ? 'Match'
+                : 'Reach';
       return {
         program: {
           id: course.program_id,

@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { UniversityCard } from '@/components/university-card';
-import type { MatchTier } from '@/lib/matching/engine';
+import type { MatchTier } from '@/lib/matching/match-tier';
 import { cn } from '@/lib/utils';
 import { Grid, LayoutList } from 'lucide-react';
 import type { EnrichedMatch } from '@/lib/matching/types';

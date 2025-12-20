@@ -1,4 +1,5 @@
 import { defaultWeights, type MatchingWeights, OUTCOME_RANKING_BENCHMARK } from './config';
+import type { MatchTier } from './match-tier';
 
 export type StudentAcademics = {
   curriculum?: string | null;
@@ -83,8 +84,6 @@ export type MatchBreakdown = {
   preferenceFit: number;
   outcomes: number;
 };
-
-export type MatchTier = 'Reach' | 'Match' | 'Safe';
 
 export type MatchResult = {
   programId: string;

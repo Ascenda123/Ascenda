@@ -1,4 +1,4 @@
-import { MatchTier } from '@/lib/matching/engine';
+import type { MatchTier } from '@/lib/matching/match-tier';
 
 export type ProgramSearchResult = {
   id: string;
@@ -27,7 +27,7 @@ export type ProgramSearchResult = {
 
 export const tierFromScore = (score?: number | null): MatchTier | null => {
   if (score === null || score === undefined) return null;
-  if (score >= 88) return 'Reach';
-  if (score >= 75) return 'Match';
-  return 'Safe';
+  if (score >= 80) return 'Safe';
+  if (score >= 45) return 'Match';
+  return 'Reach';
 };

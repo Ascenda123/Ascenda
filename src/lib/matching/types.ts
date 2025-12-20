@@ -1,4 +1,4 @@
-import type { MatchTier } from './engine';
+import type { MatchTier } from './match-tier';
 
 export interface EnrichedMatch {
   program: {

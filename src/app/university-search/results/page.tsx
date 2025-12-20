@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { MatchTier } from '@/lib/matching/engine';
+import type { MatchTier } from '@/lib/matching/match-tier';
 import { UniversityCard } from '@/components/university-card';
 import { UniversityCardSkeleton } from '@/components/university-card-skeleton';
 import { FilterBar } from '@/components/university-search/FilterBar';

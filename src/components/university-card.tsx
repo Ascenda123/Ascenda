@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Check } from 'lucide-react';
-import { MatchTier } from '@/lib/matching/engine';
+import type { MatchTier } from '@/lib/matching/match-tier';
 import { TrackProgramButton, type TrackLabelVariant } from '@/components/programs/track-program-button';
 import { ACTION_TEXT } from '@/lib/constants/text';
 import { getFitScoreVisuals } from '@/lib/theme/fit-score';

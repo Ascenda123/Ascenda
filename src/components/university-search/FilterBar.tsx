@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { MatchTier } from '@/lib/matching/engine';
+import type { MatchTier } from '@/lib/matching/match-tier';
 import { cn } from '@/lib/utils';
 import { Check, ChevronDown, Grid, LayoutList, X } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
