@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { IntelligentSearchBar, Suggestion } from '@/components/university-search/IntelligentSearchBar';
 import { getBrowserSupabaseClient } from '@/lib/supabase/client';
+import { buildSearchResultsUrl, buildSuggestionResultsUrl } from '@/lib/university-search/search-params';
 
 const DEFAULT_FILTER_GROUPS = [
   {
@@ -110,40 +111,14 @@ export default function UniversitySearchPage() {
     setSelectedFilters(new Set());
   };
 
-  const buildSearchUrl = () => {
-    const params = new URLSearchParams();
-    const combinedQuery = [searchQuery, ...selectedFilters]
-      .filter(Boolean)
-      .join(' ')
-      .trim();
-    if (combinedQuery) {
-      params.set('q', combinedQuery);
-    }
-    return params.toString()
-      ? `/university-search/results?${params.toString()}`
-      : '/university-search/results';
-  };
-
   const handleSubmit = (event?: FormEvent<HTMLFormElement> | MouseEvent<HTMLButtonElement>) => {
     event?.preventDefault();
-    router.push(buildSearchUrl());
+    router.push(buildSearchResultsUrl(searchQuery, selectedFilters));
   };
 
   const handleSelectSuggestion = (item: Suggestion) => {
     setSearchQuery(item.name);
-
-    const params = new URLSearchParams();
-    if (item.type === 'program') {
-      // It's a program
-      params.set('programId', item.id);
-      params.set('q', `${item.name} ${item.university}`); // Fallback/Context
-    } else {
-      // It's a university
-      params.set('universityId', item.id);
-      params.set('q', item.name); // Fallback/Context
-    }
-
-    router.push(`/university-search/results?${params.toString()}`);
+    router.push(buildSuggestionResultsUrl(item));
   };
 
 

@@ -15,6 +15,7 @@ type QuickFilters = {
 interface FilterBarProps {
     searchQuery: string;
     onSearchChange: (query: string) => void;
+    onSearchSubmit?: () => void;
     onSelectSuggestion?: (item: Suggestion) => void;
     selectedTiers: MatchTier[];
     onTierChange: (tier: MatchTier) => void;
@@ -130,6 +131,7 @@ function SelectionDropdown({
 export function FilterBar({
     searchQuery,
     onSearchChange,
+    onSearchSubmit,
     onSelectSuggestion = () => { },
     selectedTiers,
     onTierChange,
@@ -180,7 +182,13 @@ export function FilterBar({
         >
             <div className="flex flex-col gap-3">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
-                    <div className="relative w-full sm:max-w-xl lg:max-w-2xl">
+                    <form
+                        className="relative w-full sm:max-w-xl lg:max-w-2xl"
+                        onSubmit={(event) => {
+                            event.preventDefault();
+                            onSearchSubmit?.();
+                        }}
+                    >
                         <IntelligentSearchBar
                             value={searchQuery}
                             onChange={onSearchChange}
@@ -188,7 +196,7 @@ export function FilterBar({
                             placeholder="Search universities..."
                             variant="minimal"
                         />
-                    </div>
+                    </form>
 
                     <div className="flex w-full flex-wrap items-center gap-3 sm:w-auto sm:justify-end">
                         <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">

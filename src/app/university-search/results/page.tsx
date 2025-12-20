@@ -14,6 +14,7 @@ import { getBrowserSupabaseClient } from '@/lib/supabase/client';
 import { ProgramSearchResult, tierFromScore } from '@/components/university-search/types';
 import { Suggestion } from '@/components/university-search/IntelligentSearchBar';
 import { filterVisiblePrograms } from '@/lib/catalog/visibility';
+import { buildSearchResultsUrl, buildSuggestionResultsUrl } from '@/lib/university-search/search-params';
 import type { Database } from '@/lib/types/database';
 
 import { Breadcrumbs } from '@/components/ui/breadcrumbs';
@@ -567,19 +568,11 @@ export default function UniversitySearchResultsPage() {
     }
     setResults([]);
     setPage(0);
+    router.push(buildSuggestionResultsUrl(item));
+  };
 
-    const params = new URLSearchParams();
-    if (item.type === 'program') {
-      // It's a program
-      params.set('programId', item.id);
-      params.set('q', `${item.name} ${item.university}`);
-    } else {
-      // It's a university
-      params.set('universityId', item.id);
-      params.set('q', item.name);
-    }
-
-    router.push(`/university-search/results?${params.toString()}`);
+  const handleSearchSubmit = () => {
+    router.push(buildSearchResultsUrl(searchQuery));
   };
 
   const handleLoadMore = () => {
@@ -639,6 +632,7 @@ export default function UniversitySearchResultsPage() {
         <FilterBar
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
+          onSearchSubmit={handleSearchSubmit}
           onSelectSuggestion={handleSelectSuggestion}
           selectedTiers={selectedTiers}
           onTierChange={(tier) => {
