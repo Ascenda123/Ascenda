@@ -7,7 +7,7 @@ import type { MatchTier } from './match-tier';
 import type { StudentProfilePayload } from '@/lib/profile/intake-types';
 import { scoreStudentProfile } from '@/lib/scoring/student_scoring';
 import type { CourseRecord, EnrichedCourseRecord } from '@/lib/tiering/course_tiering';
-import { rankCourseMatches } from '@/lib/matching/matching_engine';
+import { rankCourseMatches, type RankedCourseMatch } from '@/lib/matching/matching_engine';
 
 type StudentAcademicInputRow = Database['public']['Tables']['student_academic_input']['Row'];
 type StudentLifestyleRow = Database['public']['Tables']['student_lifestyle_preference']['Row'];
@@ -32,7 +32,9 @@ export type MatchComputationResult = {
   error?: { stage: 'profile' | 'programs' | 'universities' | 'requirements'; message: string };
 };
 
-const PROGRAM_PAGE_SIZE = 200;
+const PROGRAM_PAGE_SIZE = 150;
+const PROGRAM_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+const PROGRAM_CACHE_WINDOW_MS = 5 * 60 * 1000;
 
 const applyProgramVisibilityFilters = (query: ReturnType<Client['from']>) => {
   const flagged = getFlaggedProgramIds();
@@ -252,7 +254,7 @@ export const loadMatchesForProfile = async (
   profileId: string,
   options: LoadMatchesOptions = {}
 ): Promise<MatchComputationResult> => {
-  const programLimit = options.programLimit ?? 800;
+  const programLimit = options.programLimit ?? 300;
 
   const [
     { data: academicData, error: academicError },
@@ -289,6 +291,85 @@ export const loadMatchesForProfile = async (
       catalogSize: { programs: 0, universities: 0 },
       missingSections
     };
+  }
+
+  const latestMatchMeta = await supabase
+    .from('student_matches')
+    .select('created_at')
+    .eq('profile_id', profileId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (latestMatchMeta.data?.created_at) {
+    const latestCreatedAt = new Date(latestMatchMeta.data.created_at);
+    if (Number.isFinite(latestCreatedAt.valueOf())) {
+      const age = Date.now() - latestCreatedAt.getTime();
+      if (age >= 0 && age <= PROGRAM_CACHE_TTL_MS) {
+        const windowStart = new Date(latestCreatedAt.getTime() - PROGRAM_CACHE_WINDOW_MS).toISOString();
+        const { data: cachedRows, error: cachedError } = await supabase
+          .from('student_matches')
+          .select('program_id, score, breakdown, created_at')
+          .eq('profile_id', profileId)
+          .gte('created_at', windowStart)
+          .order('score', { ascending: false });
+        if (!cachedError && cachedRows && cachedRows.length > 0) {
+          const cachedMatches = cachedRows
+            .map((row) => {
+              const breakdown = (row.breakdown ?? {}) as Record<string, number | string>;
+              const programName = typeof breakdown.program_name === 'string' ? breakdown.program_name : null;
+              const universityName = typeof breakdown.university_name === 'string' ? breakdown.university_name : null;
+              const universityCountry = typeof breakdown.university_country === 'string' ? breakdown.university_country : null;
+              if (!programName || !universityName || !universityCountry) return null;
+
+              const cachedTier = (breakdown.tier as MatchTier | undefined) ?? null;
+              const fallbackTier: MatchTier =
+                row.score >= 70 ? 'Safe' : row.score >= 50 ? 'Match' : 'Reach';
+
+              return {
+                program: {
+                  id: row.program_id,
+                  name: programName,
+                  field: typeof breakdown.program_field === 'string' ? breakdown.program_field : null,
+                  level: typeof breakdown.program_level === 'string' ? breakdown.program_level : null,
+                  language: typeof breakdown.program_language === 'string' ? breakdown.program_language : null,
+                  mode: typeof breakdown.program_mode === 'string' ? breakdown.program_mode : null,
+                  tuition: typeof breakdown.program_tuition === 'number' ? breakdown.program_tuition : null,
+                  currency: typeof breakdown.program_currency === 'string' ? breakdown.program_currency : null,
+                  url: typeof breakdown.program_url === 'string' ? breakdown.program_url : null
+                },
+                university: {
+                  id: typeof breakdown.university_id === 'string' ? breakdown.university_id : '',
+                  name: universityName,
+                  country: universityCountry,
+                  rankOverall: typeof breakdown.university_rank_overall === 'number' ? breakdown.university_rank_overall : null,
+                  rankSource: typeof breakdown.university_rank_source === 'string' ? breakdown.university_rank_source : null,
+                  requiresTest: typeof breakdown.university_requires_test === 'boolean' ? breakdown.university_requires_test : null
+                },
+                score: row.score ?? 0,
+                breakdown: {
+                  eligibility: typeof breakdown.eligibility === 'number' ? breakdown.eligibility : 0,
+                  academicFit: typeof breakdown.academicFit === 'number' ? breakdown.academicFit : 0,
+                  preferenceFit: typeof breakdown.preferenceFit === 'number' ? breakdown.preferenceFit : 0,
+                  outcomes: typeof breakdown.outcomes === 'number' ? breakdown.outcomes : 0
+                },
+                blockingReasons: [],
+                tier: cachedTier ?? fallbackTier
+              } satisfies EnrichedMatch;
+            })
+            .filter((value): value is EnrichedMatch => value !== null);
+
+          if (cachedMatches.length > 0) {
+            const limited = options.resultLimit ? cachedMatches.slice(0, options.resultLimit) : cachedMatches;
+            const universitiesCount = new Set(cachedMatches.map((match) => match.university.id)).size;
+            return {
+              matches: limited,
+              catalogSize: { programs: cachedMatches.length, universities: universitiesCount },
+              missingSections
+            };
+          }
+        }
+      }
+    }
   }
 
   const programsData: ProgramSummaryRow[] = [];
@@ -358,15 +439,11 @@ export const loadMatchesForProfile = async (
     'degree_type',
     'field_of_study',
     'duration',
-    'acceptance_rate_pct',
     'nss_score_pct',
     'intake_size',
     'gender_ratio_pct',
-    'international_students_ratio_pct',
     'student_to_staff_ratio',
     'yearly_international_tuition_fee_gbp',
-    'student_dorm_cost_gbp_per_year',
-    'average_rent_outside_campus_gbp_per_month',
     'cost_of_life',
     'min_ib_score',
     'min_a_level_score',
@@ -378,13 +455,7 @@ export const loadMatchesForProfile = async (
     'interview',
     'university_life',
     'number_of_students',
-    'transport_accessibility',
-    'cultural_social_environment',
-    'city_life',
-    'climate',
-    'safety_index',
     'study_abroad_option',
-    'graduate_employment_rate_pct',
     'average_starting_salary_gbp',
     'top_industries',
     'placement_year',
@@ -462,8 +533,11 @@ export const loadMatchesForProfile = async (
   const courseLookup = new Map(enrichedCourses.map((course) => [toKey(course), course]));
   const courseByProgramId = new Map(enrichedCourses.map((course) => [course.program_id, course]));
 
-  const assignTier = (chance: number): MatchTier =>
-    chance >= 70 ? 'Safe' : chance >= 50 ? 'Match' : 'Reach';
+  const assignTierFromFit = (fit: RankedCourseMatch['tier_fit']): MatchTier => {
+    if (fit === 'Safety') return 'Safe';
+    if (fit === 'Target') return 'Match';
+    return 'Reach';
+  };
 
   let matches: EnrichedMatch[] = limited
     .map((match) => {
@@ -471,7 +545,7 @@ export const loadMatchesForProfile = async (
         (match.program_id ? courseByProgramId.get(match.program_id) : null) ??
         courseLookup.get(toKey(match));
       if (!course) return null;
-      const tier: MatchTier = assignTier(match.chance_percent);
+      const tier: MatchTier = assignTierFromFit(match.tier_fit);
       return {
         program: {
           id: course.program_id,
@@ -506,23 +580,36 @@ export const loadMatchesForProfile = async (
     .filter((value): value is EnrichedMatch => value !== null);
 
   if (matches.length > 0) {
-    const sortedByScore = [...matches].sort((a, b) => a.score - b.score);
-
-    if (!matches.some((match) => match.tier === 'Reach')) {
-      const reachCount = Math.max(1, Math.floor(matches.length * 0.2));
-      const reachIds = new Set(sortedByScore.slice(0, reachCount).map((match) => match.program.id));
-      matches = matches.map((match) => (reachIds.has(match.program.id) ? { ...match, tier: 'Reach' } : match));
+    const cachePayload = matches.map((match) => ({
+      profile_id: profileId,
+      program_id: match.program.id,
+      score: match.score,
+      breakdown: {
+        ...match.breakdown,
+        tier: match.tier,
+        program_name: match.program.name,
+        program_field: match.program.field,
+        program_level: match.program.level,
+        program_language: match.program.language,
+        program_mode: match.program.mode,
+        program_tuition: match.program.tuition,
+        program_currency: match.program.currency,
+        program_url: match.program.url,
+        university_id: match.university.id,
+        university_name: match.university.name,
+        university_country: match.university.country,
+        university_rank_overall: match.university.rankOverall,
+        university_rank_source: match.university.rankSource,
+        university_requires_test: match.university.requiresTest
+      }
+    }));
+    const { error: deleteError } = await supabase.from('student_matches').delete().eq('profile_id', profileId);
+    if (deleteError) {
+      console.warn('Failed to clear cached matches', deleteError);
     }
-
-    if (!matches.some((match) => match.tier === 'Match')) {
-      const matchCount = Math.max(1, Math.floor(matches.length * 0.2));
-      const startIndex = Math.max(0, Math.floor((matches.length - matchCount) / 2));
-      const matchIds = new Set(
-        sortedByScore
-          .slice(startIndex, startIndex + matchCount)
-          .map((match) => match.program.id)
-      );
-      matches = matches.map((match) => (matchIds.has(match.program.id) ? { ...match, tier: 'Match' } : match));
+    const { error: insertError } = await supabase.from('student_matches').insert(cachePayload);
+    if (insertError) {
+      console.warn('Failed to persist cached matches', insertError);
     }
   }
 
