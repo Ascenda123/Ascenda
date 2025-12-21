@@ -1,4 +1,4 @@
-import type { StudentProfilePayload } from '@/lib/profile/intake-types';
+import type { AdmissionsTestType, IntendedCluster, StudentProfilePayload } from '@/lib/profile/intake-types';
 import type { StudentScoreResult } from '@/lib/scoring/student_scoring';
 import type { EnrichedCourseRecord } from '@/lib/tiering/course_tiering';
 
@@ -46,8 +46,45 @@ const parseALevelProfile = (value: string | null): string[] | null => {
   return matches.slice(0, 3);
 };
 
-const normalizeTestRequirement = (value: string | null) =>
-  value ? value.toUpperCase().replace(/\s+/g, '') : '';
+const normalizeTestRequirement = (value: string | null) => {
+  if (!value) return '';
+  return value.toUpperCase().replace(/[^A-Z0-9]+/g, ' ').trim();
+};
+
+const clusterKeywords: Record<IntendedCluster, string[]> = {
+  computer_science: ['computer science', 'computing', 'informatics', 'software', 'ai', 'artificial intelligence', 'data science'],
+  maths: ['mathematics', 'maths', 'statistics', 'applied mathematics', 'applied maths'],
+  engineering: ['engineering', 'mechanical', 'electrical', 'civil', 'aerospace', 'chemical', 'biomedical', 'industrial', 'systems', 'materials'],
+  life_sciences_biochem: ['biology', 'biological', 'biochemistry', 'biomedical', 'life science', 'genetics', 'microbiology', 'neuroscience', 'pharmacology', 'chemistry'],
+  medicine_dentistry: ['medicine', 'medical', 'mbbs', 'mbchb', 'dentistry', 'dental'],
+  economics_quant: ['economics', 'econometric', 'finance', 'accounting', 'quantitative', 'business analytics'],
+  business_non_quant: ['business', 'management', 'marketing', 'entrepreneur', 'international business'],
+  law: ['law', 'legal', 'juris', 'llb'],
+  humanities: ['history', 'philosophy', 'politics', 'international relations', 'languages', 'literature', 'classics', 'sociology', 'anthropology'],
+  creative: ['design', 'graphic', 'media', 'communication', 'art', 'fashion', 'music', 'film', 'architecture']
+};
+
+const buildClusterKeywords = (clusters: IntendedCluster[]) => {
+  const keywords = clusters.flatMap((cluster) => clusterKeywords[cluster] ?? []);
+  const seen = new Set<string>();
+  return keywords
+    .map((keyword) => keyword.toLowerCase())
+    .filter((keyword) => {
+      if (!keyword) return false;
+      if (seen.has(keyword)) return false;
+      seen.add(keyword);
+      return true;
+    });
+};
+
+const matchesClusterKeywords = (course: EnrichedCourseRecord, keywords: string[]) => {
+  if (!keywords.length) return true;
+  const field = course.field_of_study?.toLowerCase() ?? '';
+  const name = course.course?.toLowerCase() ?? '';
+  if (!field && !name) return true;
+  const haystack = `${field} ${name}`;
+  return keywords.some((keyword) => haystack.includes(keyword));
+};
 
 const computeBestALevelGrades = (student: StudentProfilePayload): string[] | null => {
   const grades = student.academic_input.a_level_predicted_grades;
@@ -67,6 +104,7 @@ const computeBestALevelGrades = (student: StudentProfilePayload): string[] | nul
 
 const compareGradeProfiles = (studentGrades: string[] | null, requiredGrades: string[] | null) => {
   if (!studentGrades || studentGrades.length === 0 || !requiredGrades || requiredGrades.length === 0) return null;
+  if (studentGrades.length < requiredGrades.length) return -1;
   const studentValues = studentGrades.map((grade) => gradeValueMap[grade] ?? 0).sort((a, b) => b - a);
   const requiredValues = requiredGrades.map((grade) => gradeValueMap[grade] ?? 0).sort((a, b) => b - a);
   const length = Math.min(studentValues.length, requiredValues.length);
@@ -123,7 +161,7 @@ const tierFitMap: Record<
   Strong: { reach: [2], target: [3], safety: [4, 5] },
   Solid: { reach: [2], target: [3, 4], safety: [5] },
   Borderline: { reach: [3], target: [4], safety: [5] },
-  Weak: { reach: [4], target: [5], safety: [5] }
+  Weak: { reach: [3], target: [4], safety: [5] }
 };
 
 const resolveTierFit = (band: StudentScoreResult['student_band'], tier: 1 | 2 | 3 | 4 | 5): RankedCourseMatch['tier_fit'] => {
@@ -142,13 +180,38 @@ const resolveTierFit = (band: StudentScoreResult['student_band'], tier: 1 | 2 | 
 };
 
 const baselineChance: Record<RankedCourseMatch['tier_fit'], number> = {
-  Safety: 80,
-  Target: 60,
-  Reach: 35,
-  'Harder-than-reach': 15
+  Safety: 70,
+  Target: 55,
+  Reach: 40,
+  'Harder-than-reach': 25
 };
 
 const clampChance = (value: number) => Math.max(5, Math.min(95, Math.round(value)));
+
+const admissionTestAliases: Record<AdmissionsTestType, string[]> = {
+  LNAT: ['LNAT'],
+  UCAT: ['UCAT', 'UKCAT'],
+  TMUA: ['TMUA'],
+  MAT: ['MAT'],
+  STEP: ['STEP'],
+  ESAT: ['ESAT'],
+  TSA: ['TSA'],
+  NONE: []
+};
+
+const detectRequiredAdmissionTests = (requirement: string): AdmissionsTestType[] => {
+  if (!requirement.trim()) return [];
+  const required = new Set<AdmissionsTestType>();
+  const haystack = ` ${requirement} `;
+
+  Object.entries(admissionTestAliases).forEach(([test, aliases]) => {
+    if (!aliases.length) return;
+    const matched = aliases.some((alias) => new RegExp(`\\b${alias}\\b`).test(haystack));
+    if (matched) required.add(test as AdmissionsTestType);
+  });
+
+  return Array.from(required);
+};
 
 export const rankCourseMatches = (
   student: StudentProfilePayload,
@@ -156,7 +219,11 @@ export const rankCourseMatches = (
   courses: EnrichedCourseRecord[],
   filters?: PreferencesFilters
 ): RankedCourseMatch[] => {
-  const filtered = filterCourses(courses, filters);
+  const clusterSet = buildClusterKeywords([
+    ...(student.academic_input.intended_clusters ?? []),
+    ...(student.academic_input.secondary_clusters ?? [])
+  ]);
+  const filtered = filterCourses(courses, filters).filter((course) => matchesClusterKeywords(course, clusterSet));
   const studentProgramme = student.academic_input.programme_type;
   const studentIbTotal = student.academic_input.ib_total_points ?? null;
   const studentEnglishRequired = student.academic_input.english_required === true;
@@ -198,14 +265,12 @@ export const rankCourseMatches = (
 
     const admissionRequirement = normalizeTestRequirement(course.admission_test);
     if (admissionRequirement) {
-      const testsToMatch = ['LNAT', 'UCAT', 'TMUA', 'MAT', 'STEP', 'ESAT', 'TSA'];
-      testsToMatch.forEach((test) => {
-        if (admissionRequirement.includes(test)) {
-          const status = studentTestsByType.get(test as any);
-          if (!status || status === 'missing') {
-            excluded = true;
-            reasons.push(`${test} required but missing.`);
-          }
+      const requiredTests = detectRequiredAdmissionTests(admissionRequirement);
+      requiredTests.forEach((test) => {
+        const status = studentTestsByType.get(test);
+        if (!status || status === 'missing') {
+          excluded = true;
+          reasons.push(`${test} required but missing.`);
         }
       });
     }
@@ -225,11 +290,11 @@ export const rankCourseMatches = (
     // Margin Adjustment
     if (studentProgramme === 'IB' && studentIbTotal !== null && course.min_ib_score !== null) {
       const margin = studentIbTotal - course.min_ib_score;
-      if (margin >= 4) chance += 15;
-      else if (margin >= 2) chance += 10;
-      else if (margin >= 0) chance += 5;
-      else if (margin === -1) chance -= 15;
-      else if (margin <= -2) chance -= 25;
+      if (margin >= 4) chance += 10;
+      else if (margin >= 2) chance += 6;
+      else if (margin >= 0) chance += 3;
+      else if (margin === -1) chance -= 10;
+      else if (margin <= -2) chance -= 18;
     }
 
     if (studentProgramme === 'A_LEVEL' && course.min_a_level_score && bestALevelGrades) {
@@ -237,17 +302,17 @@ export const rankCourseMatches = (
       const requiredValues = requiredGrades?.map((grade) => gradeValueMap[grade] ?? 0).sort((a, b) => b - a) ?? [];
       const requiredSum = requiredValues.reduce((sum, value) => sum + value, 0);
       const margin = bestALevelSum - requiredSum;
-      if (margin >= 4) chance += 15;
-      else if (margin >= 2) chance += 10;
-      else if (margin >= 0) chance += 5;
-      else if (margin === -1) chance -= 15;
-      else if (margin <= -2) chance -= 25;
+      if (margin >= 4) chance += 10;
+      else if (margin >= 2) chance += 6;
+      else if (margin >= 0) chance += 3;
+      else if (margin === -1) chance -= 10;
+      else if (margin <= -2) chance -= 18;
     }
 
     // Academic Fit adjustments from score breakdown
-    if (score.breakdown.preferred_subjects_alignment >= 15) chance += 8;
-    if (score.breakdown.rigour_score >= 12) chance += 6;
-    if (score.breakdown.tests_and_english >= 16) chance += 8;
+    if (score.breakdown.preferred_subjects_alignment >= 15) chance += 5;
+    if (score.breakdown.rigour_score >= 12) chance += 4;
+    if (score.breakdown.tests_and_english >= 16) chance += 5;
 
     chance += englishPenalty;
     if (excluded) {
@@ -285,6 +350,9 @@ export const rankCourseMatches = (
     if (b.chance_percent !== a.chance_percent) return b.chance_percent - a.chance_percent;
     const courseA = courses.find((course) => course.university === a.university && course.course === a.course);
     const courseB = courses.find((course) => course.university === b.university && course.course === b.course);
+    if (courseA && courseB && courseA.course_tier !== courseB.course_tier) {
+      return courseA.course_tier - courseB.course_tier;
+    }
     if (courseA && courseB && courseB.total_course_score !== courseA.total_course_score) {
       return courseB.total_course_score - courseA.total_course_score;
     }

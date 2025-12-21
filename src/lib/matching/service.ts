@@ -6,7 +6,7 @@ import type { EnrichedMatch, MissingProfileSection } from './types';
 import type { MatchTier } from './match-tier';
 import type { StudentProfilePayload } from '@/lib/profile/intake-types';
 import { scoreStudentProfile } from '@/lib/scoring/student_scoring';
-import { enrichCourseRecords, type CourseRecord } from '@/lib/tiering/course_tiering';
+import type { CourseRecord, EnrichedCourseRecord } from '@/lib/tiering/course_tiering';
 import { rankCourseMatches } from '@/lib/matching/matching_engine';
 
 type StudentAcademicInputRow = Database['public']['Tables']['student_academic_input']['Row'];
@@ -14,8 +14,8 @@ type StudentLifestyleRow = Database['public']['Tables']['student_lifestyle_prefe
 type StudentSubjectRow = Database['public']['Tables']['student_subjects']['Row'];
 type StudentAdmissionsTestRow = Database['public']['Tables']['student_admissions_tests']['Row'];
 type ProgramRow = Database['public']['Tables']['programs']['Row'];
-type UniversityRow = Database['public']['Tables']['universities']['Row'];
-type ProgramRequirementRow = Database['public']['Tables']['program_requirements']['Row'];
+type CourseScoringRow = Database['public']['Views']['course_scoring_v1']['Row'];
+type ProgramSummaryRow = Pick<ProgramRow, 'id' | 'metadata'>;
 
 type Client = SupabaseClient<Database>;
 
@@ -63,52 +63,7 @@ const asCostOfLife = (value: unknown): CourseRecord['cost_of_life'] => {
   return null;
 };
 
-const extractAdmissionTests = (value: string | null): string | null => {
-  if (!value) return null;
-  const upper = value.toUpperCase();
-  const tests = ['LNAT', 'UCAT', 'TMUA', 'MAT', 'STEP', 'ESAT', 'TSA'].filter((test) => upper.includes(test));
-  return tests.length ? tests.join(', ') : null;
-};
-
-const gradeValueMap: Record<string, number> = {
-  'A*': 7,
-  A: 6,
-  B: 5,
-  C: 4,
-  D: 3,
-  E: 2,
-  U: 1
-};
-
-const extractALevelProfiles = (value: string | null): string[] => {
-  if (!value) return [];
-  const matches = value.toUpperCase().match(/A\*AA|AAA|AAB|ABB|BBB|BBC|BCC|CCC|CCD|DDD|EEE/g);
-  return matches ?? [];
-};
-
-const profileToScore = (profile: string) =>
-  (profile.match(/A\*|A|B|C|D|E|U/g) ?? [])
-    .slice(0, 3)
-    .reduce((sum, grade) => sum + (gradeValueMap[grade] ?? 0), 0);
-
-const selectLenientALevel = (value: string | null): string | null => {
-  const profiles = extractALevelProfiles(value);
-  if (!profiles.length) return null;
-  return profiles.reduce((lowest, current) => (profileToScore(current) < profileToScore(lowest) ? current : lowest));
-};
-
-const extractIbTotal = (value: string | null): number | null => {
-  if (!value) return null;
-  const match = value.match(/(\d{2})/);
-  if (!match) return null;
-  const parsed = Number(match[1]);
-  if (!Number.isFinite(parsed)) return null;
-  if (/higher level|hl/i.test(value) && parsed <= 21) return null;
-  if (parsed < 24 || parsed > 45) return null;
-  return parsed;
-};
-
-type CourseSource = CourseRecord & {
+type CourseSource = EnrichedCourseRecord & {
   program_id: string;
   university_id: string;
   program_level: string | null;
@@ -196,98 +151,92 @@ const buildStudentPayload = (params: {
   };
 };
 
-const buildCourseRecords = (params: {
-  programs: ProgramRow[];
-  universities: UniversityRow[];
-  requirements: ProgramRequirementRow[];
-}): CourseSource[] => {
-  const universityMap = new Map(params.universities.map((uni) => [uni.id, uni]));
-  const requirementMap = new Map(params.requirements.map((req) => [req.program_id, req]));
-  return params.programs.map((program) => {
-    const university = universityMap.get(program.university_id);
-    const requirement = requirementMap.get(program.id);
-    const universityMetadata = (university?.metadata ?? null) as Record<string, unknown> | null;
-    const programMetadata = (program.metadata ?? null) as Record<string, unknown> | null;
-    const qsRank = asNumber(universityMetadata?.qs_uk_rank ?? universityMetadata?.qs_rank ?? universityMetadata?.qs);
-    const timesRank = asNumber(universityMetadata?.times_sunday_rank ?? universityMetadata?.times_rank);
-    const guardianRank = asNumber(universityMetadata?.guardian_rank);
-    const nssScore = asNumber(programMetadata?.nss_score_pct ?? program.student_satisfaction);
-    const intakeSize = asNumber(programMetadata?.intake_size);
-    const studentToStaff = asNumber(programMetadata?.student_to_staff_ratio);
-    const internationalRatio = asNumber(programMetadata?.international_students_ratio_pct);
-    const costOfLife = asCostOfLife(universityMetadata?.cost_of_life ?? programMetadata?.cost_of_life);
+const toTier = (value: unknown): 1 | 2 | 3 | 4 | 5 => {
+  const parsed = typeof value === 'number' ? value : Number(value);
+  if (parsed === 1 || parsed === 2 || parsed === 3 || parsed === 4 || parsed === 5) return parsed;
+  return 5;
+};
 
-    const ibFromProgram = extractIbTotal(asString(program.min_ib));
-    const ibFromOverview = extractIbTotal(asString(program.entry_requirements_overview));
-    const minIbScore =
-      asNumber(requirement?.min_ib_total) ?? ibFromProgram ?? ibFromOverview;
-    const minALevelScore =
-      selectLenientALevel(asString(program.min_alevel)) ??
-      selectLenientALevel(asString(program.entry_requirements_overview));
+const toPlacementYear = (value: unknown, detail: string | null): string | null => {
+  if (detail && detail.trim()) return detail.trim();
+  if (typeof value === 'boolean') return value ? 'yes' : 'no';
+  return asString(value);
+};
 
-    const admissionTest = extractAdmissionTests(program.additional_entry_requirements ?? program.entry_requirements_overview ?? null);
+const mapCourseScoringRow = (row: CourseScoringRow): CourseSource => {
+  const universityScore = asNumber(row.university_score) ?? 0;
+  const selectivityScore = asNumber(row.course_selectivity_score) ?? 0;
+  const totalScore = asNumber(row.total_course_score) ?? Math.round(universityScore * 0.6 + selectivityScore * 0.4);
+  const courseTier = toTier(row.course_tier);
+  const genderRatio = row.gender_ratio_pct;
+  const genderRatioText =
+    typeof genderRatio === 'number' ? String(genderRatio) : asString(genderRatio);
 
-    const duration = asString(program.duration) ?? (program.duration_years ? `${program.duration_years} years` : null);
-    const tuition = asNumber(program.tuition ?? program.tuition_fees_international);
-
-    return {
-      university: university?.name ?? 'University',
-      city: university?.city ?? '',
-      level: program.study_level ?? program.level ?? 'Undergraduate',
-      degree_type: program.name ?? program.course_name ?? 'Undergraduate degree',
-      field_of_study: program.field ?? null,
-      course: program.course_name ?? program.name ?? 'Course',
-      duration,
-      qs_uk_rank: qsRank,
-      times_sunday_rank: timesRank,
-      guardian_rank: guardianRank,
-      acceptance_rate_pct: asNumber(university?.acceptance_rate),
-      nss_score_pct: nssScore,
-      intake_size: intakeSize,
-      gender_ratio_pct: asString(programMetadata?.gender_ratio_pct) ?? null,
-      international_students_ratio_pct: internationalRatio,
-      student_to_staff_ratio: studentToStaff,
-      yearly_international_tuition_fee_gbp: tuition,
-      student_dorm_cost_gbp_per_year: asNumber(universityMetadata?.student_dorm_cost_gbp_per_year ?? programMetadata?.student_dorm_cost_gbp_per_year),
-      average_rent_outside_campus_gbp_per_month: asNumber(
-        universityMetadata?.average_rent_outside_campus_gbp_per_month ?? programMetadata?.average_rent_outside_campus_gbp_per_month
-      ),
-      cost_of_life: costOfLife,
-      min_ib_score: minIbScore,
-      min_a_level_score: minALevelScore,
-      preferred_subjects: asString(program.subject_requirements),
-      english_score_requirement: asString(program.english_requirements),
-      course_online_page: program.provider_course_url ?? program.url ?? null,
-      ucas_code: program.ucas_code ?? null,
-      ucas_deadline: asString(program.start_date),
-      admission_test: admissionTest,
-      interview: asString(programMetadata?.interview),
-      university_life: asString(programMetadata?.university_life),
-      number_of_students: asNumber(universityMetadata?.number_of_students),
-      transport_accessibility: asString(universityMetadata?.transport_accessibility),
-      cultural_social_environment: asString(universityMetadata?.cultural_social_environment),
-      city_life: asString(universityMetadata?.city_life),
-      climate: asString(universityMetadata?.climate),
-      safety_index: asString(universityMetadata?.safety_index),
-      study_abroad_option: asString(programMetadata?.study_abroad_option),
-      graduate_employment_rate_pct: asNumber(programMetadata?.graduate_employment_rate_pct ?? program.employment_after_course),
-      average_starting_salary_gbp: asNumber(program.average_salary_after_15m),
-      top_industries: asString(programMetadata?.top_industries),
-      placement_year: asString(programMetadata?.placement_year),
-      program_id: program.id,
-      university_id: university?.id ?? '',
-      program_level: program.study_level ?? program.level ?? null,
-      program_language: program.language ?? null,
-      program_mode: program.mode ?? null,
-      program_tuition: tuition,
-      program_currency: program.currency ?? null,
-      program_url: program.provider_course_url ?? program.url ?? null,
-      university_country: university?.country ?? 'United Kingdom',
-      university_rank_overall: university?.rank_overall ?? null,
-      university_rank_source: university?.rank_source ?? null,
-      university_requires_test: university?.requires_test ?? null
-    };
-  });
+  return {
+    university: asString(row.university) ?? 'University',
+    city: asString(row.city) ?? '',
+    level: asString(row.level) ?? 'Undergraduate',
+    degree_type: asString(row.degree_type) ?? asString(row.course) ?? 'Undergraduate degree',
+    field_of_study: asString(row.field_of_study),
+    course: asString(row.course) ?? 'Course',
+    duration: asString(row.duration),
+    qs_uk_rank: null,
+    times_sunday_rank: null,
+    guardian_rank: null,
+    acceptance_rate_pct: asNumber(row.acceptance_rate_pct),
+    nss_score_pct: asNumber(row.nss_score_pct),
+    intake_size: asNumber(row.intake_size),
+    gender_ratio_pct: genderRatioText,
+    international_students_ratio_pct: asNumber(row.international_students_ratio_pct),
+    student_to_staff_ratio: asNumber(row.student_to_staff_ratio),
+    yearly_international_tuition_fee_gbp: asNumber(row.yearly_international_tuition_fee_gbp),
+    student_dorm_cost_gbp_per_year: asNumber(row.student_dorm_cost_gbp_per_year),
+    average_rent_outside_campus_gbp_per_month: asNumber(row.average_rent_outside_campus_gbp_per_month),
+    cost_of_life: asCostOfLife(row.cost_of_life),
+    min_ib_score: asNumber(row.min_ib_score),
+    min_a_level_score: asString(row.min_a_level_score),
+    preferred_subjects: asString(row.preferred_subjects),
+    english_score_requirement: asString(row.english_score_requirement),
+    course_online_page: asString(row.course_online_page),
+    ucas_code: asString(row.ucas_code),
+    ucas_deadline: asString(row.ucas_deadline),
+    admission_test: asString(row.admission_test),
+    interview: asString(row.interview),
+    university_life: asString(row.university_life),
+    number_of_students: asNumber(row.number_of_students),
+    transport_accessibility: asString(row.transport_accessibility),
+    cultural_social_environment: asString(row.cultural_social_environment),
+    city_life: asString(row.city_life),
+    climate: asString(row.climate),
+    safety_index: asString(row.safety_index),
+    study_abroad_option: asString(row.study_abroad_option),
+    graduate_employment_rate_pct: asNumber(row.graduate_employment_rate_pct),
+    average_starting_salary_gbp: asNumber(row.average_starting_salary_gbp),
+    top_industries: asString(row.top_industries),
+    placement_year: toPlacementYear(row.placement_year, asString(row.placement_year_detail)),
+    university_score: Math.round(universityScore),
+    course_selectivity_score: Math.round(selectivityScore),
+    total_course_score: Math.round(totalScore),
+    course_tier: courseTier,
+    explanations: [
+      `University ranking score: ${Math.round(universityScore)}/100`,
+      `Course selectivity score: ${Math.round(selectivityScore)}/100`,
+      `Total score: ${Math.round(totalScore)}/100`,
+      `Tier ${courseTier} based on total score`
+    ],
+    program_id: String(row.program_id ?? row.course_id ?? ''),
+    university_id: String(row.university_id ?? ''),
+    program_level: asString(row.level),
+    program_language: asString(row.program_language),
+    program_mode: asString(row.program_mode),
+    program_tuition: asNumber(row.program_tuition),
+    program_currency: asString(row.program_currency),
+    program_url: asString(row.program_url),
+    university_country: asString(row.university_country) ?? 'United Kingdom',
+    university_rank_overall: asNumber(row.university_rank_overall),
+    university_rank_source: asString(row.university_rank_source),
+    university_requires_test: row.university_requires_test ?? null
+  };
 };
 
 const chunk = <T,>(items: T[], size: number): T[][] => {
@@ -342,12 +291,12 @@ export const loadMatchesForProfile = async (
     };
   }
 
-  const programsData: ProgramRow[] = [];
+  const programsData: ProgramSummaryRow[] = [];
   let offset = 0;
   while (programsData.length < programLimit) {
     const rangeFrom = offset;
     const rangeTo = Math.min(offset + PROGRAM_PAGE_SIZE - 1, programLimit - 1);
-    let programQuery = supabase.from('programs').select('*');
+    let programQuery = supabase.from('programs').select('id,metadata');
     programQuery = applyProgramVisibilityFilters(programQuery).range(rangeFrom, rangeTo);
     const { data, error: programsError } = await programQuery;
     if (programsError) {
@@ -395,69 +344,96 @@ export const loadMatchesForProfile = async (
     };
   }
 
-  const universityIds = filteredPrograms.map((program) => program.university_id);
   const programIds = filteredPrograms.map((program) => program.id);
 
-  const universitiesData: UniversityRow[] = [];
-  for (const batch of chunk(Array.from(new Set(universityIds)), 500)) {
+  const courseColumns = [
+    'course_id',
+    'program_id',
+    'university_id',
+    'university',
+    'course',
+    'city',
+    'ucas_code',
+    'level',
+    'degree_type',
+    'field_of_study',
+    'duration',
+    'acceptance_rate_pct',
+    'nss_score_pct',
+    'intake_size',
+    'gender_ratio_pct',
+    'international_students_ratio_pct',
+    'student_to_staff_ratio',
+    'yearly_international_tuition_fee_gbp',
+    'student_dorm_cost_gbp_per_year',
+    'average_rent_outside_campus_gbp_per_month',
+    'cost_of_life',
+    'min_ib_score',
+    'min_a_level_score',
+    'preferred_subjects',
+    'english_score_requirement',
+    'course_online_page',
+    'ucas_deadline',
+    'admission_test',
+    'interview',
+    'university_life',
+    'number_of_students',
+    'transport_accessibility',
+    'cultural_social_environment',
+    'city_life',
+    'climate',
+    'safety_index',
+    'study_abroad_option',
+    'graduate_employment_rate_pct',
+    'average_starting_salary_gbp',
+    'top_industries',
+    'placement_year',
+    'placement_year_detail',
+    'program_language',
+    'program_mode',
+    'program_tuition',
+    'program_currency',
+    'program_url',
+    'university_country',
+    'university_rank_overall',
+    'university_rank_source',
+    'university_requires_test',
+    'university_score',
+    'course_selectivity_score',
+    'total_course_score',
+    'course_tier'
+  ].join(',');
+
+  const courseRows: CourseScoringRow[] = [];
+  for (const batch of chunk(programIds, 200)) {
     const { data, error } = await supabase
-      .from('universities')
-      .select('id,name,country,region,rank_overall,rank_source,acceptance_rate,requires_test,metadata,city')
-      .in('id', batch);
+      .from('course_scoring_v1')
+      .select(courseColumns)
+      .in('course_id', batch);
     if (error) {
-      console.error('Failed to load catalog data', { universitiesError: error });
+      console.error('Failed to load catalog data', { courseScoringError: error });
       return {
         matches: [],
         catalogSize: { programs: filteredPrograms.length, universities: 0 },
         missingSections,
-        error: {
-          stage: 'universities',
-          message: 'Failed to load universities'
-        }
+        error: { stage: 'programs', message: 'Failed to load course scoring view' }
       };
     }
-    universitiesData.push(...(data ?? []));
+    courseRows.push(...(data ?? []));
   }
 
-  const requirementsData: ProgramRequirementRow[] = [];
-  for (const batch of chunk(programIds, 500)) {
-    const { data, error } = await supabase
-      .from('program_requirements')
-      .select('program_id,min_ib_total')
-      .in('program_id', batch);
-    if (error) {
-      console.warn('Requirements lookup failed, continuing without requirements data', error.message);
-      break;
-    }
-    requirementsData.push(...(data ?? []));
-  }
-
-  if (!universitiesData.length) {
+  if (!courseRows.length) {
     return {
       matches: [],
       catalogSize: { programs: filteredPrograms.length, universities: 0 },
       missingSections,
-      error: { stage: 'universities', message: 'Failed to load universities' }
+      error: { stage: 'programs', message: 'Course scoring view returned no rows' }
     };
   }
 
-  if (!filteredPrograms.length) {
-    return {
-      matches: [],
-      catalogSize: { programs: filteredPrograms.length, universities: universitiesData.length },
-      missingSections
-    };
-  }
+  const enrichedCourses = courseRows.map(mapCourseScoringRow);
 
-  const courseRecords = buildCourseRecords({
-    programs: filteredPrograms,
-    universities: universitiesData,
-    requirements: requirementsData
-  });
-  const enrichedCourses = enrichCourseRecords(courseRecords).map((course, index) => ({
-    ...courseRecords[index],
-    ...course
-  }));
+  const universitiesCount = new Set(enrichedCourses.map((course) => course.university_id)).size;
 
   const studentPayload = buildStudentPayload({
     academic: academicData!,
@@ -486,22 +462,16 @@ export const loadMatchesForProfile = async (
   const courseLookup = new Map(enrichedCourses.map((course) => [toKey(course), course]));
   const courseByProgramId = new Map(enrichedCourses.map((course) => [course.program_id, course]));
 
-  const matches: EnrichedMatch[] = limited
+  const assignTier = (chance: number): MatchTier =>
+    chance > 75 ? 'Safe' : chance >= 50 ? 'Match' : 'Reach';
+
+  let matches: EnrichedMatch[] = limited
     .map((match) => {
       const course =
         (match.program_id ? courseByProgramId.get(match.program_id) : null) ??
         courseLookup.get(toKey(match));
       if (!course) return null;
-      const tier: MatchTier =
-        match.tier_fit === 'Safety'
-          ? 'Safe'
-          : match.tier_fit === 'Target'
-            ? 'Match'
-            : match.chance_category === 'Very likely'
-              ? 'Safe'
-              : match.chance_category === 'Likely' || match.chance_category === 'Possible'
-                ? 'Match'
-                : 'Reach';
+      const tier: MatchTier = assignTier(match.chance_percent);
       return {
         program: {
           id: course.program_id,
@@ -535,9 +505,30 @@ export const loadMatchesForProfile = async (
     })
     .filter((value): value is EnrichedMatch => value !== null);
 
+  if (matches.length > 0) {
+    const sortedByScore = [...matches].sort((a, b) => a.score - b.score);
+
+    if (!matches.some((match) => match.tier === 'Reach')) {
+      const reachCount = Math.max(1, Math.floor(matches.length * 0.2));
+      const reachIds = new Set(sortedByScore.slice(0, reachCount).map((match) => match.program.id));
+      matches = matches.map((match) => (reachIds.has(match.program.id) ? { ...match, tier: 'Reach' } : match));
+    }
+
+    if (!matches.some((match) => match.tier === 'Match')) {
+      const matchCount = Math.max(1, Math.floor(matches.length * 0.2));
+      const startIndex = Math.max(0, Math.floor((matches.length - matchCount) / 2));
+      const matchIds = new Set(
+        sortedByScore
+          .slice(startIndex, startIndex + matchCount)
+          .map((match) => match.program.id)
+      );
+      matches = matches.map((match) => (matchIds.has(match.program.id) ? { ...match, tier: 'Match' } : match));
+    }
+  }
+
   return {
     matches,
-    catalogSize: { programs: filteredPrograms.length, universities: universitiesData?.length ?? 0 },
+    catalogSize: { programs: filteredPrograms.length, universities: universitiesCount },
     missingSections
   };
 };

@@ -48,6 +48,7 @@ type ProgramInsert = {
   id: string;
   university_id: string;
   course_name: string;
+  name?: string | null;
   ucas_code?: string | null;
   study_level?: string | null;
   duration?: string | null;
@@ -76,6 +77,15 @@ type ProgramInsert = {
   average_salary_after_15m?: string | null;
   historic_entry_grades?: string | null;
   open_days?: string | null;
+  min_ib_score?: number | null;
+  min_a_level_score?: string | null;
+  a_level_min_numeric?: number | null;
+  preferred_subjects?: string | null;
+  english_score_requirement?: string | null;
+  course_online_page?: string | null;
+  ucas_deadline?: string | null;
+  admission_test?: string | null;
+  yearly_international_tuition_fee_gbp?: number | null;
 };
 
 const DEFAULT_COUNTRY = 'United Kingdom';
@@ -101,6 +111,46 @@ const trimOrUndefined = (value?: string | null): string | undefined => {
   if (value === undefined || value === null) return undefined;
   const trimmed = value.trim();
   return trimmed === '' ? undefined : trimmed;
+};
+
+const normalizeALevelProfile = (value?: string | null): string | null => {
+  if (!value) return null;
+  const match = value.toUpperCase().match(/A\\*AA|A\\*AB|AAA|AAB|ABB|BBB|BBC|BCC|CCC/);
+  return match ? match[0] : null;
+};
+
+const mapALevelNumeric = (value?: string | null): number | null => {
+  const profile = normalizeALevelProfile(value);
+  if (!profile) return null;
+  if (profile.includes('A*AA')) return 100;
+  if (profile === 'A*AB') return 95;
+  if (profile === 'AAA') return 90;
+  if (profile === 'AAB') return 80;
+  if (profile === 'ABB') return 70;
+  if (profile === 'BBB') return 60;
+  if (profile === 'BBC') return 50;
+  if (profile === 'BCC') return 40;
+  if (profile === 'CCC') return 30;
+  return null;
+};
+
+const parseIbTotal = (value?: string | null): number | null => {
+  if (!value) return null;
+  const match = value.match(/(\\d{2})/);
+  if (!match) return null;
+  const parsed = Number(match[1]);
+  if (!Number.isFinite(parsed)) return null;
+  if (parsed < 24 || parsed > 45) return null;
+  return parsed;
+};
+
+const parseMoney = (value?: string | null): number | null => {
+  const cleaned = trimOrUndefined(value);
+  if (!cleaned) return null;
+  const numeric = cleaned.replace(/[^0-9.]/g, '');
+  if (!numeric) return null;
+  const parsed = Number(numeric);
+  return Number.isFinite(parsed) ? Math.round(parsed) : null;
 };
 
 const chunk = <T,>(items: T[], size: number): T[][] => {
@@ -211,6 +261,7 @@ const buildPrograms = (
     programMap.set(id, {
       id,
       university_id: uni.id,
+      name: row.course_name,
       course_name: row.course_name,
       ucas_code: row.ucas_code ?? null,
       study_level: row.study_level ?? null,
@@ -239,7 +290,16 @@ const buildPrograms = (
       student_outcomes: row.student_outcomes ?? null,
       average_salary_after_15m: row.average_salary_after_15m ?? null,
       historic_entry_grades: row.historic_entry_grades ?? null,
-      open_days: row.open_days ?? null
+      open_days: row.open_days ?? null,
+      min_ib_score: parseIbTotal(row.min_ib),
+      min_a_level_score: normalizeALevelProfile(row.min_alevel),
+      a_level_min_numeric: mapALevelNumeric(row.min_alevel),
+      preferred_subjects: row.subject_requirements ?? null,
+      english_score_requirement: row.english_requirements ?? null,
+      course_online_page: row.provider_course_url ?? null,
+      ucas_deadline: row.start_date ?? null,
+      admission_test: row.additional_entry_requirements ?? null,
+      yearly_international_tuition_fee_gbp: parseMoney(row.tuition_fees_international) ?? null
     });
   });
 

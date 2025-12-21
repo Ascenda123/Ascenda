@@ -16,6 +16,9 @@ type ProgramUpdate = {
   min_alevel: string | null;
   min_ib: string | null;
   additional_entry_requirements: string | null;
+  min_ib_score: number | null;
+  min_a_level_score: string | null;
+  a_level_min_numeric: number | null;
 };
 
 const BATCH_SIZE = 100;
@@ -24,6 +27,37 @@ const trimOrNull = (value?: string | null) => {
   if (value === undefined || value === null) return null;
   const trimmed = value.trim();
   return trimmed === '' ? null : trimmed;
+};
+
+const normalizeALevelProfile = (value?: string | null): string | null => {
+  if (!value) return null;
+  const match = value.toUpperCase().match(/A\\*AA|A\\*AB|AAA|AAB|ABB|BBB|BBC|BCC|CCC/);
+  return match ? match[0] : null;
+};
+
+const mapALevelNumeric = (value?: string | null): number | null => {
+  const profile = normalizeALevelProfile(value);
+  if (!profile) return null;
+  if (profile.includes('A*AA')) return 100;
+  if (profile === 'A*AB') return 95;
+  if (profile === 'AAA') return 90;
+  if (profile === 'AAB') return 80;
+  if (profile === 'ABB') return 70;
+  if (profile === 'BBB') return 60;
+  if (profile === 'BBC') return 50;
+  if (profile === 'BCC') return 40;
+  if (profile === 'CCC') return 30;
+  return null;
+};
+
+const parseIbTotal = (value?: string | null): number | null => {
+  if (!value) return null;
+  const match = value.match(/(\\d{2})/);
+  if (!match) return null;
+  const parsed = Number(match[1]);
+  if (!Number.isFinite(parsed)) return null;
+  if (parsed < 24 || parsed > 45) return null;
+  return parsed;
 };
 
 const chunk = <T,>(items: T[], size: number): T[][] => {
@@ -78,7 +112,10 @@ const buildUpdates = (rows: CsvRow[]): ProgramUpdate[] =>
     id: row.id,
     min_alevel: trimOrNull(row.min_alevel),
     min_ib: trimOrNull(row.min_ib),
-    additional_entry_requirements: trimOrNull(row.additional_entry_requirements)
+    additional_entry_requirements: trimOrNull(row.additional_entry_requirements),
+    min_ib_score: parseIbTotal(row.min_ib),
+    min_a_level_score: normalizeALevelProfile(row.min_alevel),
+    a_level_min_numeric: mapALevelNumeric(row.min_alevel)
   }));
 
 const main = async () => {
@@ -111,7 +148,10 @@ const main = async () => {
         .update({
           min_alevel: row.min_alevel,
           min_ib: row.min_ib,
-          additional_entry_requirements: row.additional_entry_requirements
+          additional_entry_requirements: row.additional_entry_requirements,
+          min_ib_score: row.min_ib_score,
+          min_a_level_score: row.min_a_level_score,
+          a_level_min_numeric: row.a_level_min_numeric
         })
         .eq('id', row.id)
         .select('id');

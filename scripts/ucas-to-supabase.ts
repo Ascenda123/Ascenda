@@ -92,6 +92,15 @@ type ProgramOut = {
   open_days?: string;
   url?: string;
   metadata?: Record<string, unknown>;
+  min_ib_score?: number;
+  min_a_level_score?: string;
+  a_level_min_numeric?: number;
+  preferred_subjects?: string;
+  english_score_requirement?: string;
+  course_online_page?: string;
+  ucas_deadline?: string;
+  admission_test?: string;
+  yearly_international_tuition_fee_gbp?: number;
 };
 
 type RequirementOut = {
@@ -194,6 +203,35 @@ const uuidFromString = (value: string): string => {
   ].join('-');
 };
 
+const normalizeALevelProfile = (value?: string): string | undefined => {
+  const text = trimOrUndefined(value);
+  if (!text) return undefined;
+  const match = text.toUpperCase().match(/A\\*AA|A\\*AB|AAA|AAB|ABB|BBB|BBC|BCC|CCC/);
+  return match ? match[0] : undefined;
+};
+
+const mapALevelNumeric = (value?: string): number | undefined => {
+  const profile = normalizeALevelProfile(value);
+  if (!profile) return undefined;
+  if (profile.includes('A*AA')) return 100;
+  if (profile === 'A*AB') return 95;
+  if (profile === 'AAA') return 90;
+  if (profile === 'AAB') return 80;
+  if (profile === 'ABB') return 70;
+  if (profile === 'BBB') return 60;
+  if (profile === 'BBC') return 50;
+  if (profile === 'BCC') return 40;
+  if (profile === 'CCC') return 30;
+  return undefined;
+};
+
+const parseIbTotal = (value?: string): number | undefined => {
+  const total = extractNumber(value);
+  if (total === undefined) return undefined;
+  if (total < 24 || total > 45) return undefined;
+  return Math.round(total);
+};
+
 const readInput = (inputPath: string): InputRow[] => {
   const contents = fs.readFileSync(inputPath, 'utf-8');
   const parsed = Papa.parse(contents, {
@@ -281,6 +319,9 @@ const buildPrograms = (
     const tuition =
       parseMoney(row.tuition_fees_international) ?? parseMoney(row.tuition_fees_home);
     const ielts = extractIelts(row.english_requirements);
+    const minIbScore = parseIbTotal(row.min_ib);
+    const minALevelScore = normalizeALevelProfile(row.min_alevel);
+    const aLevelNumeric = mapALevelNumeric(row.min_alevel);
 
     const programMeta: Record<string, unknown> = {
       source: 'ucas'
@@ -324,7 +365,16 @@ const buildPrograms = (
       average_salary_after_15m: row.average_salary_after_15m,
       open_days: row.open_days,
       url: row.provider_course_url,
-      metadata: Object.keys(programMeta).length ? programMeta : undefined
+      metadata: Object.keys(programMeta).length ? programMeta : undefined,
+      min_ib_score: minIbScore,
+      min_a_level_score: minALevelScore,
+      a_level_min_numeric: aLevelNumeric,
+      preferred_subjects: row.subject_requirements,
+      english_score_requirement: row.english_requirements,
+      course_online_page: row.provider_course_url,
+      ucas_deadline: row.start_date,
+      admission_test: row.additional_entry_requirements,
+      yearly_international_tuition_fee_gbp: tuition ? Math.round(tuition) : undefined
     });
 
     const reqPieces: string[] = [];
@@ -467,7 +517,16 @@ const main = () => {
       'average_salary_after_15m',
       'open_days',
       'url',
-      'metadata'
+      'metadata',
+      'min_ib_score',
+      'min_a_level_score',
+      'a_level_min_numeric',
+      'preferred_subjects',
+      'english_score_requirement',
+      'course_online_page',
+      'ucas_deadline',
+      'admission_test',
+      'yearly_international_tuition_fee_gbp'
     ]
   );
 
