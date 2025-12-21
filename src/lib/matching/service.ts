@@ -463,7 +463,7 @@ export const loadMatchesForProfile = async (
   const courseByProgramId = new Map(enrichedCourses.map((course) => [course.program_id, course]));
 
   const assignTier = (chance: number): MatchTier =>
-    chance > 75 ? 'Safe' : chance >= 50 ? 'Match' : 'Reach';
+    chance >= 70 ? 'Safe' : chance >= 50 ? 'Match' : 'Reach';
 
   let matches: EnrichedMatch[] = limited
     .map((match) => {
