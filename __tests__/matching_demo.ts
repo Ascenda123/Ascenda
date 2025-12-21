@@ -3,7 +3,7 @@ import { rankCourseMatches } from '../src/lib/matching/matching_engine';
 import type { StudentProfilePayload } from '../src/lib/profile/intake-types';
 import type { EnrichedCourseRecord } from '../src/lib/tiering/course_tiering';
 
-const sampleCourses: EnrichedCourseRecord[] = [
+const sampleCourses: Partial<EnrichedCourseRecord>[] = [
     {
         university: 'University of Oxford',
         course: 'Medicine',
@@ -228,7 +228,7 @@ function runDemo() {
 
     students.forEach(student => {
         const score = scoreStudentProfile(student);
-        const matches = rankCourseMatches(student, score, sampleCourses);
+        const matches = rankCourseMatches(student, score, sampleCourses as EnrichedCourseRecord[]);
 
         console.log(`\n========================================`);
         console.log(`MATCHES FOR ${student.personal_information.first_name.toUpperCase()}`);

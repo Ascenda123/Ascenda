@@ -32,6 +32,34 @@ const readCsv = (filePath: string): Row[] => {
     const message = parsed.errors.map((e: any) => `${e.message} at row ${e.row}`).join('; ');
     throw new Error(`CSV parse errors in ${filePath}: ${message}`);
   }
+  const numericFields = new Set([
+    'rank_overall',
+    'intl_tuition_low',
+    'intl_tuition_high',
+    'acceptance_rate',
+    'acceptance_rate_pct',
+    'nss_score_pct',
+    'intake_size',
+    'gender_ratio_pct',
+    'international_students_ratio_pct',
+    'student_to_staff_ratio',
+    'student_dorm_cost_gbp_per_year',
+    'average_rent_outside_campus_gbp_per_month',
+    'graduate_employment_rate_pct',
+    'average_starting_salary_gbp',
+    'number_of_students',
+    'min_ib_score',
+    'a_level_min_numeric',
+    'yearly_international_tuition_fee_gbp'
+  ]);
+
+  const parseNumeric = (value: string): number | null => {
+    const cleaned = value.replace(/[^0-9.-]/g, '');
+    if (!cleaned) return null;
+    const parsed = Number(cleaned);
+    return Number.isFinite(parsed) ? parsed : null;
+  };
+
   return parsed.data
     .map((row: Row) => {
       const normalized: Row = {};
@@ -50,6 +78,13 @@ const readCsv = (filePath: string): Row[] => {
               return;
             } catch {
               // keep as string
+            }
+          }
+          if (numericFields.has(key)) {
+            const parsedNumber = parseNumeric(trimmed);
+            if (parsedNumber !== null) {
+              normalized[key] = parsedNumber;
+              return;
             }
           }
           normalized[key] = trimmed;
