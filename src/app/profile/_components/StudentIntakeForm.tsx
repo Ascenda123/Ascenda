@@ -811,7 +811,7 @@ export const StudentIntakeForm = ({
         // Use window.location for a harder redirect to clear any middleware/router stuckness
         setTimeout(() => {
           window.location.href = '/dashboard';
-        }, 800);
+        }, 1200);
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Save failed.';
         setStatusMessage(message);

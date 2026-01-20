@@ -71,23 +71,24 @@ export default async function ProfileWizardPage({ searchParams }: ProfileWizardP
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-background text-foreground">
-
       <div className="relative z-10 mx-auto flex w-full max-w-none flex-col gap-6 px-4 pb-16 pt-20 sm:px-6 lg:px-10">
-        <div className="flex flex-wrap items-center justify-between gap-4 relative z-50">
+        <div className="flex flex-wrap items-center justify-between gap-4 relative z-[100] pointer-events-auto">
           <div className="flex items-center gap-2">
-            <Button asChild size="sm" variant="ghost" className="gap-2 rounded-xl text-muted-foreground hover:text-foreground">
-              <Link href="/dashboard">
-                <Home className="w-4 h-4" />
-                Dashboard
-              </Link>
-            </Button>
+            <a
+              href="/dashboard"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all duration-200 cursor-pointer"
+            >
+              <Home className="w-4 h-4" />
+              Dashboard
+            </a>
             <div className="w-px h-4 bg-border/50" />
-            <Button asChild size="sm" variant="ghost" className="gap-2 rounded-xl text-muted-foreground hover:text-foreground">
-              <Link href="/profile">
-                <User className="w-4 h-4" />
-                Back to profile
-              </Link>
-            </Button>
+            <a
+              href="/profile"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all duration-200 cursor-pointer"
+            >
+              <User className="w-4 h-4" />
+              Back to profile
+            </a>
           </div>
           <Button asChild size="sm" variant="secondary" className="gap-2 rounded-xl shadow-sm">
             <a href="/api/profile/export" download>
