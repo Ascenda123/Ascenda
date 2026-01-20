@@ -36,7 +36,7 @@ const PROGRAM_PAGE_SIZE = 150;
 const PROGRAM_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 const PROGRAM_CACHE_WINDOW_MS = 5 * 60 * 1000;
 
-const applyProgramVisibilityFilters = (query: ReturnType<Client['from']>) => {
+const applyProgramVisibilityFilters = (query: any) => {
   const flagged = getFlaggedProgramIds();
   if (!flagged.length) return query.order('id', { ascending: true });
 
@@ -323,7 +323,7 @@ export const loadMatchesForProfile = async (
 
               const cachedTier = (breakdown.tier as MatchTier | undefined) ?? null;
               const fallbackTier: MatchTier =
-                row.score >= 70 ? 'Safe' : row.score >= 50 ? 'Match' : 'Reach';
+                (row.score ?? 0) >= 70 ? 'Safe' : (row.score ?? 0) >= 50 ? 'Match' : 'Reach';
 
               return {
                 program: {
@@ -354,7 +354,7 @@ export const loadMatchesForProfile = async (
                 },
                 blockingReasons: [],
                 tier: cachedTier ?? fallbackTier
-              } satisfies EnrichedMatch;
+              } as EnrichedMatch;
             })
             .filter((value): value is EnrichedMatch => value !== null);
 
@@ -490,7 +490,7 @@ export const loadMatchesForProfile = async (
         error: { stage: 'programs', message: 'Failed to load course scoring view' }
       };
     }
-    courseRows.push(...(data ?? []));
+    courseRows.push(...((data as unknown as CourseScoringRow[]) ?? []));
   }
 
   if (!courseRows.length) {

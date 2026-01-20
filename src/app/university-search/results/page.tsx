@@ -71,7 +71,7 @@ const getFlaggedProgramIds = () => {
 };
 
 const applyProgramVisibilityFilters = (
-  query: ReturnType<ReturnType<typeof getBrowserSupabaseClient>['from']>,
+  query: any,
   flaggedIds: string[]
 ) => {
   if (!flaggedIds.length) return query;
@@ -230,9 +230,9 @@ export default function UniversitySearchResultsPage() {
         // and to allow filtering by university name.
         let query = applyProgramVisibilityFilters(
           supabase
-          .from('programs')
-          .select(
-            `
+            .from('programs')
+            .select(
+              `
             *,
             universities!left (
               id,
@@ -248,8 +248,8 @@ export default function UniversitySearchResultsPage() {
               metadata
             )
           `,
-            { count: 'exact' }
-          ),
+              { count: 'exact' }
+            ),
           flaggedIds
         );
 

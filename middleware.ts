@@ -81,18 +81,18 @@ export async function middleware(req: NextRequest) {
       }
     }
 
-    const [profileResponse, academicsResponse, preferencesResponse, aspirationsResponse] = await Promise.all([
-      supabase.from('profiles').select('full_name,country,time_zone').eq('id', session.user.id).maybeSingle(),
-      supabase.from('student_academics').select('curriculum').eq('profile_id', session.user.id).maybeSingle(),
-      supabase.from('student_preferences').select('countries').eq('profile_id', session.user.id).maybeSingle(),
-      supabase.from('student_aspirations').select('target_fields').eq('profile_id', session.user.id).maybeSingle()
+    const [personalResponse, academicResponse, lifestyleResponse, subjectsResponse] = await Promise.all([
+      supabase.from('student_personal_information').select('first_name,last_name,email,nationality,resident_country').eq('profile_id', session.user.id).maybeSingle(),
+      supabase.from('student_academic_input').select('programme_type,school_name,school_country,graduation_year,intended_clusters,english_required').eq('profile_id', session.user.id).maybeSingle(),
+      supabase.from('student_lifestyle_preference').select('extracurricular_interests').eq('profile_id', session.user.id).maybeSingle(),
+      supabase.from('student_subjects').select('id', { count: 'exact', head: true }).eq('profile_id', session.user.id)
     ]);
 
     const completionRecords = {
-      profile: profileResponse.data ?? null,
-      academics: academicsResponse.data ?? null,
-      preferences: preferencesResponse.data ?? null,
-      aspirations: aspirationsResponse.data ?? null
+      personal: personalResponse.data,
+      academicInput: academicResponse.data,
+      subjectCount: subjectsResponse.count ?? 0,
+      lifestyle: lifestyleResponse.data
     };
 
     const needsOnboarding = !isProfileComplete(completionRecords);

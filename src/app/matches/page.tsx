@@ -19,6 +19,8 @@ export const metadata: Metadata = {
   title: 'Match suggestions | Ascenda'
 };
 
+export const dynamic = 'force-dynamic';
+
 export default async function MatchesPage() {
   const supabase = createServerSupabaseClient();
   const {

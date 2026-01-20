@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { createRouteHandlerSupabaseClient } from '@/lib/supabase/server';
 import { filterVisiblePrograms, getFlaggedProgramIds } from '@/lib/catalog/visibility';
 
-const applyProgramVisibilityFilters = (query: ReturnType<ReturnType<typeof createRouteHandlerSupabaseClient>['from']>) => {
+const applyProgramVisibilityFilters = (query: any) => {
   const flagged = getFlaggedProgramIds();
   if (!flagged.length) return query;
   const formatted = flagged.map((id) => `"${id}"`).join(',');
@@ -29,24 +29,24 @@ export async function GET() {
     return NextResponse.json({ error: error?.message ?? 'Failed to load filters' }, { status: 500 });
   }
 
-  const normalizedPrograms = filterVisiblePrograms((programsResponse.data ?? []).map((program) => ({
+  const normalizedPrograms = filterVisiblePrograms((programsResponse.data ?? []).map((program: any) => ({
     id: program.id,
     metadata: program.metadata ?? null
   }))).map((program) => program.id);
   const visibleIds = new Set(normalizedPrograms);
 
   const filterOptions = (programsResponse.data ?? [])
-    .filter((program) => {
+    .filter((program: any) => {
       if (flaggedIds.length && flaggedIds.includes(program.id.toLowerCase())) return false;
       return visibleIds.has(program.id);
     })
-    .map((program) => ({
+    .map((program: any) => ({
       programName: program.course_name ?? program.name ?? 'Program',
       universityId: program.university_id
     }));
 
   const uniqueProgramOptions = Array.from(
-    filterOptions.reduce((acc, option) => {
+    filterOptions.reduce((acc: any, option: any) => {
       const key = `${option.universityId ?? 'unknown'}|${option.programName}`;
       if (!acc.has(key)) {
         acc.set(key, option);

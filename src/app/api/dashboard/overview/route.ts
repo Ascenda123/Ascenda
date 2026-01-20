@@ -54,7 +54,7 @@ export async function GET() {
   ] = await Promise.all([
     applicationIds.length
       ? supabase.from('application_checklist').select('*').in('application_id', applicationIds).order('due_date', { ascending: true }).limit(5)
-      : Promise.resolve({ data: [] as ChecklistRow[] }),
+      : Promise.resolve({ data: [] as ChecklistRow[], error: null }),
     applicationProgramIds.length
       ? supabase
         .from('deadlines')
@@ -63,7 +63,7 @@ export async function GET() {
         .gte('deadline_date', today)
         .order('deadline_date', { ascending: true })
         .limit(5)
-      : Promise.resolve({ data: [] as DeadlineRow[] }),
+      : Promise.resolve({ data: [] as DeadlineRow[], error: null }),
     supabase.from('student_personal_information').select('*').eq('profile_id', user.id).maybeSingle(),
     supabase.from('student_academic_input').select('*').eq('profile_id', user.id).maybeSingle(),
     supabase.from('student_lifestyle_preference').select('*').eq('profile_id', user.id).maybeSingle(),

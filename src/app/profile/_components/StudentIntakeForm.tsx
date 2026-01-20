@@ -208,6 +208,7 @@ export const StudentIntakeForm = ({
   const [currentStep, setCurrentStep] = useState(initialStep);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [isSaving, startTransition] = useTransition();
+  const [isRedirecting, setIsRedirecting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [programmeType, setProgrammeType] = useState<ProgrammeType | ''>('');
   const [nationalities, setNationalities] = useState<string[]>(['']);
@@ -220,6 +221,15 @@ export const StudentIntakeForm = ({
   const hasHydratedRef = useRef(false);
   const skipProgrammeResetRef = useRef(false);
 
+  useEffect(() => {
+    if (typeof Intl !== 'undefined' && typeof Intl.DateTimeFormat === 'function') {
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      if (tz) {
+        setPersonalInfo(prev => ({ ...prev, time_zone: tz }));
+      }
+    }
+  }, []);
+
   const [personalInfo, setPersonalInfo] = useState({
     first_name: '',
     last_name: '',
@@ -228,10 +238,7 @@ export const StudentIntakeForm = ({
     gender: '',
     resident_country: '',
     current_location_city: '',
-    time_zone:
-      typeof Intl !== 'undefined' && typeof Intl.DateTimeFormat === 'function'
-        ? Intl.DateTimeFormat().resolvedOptions().timeZone ?? ''
-        : ''
+    time_zone: ''
   });
 
   const [academicInput, setAcademicInput] = useState({
@@ -799,11 +806,12 @@ export const StudentIntakeForm = ({
           setStatusMessage(result?.message ?? 'Save failed.');
           return;
         }
-        setStatusMessage('Profile saved successfully!');
-        // Small delay to show success before redirect
+        setStatusMessage('Profile saved successfully! Redirecting...');
+        setIsRedirecting(true);
+        // Use window.location for a harder redirect to clear any middleware/router stuckness
         setTimeout(() => {
-          router.push('/matches');
-        }, 1500);
+          window.location.href = '/dashboard';
+        }, 800);
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Save failed.';
         setStatusMessage(message);
@@ -1013,6 +1021,7 @@ export const StudentIntakeForm = ({
                       <span>Last name</span>
                       <input
                         type="text"
+                        className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
                         value={personalInfo.last_name}
                         onChange={(event) => updatePersonalInfo('last_name', event.target.value)}
                       />
@@ -1022,6 +1031,7 @@ export const StudentIntakeForm = ({
                       <span>Email</span>
                       <input
                         type="email"
+                        className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
                         value={personalInfo.email}
                         onChange={(event) => updatePersonalInfo('email', event.target.value)}
                       />
@@ -1043,6 +1053,7 @@ export const StudentIntakeForm = ({
                       <div key={`nationality-${index}`} className="flex gap-3 items-center">
                         <input
                           list="country-options"
+                          className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
                           value={value}
                           onChange={(event) => updateNationality(index, event.target.value)}
                           placeholder="Select nationality"
@@ -1064,6 +1075,7 @@ export const StudentIntakeForm = ({
                         type="number"
                         min={10}
                         max={60}
+                        className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
                         value={personalInfo.age}
                         onChange={(event) => updatePersonalInfo('age', event.target.value)}
                       />
@@ -1077,15 +1089,24 @@ export const StudentIntakeForm = ({
                           { value: 'non_binary', label: 'Non-binary' },
                           { value: 'prefer_not_to_say', label: 'Prefer not to say' }
                         ].map((option) => (
-                          <label key={option.value} className="relative flex items-center gap-3 p-4 rounded-xl border border-border/50 bg-muted/30 hover:bg-muted/50 cursor-pointer transition-all duration-200 text-sm">
+                          <label
+                            key={option.value}
+                            className={cn(
+                              "relative flex items-center gap-3 p-4 rounded-xl border transition-all duration-200 cursor-pointer",
+                              personalInfo.gender === option.value
+                                ? "bg-primary/5 border-primary ring-1 ring-primary/20"
+                                : "bg-card border-border hover:border-primary/50 hover:bg-muted/50"
+                            )}
+                          >
                             <input
                               type="radio"
                               name="gender"
+                              className="accent-primary h-4 w-4"
                               value={option.value}
                               checked={personalInfo.gender === option.value}
                               onChange={(event) => updatePersonalInfo('gender', event.target.value)}
                             />
-                            {option.label}
+                            <span className="text-sm font-medium">{option.label}</span>
                           </label>
                         ))}
                       </div>
@@ -1094,6 +1115,7 @@ export const StudentIntakeForm = ({
                       <span>Country of residence</span>
                       <input
                         list="country-options"
+                        className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
                         value={personalInfo.resident_country}
                         onChange={(event) => updatePersonalInfo('resident_country', event.target.value)}
                       />
@@ -1105,6 +1127,7 @@ export const StudentIntakeForm = ({
                       <span>Current city (optional)</span>
                       <input
                         type="text"
+                        className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
                         value={personalInfo.current_location_city}
                         onChange={(event) => updatePersonalInfo('current_location_city', event.target.value)}
                       />
@@ -1123,15 +1146,24 @@ export const StudentIntakeForm = ({
                         { value: 'IB', label: 'IB Diploma' },
                         { value: 'A_LEVEL', label: 'A-levels' }
                       ].map((option) => (
-                        <label key={option.value} className="relative flex items-center gap-3 p-4 rounded-xl border border-border/50 bg-muted/30 hover:bg-muted/50 cursor-pointer transition-all duration-200 text-sm">
+                        <label
+                          key={option.value}
+                          className={cn(
+                            "relative flex items-center gap-3 p-4 rounded-xl border transition-all duration-200 cursor-pointer",
+                            programmeType === option.value
+                              ? "bg-primary/5 border-primary ring-1 ring-primary/20"
+                              : "bg-card border-border hover:border-primary/50 hover:bg-muted/50"
+                          )}
+                        >
                           <input
                             type="radio"
                             name="programme_type"
+                            className="accent-primary h-4 w-4"
                             value={option.value}
                             checked={programmeType === option.value}
                             onChange={(event) => setProgrammeType(event.target.value as ProgrammeType)}
                           />
-                          {option.label}
+                          <span className="text-sm font-medium">{option.label}</span>
                         </label>
                       ))}
                     </div>
@@ -1168,6 +1200,7 @@ export const StudentIntakeForm = ({
                     <label className="space-y-2 flex flex-col">
                       <span>School type (optional)</span>
                       <select
+                        className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
                         value={academicInput.school_type}
                         onChange={(event) => updateAcademicInput('school_type', event.target.value)}
                       >
@@ -1185,6 +1218,7 @@ export const StudentIntakeForm = ({
                     <label className="space-y-2 flex flex-col">
                       <span>Graduation year</span>
                       <select
+                        className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
                         value={academicInput.graduation_year}
                         onChange={(event) => updateAcademicInput('graduation_year', event.target.value)}
                       >
@@ -1219,9 +1253,21 @@ export const StudentIntakeForm = ({
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {CLUSTER_OPTIONS.map((option) => (
-                        <label key={option.value} className="relative flex items-center gap-3 p-4 rounded-xl border border-border/50 bg-muted/30 hover:bg-muted/50 cursor-pointer transition-all duration-200 text-sm">
+                        <label
+                          key={option.value}
+                          className={cn(
+                            "relative flex items-center gap-3 p-4 rounded-xl border transition-all duration-200 cursor-pointer",
+                            academicInput.intended_clusters.includes(option.value)
+                              ? "bg-primary/5 border-primary ring-1 ring-primary/20"
+                              : "bg-card border-border hover:border-primary/50 hover:bg-muted/50",
+                            !academicInput.intended_clusters.includes(option.value) &&
+                            academicInput.intended_clusters.length >= 1 &&
+                            "opacity-50 cursor-not-allowed hover:border-border hover:bg-card"
+                          )}
+                        >
                           <input
                             type="checkbox"
+                            className="accent-primary h-4 w-4"
                             checked={academicInput.intended_clusters.includes(option.value)}
                             disabled={
                               !academicInput.intended_clusters.includes(option.value) &&
@@ -1229,7 +1275,7 @@ export const StudentIntakeForm = ({
                             }
                             onChange={() => toggleCluster(option.value, 'intended_clusters')}
                           />
-                          {option.label}
+                          <span className="text-sm font-medium">{option.label}</span>
                         </label>
                       ))}
                     </div>
@@ -1245,9 +1291,21 @@ export const StudentIntakeForm = ({
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {CLUSTER_OPTIONS.map((option) => (
-                        <label key={`secondary-${option.value}`} className="relative flex items-center gap-3 p-4 rounded-xl border border-border/50 bg-muted/30 hover:bg-muted/50 cursor-pointer transition-all duration-200 text-sm">
+                        <label
+                          key={`secondary-${option.value}`}
+                          className={cn(
+                            "relative flex items-center gap-3 p-4 rounded-xl border transition-all duration-200 cursor-pointer",
+                            academicInput.secondary_clusters.includes(option.value)
+                              ? "bg-primary/5 border-primary ring-1 ring-primary/20"
+                              : "bg-card border-border hover:border-primary/50 hover:bg-muted/50",
+                            !academicInput.secondary_clusters.includes(option.value) &&
+                            academicInput.secondary_clusters.length >= 2 &&
+                            "opacity-50 cursor-not-allowed hover:border-border hover:bg-card"
+                          )}
+                        >
                           <input
                             type="checkbox"
+                            className="accent-primary h-4 w-4"
                             checked={academicInput.secondary_clusters.includes(option.value)}
                             disabled={
                               !academicInput.secondary_clusters.includes(option.value) &&
@@ -1255,7 +1313,7 @@ export const StudentIntakeForm = ({
                             }
                             onChange={() => toggleCluster(option.value, 'secondary_clusters')}
                           />
-                          {option.label}
+                          <span className="text-sm font-medium">{option.label}</span>
                         </label>
                       ))}
                     </div>
@@ -1265,6 +1323,7 @@ export const StudentIntakeForm = ({
                     <span>Career aspiration (optional)</span>
                     <input
                       type="text"
+                      className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
                       placeholder="Investment banking, Software engineer"
                       value={academicInput.career_aspiration}
                       onChange={(event) => updateAcademicInput('career_aspiration', event.target.value)}
@@ -1307,6 +1366,7 @@ export const StudentIntakeForm = ({
                             <label className="md:hidden">Subject</label>
                             <input
                               list="subject-options"
+                              className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
                               value={subject.subject_name}
                               onChange={(event) => updateSubject(index, 'subject_name', event.target.value)}
                               placeholder="Enter subject name"
@@ -1318,6 +1378,7 @@ export const StudentIntakeForm = ({
                           <div className="md:col-span-3">
                             <label className="md:hidden">Level</label>
                             <select
+                              className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 transition-all duration-200"
                               value={subject.level}
                               onChange={(event) => updateSubject(index, 'level', event.target.value)}
                               disabled={programmeType === 'A_LEVEL'}
@@ -1339,12 +1400,14 @@ export const StudentIntakeForm = ({
                                 type="number"
                                 min={1}
                                 max={7}
+                                className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 transition-all duration-200"
                                 value={subject.grade_value}
                                 onChange={(event) => updateSubject(index, 'grade_value', event.target.value)}
                                 placeholder="Grade"
                               />
                             ) : (
                               <select
+                                className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 transition-all duration-200"
                                 value={subject.grade_value}
                                 onChange={(event) => updateSubject(index, 'grade_value', event.target.value)}
                               >
@@ -1388,15 +1451,24 @@ export const StudentIntakeForm = ({
                             { value: 'AI_HL', label: 'AI HL' },
                             { value: 'AI_SL', label: 'AI SL' }
                           ].map((option) => (
-                            <label key={option.value} className="relative flex items-center gap-3 p-4 rounded-xl border border-border/50 bg-muted/30 hover:bg-muted/50 cursor-pointer transition-all duration-200 text-sm">
+                            <label
+                              key={option.value}
+                              className={cn(
+                                "relative flex items-center gap-3 p-4 rounded-xl border transition-all duration-200 cursor-pointer",
+                                academicInput.ib_math_pathway === option.value
+                                  ? "bg-primary/5 border-primary ring-1 ring-primary/20"
+                                  : "bg-card border-border hover:border-primary/50 hover:bg-muted/50"
+                              )}
+                            >
                               <input
                                 type="radio"
                                 name="ib_math_pathway"
+                                className="accent-primary h-4 w-4"
                                 value={option.value}
                                 checked={academicInput.ib_math_pathway === option.value}
                                 onChange={(event) => updateAcademicInput('ib_math_pathway', event.target.value)}
                               />
-                              {option.label}
+                              <span className="text-sm font-medium">{option.label}</span>
                             </label>
                           ))}
                         </div>
@@ -1410,6 +1482,7 @@ export const StudentIntakeForm = ({
                             type="number"
                             min={24}
                             max={45}
+                            className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
                             value={academicInput.ib_total_points}
                             onChange={(event) => updateAcademicInput('ib_total_points', event.target.value)}
                           />
@@ -1421,6 +1494,7 @@ export const StudentIntakeForm = ({
                             type="number"
                             min={0}
                             max={3}
+                            className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
                             value={academicInput.ib_core_points}
                             onChange={(event) => updateAcademicInput('ib_core_points', event.target.value)}
                           />
@@ -1429,6 +1503,7 @@ export const StudentIntakeForm = ({
                         <label className="space-y-2 flex flex-col">
                           <span>TOK grade (optional)</span>
                           <select
+                            className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
                             value={academicInput.ib_tok_grade}
                             onChange={(event) => updateAcademicInput('ib_tok_grade', event.target.value)}
                           >
@@ -1443,6 +1518,7 @@ export const StudentIntakeForm = ({
                         <label className="space-y-2 flex flex-col">
                           <span>EE grade (optional)</span>
                           <select
+                            className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
                             value={academicInput.ib_ee_grade}
                             onChange={(event) => updateAcademicInput('ib_ee_grade', event.target.value)}
                           >
@@ -1461,6 +1537,7 @@ export const StudentIntakeForm = ({
                           <span>Extended Essay subject (optional)</span>
                           <input
                             type="text"
+                            className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
                             value={academicInput.ee_subject}
                             onChange={(event) => updateAcademicInput('ee_subject', event.target.value)}
                           />
@@ -1469,6 +1546,7 @@ export const StudentIntakeForm = ({
                           <span>Extended Essay title (optional)</span>
                           <input
                             type="text"
+                            className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
                             value={academicInput.ee_title}
                             onChange={(event) => updateAcademicInput('ee_title', event.target.value)}
                           />
@@ -1479,6 +1557,7 @@ export const StudentIntakeForm = ({
                         <textarea
                           rows={3}
                           maxLength={350}
+                          className="flex min-h-[80px] w-full rounded-xl border border-input bg-background px-4 py-3 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200 resize-y"
                           value={academicInput.ee_summary}
                           onChange={(event) => updateAcademicInput('ee_summary', event.target.value)}
                           placeholder="1–3 sentences max"
@@ -1506,15 +1585,24 @@ export const StudentIntakeForm = ({
                           { value: 'no', label: 'No' },
                           { value: 'not_sure', label: 'Not sure' }
                         ].map((option) => (
-                          <label key={option.value} className="relative flex items-center gap-3 p-4 rounded-xl border border-border/50 bg-muted/30 hover:bg-muted/50 cursor-pointer transition-all duration-200 text-sm">
+                          <label
+                            key={option.value}
+                            className={cn(
+                              "relative flex items-center gap-3 p-4 rounded-xl border transition-all duration-200 cursor-pointer",
+                              englishRequired === option.value
+                                ? "bg-primary/5 border-primary ring-1 ring-primary/20"
+                                : "bg-card border-border hover:border-primary/50 hover:bg-muted/50"
+                            )}
+                          >
                             <input
                               type="radio"
                               name="english_required"
+                              className="accent-primary h-4 w-4"
                               value={option.value}
                               checked={englishRequired === option.value}
                               onChange={(event) => setEnglishRequired(event.target.value as EnglishRequiredState)}
                             />
-                            {option.label}
+                            <span className="text-sm font-medium">{option.label}</span>
                           </label>
                         ))}
                       </div>
@@ -1525,7 +1613,11 @@ export const StudentIntakeForm = ({
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <label className="space-y-2 flex flex-col">
                           <span>English test type</span>
-                          <select value={englishTestType} onChange={(event) => setEnglishTestType(event.target.value as EnglishTestType)}>
+                          <select
+                            className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
+                            value={englishTestType}
+                            onChange={(event) => setEnglishTestType(event.target.value as EnglishTestType)}
+                          >
                             {ENGLISH_TEST_OPTIONS.map((option) => (
                               <option key={option.value} value={option.value}>
                                 {option.label}
@@ -1538,10 +1630,16 @@ export const StudentIntakeForm = ({
                           <span>English test status</span>
                           <div className="flex flex-wrap gap-3">
                             {ENGLISH_STATUS_OPTIONS.map((option) => (
-                              <label key={option.value} className="relative flex items-center gap-3 p-4 rounded-xl border border-border/50 bg-muted/30 hover:bg-muted/50 cursor-pointer transition-all duration-200 text-sm">
+                              <label key={option.value} className={cn(
+                                "relative flex items-center gap-3 p-4 rounded-xl border transition-all duration-200 cursor-pointer text-sm",
+                                englishStatus === option.value
+                                  ? "bg-primary/5 border-primary ring-1 ring-primary/20"
+                                  : "bg-card border-border hover:border-primary/50 hover:bg-muted/50"
+                              )}>
                                 <input
                                   type="radio"
                                   name="english_status"
+                                  className="accent-primary h-4 w-4"
                                   value={option.value}
                                   checked={englishStatus === option.value}
                                   onChange={(event) => setEnglishStatus(event.target.value as EnglishStatus)}
@@ -1560,6 +1658,7 @@ export const StudentIntakeForm = ({
                         <span>English overall score (optional)</span>
                         <input
                           type="number"
+                          className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
                           value={englishScoreOverall}
                           onChange={(event) => setEnglishScoreOverall(event.target.value)}
                         />
@@ -1580,9 +1679,18 @@ export const StudentIntakeForm = ({
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {ADMISSIONS_TEST_OPTIONS.map((option) => (
-                          <label key={option.value} className="relative flex items-center gap-3 p-4 rounded-xl border border-border/50 bg-muted/30 hover:bg-muted/50 cursor-pointer transition-all duration-200 text-sm">
+                          <label
+                            key={option.value}
+                            className={cn(
+                              "relative flex items-center gap-3 p-4 rounded-xl border transition-all duration-200 cursor-pointer",
+                              admissionsTests.some((test) => test.test_type === option.value)
+                                ? "bg-primary/5 border-primary ring-1 ring-primary/20"
+                                : "bg-card border-border hover:border-primary/50 hover:bg-muted/50"
+                            )}
+                          >
                             <input
                               type="checkbox"
+                              className="accent-primary h-4 w-4"
                               checked={admissionsTests.some((test) => test.test_type === option.value)}
                               onChange={() => toggleAdmissionsTest(option.value)}
                             />
@@ -1607,10 +1715,16 @@ export const StudentIntakeForm = ({
                                 { value: 'booked', label: 'Booked' },
                                 { value: 'missing', label: 'Missing' }
                               ].map((option) => (
-                                <label key={`${test.test_type}-${option.value}`} className="flex-1 min-w-[100px] relative flex items-center gap-3 p-3 rounded-xl border border-border/50 bg-muted/30 hover:bg-muted/50 cursor-pointer transition-all duration-200 text-xs">
+                                <label key={`${test.test_type}-${option.value}`} className={cn(
+                                  "flex-1 min-w-[100px] relative flex items-center gap-3 p-3 rounded-xl border transition-all duration-200 text-xs cursor-pointer",
+                                  test.status === option.value
+                                    ? "bg-primary/5 border-primary ring-1 ring-primary/20"
+                                    : "bg-card border-border hover:border-primary/50 hover:bg-muted/50"
+                                )}>
                                   <input
                                     type="radio"
                                     name={`admissions-status-${index}`}
+                                    className="accent-primary h-4 w-4"
                                     value={option.value}
                                     checked={test.status === option.value}
                                     onChange={(event) => updateAdmissionsTest(index, 'status', event.target.value)}
@@ -1628,6 +1742,7 @@ export const StudentIntakeForm = ({
                               Score
                               <input
                                 type="number"
+                                className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
                                 value={test.score_numeric}
                                 onChange={(event) => updateAdmissionsTest(index, 'score_numeric', event.target.value)}
                                 placeholder="Value"
@@ -1641,6 +1756,7 @@ export const StudentIntakeForm = ({
                                 type="number"
                                 min={0}
                                 max={100}
+                                className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
                                 value={test.percentile}
                                 onChange={(event) => updateAdmissionsTest(index, 'percentile', event.target.value)}
                                 placeholder="0-100"
@@ -1666,10 +1782,16 @@ export const StudentIntakeForm = ({
                         { value: 'mixed', label: 'Mixed' },
                         { value: '', label: 'No preference' }
                       ].map((option) => (
-                        <label key={option.value} className="relative flex items-center gap-3 p-4 rounded-xl border border-border/50 bg-muted/30 hover:bg-muted/50 cursor-pointer transition-all duration-200 text-sm">
+                        <label key={option.value} className={cn(
+                          "relative flex items-center gap-3 p-4 rounded-xl border transition-all duration-200 cursor-pointer text-sm",
+                          lifestylePreference.teaching_style === option.value
+                            ? "bg-primary/5 border-primary ring-1 ring-primary/20"
+                            : "bg-card border-border hover:border-primary/50 hover:bg-muted/50"
+                        )}>
                           <input
                             type="radio"
                             name="teaching_style"
+                            className="accent-primary h-4 w-4"
                             value={option.value}
                             checked={lifestylePreference.teaching_style === option.value}
                             onChange={(event) => updateLifestylePreference('teaching_style', event.target.value)}
@@ -1689,10 +1811,16 @@ export const StudentIntakeForm = ({
                         { value: 'suburban', label: 'Suburban' },
                         { value: 'no_preference', label: 'No preference' }
                       ].map((option) => (
-                        <label key={option.value} className="relative flex items-center gap-3 p-4 rounded-xl border border-border/50 bg-muted/30 hover:bg-muted/50 cursor-pointer transition-all duration-200 text-sm">
+                        <label key={option.value} className={cn(
+                          "relative flex items-center gap-3 p-4 rounded-xl border transition-all duration-200 cursor-pointer text-sm",
+                          lifestylePreference.desired_location_type === option.value
+                            ? "bg-primary/5 border-primary ring-1 ring-primary/20"
+                            : "bg-card border-border hover:border-primary/50 hover:bg-muted/50"
+                        )}>
                           <input
                             type="radio"
                             name="desired_location_type"
+                            className="accent-primary h-4 w-4"
                             value={option.value}
                             checked={lifestylePreference.desired_location_type === option.value}
                             onChange={(event) => updateLifestylePreference('desired_location_type', event.target.value)}
@@ -1711,10 +1839,16 @@ export const StudentIntakeForm = ({
                         { value: 'large', label: 'Large' },
                         { value: 'no_preference', label: 'No preference' }
                       ].map((option) => (
-                        <label key={option.value} className="relative flex items-center gap-3 p-4 rounded-xl border border-border/50 bg-muted/30 hover:bg-muted/50 cursor-pointer transition-all duration-200 text-sm">
+                        <label key={option.value} className={cn(
+                          "relative flex items-center gap-3 p-4 rounded-xl border transition-all duration-200 cursor-pointer text-sm",
+                          lifestylePreference.campus_size === option.value
+                            ? "bg-primary/5 border-primary ring-1 ring-primary/20"
+                            : "bg-card border-border hover:border-primary/50 hover:bg-muted/50"
+                        )}>
                           <input
                             type="radio"
                             name="campus_size"
+                            className="accent-primary h-4 w-4"
                             value={option.value}
                             checked={lifestylePreference.campus_size === option.value}
                             onChange={(event) => updateLifestylePreference('campus_size', event.target.value)}
@@ -1733,9 +1867,15 @@ export const StudentIntakeForm = ({
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {EXTRACURRICULAR_OPTIONS.map((option) => (
-                        <label key={option} className="relative flex items-center gap-3 p-4 rounded-xl border border-border/50 bg-muted/30 hover:bg-muted/50 cursor-pointer transition-all duration-200 text-sm">
+                        <label key={option} className={cn(
+                          "relative flex items-center gap-3 p-4 rounded-xl border transition-all duration-200 cursor-pointer text-sm",
+                          lifestylePreference.extracurricular_interests.includes(option)
+                            ? "bg-primary/5 border-primary ring-1 ring-primary/20"
+                            : "bg-card border-border hover:border-primary/50 hover:bg-muted/50"
+                        )}>
                           <input
                             type="checkbox"
+                            className="accent-primary h-4 w-4"
                             checked={lifestylePreference.extracurricular_interests.includes(option)}
                             onChange={() => toggleExtracurricular(option)}
                           />
@@ -1748,6 +1888,7 @@ export const StudentIntakeForm = ({
                     <span>Other extracurriculars (optional)</span>
                     <input
                       type="text"
+                      className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
                       value={lifestylePreference.other_extracurriculars}
                       onChange={(event) => updateLifestylePreference('other_extracurriculars', event.target.value)}
                     />
@@ -1893,13 +2034,13 @@ export const StudentIntakeForm = ({
               ) : (
                 <Button
                   type="submit"
-                  disabled={isSaving}
+                  disabled={isSaving || isRedirecting}
                   className="h-12 px-8 rounded-xl bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20"
                 >
-                  {isSaving ? (
+                  {isSaving || isRedirecting ? (
                     <div className="flex items-center gap-2">
                       <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      Saving...
+                      {isRedirecting ? 'Redirecting...' : 'Saving...'}
                     </div>
                   ) : (
                     <div className="flex items-center gap-2">

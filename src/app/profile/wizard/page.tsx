@@ -71,9 +71,9 @@ export default async function ProfileWizardPage({ searchParams }: ProfileWizardP
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-background text-foreground">
-      <AnimatedBlobBanner className="opacity-60" variant="cool" />
+
       <div className="relative z-10 mx-auto flex w-full max-w-none flex-col gap-6 px-4 pb-16 pt-20 sm:px-6 lg:px-10">
-        <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-4 relative z-50">
           <div className="flex items-center gap-2">
             <Button asChild size="sm" variant="ghost" className="gap-2 rounded-xl text-muted-foreground hover:text-foreground">
               <Link href="/dashboard">
@@ -111,6 +111,7 @@ export default async function ProfileWizardPage({ searchParams }: ProfileWizardP
           <StudentIntakeForm initialStep={initialStep} initialPayload={initialPayload} />
         </div>
       </div>
+      <AnimatedBlobBanner className="opacity-60 -z-10" variant="cool" />
     </div>
   );
 }

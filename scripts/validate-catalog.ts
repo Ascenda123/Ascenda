@@ -53,8 +53,8 @@ const getMinMax = async (
     .limit(1);
   if (maxQuery.error) throw maxQuery.error;
 
-  const minVal = minQuery.data?.[0]?.[column] ?? null;
-  const maxVal = maxQuery.data?.[0]?.[column] ?? null;
+  const minVal = (minQuery.data?.[0] as any)?.[column] ?? null;
+  const maxVal = (maxQuery.data?.[0] as any)?.[column] ?? null;
   return {
     min: typeof minVal === 'number' ? minVal : Number(minVal) || null,
     max: typeof maxVal === 'number' ? maxVal : Number(maxVal) || null
