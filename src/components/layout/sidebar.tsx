@@ -1,15 +1,25 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { filterNavByRole, isNavActive, NAV_ITEMS } from './navigation';
 import { useUserRole } from '@/hooks/use-user-role';
+import { useSupabase } from '@/hooks/useSupabase';
+import { LogOut } from 'lucide-react';
 
 export const Sidebar = () => {
   const pathname = usePathname();
+  const router = useRouter();
+  const supabase = useSupabase();
   const role = useUserRole();
   const items = filterNavByRole(NAV_ITEMS, role);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    router.refresh();
+    router.push('/login');
+  };
 
   return (
     <aside className="glass-panel sticky top-28 hidden w-60 self-start rounded-[24px] p-5 text-foreground transition-colors md:block">
@@ -31,6 +41,14 @@ export const Sidebar = () => {
             </Link>
           );
         })}
+
+        <button
+          onClick={handleSignOut}
+          className="flex w-full items-center gap-3 rounded-2xl px-3 py-2 text-sm font-medium text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive"
+        >
+          <LogOut className="h-4 w-4" aria-hidden />
+          <span>Sign out</span>
+        </button>
       </nav>
       <div className="mt-6 space-y-2 rounded-2xl border border-border bg-muted/40 p-4 text-foreground transition-colors">
         <p className="text-xs uppercase tracking-[0.35em] text-muted-foreground">Support</p>

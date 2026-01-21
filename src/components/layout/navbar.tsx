@@ -9,8 +9,15 @@ import { filterNavByRole, NAV_ITEMS } from './navigation';
 import { useUserRole } from '@/hooks/use-user-role';
 import { NavLink } from './nav-link';
 
+import { LogOut } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useSupabase } from '@/hooks/useSupabase';
+import { Button } from '../ui/button';
+
 export const Navbar = () => {
   const role = useUserRole();
+  const router = useRouter();
+  const supabase = useSupabase();
   const navItems = filterNavByRole(NAV_ITEMS, role);
   const logoSrc = '/Ascenda_Logo-removebg-.png';
   const [scrolled, setScrolled] = useState(false);
@@ -21,6 +28,12 @@ export const Navbar = () => {
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    router.refresh();
+    router.push('/login');
+  };
 
   return (
     <header className="fixed inset-x-0 top-0 z-50">
@@ -54,6 +67,15 @@ export const Navbar = () => {
           </nav>
           <div className="flex items-center gap-2">
             <ThemeToggle compact />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleSignOut}
+              className="rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+              title="Sign out"
+            >
+              <LogOut className="h-4 w-4" />
+            </Button>
           </div>
         </div>
       </div>

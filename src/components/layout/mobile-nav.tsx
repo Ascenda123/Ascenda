@@ -1,15 +1,25 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { filterNavByRole, isNavActive, NAV_ITEMS } from './navigation';
 import { useUserRole } from '@/hooks/use-user-role';
+import { useSupabase } from '@/hooks/useSupabase';
+import { LogOut } from 'lucide-react';
 
 export const MobileNav = () => {
   const pathname = usePathname();
+  const router = useRouter();
+  const supabase = useSupabase();
   const role = useUserRole();
   const items = filterNavByRole(NAV_ITEMS, role);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    router.refresh();
+    router.push('/login');
+  };
 
   return (
     <nav className="fixed inset-x-0 bottom-4 z-50 mx-auto w-full max-w-3xl px-4 md:hidden">
@@ -31,6 +41,14 @@ export const MobileNav = () => {
             </Link>
           );
         })}
+
+        <button
+          onClick={handleSignOut}
+          className="flex flex-1 items-center justify-center gap-2 rounded-full px-3 py-2 transition hover:text-destructive"
+        >
+          <LogOut className="h-4 w-4" aria-hidden />
+          <span>Sign out</span>
+        </button>
       </div>
     </nav>
   );
