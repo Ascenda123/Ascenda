@@ -3,7 +3,8 @@
 import { Button } from '@/components/ui/button';
 import { ProgramSearchResult } from './types';
 import { X, ArrowRight, ChevronUp, ChevronDown } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { cn } from '@/lib/utils';
 
 interface CompareBarProps {
@@ -16,16 +17,21 @@ interface CompareBarProps {
 
 export function CompareBar({ selectedItems, onClear, onRemove, onCompare, maxItems = 5 }: CompareBarProps) {
     const [isExpanded, setIsExpanded] = useState(true);
+    const [mounted, setMounted] = useState(false);
 
-    if (selectedItems.length === 0) return null;
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    if (!mounted || selectedItems.length === 0) return null;
 
     const readyState =
         selectedItems.length === maxItems
             ? 'Ready for a side-by-side view.'
             : `Add ${maxItems - selectedItems.length} more to max out diff mode.`;
 
-    return (
-        <div className="fixed bottom-6 left-1/2 z-50 w-full max-w-5xl -translate-x-1/2 px-4 transition-all duration-300 ease-in-out">
+    return createPortal(
+        <div className="fixed bottom-6 left-1/2 z-[100] w-full max-w-5xl -translate-x-1/2 px-4 transition-all duration-300 ease-in-out">
             {/* Mobile Toggle Handle - Visible only on small screens when collapsed */}
             {!isExpanded && (
                 <div className="flex justify-center sm:hidden">
@@ -42,10 +48,8 @@ export function CompareBar({ selectedItems, onClear, onRemove, onCompare, maxIte
             {/* Main Bar Container */}
             <div
                 className={cn(
-                    "flex flex-col gap-1.5 rounded-[30px] border border-border/80 bg-card/90 p-2.5 text-foreground shadow-lg backdrop-blur transition-all duration-300",
+                    "flex flex-col gap-1.5 rounded-[30px] border border-border/80 bg-card/90 p-2.5 text-foreground shadow-2xl backdrop-blur-xl transition-all duration-300",
                     !isExpanded ? "hidden sm:flex" : "flex",
-                    // On mobile, if expanded, take full width/space or animate up?
-                    // Just standard flex for now.
                 )}
             >
                 <div className="flex items-center justify-between gap-3 text-sm font-semibold text-muted-foreground">
@@ -90,7 +94,7 @@ export function CompareBar({ selectedItems, onClear, onRemove, onCompare, maxIte
                     <div
                         className="grid w-full min-w-[260px] gap-2 rounded-2xl border border-border/50 bg-muted/20 px-3 py-1.5 text-[12px] font-semibold shadow-inner"
                         style={{
-                            gridTemplateColumns: `repeat(${selectedItems.length}, minmax(180px, 1fr))` // reduced min-width for mobile fit
+                            gridTemplateColumns: `repeat(${selectedItems.length}, minmax(180px, 1fr))`
                         }}
                     >
                         {selectedItems.map((item) => (
@@ -134,6 +138,7 @@ export function CompareBar({ selectedItems, onClear, onRemove, onCompare, maxIte
                     </div>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }

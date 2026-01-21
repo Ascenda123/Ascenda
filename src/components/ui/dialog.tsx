@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { createPortal } from 'react-dom';
 import { AnimatePresence, motion, HTMLMotionProps } from 'framer-motion';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -12,10 +13,18 @@ interface DialogProps {
 }
 
 export function Dialog({ open, onOpenChange, children }: DialogProps) {
-    return (
+    const [mounted, setMounted] = React.useState(false);
+
+    React.useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    if (!mounted) return null;
+
+    return createPortal(
         <AnimatePresence>
             {open && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center">
+                <div className="fixed inset-0 z-[200] flex items-center justify-center">
                     {/* Backdrop */}
                     <motion.div
                         initial={{ opacity: 0 }}
@@ -25,12 +34,13 @@ export function Dialog({ open, onOpenChange, children }: DialogProps) {
                         className="fixed inset-0 bg-black/50 backdrop-blur-sm"
                     />
                     {/* Content Wrapper to handle z-index and positioning */}
-                    <div className="relative z-50 flex w-full items-center justify-center p-4 sm:p-6">
+                    <div className="relative z-[205] flex w-full items-center justify-center p-4 sm:p-6">
                         {children}
                     </div>
                 </div>
             )}
-        </AnimatePresence>
+        </AnimatePresence>,
+        document.body
     );
 }
 
