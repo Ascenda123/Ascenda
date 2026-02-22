@@ -134,7 +134,7 @@ export async function middleware(req: NextRequest) {
   if (session && isAuthRoute) {
     const redirectUrl = req.nextUrl.clone();
     const needsOnboarding = await getOnboardingStatus(res);
-    redirectUrl.pathname = needsOnboarding ? '/profile' : '/dashboard';
+    redirectUrl.pathname = needsOnboarding ? '/profile/wizard' : '/dashboard';
     if (needsOnboarding) {
       redirectUrl.searchParams.set('onboarding', 'true');
     }
@@ -148,7 +148,7 @@ export async function middleware(req: NextRequest) {
     const needsOnboarding = await getOnboardingStatus(res);
     if (needsOnboarding) {
       const redirectUrl = req.nextUrl.clone();
-      redirectUrl.pathname = '/profile';
+      redirectUrl.pathname = '/profile/wizard';
       redirectUrl.searchParams.set('onboarding', 'true');
       const redirectResponse = NextResponse.redirect(redirectUrl);
       applyCookies(res, redirectResponse);

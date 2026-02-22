@@ -56,7 +56,7 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
     };
   }, [supabase]);
 
-  const buildAuthCallbackUrl = (nextPath: string) => {
+  const buildAuthCallbackUrl = (nextPath?: string) => {
     const envUrl = process.env.NEXT_PUBLIC_SITE_URL;
     const baseUrl =
       envUrl && envUrl.length
@@ -68,11 +68,15 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
       return undefined;
     }
     const normalizedBase = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
-    return `${normalizedBase}/auth/callback?next=${encodeURIComponent(nextPath)}`;
+    const callbackUrl = `${normalizedBase}/auth/callback`;
+    if (!nextPath) {
+      return callbackUrl;
+    }
+    return `${callbackUrl}?next=${encodeURIComponent(nextPath)}`;
   };
 
   const onboardingRedirectUrl = buildAuthCallbackUrl('/profile/wizard');
-  const dashboardRedirectUrl = buildAuthCallbackUrl('/dashboard');
+  const authCallbackUrl = buildAuthCallbackUrl();
 
   const determineRedirectTarget = async (userId?: string | null) => {
     if (!userId) {
@@ -195,8 +199,9 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
 
     // We don't use startTransition here because we're initiating a top-level redirect to Google
     const redirectTo =
-      dashboardRedirectUrl ??
-      (typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : undefined);
+      mode === 'signup'
+        ? onboardingRedirectUrl
+        : authCallbackUrl ?? (typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : undefined);
 
     const initiation = async () => {
       const { error: signInError } = await supabase.auth.signInWithOAuth({

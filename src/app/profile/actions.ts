@@ -164,6 +164,12 @@ export const saveStudentIntake = async (payload: StudentProfilePayload) => {
       console.error('Score computation failed', error);
     }
 
+    // Profile changes must invalidate cached recommendations.
+    const { error: matchCacheDeleteError } = await supabase.from('student_matches').delete().eq('profile_id', userId);
+    if (matchCacheDeleteError) {
+      console.warn('Failed to clear cached matches after profile save', matchCacheDeleteError);
+    }
+
     clearOnboardingCache();
     revalidatePath('/profile');
     revalidatePath('/dashboard');

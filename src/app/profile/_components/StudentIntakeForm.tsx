@@ -810,7 +810,7 @@ export const StudentIntakeForm = ({
         setIsRedirecting(true);
         // Use window.location for a harder redirect to clear any middleware/router stuckness
         setTimeout(() => {
-          window.location.href = '/dashboard';
+          window.location.href = '/matches';
         }, 1200);
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Save failed.';

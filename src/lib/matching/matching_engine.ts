@@ -83,7 +83,11 @@ const matchesClusterKeywords = (course: EnrichedCourseRecord, keywords: string[]
   const name = course.course?.toLowerCase() ?? '';
   if (!field && !name) return true;
   const haystack = `${field} ${name}`;
-  return keywords.some((keyword) => haystack.includes(keyword));
+  return keywords.some((keyword) => {
+    const escaped = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const pattern = new RegExp(`\\b${escaped}\\b`, 'i');
+    return pattern.test(haystack);
+  });
 };
 
 const computeBestALevelGrades = (student: StudentProfilePayload): string[] | null => {

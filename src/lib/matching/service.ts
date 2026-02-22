@@ -249,6 +249,14 @@ const chunk = <T,>(items: T[], size: number): T[][] => {
   return batches;
 };
 
+const latestTimestampMs = (timestamps: Array<string | null | undefined>): number | null => {
+  const values = timestamps
+    .map((value) => (value ? new Date(value).getTime() : NaN))
+    .filter((value) => Number.isFinite(value));
+  if (!values.length) return null;
+  return Math.max(...values);
+};
+
 export const loadMatchesForProfile = async (
   supabase: Client,
   profileId: string,
@@ -293,6 +301,13 @@ export const loadMatchesForProfile = async (
     };
   }
 
+  const profileFreshnessMs = latestTimestampMs([
+    academicData?.updated_at,
+    lifestyleData?.updated_at,
+    ...((subjectsData ?? []).map((subject) => subject.created_at) as Array<string | null | undefined>),
+    ...((admissionsData ?? []).map((test) => test.created_at) as Array<string | null | undefined>)
+  ]);
+
   const latestMatchMeta = await supabase
     .from('student_matches')
     .select('created_at')
@@ -304,7 +319,8 @@ export const loadMatchesForProfile = async (
     const latestCreatedAt = new Date(latestMatchMeta.data.created_at);
     if (Number.isFinite(latestCreatedAt.valueOf())) {
       const age = Date.now() - latestCreatedAt.getTime();
-      if (age >= 0 && age <= PROGRAM_CACHE_TTL_MS) {
+      const isFreshAgainstProfile = profileFreshnessMs === null || latestCreatedAt.getTime() >= profileFreshnessMs;
+      if (age >= 0 && age <= PROGRAM_CACHE_TTL_MS && isFreshAgainstProfile) {
         const windowStart = new Date(latestCreatedAt.getTime() - PROGRAM_CACHE_WINDOW_MS).toISOString();
         const { data: cachedRows, error: cachedError } = await supabase
           .from('student_matches')
