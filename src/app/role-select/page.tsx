@@ -37,12 +37,67 @@ export default function RoleSelectPage() {
   const supabase = useSupabase();
   const [selected, setSelected] = useState<RoleId | null>(null);
   const [loading, setLoading] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      if (!data.user) router.replace('/login');
-    });
+    let isMounted = true;
+
+    // Safety timeout: if verification takes > 8s, redirect to login
+    const timeout = setTimeout(() => {
+      if (isMounted) {
+        console.warn('RoleSelect: Auth verification timed out');
+        router.replace('/login');
+      }
+    }, 8000);
+
+    const performCheck = async () => {
+      try {
+        // 1. Fast path: check current session (often cached)
+        const { data: { session } } = await supabase.auth.getSession();
+
+        if (!session) {
+          if (isMounted) router.replace('/login');
+          return;
+        }
+
+        // 2. Verification: verify the user is still valid
+        const { data: { user }, error } = await supabase.auth.getUser();
+
+        if (isMounted) {
+          if (error || !user) {
+            router.replace('/login');
+          } else {
+            setCheckingAuth(false);
+          }
+        }
+      } catch (err) {
+        console.error('RoleSelect: Verification error', err);
+        if (isMounted) router.replace('/login');
+      } finally {
+        clearTimeout(timeout);
+      }
+    };
+
+    performCheck();
+
+    return () => {
+      isMounted = false;
+      clearTimeout(timeout);
+    };
   }, [router, supabase]);
+
+  if (checkingAuth) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="space-y-3 text-center">
+          <div className="relative mx-auto h-2 w-48 overflow-hidden rounded-full bg-muted/60">
+            <div className="absolute inset-0 translate-x-[-100%] animate-shimmer bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+          </div>
+          <p className="text-sm text-muted-foreground animate-pulse">Verifying session...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleSelect = (role: (typeof ROLES)[number]) => {
     if (loading) return;

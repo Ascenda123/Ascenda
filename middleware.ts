@@ -132,27 +132,41 @@ export async function middleware(req: NextRequest) {
   }
 
   if (session && isAuthRoute) {
+    const { data: profile } = await supabase.from('profiles').select('role').eq('id', session.user.id).single();
+    const role = profile?.role;
+
     const redirectUrl = req.nextUrl.clone();
-    const needsOnboarding = await getOnboardingStatus(res);
-    redirectUrl.pathname = needsOnboarding ? '/profile/wizard' : '/dashboard';
-    if (needsOnboarding) {
-      redirectUrl.searchParams.set('onboarding', 'true');
+
+    if (role !== 'counsellor') {
+      const needsOnboarding = await getOnboardingStatus(res);
+      redirectUrl.pathname = needsOnboarding ? '/profile/wizard' : '/dashboard';
+      if (needsOnboarding) {
+        redirectUrl.searchParams.set('onboarding', 'true');
+      }
+    } else {
+      redirectUrl.pathname = '/counsellor';
     }
+
     redirectUrl.searchParams.delete('redirectedFrom');
     const redirectResponse = NextResponse.redirect(redirectUrl);
     applyCookies(res, redirectResponse);
     return redirectResponse;
   }
 
-  if (session && isProtected && !pathname.startsWith('/profile')) {
-    const needsOnboarding = await getOnboardingStatus(res);
-    if (needsOnboarding) {
-      const redirectUrl = req.nextUrl.clone();
-      redirectUrl.pathname = '/profile/wizard';
-      redirectUrl.searchParams.set('onboarding', 'true');
-      const redirectResponse = NextResponse.redirect(redirectUrl);
-      applyCookies(res, redirectResponse);
-      return redirectResponse;
+  if (session && isProtected && !pathname.startsWith('/profile') && !pathname.startsWith('/counsellor')) {
+    const { data: profile } = await supabase.from('profiles').select('role').eq('id', session.user.id).single();
+    const role = profile?.role;
+
+    if (role !== 'counsellor') {
+      const needsOnboarding = await getOnboardingStatus(res);
+      if (needsOnboarding) {
+        const redirectUrl = req.nextUrl.clone();
+        redirectUrl.pathname = '/profile/wizard';
+        redirectUrl.searchParams.set('onboarding', 'true');
+        const redirectResponse = NextResponse.redirect(redirectUrl);
+        applyCookies(res, redirectResponse);
+        return redirectResponse;
+      }
     }
   }
 

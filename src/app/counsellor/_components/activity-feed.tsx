@@ -21,14 +21,19 @@ const TYPE_CONFIG = {
   update: { icon: RefreshCw, color: 'text-sky-600', bg: 'bg-sky-500/10', label: 'Update' }
 };
 
-function formatRelativeDate(iso: string) {
+function formatRelative(iso: string) {
   const date = new Date(iso);
-  const now = new Date('2025-03-02');
-  const diff = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
-  if (diff === 0) return 'Today';
-  if (diff === 1) return 'Yesterday';
-  if (diff < 7) return `${diff}d ago`;
-  if (diff < 30) return `${Math.floor(diff / 7)}w ago`;
+  const now = new Date();
+  const diffInMs = now.getTime() - date.getTime();
+  const diffInSecs = Math.floor(diffInMs / 1000);
+  const diffInMins = Math.floor(diffInSecs / 60);
+  const diffInHours = Math.floor(diffInMins / 60);
+  const diffInDays = Math.floor(diffInHours / 24);
+
+  if (diffInSecs < 60) return 'just now';
+  if (diffInMins < 60) return `${diffInMins}m ago`;
+  if (diffInHours < 24) return `${diffInHours}h ago`;
+  if (diffInDays < 7) return `${diffInDays}d ago`;
   return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
 }
 
@@ -51,7 +56,7 @@ export const ActivityFeed = ({ activity }: ActivityFeedProps) => {
                 >
                   {item.studentFlag} {item.studentName}
                 </Link>
-                <span className="shrink-0 text-[11px] text-muted-foreground">{formatRelativeDate(item.date)}</span>
+                <span className="shrink-0 text-[11px] text-muted-foreground">{formatRelative(item.date)}</span>
               </div>
               <p className="line-clamp-2 text-xs text-muted-foreground">{item.content}</p>
             </div>

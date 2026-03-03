@@ -141,7 +141,7 @@ export const DeadlineMonitor = ({ deadlines }: DeadlineMonitorProps) => {
               {/* Group header */}
               <button
                 onClick={() => toggleGroup(group)}
-                className="flex w-full items-center justify-between gap-3"
+                className="sticky top-0 z-10 flex w-full items-center justify-between gap-3 rounded-t-[20px] bg-card/90 px-5 py-2 backdrop-blur-sm -mx-5"
               >
                 <div className="flex items-center gap-2">
                   <span className={cn('h-2.5 w-2.5 rounded-full', cfg.dotColor)} />

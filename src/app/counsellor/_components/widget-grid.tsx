@@ -45,14 +45,14 @@ function loadPrefs(): WidgetId[] {
     if (!stored) return DEFAULT_VISIBLE;
     const parsed = JSON.parse(stored) as WidgetId[];
     if (Array.isArray(parsed)) return parsed;
-  } catch {}
+  } catch { }
   return DEFAULT_VISIBLE;
 }
 
 function savePrefs(visible: WidgetId[]) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(visible));
-  } catch {}
+  } catch { }
 }
 
 interface WidgetGridProps {
@@ -165,13 +165,14 @@ export const WidgetGrid = ({ children }: WidgetGridProps) => {
       </AnimatePresence>
 
       {/* Widget content */}
-      {children(visibleWidgets, toggleWidget)}
+      <div className="min-h-0">
+        {children(visibleWidgets, toggleWidget)}
+      </div>
     </div>
   );
 };
 
-// Single draggable widget wrapper
-interface WidgetProps {
+export interface WidgetProps {
   id: WidgetId;
   title: string;
   description?: string;
@@ -179,16 +180,17 @@ interface WidgetProps {
   onRemove: (id: WidgetId) => void;
   children: React.ReactNode;
   className?: string;
+  index?: number;
 }
 
-export const Widget = ({ id, title, description, icon: Icon, onRemove, children, className }: WidgetProps) => {
+export const Widget = ({ id, title, description, icon: Icon, onRemove, children, className, index = 0 }: WidgetProps) => {
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, scale: 0.97 }}
-      animate={{ opacity: 1, scale: 1 }}
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.97 }}
-      transition={{ duration: 0.2 }}
+      transition={{ delay: index * 0.07, duration: 0.35 }}
       className={cn('surface-card surface-card--static flex flex-col gap-4', className)}
     >
       <div className="flex items-start justify-between gap-2">

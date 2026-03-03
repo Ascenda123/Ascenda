@@ -40,12 +40,12 @@ const WIDGET_META: Record<WidgetId, { title: string; description: string }> = {
   topStudents: { title: 'Top Students', description: 'Ranked by average match score' }
 };
 
-function renderWidget(id: WidgetId, removeWidget: (id: WidgetId) => void) {
+function renderWidget(id: WidgetId, index: number, removeWidget: (id: WidgetId) => void) {
   const icon = WIDGET_ICON_MAP[id];
   const meta = WIDGET_META[id];
 
   return (
-    <Widget key={id} id={id} title={meta.title} description={meta.description} icon={icon} onRemove={removeWidget}>
+    <Widget key={id} id={id} title={meta.title} description={meta.description} icon={icon} onRemove={removeWidget} index={index}>
       {id === 'alerts' && <StudentAlerts students={DUMMY_STUDENTS} />}
       {id === 'funnel' && <ApplicationFunnel funnel={stats.appFunnel} />}
       {id === 'matchDist' && <MatchDistribution tiers={stats.matchTiers} />}
@@ -84,30 +84,32 @@ export default function CounsellorOverviewPage() {
           const single = visibleWidgets.filter((id) => !spanned.has(id));
 
           return (
-            <div className="space-y-4">
+            <div className="space-y-6">
               {/* Half-width pair: funnel + matchDist */}
               {half.length > 0 && (
-                <div className={`grid gap-4 ${half.length === 2 ? 'md:grid-cols-2' : 'grid-cols-1'}`}>
-                  <AnimatePresence>
-                    {half.map((id) => renderWidget(id, removeWidget))}
+                <div className={`grid gap-6 ${half.length === 2 ? 'md:grid-cols-2' : 'grid-cols-1'}`}>
+                  <AnimatePresence mode="popLayout">
+                    {half.map((id, idx) => renderWidget(id, idx, removeWidget))}
                   </AnimatePresence>
                 </div>
               )}
 
               {/* Single-col widgets */}
               {single.length > 0 && (
-                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                  <AnimatePresence>
-                    {single.map((id) => renderWidget(id, removeWidget))}
+                <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+                  <AnimatePresence mode="popLayout">
+                    {single.map((id, idx) => renderWidget(id, half.length + idx, removeWidget))}
                   </AnimatePresence>
                 </div>
               )}
 
               {/* Full-width: cohortBreakdown */}
               {full.length > 0 && (
-                <AnimatePresence>
-                  {full.map((id) => renderWidget(id, removeWidget))}
-                </AnimatePresence>
+                <div className="grid grid-cols-1 gap-6">
+                  <AnimatePresence mode="popLayout">
+                    {full.map((id, idx) => renderWidget(id, half.length + single.length + idx, removeWidget))}
+                  </AnimatePresence>
+                </div>
               )}
             </div>
           );

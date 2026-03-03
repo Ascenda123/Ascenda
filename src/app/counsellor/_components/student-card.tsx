@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { AlertTriangle, Clock, CheckCircle2, BookOpen } from 'lucide-react';
+import { AlertTriangle, Clock, CheckCircle2, BookOpen, Eye, Mail } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { CounsellorStudent } from '@/lib/data/counsellor-dummy-data';
 
@@ -68,6 +68,29 @@ function getNextDeadline(student: CounsellorStudent) {
   return upcoming[0] ?? null;
 }
 
+function formatRelative(iso: string) {
+  const date = new Date(iso);
+  const now = new Date();
+  const diffInMs = now.getTime() - date.getTime();
+  const diffInSecs = Math.floor(diffInMs / 1000);
+  const diffInMins = Math.floor(diffInSecs / 60);
+  const diffInHours = Math.floor(diffInMins / 60);
+  const diffInDays = Math.floor(diffInHours / 24);
+
+  if (diffInSecs < 60) return 'just now';
+  if (diffInMins < 60) return `${diffInMins}m ago`;
+  if (diffInHours < 24) return `${diffInHours}h ago`;
+  if (diffInDays < 7) return `${diffInDays}d ago`;
+  return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+}
+
+function isActiveSoon(iso: string) {
+  const date = new Date(iso);
+  const now = new Date();
+  const diffInMs = now.getTime() - date.getTime();
+  return diffInMs < 2 * 24 * 60 * 60 * 1000;
+}
+
 export const StudentCard = ({ student, highlight = '' }: StudentCardProps) => {
   const initials = getInitials(student.personal.firstName, student.personal.lastName);
   const avColor = avatarColor(student.id);
@@ -85,12 +108,16 @@ export const StudentCard = ({ student, highlight = '' }: StudentCardProps) => {
     : null;
 
   return (
-    <Link
-      href={`/counsellor/students/${student.id}`}
-      className="group surface-card surface-card--static flex flex-col gap-4 transition-all hover:-translate-y-1 hover:shadow-floating"
-    >
+    <div className="group surface-card surface-card--static relative flex flex-col gap-4 transition-all hover:-translate-y-1 hover:shadow-floating">
+      {/* Main card link overlay */}
+      <Link
+        href={`/counsellor/students/${student.id}`}
+        className="absolute inset-0 z-0"
+        aria-label={`View ${student.personal.firstName} profile`}
+      />
+
       {/* Header */}
-      <div className="flex items-start gap-3">
+      <div className="relative z-10 flex items-start gap-3">
         <div className={cn('flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-sm font-bold', avColor)}>
           {initials}
         </div>
@@ -105,16 +132,38 @@ export const StudentCard = ({ student, highlight = '' }: StudentCardProps) => {
             <Highlight text={student.personal.school} query={highlight} />
           </p>
           <p className="text-xs text-muted-foreground">{student.personal.schoolCity}, {student.personal.schoolCountry}</p>
+          <p className={cn(
+            'mt-1 text-[11px] font-medium',
+            isActiveSoon(student.lastActive) ? 'text-emerald-600' : 'text-muted-foreground'
+          )}>
+            Active {formatRelative(student.lastActive)}
+          </p>
         </div>
         {student.flags.length > 0 && (
           <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber-500/10">
             <AlertTriangle className="h-3.5 w-3.5 text-amber-600" />
           </div>
         )}
+
+        {/* Quick actions */}
+        <div className="absolute right-0 top-0 flex gap-1 opacity-0 transition group-hover:opacity-100 z-20">
+          <Link
+            href={`/counsellor/students/${student.id}`}
+            className="flex h-7 w-7 items-center justify-center rounded-full border border-border/60 bg-background/80 text-muted-foreground backdrop-blur-sm transition hover:border-primary/40 hover:text-primary"
+          >
+            <Eye className="h-3.5 w-3.5" />
+          </Link>
+          <a
+            href={`mailto:${student.personal.email}`}
+            className="flex h-7 w-7 items-center justify-center rounded-full border border-border/60 bg-background/80 text-muted-foreground backdrop-blur-sm transition hover:border-primary/40 hover:text-primary"
+          >
+            <Mail className="h-3.5 w-3.5" />
+          </a>
+        </div>
       </div>
 
       {/* Programme badge */}
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="relative z-10 flex flex-wrap items-center gap-2">
         <span className={cn(
           'rounded-full border px-3 py-0.5 text-xs font-semibold',
           student.academic.programmeType === 'IB'
@@ -131,7 +180,7 @@ export const StudentCard = ({ student, highlight = '' }: StudentCardProps) => {
       </div>
 
       {/* Profile completion */}
-      <div className="space-y-1.5">
+      <div className="relative z-10 space-y-1.5">
         <div className="flex items-center justify-between text-xs">
           <span className="text-muted-foreground">Profile complete</span>
           <span className={cn('font-semibold', student.profile.completionPct === 100 ? 'text-emerald-600' : 'text-amber-600')}>
@@ -148,7 +197,7 @@ export const StudentCard = ({ student, highlight = '' }: StudentCardProps) => {
 
       {/* Match tier pills */}
       {student.matches.length > 0 ? (
-        <div className="flex items-center gap-1.5">
+        <div className="relative z-10 flex items-center gap-1.5">
           {Object.entries(tierCounts).map(([tier, count]) =>
             count > 0 ? (
               <span
@@ -161,14 +210,14 @@ export const StudentCard = ({ student, highlight = '' }: StudentCardProps) => {
           )}
         </div>
       ) : (
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+        <div className="relative z-10 flex items-center gap-1.5 text-xs text-muted-foreground">
           <BookOpen className="h-3.5 w-3.5" />
           No matches generated yet
         </div>
       )}
 
       {/* Footer: next deadline */}
-      <div className="border-t border-border/60 pt-3">
+      <div className="relative z-10 border-t border-border/60 pt-3">
         {nextDeadline ? (
           <div className={cn('flex items-center gap-2 text-xs', daysUntil !== null && daysUntil <= 7 ? 'text-red-500' : 'text-muted-foreground')}>
             <Clock className="h-3.5 w-3.5 shrink-0" />
@@ -184,6 +233,6 @@ export const StudentCard = ({ student, highlight = '' }: StudentCardProps) => {
           </div>
         )}
       </div>
-    </Link>
+    </div>
   );
 };

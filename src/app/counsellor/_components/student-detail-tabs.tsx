@@ -248,8 +248,8 @@ export const StudentDetailTabs = ({ student }: StudentDetailTabsProps) => {
                 <dt className="text-muted-foreground">English status</dt>
                 <dd className={cn('font-semibold',
                   student.academic.englishStatus === 'met' ? 'text-emerald-600'
-                  : student.academic.englishStatus === 'booked' ? 'text-amber-600'
-                  : 'text-red-500'
+                    : student.academic.englishStatus === 'booked' ? 'text-amber-600'
+                      : 'text-red-500'
                 )}>
                   {student.academic.englishStatus === 'met' ? '✓ Met' : student.academic.englishStatus === 'booked' ? '⏳ Booked' : '✗ Missing'}
                 </dd>
@@ -290,8 +290,8 @@ export const StudentDetailTabs = ({ student }: StudentDetailTabsProps) => {
                       {t.score != null && <span className="font-bold text-primary">{t.score}</span>}
                       <span className={cn('rounded-full px-2 py-0.5 text-xs font-semibold',
                         t.status === 'taken' ? 'bg-emerald-500/10 text-emerald-600'
-                        : t.status === 'booked' ? 'bg-amber-500/10 text-amber-600'
-                        : 'bg-red-500/10 text-red-500'
+                          : t.status === 'booked' ? 'bg-amber-500/10 text-amber-600'
+                            : 'bg-red-500/10 text-red-500'
                       )}>
                         {t.status}
                       </span>
@@ -387,7 +387,13 @@ export const StudentDetailTabs = ({ student }: StudentDetailTabsProps) => {
                           </div>
                           <div className="text-right">
                             <p className={cn('text-xl font-bold tabular-nums', tc.pill.split(' ').find(c => c.startsWith('text')))}>{m.score}</p>
-                            <p className="text-[11px] text-muted-foreground">fit score</p>
+                            <div className="mt-1 h-1 w-16 overflow-hidden rounded-full bg-muted/60">
+                              <div
+                                className={cn('h-1 rounded-full bg-current', tc.pill.split(' ').find(c => c.startsWith('text')))}
+                                style={{ width: `${m.score}%` }}
+                              />
+                            </div>
+                            <p className="mt-0.5 text-[11px] text-muted-foreground">fit score</p>
                           </div>
                           <span className={cn('rounded-full border px-3 py-1 text-xs font-semibold', tc.pill)}>{tier}</span>
                         </div>
