@@ -76,20 +76,6 @@ export type Database = {
             foreignKeyName: "application_tasks_program_id_fkey"
             columns: ["program_id"]
             isOneToOne: false
-            referencedRelation: "course_scoring_v1"
-            referencedColumns: ["course_id"]
-          },
-          {
-            foreignKeyName: "application_tasks_program_id_fkey"
-            columns: ["program_id"]
-            isOneToOne: false
-            referencedRelation: "course_scoring_v1"
-            referencedColumns: ["program_id"]
-          },
-          {
-            foreignKeyName: "application_tasks_program_id_fkey"
-            columns: ["program_id"]
-            isOneToOne: false
             referencedRelation: "programs"
             referencedColumns: ["id"]
           },
@@ -138,260 +124,10 @@ export type Database = {
             foreignKeyName: "applications_program_id_fkey"
             columns: ["program_id"]
             isOneToOne: false
-            referencedRelation: "course_scoring_v1"
-            referencedColumns: ["course_id"]
-          },
-          {
-            foreignKeyName: "applications_program_id_fkey"
-            columns: ["program_id"]
-            isOneToOne: false
-            referencedRelation: "course_scoring_v1"
-            referencedColumns: ["program_id"]
-          },
-          {
-            foreignKeyName: "applications_program_id_fkey"
-            columns: ["program_id"]
-            isOneToOne: false
             referencedRelation: "programs"
             referencedColumns: ["id"]
           },
         ]
-      }
-      archive_raw_courses: {
-        Row: {
-          a_level_min_numeric: number | null
-          additional_entry_requirements: string | null
-          additional_fee_info: string | null
-          assessment_methods: string | null
-          average_salary_after_15m: string | null
-          campus: string | null
-          contextual_admissions: string | null
-          course_name: string
-          course_summary: string | null
-          created_at: string
-          currency: string | null
-          duration: string | null
-          duration_years: number | null
-          employment_after_course: string | null
-          english_requirements: string | null
-          entry_requirements_overview: string | null
-          field: string | null
-          historic_entry_grades: string | null
-          id: string
-          intake_months: string[] | null
-          language: string | null
-          level: string | null
-          metadata: Json | null
-          min_alevel: string | null
-          min_ib: string | null
-          mode: string | null
-          modules: string | null
-          name: string | null
-          open_days: string | null
-          provider_apply_url: string | null
-          provider_course_url: string | null
-          start_date: string | null
-          student_outcomes: string | null
-          student_satisfaction: string | null
-          study_level: string | null
-          subject_requirements: string | null
-          subsequent_year_entry_requirements: string | null
-          tuition: number | null
-          tuition_fees_home: string | null
-          tuition_fees_international: string | null
-          ucas_code: string | null
-          ucas_points: string | null
-          university_id: string
-          url: string | null
-        }
-        Insert: {
-          a_level_min_numeric?: number | null
-          additional_entry_requirements?: string | null
-          additional_fee_info?: string | null
-          assessment_methods?: string | null
-          average_salary_after_15m?: string | null
-          campus?: string | null
-          contextual_admissions?: string | null
-          course_name: string
-          course_summary?: string | null
-          created_at?: string
-          currency?: string | null
-          duration?: string | null
-          duration_years?: number | null
-          employment_after_course?: string | null
-          english_requirements?: string | null
-          entry_requirements_overview?: string | null
-          field?: string | null
-          historic_entry_grades?: string | null
-          id?: string
-          intake_months?: string[] | null
-          language?: string | null
-          level?: string | null
-          metadata?: Json | null
-          min_alevel?: string | null
-          min_ib?: string | null
-          mode?: string | null
-          modules?: string | null
-          name?: string | null
-          open_days?: string | null
-          provider_apply_url?: string | null
-          provider_course_url?: string | null
-          start_date?: string | null
-          student_outcomes?: string | null
-          student_satisfaction?: string | null
-          study_level?: string | null
-          subject_requirements?: string | null
-          subsequent_year_entry_requirements?: string | null
-          tuition?: number | null
-          tuition_fees_home?: string | null
-          tuition_fees_international?: string | null
-          ucas_code?: string | null
-          ucas_points?: string | null
-          university_id: string
-          url?: string | null
-        }
-        Update: {
-          a_level_min_numeric?: number | null
-          additional_entry_requirements?: string | null
-          additional_fee_info?: string | null
-          assessment_methods?: string | null
-          average_salary_after_15m?: string | null
-          campus?: string | null
-          contextual_admissions?: string | null
-          course_name?: string
-          course_summary?: string | null
-          created_at?: string
-          currency?: string | null
-          duration?: string | null
-          duration_years?: number | null
-          employment_after_course?: string | null
-          english_requirements?: string | null
-          entry_requirements_overview?: string | null
-          field?: string | null
-          historic_entry_grades?: string | null
-          id?: string
-          intake_months?: string[] | null
-          language?: string | null
-          level?: string | null
-          metadata?: Json | null
-          min_alevel?: string | null
-          min_ib?: string | null
-          mode?: string | null
-          modules?: string | null
-          name?: string | null
-          open_days?: string | null
-          provider_apply_url?: string | null
-          provider_course_url?: string | null
-          start_date?: string | null
-          student_outcomes?: string | null
-          student_satisfaction?: string | null
-          study_level?: string | null
-          subject_requirements?: string | null
-          subsequent_year_entry_requirements?: string | null
-          tuition?: number | null
-          tuition_fees_home?: string | null
-          tuition_fees_international?: string | null
-          ucas_code?: string | null
-          ucas_points?: string | null
-          university_id?: string
-          url?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "programs_university_id_fkey"
-            columns: ["university_id"]
-            isOneToOne: false
-            referencedRelation: "archive_raw_universities"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      archive_raw_universities: {
-        Row: {
-          acceptance_rate: number | null
-          city: string | null
-          country: string
-          created_at: string
-          currency: string | null
-          id: string
-          intl_tuition_high: number | null
-          intl_tuition_low: number | null
-          metadata: Json | null
-          name: string
-          rank_overall: number | null
-          rank_source: string | null
-          region: string | null
-          requires_test: boolean | null
-          website: string | null
-        }
-        Insert: {
-          acceptance_rate?: number | null
-          city?: string | null
-          country: string
-          created_at?: string
-          currency?: string | null
-          id?: string
-          intl_tuition_high?: number | null
-          intl_tuition_low?: number | null
-          metadata?: Json | null
-          name: string
-          rank_overall?: number | null
-          rank_source?: string | null
-          region?: string | null
-          requires_test?: boolean | null
-          website?: string | null
-        }
-        Update: {
-          acceptance_rate?: number | null
-          city?: string | null
-          country?: string
-          created_at?: string
-          currency?: string | null
-          id?: string
-          intl_tuition_high?: number | null
-          intl_tuition_low?: number | null
-          metadata?: Json | null
-          name?: string
-          rank_overall?: number | null
-          rank_source?: string | null
-          region?: string | null
-          requires_test?: boolean | null
-          website?: string | null
-        }
-        Relationships: []
-      }
-      cities: {
-        Row: {
-          average_rent_outside_campus_gbp_per_month: number | null
-          cost_of_life: Database["public"]["Enums"]["cost_of_life_enum"] | null
-          country: string
-          created_at: string
-          id: string
-          name: string
-          region: string | null
-          updated_at: string
-        }
-        Insert: {
-          average_rent_outside_campus_gbp_per_month?: number | null
-          cost_of_life?: Database["public"]["Enums"]["cost_of_life_enum"] | null
-          country: string
-          created_at?: string
-          id?: string
-          name: string
-          region?: string | null
-          updated_at?: string
-        }
-        Update: {
-          average_rent_outside_campus_gbp_per_month?: number | null
-          cost_of_life?: Database["public"]["Enums"]["cost_of_life_enum"] | null
-          country?: string
-          created_at?: string
-          id?: string
-          name?: string
-          region?: string | null
-          updated_at?: string
-        }
-        Relationships: []
       }
       deadlines: {
         Row: {
@@ -428,20 +164,6 @@ export type Database = {
           timezone?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "deadlines_program_id_fkey"
-            columns: ["program_id"]
-            isOneToOne: false
-            referencedRelation: "course_scoring_v1"
-            referencedColumns: ["course_id"]
-          },
-          {
-            foreignKeyName: "deadlines_program_id_fkey"
-            columns: ["program_id"]
-            isOneToOne: false
-            referencedRelation: "course_scoring_v1"
-            referencedColumns: ["program_id"]
-          },
           {
             foreignKeyName: "deadlines_program_id_fkey"
             columns: ["program_id"]
@@ -562,20 +284,6 @@ export type Database = {
             foreignKeyName: "program_requirements_program_id_fkey"
             columns: ["program_id"]
             isOneToOne: true
-            referencedRelation: "course_scoring_v1"
-            referencedColumns: ["course_id"]
-          },
-          {
-            foreignKeyName: "program_requirements_program_id_fkey"
-            columns: ["program_id"]
-            isOneToOne: true
-            referencedRelation: "course_scoring_v1"
-            referencedColumns: ["program_id"]
-          },
-          {
-            foreignKeyName: "program_requirements_program_id_fkey"
-            columns: ["program_id"]
-            isOneToOne: true
             referencedRelation: "programs"
             referencedColumns: ["id"]
           },
@@ -583,21 +291,13 @@ export type Database = {
       }
       programs: {
         Row: {
-          a_level_min_numeric: number | null
           additional_entry_requirements: string | null
           additional_fee_info: string | null
-          admission_test: string | null
           assessment_methods: string | null
-          average_rent_outside_campus_gbp_per_month_override: number | null
           average_salary_after_15m: string | null
-          average_starting_salary_gbp_override: number | null
           campus: string | null
           contextual_admissions: string | null
-          cost_of_life_override:
-            | Database["public"]["Enums"]["cost_of_life_enum"]
-            | null
           course_name: string
-          course_online_page: string | null
           course_summary: string | null
           created_at: string
           currency: string | null
@@ -605,72 +305,44 @@ export type Database = {
           duration_years: number | null
           employment_after_course: string | null
           english_requirements: string | null
-          english_score_requirement: string | null
           entry_requirements_overview: string | null
           field: string | null
-          gender_ratio_pct: number | null
           historic_entry_grades: string | null
           id: string
           intake_months: string[] | null
-          intake_size: number | null
-          international_students_ratio_pct_override: number | null
-          interview: string | null
           language: string | null
           level: string | null
           metadata: Json | null
-          min_a_level_score: string | null
           min_alevel: string | null
           min_ib: string | null
-          min_ib_score: number | null
           mode: string | null
           modules: string | null
           name: string | null
-          nss_score_pct_override: number | null
           open_days: string | null
-          placement_year: boolean | null
-          placement_year_detail: string | null
-          preferred_subjects: string | null
-          preferred_subjects_json: Json | null
           provider_apply_url: string | null
           provider_course_url: string | null
           start_date: string | null
-          student_dorm_cost_gbp_per_year_override: number | null
           student_outcomes: string | null
           student_satisfaction: string | null
-          student_to_staff_ratio_override: number | null
-          study_abroad_option: string | null
           study_level: string | null
           subject_requirements: string | null
           subsequent_year_entry_requirements: string | null
-          top_industries: string | null
           tuition: number | null
           tuition_fees_home: string | null
           tuition_fees_international: string | null
           ucas_code: string | null
-          ucas_deadline: string | null
           ucas_points: string | null
           university_id: string
-          university_life_override: string | null
-          updated_at: string
           url: string | null
-          yearly_international_tuition_fee_gbp: number | null
         }
         Insert: {
-          a_level_min_numeric?: number | null
           additional_entry_requirements?: string | null
           additional_fee_info?: string | null
-          admission_test?: string | null
           assessment_methods?: string | null
-          average_rent_outside_campus_gbp_per_month_override?: number | null
           average_salary_after_15m?: string | null
-          average_starting_salary_gbp_override?: number | null
           campus?: string | null
           contextual_admissions?: string | null
-          cost_of_life_override?:
-            | Database["public"]["Enums"]["cost_of_life_enum"]
-            | null
           course_name: string
-          course_online_page?: string | null
           course_summary?: string | null
           created_at?: string
           currency?: string | null
@@ -678,72 +350,44 @@ export type Database = {
           duration_years?: number | null
           employment_after_course?: string | null
           english_requirements?: string | null
-          english_score_requirement?: string | null
           entry_requirements_overview?: string | null
           field?: string | null
-          gender_ratio_pct?: number | null
           historic_entry_grades?: string | null
           id?: string
           intake_months?: string[] | null
-          intake_size?: number | null
-          international_students_ratio_pct_override?: number | null
-          interview?: string | null
           language?: string | null
           level?: string | null
           metadata?: Json | null
-          min_a_level_score?: string | null
           min_alevel?: string | null
           min_ib?: string | null
-          min_ib_score?: number | null
           mode?: string | null
           modules?: string | null
           name?: string | null
-          nss_score_pct_override?: number | null
           open_days?: string | null
-          placement_year?: boolean | null
-          placement_year_detail?: string | null
-          preferred_subjects?: string | null
-          preferred_subjects_json?: Json | null
           provider_apply_url?: string | null
           provider_course_url?: string | null
           start_date?: string | null
-          student_dorm_cost_gbp_per_year_override?: number | null
           student_outcomes?: string | null
           student_satisfaction?: string | null
-          student_to_staff_ratio_override?: number | null
-          study_abroad_option?: string | null
           study_level?: string | null
           subject_requirements?: string | null
           subsequent_year_entry_requirements?: string | null
-          top_industries?: string | null
           tuition?: number | null
           tuition_fees_home?: string | null
           tuition_fees_international?: string | null
           ucas_code?: string | null
-          ucas_deadline?: string | null
           ucas_points?: string | null
           university_id: string
-          university_life_override?: string | null
-          updated_at?: string
           url?: string | null
-          yearly_international_tuition_fee_gbp?: number | null
         }
         Update: {
-          a_level_min_numeric?: number | null
           additional_entry_requirements?: string | null
           additional_fee_info?: string | null
-          admission_test?: string | null
           assessment_methods?: string | null
-          average_rent_outside_campus_gbp_per_month_override?: number | null
           average_salary_after_15m?: string | null
-          average_starting_salary_gbp_override?: number | null
           campus?: string | null
           contextual_admissions?: string | null
-          cost_of_life_override?:
-            | Database["public"]["Enums"]["cost_of_life_enum"]
-            | null
           course_name?: string
-          course_online_page?: string | null
           course_summary?: string | null
           created_at?: string
           currency?: string | null
@@ -751,59 +395,39 @@ export type Database = {
           duration_years?: number | null
           employment_after_course?: string | null
           english_requirements?: string | null
-          english_score_requirement?: string | null
           entry_requirements_overview?: string | null
           field?: string | null
-          gender_ratio_pct?: number | null
           historic_entry_grades?: string | null
           id?: string
           intake_months?: string[] | null
-          intake_size?: number | null
-          international_students_ratio_pct_override?: number | null
-          interview?: string | null
           language?: string | null
           level?: string | null
           metadata?: Json | null
-          min_a_level_score?: string | null
           min_alevel?: string | null
           min_ib?: string | null
-          min_ib_score?: number | null
           mode?: string | null
           modules?: string | null
           name?: string | null
-          nss_score_pct_override?: number | null
           open_days?: string | null
-          placement_year?: boolean | null
-          placement_year_detail?: string | null
-          preferred_subjects?: string | null
-          preferred_subjects_json?: Json | null
           provider_apply_url?: string | null
           provider_course_url?: string | null
           start_date?: string | null
-          student_dorm_cost_gbp_per_year_override?: number | null
           student_outcomes?: string | null
           student_satisfaction?: string | null
-          student_to_staff_ratio_override?: number | null
-          study_abroad_option?: string | null
           study_level?: string | null
           subject_requirements?: string | null
           subsequent_year_entry_requirements?: string | null
-          top_industries?: string | null
           tuition?: number | null
           tuition_fees_home?: string | null
           tuition_fees_international?: string | null
           ucas_code?: string | null
-          ucas_deadline?: string | null
           ucas_points?: string | null
           university_id?: string
-          university_life_override?: string | null
-          updated_at?: string
           url?: string | null
-          yearly_international_tuition_fee_gbp?: number | null
         }
         Relationships: [
           {
-            foreignKeyName: "programs_v2_university_id_fkey"
+            foreignKeyName: "programs_university_id_fkey"
             columns: ["university_id"]
             isOneToOne: false
             referencedRelation: "universities"
@@ -1086,20 +710,6 @@ export type Database = {
             foreignKeyName: "student_matches_program_id_fkey"
             columns: ["program_id"]
             isOneToOne: false
-            referencedRelation: "course_scoring_v1"
-            referencedColumns: ["course_id"]
-          },
-          {
-            foreignKeyName: "student_matches_program_id_fkey"
-            columns: ["program_id"]
-            isOneToOne: false
-            referencedRelation: "course_scoring_v1"
-            referencedColumns: ["program_id"]
-          },
-          {
-            foreignKeyName: "student_matches_program_id_fkey"
-            columns: ["program_id"]
-            isOneToOne: false
             referencedRelation: "programs"
             referencedColumns: ["id"]
           },
@@ -1234,205 +844,60 @@ export type Database = {
       universities: {
         Row: {
           acceptance_rate: number | null
-          acceptance_rate_pct: number | null
-          average_rent_outside_campus_gbp_per_month_override: number | null
-          average_starting_salary_gbp: number | null
           city: string | null
-          city_id: string | null
-          city_life: string | null
-          climate: string | null
-          cost_of_life_override:
-            | Database["public"]["Enums"]["cost_of_life_enum"]
-            | null
           country: string
           created_at: string
-          cultural_social_environment: string | null
           currency: string | null
-          graduate_employment_rate_pct: number | null
-          guardian_rank: number | null
           id: string
-          international_students_ratio_pct: number | null
           intl_tuition_high: number | null
           intl_tuition_low: number | null
           metadata: Json | null
           name: string
-          nss_score_pct: number | null
-          number_of_students: number | null
-          qs_uk_rank: number | null
           rank_overall: number | null
           rank_source: string | null
           region: string | null
           requires_test: boolean | null
-          safety_index: string | null
-          student_dorm_cost_gbp_per_year: number | null
-          student_to_staff_ratio: number | null
-          times_sunday_rank: number | null
-          transport_accessibility: string | null
-          university_life: string | null
-          updated_at: string
           website: string | null
         }
         Insert: {
           acceptance_rate?: number | null
-          acceptance_rate_pct?: number | null
-          average_rent_outside_campus_gbp_per_month_override?: number | null
-          average_starting_salary_gbp?: number | null
           city?: string | null
-          city_id?: string | null
-          city_life?: string | null
-          climate?: string | null
-          cost_of_life_override?:
-            | Database["public"]["Enums"]["cost_of_life_enum"]
-            | null
           country: string
           created_at?: string
-          cultural_social_environment?: string | null
           currency?: string | null
-          graduate_employment_rate_pct?: number | null
-          guardian_rank?: number | null
           id?: string
-          international_students_ratio_pct?: number | null
           intl_tuition_high?: number | null
           intl_tuition_low?: number | null
           metadata?: Json | null
           name: string
-          nss_score_pct?: number | null
-          number_of_students?: number | null
-          qs_uk_rank?: number | null
           rank_overall?: number | null
           rank_source?: string | null
           region?: string | null
           requires_test?: boolean | null
-          safety_index?: string | null
-          student_dorm_cost_gbp_per_year?: number | null
-          student_to_staff_ratio?: number | null
-          times_sunday_rank?: number | null
-          transport_accessibility?: string | null
-          university_life?: string | null
-          updated_at?: string
           website?: string | null
         }
         Update: {
           acceptance_rate?: number | null
-          acceptance_rate_pct?: number | null
-          average_rent_outside_campus_gbp_per_month_override?: number | null
-          average_starting_salary_gbp?: number | null
           city?: string | null
-          city_id?: string | null
-          city_life?: string | null
-          climate?: string | null
-          cost_of_life_override?:
-            | Database["public"]["Enums"]["cost_of_life_enum"]
-            | null
           country?: string
           created_at?: string
-          cultural_social_environment?: string | null
           currency?: string | null
-          graduate_employment_rate_pct?: number | null
-          guardian_rank?: number | null
           id?: string
-          international_students_ratio_pct?: number | null
           intl_tuition_high?: number | null
           intl_tuition_low?: number | null
           metadata?: Json | null
           name?: string
-          nss_score_pct?: number | null
-          number_of_students?: number | null
-          qs_uk_rank?: number | null
           rank_overall?: number | null
           rank_source?: string | null
           region?: string | null
           requires_test?: boolean | null
-          safety_index?: string | null
-          student_dorm_cost_gbp_per_year?: number | null
-          student_to_staff_ratio?: number | null
-          times_sunday_rank?: number | null
-          transport_accessibility?: string | null
-          university_life?: string | null
-          updated_at?: string
           website?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "universities_v2_city_id_fkey"
-            columns: ["city_id"]
-            isOneToOne: false
-            referencedRelation: "cities"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
     }
     Views: {
-      course_scoring_v1: {
-        Row: {
-          a_level_min_numeric: number | null
-          acceptance_rate_pct: number | null
-          admission_test: string | null
-          average_rent_outside_campus_gbp_per_month: number | null
-          average_starting_salary_gbp: number | null
-          city: string | null
-          city_life: string | null
-          climate: string | null
-          cost_of_life: Database["public"]["Enums"]["cost_of_life_enum"] | null
-          course: string | null
-          course_id: string | null
-          course_online_page: string | null
-          course_selectivity_score: number | null
-          course_tier: number | null
-          cultural_social_environment: string | null
-          degree_type: string | null
-          duration: string | null
-          english_score_requirement: string | null
-          field_of_study: string | null
-          gender_ratio_pct: number | null
-          graduate_employment_rate_pct: number | null
-          intake_size: number | null
-          international_students_ratio_pct: number | null
-          interview: string | null
-          level: string | null
-          min_a_level_score: string | null
-          min_ib_score: number | null
-          nss_score_pct: number | null
-          number_of_students: number | null
-          placement_year: boolean | null
-          placement_year_detail: string | null
-          preferred_subjects: string | null
-          program_currency: string | null
-          program_id: string | null
-          program_language: string | null
-          program_mode: string | null
-          program_tuition: number | null
-          program_url: string | null
-          safety_index: string | null
-          student_dorm_cost_gbp_per_year: number | null
-          student_to_staff_ratio: number | null
-          study_abroad_option: string | null
-          top_industries: string | null
-          total_course_score: number | null
-          transport_accessibility: string | null
-          ucas_code: string | null
-          ucas_deadline: string | null
-          university: string | null
-          university_country: string | null
-          university_id: string | null
-          university_life: string | null
-          university_rank_overall: number | null
-          university_rank_source: string | null
-          university_requires_test: boolean | null
-          university_score: number | null
-          yearly_international_tuition_fee_gbp: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "programs_v2_university_id_fkey"
-            columns: ["university_id"]
-            isOneToOne: false
-            referencedRelation: "universities"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
+      [_ in never]: never
     }
     Functions: {
       auth_role: { Args: never; Returns: string }
@@ -1466,7 +931,6 @@ export type Database = {
       campus_size_preference: "small" | "medium" | "large" | "no_preference"
       campus_type: "urban" | "suburban" | "rural" | "online"
       checklist_status: "todo" | "doing" | "done"
-      cost_of_life_enum: "HIGH" | "MEDIUM" | "LOW"
       delivery_type: "in_person" | "online" | "hybrid"
       english_status:
         | "met"
@@ -2170,7 +1634,6 @@ export const Constants = {
       campus_size_preference: ["small", "medium", "large", "no_preference"],
       campus_type: ["urban", "suburban", "rural", "online"],
       checklist_status: ["todo", "doing", "done"],
-      cost_of_life_enum: ["HIGH", "MEDIUM", "LOW"],
       delivery_type: ["in_person", "online", "hybrid"],
       english_status: [
         "met",
@@ -2225,3 +1688,4 @@ export const Constants = {
     },
   },
 } as const
+he last 

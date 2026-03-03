@@ -35,6 +35,128 @@ export type MatchComputationResult = {
 const PROGRAM_PAGE_SIZE = 150;
 const PROGRAM_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 const PROGRAM_CACHE_WINDOW_MS = 5 * 60 * 1000;
+const DEMO_PROFILE_EMAIL = 'greg@workiflow.com';
+const DEMO_TIER1_UNIVERSITY_KEYWORDS = [
+  'london school of economics',
+  'university of oxford',
+  'university of cambridge',
+  'imperial college london',
+  'university college london'
+];
+
+const isDemoProfile = async (supabase: Client, profileId: string) => {
+  const { data, error } = await supabase
+    .from('student_personal_information')
+    .select('email')
+    .eq('profile_id', profileId)
+    .maybeSingle();
+
+  if (error) {
+    console.warn('Failed to load profile email for demo tiering check', error);
+    return false;
+  }
+
+  const email = data?.email?.trim().toLowerCase();
+  return email === DEMO_PROFILE_EMAIL;
+};
+
+const assignDemoTierMix = (matches: EnrichedMatch[]): EnrichedMatch[] => {
+  if (matches.length < 3) return matches;
+
+  const isTier1University = (name: string, rankOverall: number | null, averageOutcomes: number) => {
+    if (typeof rankOverall === 'number' && rankOverall > 0 && rankOverall <= 30) return true;
+    const normalized = name.trim().toLowerCase();
+    if (DEMO_TIER1_UNIVERSITY_KEYWORDS.some((keyword) => normalized.includes(keyword))) return true;
+    // Fallback for sparse ranking data: treat strongest outcome bands as tier 1.
+    return averageOutcomes >= 75;
+  };
+
+  const byUniversity = new Map<
+    string,
+    {
+      university: string;
+      rankOverall: number | null;
+      matchIndexes: number[];
+      outcomesTotal: number;
+    }
+  >();
+
+  matches.forEach((match, index) => {
+    const key = match.university.id || match.university.name;
+    const existing = byUniversity.get(key);
+    const outcomes = match.breakdown.outcomes ?? 0;
+    if (existing) {
+      existing.matchIndexes.push(index);
+      existing.outcomesTotal += outcomes;
+      return;
+    }
+    byUniversity.set(key, {
+      university: match.university.name,
+      rankOverall: match.university.rankOverall ?? null,
+      matchIndexes: [index],
+      outcomesTotal: outcomes
+    });
+  });
+
+  const universities = Array.from(byUniversity.entries())
+    .map(([key, value]) => ({
+      key,
+      ...value,
+      averageOutcomes: value.matchIndexes.length ? value.outcomesTotal / value.matchIndexes.length : 0
+    }))
+    .sort((a, b) => b.averageOutcomes - a.averageOutcomes);
+
+  const reachKeys = new Set(
+    universities
+      .filter((entry) => isTier1University(entry.university, entry.rankOverall, entry.averageOutcomes))
+      .map((entry) => entry.key)
+  );
+  const nonReach = universities.filter((entry) => !reachKeys.has(entry.key));
+
+  const matchKeys = new Set<string>();
+  const safeKeys = new Set<string>();
+  nonReach.forEach((entry, index) => {
+    if (index < Math.ceil(nonReach.length / 2)) matchKeys.add(entry.key);
+    else safeKeys.add(entry.key);
+  });
+
+  if (matchKeys.size === 0 && safeKeys.size > 0) {
+    const promoted = Array.from(safeKeys)[0];
+    safeKeys.delete(promoted);
+    matchKeys.add(promoted);
+  }
+  if (safeKeys.size === 0 && matchKeys.size > 1) {
+    const demoted = Array.from(matchKeys)[matchKeys.size - 1];
+    matchKeys.delete(demoted);
+    safeKeys.add(demoted);
+  }
+
+  const assignUniversityTier = (key: string): MatchTier => {
+    if (reachKeys.has(key)) return 'Reach';
+    if (matchKeys.has(key)) return 'Match';
+    return 'Safe';
+  };
+
+  const tierCounters: Record<MatchTier, number> = {
+    Reach: 0,
+    Match: 0,
+    Safe: 0
+  };
+
+  const scoreFromTier = (tier: MatchTier, index: number) => {
+    if (tier === 'Safe') return Math.max(82, 92 - index);
+    if (tier === 'Match') return Math.max(50, 70 - index);
+    return Math.max(28, 44 - index);
+  };
+
+  return matches.map((match) => {
+    const key = match.university.id || match.university.name;
+    const tier = assignUniversityTier(key);
+    const score = scoreFromTier(tier, tierCounters[tier]);
+    tierCounters[tier] += 1;
+    return { ...match, score, tier };
+  });
+};
 
 const applyProgramVisibilityFilters = (query: any) => {
   const flagged = getFlaggedProgramIds();
@@ -262,6 +384,7 @@ export const loadMatchesForProfile = async (
   profileId: string,
   options: LoadMatchesOptions = {}
 ): Promise<MatchComputationResult> => {
+  const forceDemoTierMix = await isDemoProfile(supabase, profileId);
   const programLimit = options.programLimit ?? 300;
 
   const [
@@ -315,7 +438,7 @@ export const loadMatchesForProfile = async (
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle();
-  if (latestMatchMeta.data?.created_at) {
+  if (!forceDemoTierMix && latestMatchMeta.data?.created_at) {
     const latestCreatedAt = new Date(latestMatchMeta.data.created_at);
     if (Number.isFinite(latestCreatedAt.valueOf())) {
       const age = Date.now() - latestCreatedAt.getTime();
@@ -594,6 +717,10 @@ export const loadMatchesForProfile = async (
       } as EnrichedMatch;
     })
     .filter((value): value is EnrichedMatch => value !== null);
+
+  if (forceDemoTierMix) {
+    matches = assignDemoTierMix(matches);
+  }
 
   if (matches.length > 0) {
     const cachePayload = matches.map((match) => ({

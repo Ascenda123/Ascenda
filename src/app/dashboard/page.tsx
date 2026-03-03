@@ -12,7 +12,7 @@ import { PageHero } from '@/components/layout/page-hero';
 import { Button } from '@/components/ui/button';
 import { TaskListPanel } from '@/components/dashboard/task-list-panel';
 import type { Database } from '@/lib/types/database';
-import { buildStepCompletion, ProfileRecordGroup } from '@/lib/profile/completion';
+import { buildStepCompletion, isProfileComplete, ProfileRecordGroup } from '@/lib/profile/completion';
 import { PROFILE_STEPS } from '@/lib/profile/steps';
 
 type ChecklistRow = Database['public']['Tables']['application_checklist']['Row'];
@@ -66,7 +66,7 @@ export default async function DashboardPage() {
     applicationProgramIds.length
       ? supabase.from('deadlines').select('*').in('program_id', applicationProgramIds).gte('deadline_date', today).order('deadline_date', { ascending: true }).limit(5)
       : Promise.resolve({ data: [] }),
-    loadMatchesForProfile(supabase, user.id, { programLimit: 10, resultLimit: 3 }),
+    loadMatchesForProfile(supabase, user.id),
     supabase
       .from('student_personal_information')
       .select('first_name,last_name,email,nationality,resident_country')
@@ -97,6 +97,10 @@ export default async function DashboardPage() {
     subjectCount: subjectsResponse.data?.length ?? 0,
     lifestyle: lifestyle ?? null
   };
+
+  if (!isProfileComplete(records)) {
+    redirect('/profile/wizard');
+  }
 
   const stepCompletion = buildStepCompletion(records);
   const completedSteps = PROFILE_STEPS.filter((step) => stepCompletion[step.key]).length;

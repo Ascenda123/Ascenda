@@ -1,19 +1,23 @@
 import type { LucideIcon } from 'lucide-react';
 import {
   Award,
+  BarChart2,
+  CalendarClock,
   ClipboardCheck,
   LayoutDashboard,
   Search,
   Settings,
-  UserCircle
+  UserCircle,
+  Users
 } from 'lucide-react';
 
 export type NavItem = {
   label: string;
   href: string;
   icon: LucideIcon;
+  exact?: boolean;
   matchers?: Array<(pathname: string) => boolean>;
-  segment: 'home' | 'explore' | 'planner' | 'scholarships' | 'profile' | 'admin';
+  segment: 'home' | 'explore' | 'planner' | 'scholarships' | 'profile' | 'admin' | 'counsellor';
 };
 
 export type SectionNavItem = {
@@ -24,6 +28,7 @@ export type SectionNavItem = {
 };
 
 export const NAV_ITEMS: NavItem[] = [
+  // Student items
   {
     label: 'Home',
     href: '/dashboard',
@@ -66,6 +71,33 @@ export const NAV_ITEMS: NavItem[] = [
     href: '/admin',
     icon: Settings,
     segment: 'admin'
+  },
+  // Counsellor items (only shown when session role is 'counsellor')
+  {
+    label: 'Overview',
+    href: '/counsellor',
+    icon: LayoutDashboard,
+    segment: 'counsellor',
+    exact: true
+  },
+  {
+    label: 'Students',
+    href: '/counsellor/students',
+    icon: Users,
+    segment: 'counsellor',
+    matchers: [(pathname) => pathname.startsWith('/counsellor/students')]
+  },
+  {
+    label: 'Analytics',
+    href: '/counsellor/analytics',
+    icon: BarChart2,
+    segment: 'counsellor'
+  },
+  {
+    label: 'Deadlines',
+    href: '/counsellor/deadlines',
+    icon: CalendarClock,
+    segment: 'counsellor'
   }
 ];
 
@@ -88,12 +120,26 @@ export const PROFILE_SECTION_ITEMS: SectionNavItem[] = [
   { label: 'Aspirations', href: '/profile?step=aspirations', matchParam: { key: 'step', value: 'aspirations' } }
 ];
 
+export const COUNSELLOR_SECTION_ITEMS: SectionNavItem[] = [
+  { label: 'Overview', href: '/counsellor', exact: true },
+  { label: 'Students', href: '/counsellor/students' },
+  { label: 'Analytics', href: '/counsellor/analytics' },
+  { label: 'Deadlines', href: '/counsellor/deadlines' }
+];
+
 export const isNavActive = (item: NavItem, pathname: string) => {
   if (!pathname) return false;
+  if (item.exact) return pathname === item.href;
   if (pathname === item.href) return true;
   if (pathname.startsWith(`${item.href}/`)) return true;
   return item.matchers?.some((matcher) => matcher(pathname)) ?? false;
 };
 
-export const filterNavByRole = (items: NavItem[], role: string | null | undefined) =>
-  items.filter((item) => item.segment !== 'admin' || role === 'admin');
+export const filterNavByRole = (items: NavItem[], role: string | null | undefined) => {
+  if (role === 'counsellor') {
+    return items.filter((item) => item.segment === 'counsellor');
+  }
+  return items.filter(
+    (item) => item.segment !== 'counsellor' && (item.segment !== 'admin' || role === 'admin')
+  );
+};

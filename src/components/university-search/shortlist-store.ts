@@ -20,6 +20,7 @@ const STORAGE_KEY_PREFIX = 'ascenda-university-shortlist-v2';
 const OLD_STORAGE_KEY = 'ascenda-university-shortlist';
 const DEMO_IDS = new Set(['yale-epe', 'melbourne-design', 'hkust-gbus']);
 const TABLE_NAME = 'shortlisted_programs';
+const SHORTLIST_SYNC_EVENT = 'ascenda:shortlist-sync';
 
 type ShortlistRow = {
   program_id: string;
@@ -176,6 +177,33 @@ export const useShortlist = () => {
   }, [getStorageKey, loadLocal, persistLocal, upsertRemoteItem]);
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const storageKey = getStorageKey(profileId);
+    const fallbackKeys = profileId ? [] : [OLD_STORAGE_KEY];
+
+    const syncFromStorage = () => {
+      setItems(loadLocal(storageKey, fallbackKeys));
+    };
+
+    const onStorage = (event: StorageEvent) => {
+      if (!event.key || event.key === storageKey) {
+        syncFromStorage();
+      }
+    };
+
+    const onShortlistSync = () => {
+      syncFromStorage();
+    };
+
+    window.addEventListener('storage', onStorage);
+    window.addEventListener(SHORTLIST_SYNC_EVENT, onShortlistSync as EventListener);
+    return () => {
+      window.removeEventListener('storage', onStorage);
+      window.removeEventListener(SHORTLIST_SYNC_EVENT, onShortlistSync as EventListener);
+    };
+  }, [getStorageKey, loadLocal, profileId]);
+
+  useEffect(() => {
     if (ready && typeof window !== 'undefined') {
       const storageKey = getStorageKey(profileId);
       persistLocal(storageKey, items);
@@ -184,11 +212,14 @@ export const useShortlist = () => {
 
   const addItem = useCallback((item: ShortlistItem) => {
     setItems((prev) => {
-      if (prev.some((existing) => existing.id === item.id)) {
-        return prev;
+      const storageKey = getStorageKey(profileId);
+      const fallbackKeys = profileId ? [] : [OLD_STORAGE_KEY];
+      const latest = typeof window !== 'undefined' ? loadLocal(storageKey, fallbackKeys) : prev;
+      if (latest.some((existing) => existing.id === item.id)) {
+        return latest;
       }
       const nextItems = [
-        ...prev,
+        ...latest,
         {
           stage: 'Researching',
           due: null,
@@ -196,21 +227,35 @@ export const useShortlist = () => {
           ...item
         }
       ];
+      persistLocal(storageKey, nextItems);
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event(SHORTLIST_SYNC_EVENT));
+      }
       const client = supabaseRef.current;
       if (client && profileId) {
         void upsertRemoteItem(client, profileId, item);
       }
       return nextItems;
     });
-  }, [profileId, upsertRemoteItem]);
+  }, [getStorageKey, loadLocal, persistLocal, profileId, upsertRemoteItem]);
 
   const removeItem = useCallback((id: string) => {
-    setItems((prev) => prev.filter((item) => item.id !== id));
+    setItems((prev) => {
+      const storageKey = getStorageKey(profileId);
+      const fallbackKeys = profileId ? [] : [OLD_STORAGE_KEY];
+      const latest = typeof window !== 'undefined' ? loadLocal(storageKey, fallbackKeys) : prev;
+      const next = latest.filter((item) => item.id !== id);
+      persistLocal(storageKey, next);
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event(SHORTLIST_SYNC_EVENT));
+      }
+      return next;
+    });
     const client = supabaseRef.current;
     if (client && profileId) {
       void deleteRemoteItem(client, profileId, id);
     }
-  }, [deleteRemoteItem, profileId]);
+  }, [deleteRemoteItem, getStorageKey, loadLocal, persistLocal, profileId]);
 
   return { items, addItem, removeItem, ready };
 };

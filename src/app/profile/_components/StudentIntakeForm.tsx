@@ -1,7 +1,6 @@
 'use client';
 
 import { type FormEvent, useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react';
-import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, ChevronRight, ChevronLeft, Globe, GraduationCap, User, Heart, Settings, Layout, Search, Sparkles, Send, GraduationCap as School, Moon, Sun, Pencil, Trash2, PlusCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -204,7 +203,7 @@ export const StudentIntakeForm = ({
   initialStep?: number;
   initialPayload?: StudentProfilePayload | null;
 }) => {
-  const router = useRouter();
+  const contentTopRef = useRef<HTMLDivElement | null>(null);
   const [currentStep, setCurrentStep] = useState(initialStep);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [isSaving, startTransition] = useTransition();
@@ -819,12 +818,16 @@ export const StudentIntakeForm = ({
     });
   }, [
     validateStep1, validateStep2, validateStep3, validateStep4,
-    buildPayload, router
+    buildPayload
   ]);
 
   const goBack = () => {
     setCurrentStep((prev) => Math.max(1, prev - 1));
   };
+
+  useEffect(() => {
+    contentTopRef.current?.scrollIntoView({ behavior: 'auto', block: 'start' });
+  }, [currentStep]);
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -959,7 +962,7 @@ export const StudentIntakeForm = ({
           </div>
         </aside>
 
-        <div className="flex-1 min-w-0">
+        <div ref={contentTopRef} className="flex-1 min-w-0">
           {/* Top Horizontal Navigation */}
           <div className="mb-8 flex items-center gap-4">
             <nav className="flex-1 min-w-0 flex items-center justify-between gap-2 p-2 bg-muted/30 rounded-2xl border border-border/50 overflow-x-auto scrollbar-hide">

@@ -6,10 +6,15 @@ import { getBrowserSupabaseClient } from '@/lib/supabase/client';
 export const useUserRole = () => {
   const [role, setRole] = useState<string | null>(() => {
     if (typeof window === 'undefined') return null;
-    return localStorage.getItem('ascenda-role') ?? null;
+    // Session-selected role takes priority (set by /role-select, cleared on browser session end)
+    return sessionStorage.getItem('ascenda-session-role') ?? localStorage.getItem('ascenda-role') ?? null;
   });
 
   useEffect(() => {
+    // If the user explicitly selected a role this session, don't overwrite it with the DB value
+    const sessionRole = sessionStorage.getItem('ascenda-session-role');
+    if (sessionRole) return;
+
     const supabase = getBrowserSupabaseClient();
     supabase.auth
       .getUser()

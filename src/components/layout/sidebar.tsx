@@ -50,17 +50,19 @@ export const Sidebar = () => {
           <span>Sign out</span>
         </button>
       </nav>
-      <div className="mt-6 space-y-2 rounded-2xl border border-border bg-muted/40 p-4 text-foreground transition-colors">
-        <p className="text-xs uppercase tracking-[0.35em] text-muted-foreground">Support</p>
-        <p className="text-base font-semibold leading-tight text-foreground">Need a counselor nudge?</p>
-        <p className="text-sm text-muted-foreground">Live response in under 5 min during office hours.</p>
-        <Link
-          href="mailto:hello@ascenda.com"
-          className="inline-flex items-center justify-center rounded-full bg-card px-4 py-2 text-sm font-semibold text-foreground shadow-sm transition hover:bg-muted/50"
-        >
-          Ping support →
-        </Link>
-      </div>
+      {role !== 'counsellor' && (
+        <div className="mt-6 space-y-2 rounded-2xl border border-border bg-muted/40 p-4 text-foreground transition-colors">
+          <p className="text-xs uppercase tracking-[0.35em] text-muted-foreground">Support</p>
+          <p className="text-base font-semibold leading-tight text-foreground">Need a counselor nudge?</p>
+          <p className="text-sm text-muted-foreground">Live response in under 5 min during office hours.</p>
+          <Link
+            href="mailto:hello@ascenda.com"
+            className="inline-flex items-center justify-center rounded-full bg-card px-4 py-2 text-sm font-semibold text-foreground shadow-sm transition hover:bg-muted/50"
+          >
+            Ping support →
+          </Link>
+        </div>
+      )}
     </aside>
   );
 };

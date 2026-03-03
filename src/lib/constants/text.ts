@@ -1,8 +1,8 @@
 export const ACTION_TEXT = {
   shortlist: 'Shortlist',
   shortlisted: 'Shortlisted',
-  saveToPlanner: 'Save to planner',
-  savedToPlanner: 'Saved to planner',
+  saveToPlanner: 'Add to shortlist',
+  savedToPlanner: 'Shortlisted',
   addToPlanner: 'Add to planner',
   returnToDashboard: 'Return to dashboard',
   finishProfile: 'Finish profile',
