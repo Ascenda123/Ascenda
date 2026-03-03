@@ -1,4 +1,6 @@
+import { useEffect, useRef, useState } from 'react';
 import { Users, CheckCircle, Clock, AlertTriangle } from 'lucide-react';
+import { motion, useSpring, useTransform, animate } from 'framer-motion';
 import type { CohortStats } from './types';
 
 interface StatsBarProps {
@@ -41,6 +43,21 @@ const STAT_CONFIG = [
   }
 ];
 
+function CountUp({ value }: { value: number }) {
+  const [display, setDisplay] = useState(0);
+
+  useEffect(() => {
+    const controls = animate(0, value, {
+      duration: 1.2,
+      ease: [0.16, 1, 0.3, 1],
+      onUpdate: (latest) => setDisplay(Math.round(latest))
+    });
+    return () => controls.stop();
+  }, [value]);
+
+  return <>{display}</>;
+}
+
 export const StatsBar = ({ stats }: StatsBarProps) => {
   const values: Record<string, number> = {
     total: stats.total,
@@ -51,9 +68,12 @@ export const StatsBar = ({ stats }: StatsBarProps) => {
 
   return (
     <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-      {STAT_CONFIG.map(({ key, label, icon: Icon, color, bg, border, suffix }) => (
-        <div
+      {STAT_CONFIG.map(({ key, label, icon: Icon, color, bg, border, suffix }, idx) => (
+        <motion.div
           key={key}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: idx * 0.1, duration: 0.4 }}
           className={`surface-card surface-card--static flex items-center gap-4 border ${border}`}
         >
           <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${bg}`}>
@@ -61,11 +81,11 @@ export const StatsBar = ({ stats }: StatsBarProps) => {
           </div>
           <div className="min-w-0">
             <p className="text-2xl font-bold text-foreground tabular-nums">
-              {values[key]}{suffix ?? ''}
+              <CountUp value={values[key]} />{suffix ?? ''}
             </p>
             <p className="truncate text-xs text-muted-foreground">{label}</p>
           </div>
-        </div>
+        </motion.div>
       ))}
     </div>
   );

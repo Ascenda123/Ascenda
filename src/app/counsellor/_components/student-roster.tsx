@@ -1,25 +1,42 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Search, SlidersHorizontal, ChevronDown } from 'lucide-react';
+import { Search, SlidersHorizontal, ChevronDown, X, Filter, FilterX } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import type { CounsellorStudent } from '@/lib/data/counsellor-dummy-data';
 import { StudentCard } from './student-card';
+import type { DashboardFilter } from '../page';
 
 interface StudentRosterProps {
   students: CounsellorStudent[];
+  externalFilter?: DashboardFilter;
+  onClearExternalFilter?: () => void;
 }
 
 type SortKey = 'name' | 'completion' | 'matchScore' | 'lastActive';
 type ProgrammeFilter = 'all' | 'IB' | 'A_LEVEL';
 type FlagFilter = 'all' | 'flagged' | 'clear';
 
+const STAGE_MAP: Record<string, string> = {
+  planning: 'Planning',
+  inProgress: 'In Progress',
+  submitted: 'Submitted',
+  decision: 'Decision'
+};
+
+const TIER_MAP: Record<string, string> = {
+  reach: 'Reach',
+  match: 'Match',
+  safe: 'Safe'
+};
+
 function getAvgScore(s: CounsellorStudent) {
   if (s.matches.length === 0) return 0;
   return s.matches.reduce((acc, m) => acc + m.score, 0) / s.matches.length;
 }
 
-export const StudentRoster = ({ students }: StudentRosterProps) => {
+export const StudentRoster = ({ students, externalFilter, onClearExternalFilter }: StudentRosterProps) => {
   const [query, setQuery] = useState('');
   const [sortKey, setSortKey] = useState<SortKey>('name');
   const [programme, setProgramme] = useState<ProgrammeFilter>('all');
@@ -28,6 +45,15 @@ export const StudentRoster = ({ students }: StudentRosterProps) => {
 
   const filtered = useMemo(() => {
     let list = [...students];
+
+    // Apply dashboard-level (external) filters first
+    if (externalFilter?.type === 'stage' && externalFilter.value) {
+      const stageValue = externalFilter.value === 'inProgress' ? 'in_progress' : externalFilter.value;
+      list = list.filter((s) => s.applications.some((app) => app.status === stageValue));
+    } else if (externalFilter?.type === 'tier' && externalFilter.value) {
+      const targetTier = TIER_MAP[externalFilter.value];
+      list = list.filter((s) => s.matches.some((m) => m.tier === targetTier));
+    }
 
     if (query.trim()) {
       const q = query.toLowerCase();
@@ -63,7 +89,7 @@ export const StudentRoster = ({ students }: StudentRosterProps) => {
     });
 
     return list;
-  }, [students, query, sortKey, programme, flagFilter]);
+  }, [students, query, sortKey, programme, flagFilter, externalFilter]);
 
   const SORT_OPTS: { key: SortKey; label: string }[] = [
     { key: 'name', label: 'Name' },
@@ -72,8 +98,42 @@ export const StudentRoster = ({ students }: StudentRosterProps) => {
     { key: 'lastActive', label: 'Last Active' }
   ];
 
+  const hasExternalFilter = !!(externalFilter?.type && externalFilter.value);
+  const filterLabel = externalFilter?.type === 'stage'
+    ? STAGE_MAP[externalFilter.value!]
+    : externalFilter?.type === 'tier'
+      ? TIER_MAP[externalFilter.value!]
+      : '';
+
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
+      {/* Dashboard Filter Feedback */}
+      <AnimatePresence>
+        {hasExternalFilter && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="flex items-center gap-2 overflow-hidden"
+          >
+            <div className="flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-xs font-semibold text-primary">
+              <Filter className="h-3 w-3" />
+              Showing {filterLabel} Students
+              <button
+                onClick={onClearExternalFilter}
+                className="ml-1 rounded-full p-0.5 hover:bg-primary/10"
+                title="Clear dashboard filter"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </div>
+            <p className="text-[11px] text-muted-foreground italic">
+              Click the chart again to reset
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Search + filter bar */}
       <div className="glass-panel flex flex-col gap-3 rounded-[24px] px-4 py-3 sm:flex-row sm:items-center">
         <div className="relative flex-1">
@@ -168,15 +228,43 @@ export const StudentRoster = ({ students }: StudentRosterProps) => {
 
       {/* Grid */}
       {filtered.length > 0 ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {filtered.map((student) => (
-            <StudentCard key={student.id} student={student} highlight={query.trim()} />
-          ))}
-        </div>
+        <motion.div
+          layout
+          className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+        >
+          <AnimatePresence mode="popLayout">
+            {filtered.map((student) => (
+              <motion.div
+                key={student.id}
+                layout
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                transition={{ duration: 0.2 }}
+              >
+                <StudentCard student={student} highlight={query.trim()} />
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </motion.div>
       ) : (
         <div className="rounded-[28px] border border-dashed border-border bg-muted/40 p-12 text-center">
           <p className="text-base font-semibold text-foreground">No students found</p>
           <p className="mt-1 text-sm text-muted-foreground">Try adjusting your search or filters.</p>
+          {(hasExternalFilter || query || programme !== 'all' || flagFilter !== 'all') && (
+            <button
+              onClick={() => {
+                onClearExternalFilter?.();
+                setQuery('');
+                setProgramme('all');
+                setFlagFilter('all');
+              }}
+              className="mt-4 flex items-center gap-2 mx-auto rounded-full border border-border bg-background px-4 py-2 text-sm font-medium hover:bg-muted/60"
+            >
+              <FilterX className="h-4 w-4" />
+              Reset all filters
+            </button>
+          )}
         </div>
       )}
     </div>

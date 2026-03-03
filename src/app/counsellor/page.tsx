@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { AlertTriangle, TrendingUp, BarChart2, Clock, Activity, PieChart, Trophy } from 'lucide-react';
 import { PageHero } from '@/components/layout/page-hero';
@@ -13,6 +14,7 @@ import { MatchDistribution } from './_components/match-distribution';
 import { DeadlineWidget } from './_components/deadline-widget';
 import { ActivityFeed } from './_components/activity-feed';
 import { CohortBreakdown } from './_components/cohort-breakdown';
+import { StudentRoster } from './_components/student-roster';
 import { TopStudents } from './_components/top-students';
 
 const stats = getCohortStats();
@@ -40,15 +42,35 @@ const WIDGET_META: Record<WidgetId, { title: string; description: string }> = {
   topStudents: { title: 'Top Students', description: 'Ranked by average match score' }
 };
 
-function renderWidget(id: WidgetId, index: number, removeWidget: (id: WidgetId) => void) {
+export type DashboardFilter = { type: 'stage' | 'tier' | null; value: string | null };
+
+function renderWidget(
+  id: WidgetId,
+  index: number,
+  removeWidget: (id: WidgetId) => void,
+  filter: DashboardFilter,
+  setFilter: (f: DashboardFilter) => void
+) {
   const icon = WIDGET_ICON_MAP[id];
   const meta = WIDGET_META[id];
 
   return (
     <Widget key={id} id={id} title={meta.title} description={meta.description} icon={icon} onRemove={removeWidget} index={index}>
       {id === 'alerts' && <StudentAlerts students={DUMMY_STUDENTS} />}
-      {id === 'funnel' && <ApplicationFunnel funnel={stats.appFunnel} />}
-      {id === 'matchDist' && <MatchDistribution tiers={stats.matchTiers} />}
+      {id === 'funnel' && (
+        <ApplicationFunnel
+          funnel={stats.appFunnel}
+          activeStage={filter.type === 'stage' ? (filter.value as any) : null}
+          onSelectStage={(stage) => setFilter(filter.value === stage ? { type: null, value: null } : { type: 'stage', value: stage })}
+        />
+      )}
+      {id === 'matchDist' && (
+        <MatchDistribution
+          tiers={stats.matchTiers}
+          activeTier={filter.type === 'tier' ? (filter.value as any) : null}
+          onSelectTier={(tier) => setFilter(filter.value === tier ? { type: null, value: null } : { type: 'tier', value: tier })}
+        />
+      )}
       {id === 'deadlines' && <DeadlineWidget deadlines={upcomingDeadlines} />}
       {id === 'activity' && <ActivityFeed activity={recentActivity} />}
       {id === 'cohortBreakdown' && <CohortBreakdown programmeBreakdown={stats.programmeBreakdown} fieldDistribution={fieldDistribution} />}
@@ -58,6 +80,7 @@ function renderWidget(id: WidgetId, index: number, removeWidget: (id: WidgetId) 
 }
 
 export default function CounsellorOverviewPage() {
+  const [filter, setFilter] = useState<DashboardFilter>({ type: null, value: null });
   return (
     <div className="space-y-6">
       <PageHero
@@ -89,7 +112,7 @@ export default function CounsellorOverviewPage() {
               {half.length > 0 && (
                 <div className={`grid gap-6 ${half.length === 2 ? 'md:grid-cols-2' : 'grid-cols-1'}`}>
                   <AnimatePresence mode="popLayout">
-                    {half.map((id, idx) => renderWidget(id, idx, removeWidget))}
+                    {half.map((id, idx) => renderWidget(id, idx, removeWidget, filter, setFilter))}
                   </AnimatePresence>
                 </div>
               )}
@@ -98,7 +121,7 @@ export default function CounsellorOverviewPage() {
               {single.length > 0 && (
                 <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
                   <AnimatePresence mode="popLayout">
-                    {single.map((id, idx) => renderWidget(id, half.length + idx, removeWidget))}
+                    {single.map((id, idx) => renderWidget(id, half.length + idx, removeWidget, filter, setFilter))}
                   </AnimatePresence>
                 </div>
               )}
@@ -107,10 +130,25 @@ export default function CounsellorOverviewPage() {
               {full.length > 0 && (
                 <div className="grid grid-cols-1 gap-6">
                   <AnimatePresence mode="popLayout">
-                    {full.map((id, idx) => renderWidget(id, half.length + single.length + idx, removeWidget))}
+                    {full.map((id, idx) => renderWidget(id, half.length + single.length + idx, removeWidget, filter, setFilter))}
                   </AnimatePresence>
                 </div>
               )}
+
+              {/* Student Roster at the bottom */}
+              <div className="pt-4">
+                <div className="mb-6 flex items-center justify-between border-b border-border pb-4">
+                  <div>
+                    <h2 className="text-2xl font-semibold">Student Roster</h2>
+                    <p className="text-sm text-muted-foreground">Manage your cohort and track progress</p>
+                  </div>
+                </div>
+                <StudentRoster
+                  students={DUMMY_STUDENTS}
+                  externalFilter={filter}
+                  onClearExternalFilter={() => setFilter({ type: null, value: null })}
+                />
+              </div>
             </div>
           );
         }}
