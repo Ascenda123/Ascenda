@@ -46,8 +46,8 @@ export function ProfileProgressCard({
   }, [isComplete]);
 
   return (
-    <div className="relative overflow-hidden rounded-[28px] border border-white/15 bg-card/60 p-6 shadow-[0_24px_80px_rgba(15,23,42,0.22)] backdrop-blur-lg backdrop-saturate-150 transition-colors dark:border-white/10">
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/5 via-primary/5 to-sky-500/5 opacity-60" aria-hidden />
+    <div className="surface-card surface-card--static relative overflow-hidden rounded-[28px] p-6">
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-sky-500/10 opacity-70" aria-hidden />
       <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm font-medium text-muted-foreground">Profile completion</p>
@@ -56,13 +56,13 @@ export function ProfileProgressCard({
             {completedCount}/{totalSteps} steps done {nextStepTitle ? `• Next: ${nextStepTitle}` : ''}
           </p>
         </div>
-        <div className="flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.35em] text-foreground backdrop-blur-sm dark:border-white/10">
+        <div className="surface-chip px-4 py-2 text-[11px] uppercase tracking-[0.35em]">
           <Sparkles className="h-4 w-4 text-primary" />
           Progress
         </div>
       </div>
 
-      <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/10">
+      <div className="mt-4 h-2 overflow-hidden rounded-full bg-muted/70">
         <motion.div
           className="h-full rounded-full bg-gradient-to-r from-primary via-sky-400 to-emerald-400 shadow-[0_0_0_1px_rgba(255,255,255,0.4)]"
           initial={{ width: 0 }}
@@ -80,10 +80,10 @@ export function ProfileProgressCard({
               key={step.key}
               href={`/profile/wizard?step=${step.key}`}
               className={cn(
-                'group relative overflow-hidden rounded-2xl border px-4 py-4 shadow-[0_12px_30px_rgba(15,23,42,0.12)] backdrop-blur-sm transition-colors hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
+                'group surface-subcard relative overflow-hidden px-4 py-4 transition-all duration-300 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
                 complete
-                  ? 'border-emerald-200/60 bg-emerald-50/30 dark:border-emerald-400/30 dark:bg-emerald-500/10'
-                  : 'border-white/10 bg-white/5 dark:border-white/10 dark:bg-white/5'
+                  ? 'border-emerald-300/60 bg-emerald-500/10 dark:border-emerald-400/40 dark:bg-emerald-500/10'
+                  : ''
               )}
             >
               <div className="flex items-center justify-between gap-2">
@@ -93,7 +93,7 @@ export function ProfileProgressCard({
                     'inline-flex items-center rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em]',
                     complete
                       ? 'bg-emerald-500/15 text-emerald-600 ring-1 ring-emerald-400/40 dark:text-emerald-200'
-                      : 'bg-white/5 text-muted-foreground ring-1 ring-white/10'
+                      : 'bg-muted/70 text-muted-foreground ring-1 ring-border'
                   )}
                 >
                   {complete ? 'Complete' : 'Action'}

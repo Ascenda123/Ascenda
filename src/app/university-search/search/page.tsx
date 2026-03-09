@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import { IntelligentSearchBar, Suggestion } from '@/components/university-search/IntelligentSearchBar';
 import { getBrowserSupabaseClient } from '@/lib/supabase/client';
 import { buildSearchResultsUrl, buildSuggestionResultsUrl } from '@/lib/university-search/search-params';
+import { StudentWorkspaceDock } from '@/components/layout/student-workspace-dock';
 
 const DEFAULT_FILTER_GROUPS = [
   {
@@ -125,7 +126,17 @@ export default function UniversitySearchPage() {
 
   return (
     <div className="space-y-8">
-      <section className="relative z-20 rounded-[32px] border border-border bg-gradient-to-br from-background to-muted/70 p-8 shadow-[0_30px_60px_rgba(15,23,42,0.08)]">
+      <StudentWorkspaceDock
+        current="search"
+        metrics={{
+          dashboard: { value: 'Dashboard', detail: 'return to your active priorities' },
+          matches: { value: 'Matches', detail: 'review recommended programs first' },
+          applications: { value: 'Planner', detail: 'track anything you shortlist' },
+          profile: { value: 'Profile', detail: 'better inputs improve search quality' },
+          search: { value: `${selectedFilters.size}`, detail: selectedFilters.size ? 'filters currently selected' : 'start with a broad scan' }
+        }}
+      />
+      <section className="surface-stage relative z-20 rounded-[32px] p-8">
         <div className="absolute inset-0 overflow-hidden rounded-[32px]">
           <AnimatedBlobBanner className="opacity-80" />
         </div>
@@ -140,7 +151,7 @@ export default function UniversitySearchPage() {
             </div>
             <form
               onSubmit={handleSubmit}
-              className="space-y-3 rounded-[28px] border border-border bg-card/90 p-4 shadow-[0_20px_45px_rgba(15,23,42,0.08)] backdrop-blur"
+              className="surface-stat space-y-3 rounded-[28px] p-4"
             >
               <label htmlFor="search-keyword" className="text-xs font-semibold uppercase tracking-[0.35em] text-muted-foreground">
                 universities or courses
@@ -173,7 +184,7 @@ export default function UniversitySearchPage() {
           {filterGroups.map((group) => (
             <div
               key={group.title}
-              className="surface-card surface-card--static space-y-3 bg-muted/70 p-5 shadow-none"
+              className="surface-subcard space-y-3 p-5 shadow-none"
             >
               <div className="space-y-1">
                 <p className="text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground">{group.title}</p>

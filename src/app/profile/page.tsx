@@ -12,6 +12,7 @@ import { SectionNav } from '@/components/layout/section-nav';
 import { ProfileProgressCard } from './_components/profile-progress-card';
 import { recalculateStudentScore, resubmitStudentProfile } from './actions';
 import { Compass, GraduationCap, MapPin, Target } from 'lucide-react';
+import { StudentWorkspaceDock } from '@/components/layout/student-workspace-dock';
 
 export const metadata: Metadata = {
   title: 'Profile | Ascenda'
@@ -148,9 +149,19 @@ export default async function ProfilePage() {
           </>
         }
       />
+      <StudentWorkspaceDock
+        current="profile"
+        metrics={{
+          dashboard: { value: 'Dashboard', detail: 'return to priorities and action items' },
+          matches: { value: typeof scores?.total_score === 'number' ? `${scores.total_score}` : 'Match', detail: 'profile score and recommendation quality' },
+          applications: { value: 'Planner', detail: 'deadlines use this data' },
+          profile: { value: `${completionPercent}%`, detail: nextStep ? nextStep.title : 'all sections complete' },
+          search: { value: 'Explore', detail: 'browse catalog with better context' }
+        }}
+      />
       <div className="mt-8 grid gap-8 lg:grid-cols-2">
-        <div className="relative overflow-hidden rounded-[32px] glass-panel p-8 shadow-2xl transition-all duration-300 hover:shadow-primary/5 group border border-white/10">
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/5 via-primary/5 to-emerald-400/5 opacity-50" aria-hidden />
+        <div className="surface-card surface-card--static relative rounded-[32px] p-8">
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-emerald-400/10 opacity-70" aria-hidden />
           <div className="relative z-10 flex items-start justify-between gap-4">
             <div className="space-y-1">
               <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Profile</p>
@@ -162,15 +173,15 @@ export default async function ProfilePage() {
             </div>
           </div>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
+            <div className="surface-subcard p-3">
               <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Country</p>
               <p className="text-sm font-semibold text-foreground">{personal?.resident_country || 'Add home country'}</p>
             </div>
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
+            <div className="surface-subcard p-3">
               <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Time zone</p>
               <p className="text-sm font-semibold text-foreground">{personal?.time_zone || profile?.time_zone || 'Set time zone'}</p>
             </div>
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
+            <div className="surface-subcard p-3">
               <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Score</p>
               <p className="text-sm font-semibold text-foreground">
                 {typeof scores?.total_score === 'number' ? `${scores.total_score} • ${scores.student_band ?? 'Unbanded'}` : 'Not scored'}
@@ -184,14 +195,14 @@ export default async function ProfilePage() {
                 primaryClusters.map((cluster) => (
                   <span
                     key={cluster}
-                    className="inline-flex items-center gap-2 rounded-full bg-white/5 px-3 py-1 text-xs font-semibold text-foreground ring-1 ring-white/10"
+                    className="surface-chip"
                   >
                     <Compass className="h-3.5 w-3.5" />
                     {formatClusterLabel(cluster)}
                   </span>
                 ))
               ) : (
-                <span className="inline-flex items-center gap-2 rounded-full bg-white/5 px-3 py-1 text-xs font-semibold text-muted-foreground ring-1 ring-white/10">
+                <span className="surface-chip text-muted-foreground">
                   Add intended subjects
                 </span>
               )}
@@ -203,14 +214,14 @@ export default async function ProfilePage() {
               {secondaryClusters.slice(0, 2).map((cluster) => (
                 <span
                   key={cluster}
-                  className="inline-flex items-center gap-2 rounded-full bg-white/5 px-3 py-1 text-xs font-semibold text-foreground ring-1 ring-white/10"
+                  className="surface-chip"
                 >
                   <Target className="h-3.5 w-3.5" />
                   {formatClusterLabel(cluster)}
                 </span>
               ))}
               {!secondaryClusters.length ? (
-                <span className="inline-flex items-center gap-2 rounded-full bg-white/5 px-3 py-1 text-xs font-semibold text-muted-foreground ring-1 ring-white/10">
+                <span className="surface-chip text-muted-foreground">
                   Add secondary interests
                 </span>
               ) : null}
@@ -233,8 +244,8 @@ export default async function ProfilePage() {
           </div>
         </div>
         <div className="space-y-8">
-          <div className="relative overflow-hidden rounded-[32px] glass-panel p-6 shadow-xl border border-white/10 hover:shadow-primary/5 transition-all duration-300">
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/5 via-primary/5 to-emerald-400/5 opacity-50" aria-hidden />
+          <div className="surface-card relative rounded-[32px] p-6">
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-emerald-400/10 opacity-70" aria-hidden />
             <div className="relative z-10 flex items-start justify-between gap-4">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Lifestyle</p>
@@ -246,13 +257,13 @@ export default async function ProfilePage() {
               </div>
             </div>
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
-              <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+              <div className="surface-subcard p-3">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Teaching style</p>
                 <p className="text-sm font-semibold text-foreground">
                   {lifestyle?.teaching_style ? formatClusterLabel(lifestyle.teaching_style) : 'Add preference'}
                 </p>
               </div>
-              <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+              <div className="surface-subcard p-3">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Location type</p>
                 <p className="text-sm font-semibold text-foreground">
                   {lifestyle?.desired_location_type ? formatClusterLabel(lifestyle.desired_location_type) : 'Add preference'}
@@ -263,7 +274,7 @@ export default async function ProfilePage() {
               {(lifestyle?.extracurricular_interests ?? []).slice(0, 3).map((interest) => (
                 <span
                   key={interest}
-                  className="rounded-full bg-white/5 px-3 py-1 text-xs font-semibold text-foreground ring-1 ring-white/10"
+                  className="surface-chip"
                 >
                   {interest}
                 </span>
@@ -275,8 +286,8 @@ export default async function ProfilePage() {
               </Button>
             </div>
           </div>
-          <div className="relative overflow-hidden rounded-[32px] glass-panel p-6 shadow-xl border border-white/10 hover:shadow-primary/5 transition-all duration-300">
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/6 via-primary/5 to-emerald-400/6 opacity-50" aria-hidden />
+          <div className="surface-card relative rounded-[32px] p-6">
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-emerald-400/10 opacity-70" aria-hidden />
             <div className="relative z-10 flex items-start justify-between gap-4">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Academics</p>
@@ -294,19 +305,19 @@ export default async function ProfilePage() {
                 academicSignals.map((signal) => (
                   <span
                     key={signal}
-                    className="rounded-full bg-white/5 px-3 py-1 text-xs font-semibold text-foreground ring-1 ring-white/10"
+                    className="surface-chip"
                   >
                     {signal}
                   </span>
                 ))
               ) : (
-                <span className="rounded-full bg-white/5 px-3 py-1 text-xs font-semibold text-muted-foreground ring-1 ring-white/10">
+                <span className="surface-chip text-muted-foreground">
                   Add scores to sharpen matches
                 </span>
               )}
             </div>
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+              <div className="surface-subcard p-3">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">School</p>
                 <p className="text-sm font-semibold text-foreground">
                   {academicInput?.school_name ? academicInput.school_name : 'Add school name'}
@@ -315,18 +326,18 @@ export default async function ProfilePage() {
                   {academicInput?.school_country ? academicInput.school_country : 'Add school country'}
                 </p>
               </div>
-              <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+              <div className="surface-subcard p-3">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Graduation</p>
                 <p className="text-sm font-semibold text-foreground">
                   {academicInput?.graduation_year ? academicInput.graduation_year : 'Set graduation year'}
                 </p>
                 <p className="text-xs text-muted-foreground">{academicInput?.desired_start_date ?? 'Start date not set'}</p>
               </div>
-              <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+              <div className="surface-subcard p-3">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Top subjects</p>
                 <p className="text-sm font-semibold text-foreground">{subjectHighlights.join(' • ') || 'Add subjects'}</p>
               </div>
-              <div className="rounded-xl border border-white/10 bg-white/5 p-3">
+              <div className="surface-subcard p-3">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Admissions tests</p>
                 <p className="text-sm font-semibold text-foreground">{admissionsLabel}</p>
               </div>
@@ -347,8 +358,8 @@ export default async function ProfilePage() {
           nextStepTitle={nextStep?.title}
           stepCompletion={stepCompletion}
         />
-        <div className="relative overflow-hidden rounded-[32px] glass-panel p-8 text-sm text-muted-foreground shadow-xl border border-white/10 transition-all duration-300">
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/5 via-primary/5 to-emerald-400/5 opacity-60" aria-hidden />
+        <div className="surface-card surface-card--static relative rounded-[32px] p-8 text-sm text-muted-foreground">
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-emerald-400/10 opacity-70" aria-hidden />
           <div className="relative z-10">
             <p className="text-base font-semibold text-foreground">Why it matters</p>
             <ul className="mt-4 space-y-3 text-foreground/80">
@@ -364,8 +375,8 @@ export default async function ProfilePage() {
         </div>
       </div>
       <div className="mt-8">
-        <div className="relative overflow-hidden rounded-[32px] glass-panel p-8 text-sm text-muted-foreground shadow-xl border border-white/10 transition-all duration-300">
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/6 via-primary/8 to-emerald-400/8 opacity-60" aria-hidden />
+        <div className="surface-card surface-card--static relative rounded-[32px] p-8 text-sm text-muted-foreground">
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-emerald-400/10 opacity-70" aria-hidden />
           <div className="relative z-10 space-y-4">
             <div className="flex items-start justify-between gap-3">
               <div>
@@ -382,14 +393,14 @@ export default async function ProfilePage() {
                 outcomeHints.map((hint) => (
                   <li
                     key={hint.title}
-                    className="rounded-2xl border border-white/10 bg-white/5 px-3 py-3 shadow-[0_10px_30px_rgba(15,23,42,0.08)]"
+                    className="surface-subcard px-3 py-3"
                   >
                     <p className="text-sm font-semibold text-foreground">{hint.title}</p>
                     <p className="text-xs text-muted-foreground">{hint.detail}</p>
                   </li>
                 ))
               ) : (
-                <li className="rounded-2xl border border-white/10 bg-white/5 px-3 py-3 text-sm text-foreground">
+                <li className="surface-subcard px-3 py-3 text-sm text-foreground">
                   You&apos;ve unlocked the major boosts. Keep details current to stay optimized.
                 </li>
               )}

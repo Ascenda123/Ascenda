@@ -15,7 +15,7 @@ export const SectionNav = ({ items, getIsActive }: SectionNavProps) => {
   const searchParams = useSearchParams();
 
   return (
-    <nav className="flex flex-wrap items-center gap-3 rounded-[32px] border border-border bg-card px-4 py-3 shadow-[0_20px_45px_rgba(15,23,42,0.08)] transition-colors">
+    <nav className="surface-toolbar flex flex-wrap items-center gap-3 rounded-[32px]">
       {items.map((item) => {
         const active = getIsActive
           ? getIsActive(item, pathname, searchParams)
@@ -36,10 +36,10 @@ export const SectionNav = ({ items, getIsActive }: SectionNavProps) => {
             key={item.href}
             href={item.href}
             className={cn(
-              'rounded-full border px-4 py-2 text-sm font-semibold transition hover:bg-muted/80',
+              'nav-pill',
               active
-                ? 'border-primary bg-primary text-primary-foreground shadow-[0_10px_30px_rgba(15,23,42,0.25)]'
-                : 'border-transparent text-muted-foreground hover:text-foreground'
+                ? 'nav-pill-active'
+                : ''
             )}
           >
             {item.label}

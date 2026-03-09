@@ -14,6 +14,8 @@ import { TaskListPanel } from '@/components/dashboard/task-list-panel';
 import type { Database } from '@/lib/types/database';
 import { buildStepCompletion, isProfileComplete, ProfileRecordGroup } from '@/lib/profile/completion';
 import { PROFILE_STEPS } from '@/lib/profile/steps';
+import { CheckCircle2, Compass, Target, Zap } from 'lucide-react';
+import { StudentWorkspaceDock } from '@/components/layout/student-workspace-dock';
 
 type ChecklistRow = Database['public']['Tables']['application_checklist']['Row'];
 type DeadlineRow = Database['public']['Tables']['deadlines']['Row'];
@@ -234,6 +236,37 @@ export default async function DashboardPage() {
     { label: 'Match health', value: matchError ? '—' : averageMatchScore !== null ? `${averageMatchScore}%` : '-', detail: matchError ? 'Service unavailable' : matches.length ? `${matches[0].program.name}` : 'Finish profile to unlock' }
   ];
 
+  const pulseCards = [
+    {
+      label: 'Execution',
+      value: `${openTasks}`,
+      detail: openTasks === 1 ? 'open task to close' : 'open tasks in motion',
+      icon: CheckCircle2,
+      accentClass: 'text-emerald-600 bg-emerald-500/10 border-emerald-200/60'
+    },
+    {
+      label: 'Momentum',
+      value: `${dueSoonCount}`,
+      detail: dueSoonCount > 0 ? 'deadlines coming this week' : 'nothing pressing this week',
+      icon: Zap,
+      accentClass: 'text-amber-600 bg-amber-500/10 border-amber-200/60'
+    },
+    {
+      label: 'Tracked',
+      value: `${trackedProgramsCount}`,
+      detail: trackedProgramsCount > 0 ? 'programs on your radar' : 'build your shortlist',
+      icon: Compass,
+      accentClass: 'text-sky-600 bg-sky-500/10 border-sky-200/60'
+    },
+    {
+      label: 'Readiness',
+      value: `${completionPercent}%`,
+      detail: nextStep ? `${nextStep.title} is next` : 'profile fully ready',
+      icon: Target,
+      accentClass: 'text-violet-600 bg-violet-500/10 border-violet-200/60'
+    }
+  ];
+
   return (
     <DashboardShell>
       <PageHero
@@ -258,6 +291,35 @@ export default async function DashboardPage() {
       />
 
       <div className="space-y-6">
+        <StudentWorkspaceDock
+          current="dashboard"
+          metrics={{
+            dashboard: { value: heroHighlight, detail: 'Current operating state' },
+            matches: { value: matchError ? '—' : `${matches.length}`, detail: 'eligible matches ranked' },
+            applications: { value: `${trackedProgramsCount}`, detail: 'programs being tracked' },
+            profile: { value: `${completionPercent}%`, detail: nextStep ? nextStep.title : 'all sections complete' },
+            search: { value: 'Explore', detail: 'browse universities and courses' }
+          }}
+        />
+
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {pulseCards.map((card) => {
+            const Icon = card.icon;
+            return (
+              <div key={card.label} className="surface-stat flex items-center gap-4">
+                <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border ${card.accentClass}`}>
+                  <Icon className="h-5 w-5" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-2xl font-semibold text-foreground">{card.value}</p>
+                  <p className="text-[11px] uppercase tracking-[0.28em] text-muted-foreground">{card.label}</p>
+                  <p className="text-xs text-muted-foreground">{card.detail}</p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
         <DashboardOverview data={overviewPayload} />
 
         {deadlines.length > 0 ? (

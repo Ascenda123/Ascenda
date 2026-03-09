@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { StudentIntakeForm } from '../_components/StudentIntakeForm';
@@ -8,7 +7,8 @@ import { buildStepCompletion, isProfileComplete, type ProfileRecordGroup } from 
 import { AnimatedBlobBanner } from '@/components/animated-blob-banner';
 import { Button } from '@/components/ui/button';
 import { buildStudentProfilePayload } from '@/lib/scoring/student_score_loader';
-import { ArrowLeft, Home, LayoutDashboard, User, Download } from 'lucide-react';
+import { PageHero } from '@/components/layout/page-hero';
+import { Download, Home, User } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'Profile wizard | Ascenda'
@@ -97,18 +97,19 @@ export default async function ProfileWizardPage({ searchParams }: ProfileWizardP
             </a>
           </Button>
         </div>
-        <header className="text-center">
-          <p className="text-xs uppercase tracking-[0.6em] text-muted-foreground">Profile wizard</p>
-          <h1 className="mt-4 text-4xl font-semibold text-foreground">Let&apos;s build your profile</h1>
-          <p className="mx-auto mt-3 max-w-2xl text-sm text-muted-foreground">
-            We’ll use this information to personalize matches, recommendations, and counselor updates. You can always
-            tweak the details later.
-          </p>
-          {hasCompletedProfile ? (
-            <p className="mt-3 text-xs text-muted-foreground">You&apos;re already complete — update anything you need.</p>
-          ) : null}
-        </header>
-        <div className="rounded-[32px] glass-panel p-6 shadow-soft backdrop-blur">
+        <PageHero
+          eyebrow="Profile wizard"
+          title="Let&apos;s build your profile"
+          description="We’ll use this information to personalize matches, recommendations, and counselor updates. You can always tweak the details later."
+          highlight={hasCompletedProfile ? 'Profile complete' : `Step ${initialStep} ready`}
+          accent="Student setup"
+          stats={[
+            { label: 'Completed', value: `${Object.values(stepCompletion).filter(Boolean).length}/${PROFILE_STEPS.length}`, detail: 'Sections finished' },
+            { label: 'Current step', value: String(initialStep), detail: requestedStep?.title ?? nextStep?.title ?? 'Review details' },
+            { label: 'Status', value: hasCompletedProfile ? 'Ready' : 'In progress', detail: hasCompletedProfile ? 'Update anytime' : 'More detail improves matches' }
+          ]}
+        />
+        <div className="surface-card surface-card--static rounded-[32px] p-6">
           <StudentIntakeForm initialStep={initialStep} initialPayload={initialPayload} />
         </div>
       </div>

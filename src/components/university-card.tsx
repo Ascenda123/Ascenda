@@ -51,11 +51,19 @@ export function UniversityCard({
     return (
         <article
             className={cn(
-                'group relative flex h-full flex-col rounded-[24px] border bg-card/80 backdrop-blur-sm shadow-soft transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_-5px_rgba(0,0,0,0.1)] dark:bg-muted/20 dark:border-white/10 dark:shadow-none dark:hover:border-primary/50 dark:hover:bg-muted/30',
+                'group relative flex h-full flex-col overflow-hidden rounded-[28px] border bg-card/80 shadow-[0_22px_50px_-28px_rgba(15,23,42,0.38)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_28px_70px_-30px_rgba(15,23,42,0.42)] dark:bg-muted/20 dark:border-white/10 dark:shadow-none dark:hover:border-primary/50 dark:hover:bg-muted/30',
                 isSelected ? 'border-primary ring-1 ring-primary' : 'border-border',
                 variant === 'compact' ? 'p-4' : 'p-5'
             )}
         >
+            <span
+                className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(79,70,229,0.14),transparent_36%),radial-gradient(circle_at_bottom_right,rgba(16,185,129,0.1),transparent_32%)] opacity-80"
+                aria-hidden
+            />
+            <span
+                className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent"
+                aria-hidden
+            />
             {/* Selection Checkbox (Visible on hover or when selected) */}
             {onToggleSelect && (
                 <button
@@ -64,7 +72,7 @@ export function UniversityCard({
                         'absolute right-4 top-4 z-10 flex h-8 w-8 items-center justify-center rounded-full border transition-all',
                         isSelected
                             ? 'border-primary bg-primary text-primary-foreground'
-                            : 'border-border/60 bg-background/30 text-transparent opacity-0 backdrop-blur-[2px] group-hover:opacity-100 hover:border-primary/50'
+                            : 'border-border/60 bg-background/60 text-transparent opacity-0 backdrop-blur-[2px] group-hover:opacity-100 hover:border-primary/50'
                     )}
                     aria-label={isSelected ? 'Deselect' : 'Select for comparison'}
                 >
@@ -73,19 +81,22 @@ export function UniversityCard({
             )}
 
             {/* Header: Score & Location */}
-            <div className="flex items-start justify-between">
-                <div className={cn('flex items-center justify-center rounded-full ring-4', scoreColorClass, variant === 'compact' ? 'h-10 w-10' : 'h-12 w-12')}>
+            <div className="relative z-10 flex items-start justify-between">
+                <div className={cn('flex items-center justify-center rounded-[18px] border border-white/50 ring-4 shadow-[0_16px_30px_-20px_rgba(15,23,42,0.55)]', scoreColorClass, variant === 'compact' ? 'h-10 w-10' : 'h-12 w-12')}>
                     <span className={cn('font-bold', variant === 'compact' ? 'text-xs' : 'text-sm')}>
                         {scoreValue !== null ? `${scoreValue}%` : 'N/A'}
                     </span>
                 </div>
                 <div className="text-right">
-                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{location}</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">{location}</p>
+                    {tier ? (
+                        <p className="mt-1 text-xs font-semibold text-foreground/80">{tier} tier</p>
+                    ) : null}
                 </div>
             </div>
 
             {/* Content */}
-            <div className="mt-4 flex-1">
+            <div className="relative z-10 mt-4 flex-1">
                 <div className="flex items-center gap-3">
                     {logoUrl ? (
                         <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-border bg-black shadow-sm">
@@ -118,13 +129,13 @@ export function UniversityCard({
                         {highlights.slice(0, 3).map((highlight) => (
                             <span
                                 key={highlight}
-                                className="inline-flex items-center rounded-full border border-border bg-muted/30 px-2.5 py-0.5 text-[11px] font-medium text-muted-foreground"
+                                className="inline-flex items-center rounded-full border border-border/70 bg-background/70 px-2.5 py-1 text-[11px] font-medium text-foreground/80 shadow-sm"
                             >
                                 {highlight}
                             </span>
                         ))}
                         {highlights.length > 3 && (
-                            <span className="inline-flex items-center rounded-full border border-border bg-muted/30 px-2.5 py-0.5 text-[11px] font-medium text-muted-foreground">
+                            <span className="inline-flex items-center rounded-full border border-border/70 bg-background/70 px-2.5 py-1 text-[11px] font-medium text-muted-foreground shadow-sm">
                                 +{highlights.length - 3}
                             </span>
                         )}
@@ -155,7 +166,7 @@ export function UniversityCard({
             </div>
 
             {/* Actions */}
-            <div className="mt-6 grid grid-cols-2 gap-3">
+            <div className="relative z-10 mt-6 grid grid-cols-2 gap-3">
                 {actions ? (
                     actions
                 ) : (

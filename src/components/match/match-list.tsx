@@ -86,8 +86,8 @@ export const MatchList = ({ matches }: MatchListProps) => {
 
   return (
     <div className="space-y-8 pb-24">
-      <div className="glass-panel flex flex-wrap items-center justify-between gap-3 rounded-[24px] px-4 py-3">
-        <div className="flex flex-col gap-1">
+      <div className="surface-toolbar flex flex-wrap items-center justify-between gap-3">
+        <div className="relative z-10 flex flex-col gap-1">
           <p className="text-[11px] uppercase tracking-[0.35em] text-muted-foreground">
             {MATCHES_TEXT.list.headerEyebrow}
           </p>
@@ -95,30 +95,30 @@ export const MatchList = ({ matches }: MatchListProps) => {
             Showing {matches.length} program{matches.length === 1 ? '' : 's'} ranked by fit
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center gap-1 rounded-xl border border-border bg-background p-1 shadow-sm">
+        <div className="relative z-10 flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-1 rounded-2xl border border-border/70 bg-background/80 p-1.5 shadow-sm">
             {(['All', ...TIER_ORDER] as const).map((tier) => (
               <button
                 key={tier}
                 onClick={() => setSelectedTier(tier)}
                 className={cn(
-                  'px-3 py-1.5 text-xs font-medium rounded-lg transition-all capitalize',
+                  'rounded-xl px-3 py-1.5 text-xs font-medium capitalize transition-all',
                   selectedTier === tier
-                    ? 'bg-primary text-primary-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                    ? 'bg-primary text-primary-foreground shadow-[0_12px_24px_-14px_rgba(79,70,229,0.8)]'
+                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                 )}
               >
                 {tier}
               </button>
             ))}
           </div>
-          <div className="flex items-center gap-1 rounded-xl border border-border bg-background p-1 shadow-sm">
+          <div className="flex items-center gap-1 rounded-2xl border border-border/70 bg-background/80 p-1.5 shadow-sm">
             <button
               onClick={() => setViewMode('grid')}
               className={cn(
-                'flex h-8 w-8 items-center justify-center rounded-lg transition-all',
+                'flex h-8 w-8 items-center justify-center rounded-xl transition-all',
                 viewMode === 'grid'
-                  ? 'bg-muted text-foreground shadow-sm'
+                  ? 'bg-primary/10 text-primary shadow-sm'
                   : 'text-muted-foreground hover:text-foreground'
               )}
               aria-label="Grid view"
@@ -128,9 +128,9 @@ export const MatchList = ({ matches }: MatchListProps) => {
             <button
               onClick={() => setViewMode('list')}
               className={cn(
-                'flex h-8 w-8 items-center justify-center rounded-lg transition-all',
+                'flex h-8 w-8 items-center justify-center rounded-xl transition-all',
                 viewMode === 'list'
-                  ? 'bg-muted text-foreground shadow-sm'
+                  ? 'bg-primary/10 text-primary shadow-sm'
                   : 'text-muted-foreground hover:text-foreground'
               )}
               aria-label="List view"
@@ -151,7 +151,7 @@ export const MatchList = ({ matches }: MatchListProps) => {
             selectedTier === 'All' || matches.length ? (
               <motion.div
                 key={tier}
-                className="space-y-5 rounded-[32px] border border-border bg-card p-6 shadow-[0_24px_50px_rgba(15,23,42,0.08)] transition-colors"
+                className="surface-stage space-y-5"
                 variants={tierCardVariants}
                 initial="hidden"
                 whileInView="show"
@@ -160,7 +160,7 @@ export const MatchList = ({ matches }: MatchListProps) => {
                 <div className="flex flex-col gap-2 border-b border-border pb-3">
                   <div className="flex items-center justify-between gap-4">
                     <p className="text-xs uppercase tracking-[0.35em] text-muted-foreground">Tier</p>
-                    <span className="rounded-full border border-border bg-muted px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-foreground">
+                    <span className="surface-chip uppercase tracking-[0.3em]">
                       {tier}
                     </span>
                   </div>

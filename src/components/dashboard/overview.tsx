@@ -40,7 +40,7 @@ export const DashboardOverview = ({ data }: { data: OverviewPayload }) => {
   const focusList = data.focusItems.slice(0, 4);
 
   return (
-    <section className="surface-card surface-card--static space-y-8 text-foreground">
+    <section className="surface-stage space-y-8 text-foreground">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="space-y-1">
           <p className="text-xs uppercase tracking-[0.35em] text-muted-foreground">Overview</p>
@@ -57,7 +57,7 @@ export const DashboardOverview = ({ data }: { data: OverviewPayload }) => {
               <Link key={card.id} href={card.href} className="group block h-full" aria-label={card.label}>
                 <div
                   className={cn(
-                    'h-full rounded-[20px] border p-5 text-foreground shadow-[0_25px_60px_-40px_rgba(0,0,0,0.35)] transition-all duration-300 group-hover:-translate-y-0.5 group-hover:shadow-[0_30px_70px_-45px_rgba(0,0,0,0.38)]',
+                    'surface-stat h-full p-5 text-foreground group-hover:-translate-y-0.5',
                     toneClass(card.tone)
                   )}
                 >
@@ -70,7 +70,7 @@ export const DashboardOverview = ({ data }: { data: OverviewPayload }) => {
               <div
                 key={card.id}
                 className={cn(
-                  'h-full rounded-[20px] border p-5 text-foreground shadow-[0_25px_60px_-40px_rgba(0,0,0,0.35)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_30px_70px_-45px_rgba(0,0,0,0.38)]',
+                  'surface-stat h-full p-5 text-foreground hover:-translate-y-0.5',
                   toneClass(card.tone)
                 )}
               >
@@ -82,7 +82,7 @@ export const DashboardOverview = ({ data }: { data: OverviewPayload }) => {
           )}
         </div>
 
-        <div className="rounded-[24px] border border-border bg-card/80 p-5 shadow-[0_30px_80px_-60px_rgba(0,0,0,0.4)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_35px_90px_-60px_rgba(0,0,0,0.45)]">
+        <div className="surface-stat rounded-[24px] p-5 hover:-translate-y-0.5">
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="text-sm font-semibold text-foreground">Focus radar</p>
@@ -91,14 +91,14 @@ export const DashboardOverview = ({ data }: { data: OverviewPayload }) => {
           </div>
           <ul className="mt-4 space-y-4">
             {focusList.map((item) => (
-              <li key={item.id} className="rounded-2xl border border-border bg-muted/60 p-4 shadow-sm transition-all duration-300 hover:-translate-y-0.5">
+              <li key={item.id} className="surface-subcard p-4 transition-all duration-300 hover:-translate-y-0.5">
                 <p className="text-[11px] uppercase tracking-[0.3em] text-muted-foreground">{item.label}</p>
                 <p className="text-base font-semibold text-foreground">{item.title}</p>
                 <p className="helper-text">{item.detail}</p>
               </li>
             ))}
             {focusList.length === 0 ? (
-              <li className="rounded-2xl border border-border bg-muted/60 p-4 text-sm text-muted-foreground">
+              <li className="surface-subcard p-4 text-sm text-muted-foreground">
                 Nothing urgent right now. Keep logging progress or add programs to reveal new actions.
               </li>
             ) : null}

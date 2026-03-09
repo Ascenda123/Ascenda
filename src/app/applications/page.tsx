@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import { SectionNav } from '@/components/layout/section-nav';
 import { PLANNER_SECTION_ITEMS } from '@/components/layout/navigation';
+import { StudentWorkspaceDock } from '@/components/layout/student-workspace-dock';
 
 export const metadata: Metadata = {
   title: 'Applications | Ascenda'
@@ -318,11 +319,21 @@ export default async function ApplicationsPage() {
       />
 
       <div className="space-y-8">
+        <StudentWorkspaceDock
+          current="applications"
+          metrics={{
+            dashboard: { value: `${dailySummary.tasks}`, detail: 'tasks due today' },
+            matches: { value: 'Matches', detail: 'send strong options to planner' },
+            applications: { value: `${appRecords.length}`, detail: 'active applications tracked' },
+            profile: { value: 'Profile', detail: 'keep requirements accurate' },
+            search: { value: 'Search', detail: 'discover more programs' }
+          }}
+        />
         <ApplicationPriorityBoard items={priorityItems} />
         <PlannerCalendar events={plannerEvents} />
         <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
           <RequirementTracker items={requirementItems} />
-          <div className="space-y-4 rounded-[32px] border border-border bg-card p-6 shadow-[0_15px_40px_rgba(15,23,42,0.08)] transition-colors">
+          <div className="surface-stage space-y-4">
             <div>
               <p className="text-sm font-semibold text-foreground">Today’s focus</p>
               <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
@@ -336,18 +347,18 @@ export default async function ApplicationsPage() {
         </div>
 
         <div className="grid gap-6 lg:grid-cols-3">
-          <div className="space-y-4 rounded-[28px] border border-border bg-card p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)] transition-colors">
+          <div className="surface-stage space-y-4 rounded-[28px]">
             <h2 className="text-2xl font-semibold text-foreground">Upload documents</h2>
             <DocumentUploader applicationId={appRecords[0]?.id ?? null} />
           </div>
           <SignalCenter signals={signalItems} />
-          <div className="space-y-4 rounded-[28px] border border-border bg-card p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)] transition-colors">
+          <div className="surface-stage space-y-4 rounded-[28px]">
             <h2 className="text-2xl font-semibold text-foreground">Upcoming deadlines</h2>
             <DeadlineTimeline items={timelineItems} />
           </div>
         </div>
 
-        <section className="space-y-4 rounded-[28px] border border-border bg-card p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)] transition-colors">
+        <section className="surface-stage space-y-4 rounded-[28px]">
           <div className="flex items-center justify-between gap-4">
             <div>
               <p className="text-[11px] uppercase tracking-[0.4em] text-muted-foreground">Just in case</p>
@@ -359,7 +370,7 @@ export default async function ApplicationsPage() {
             {resourceHighlights.map((resource) => (
               <article
                 key={resource.id}
-                className="flex min-h-[180px] flex-col justify-between gap-3 rounded-2xl border border-border bg-muted/60 p-4 transition-colors"
+                className="surface-subcard flex min-h-[180px] flex-col justify-between gap-3 transition-colors"
               >
                 <div>
                   <p className="text-[11px] uppercase tracking-[0.4em] text-muted-foreground">{resource.tag}</p>
@@ -379,7 +390,7 @@ export default async function ApplicationsPage() {
           </div>
         </section>
 
-        <div className="rounded-[28px] border border-border bg-card p-6 text-sm text-muted-foreground shadow-[0_18px_50px_rgba(15,23,42,0.08)] transition-colors">
+        <div className="surface-stage rounded-[28px] p-6 text-sm text-muted-foreground">
           {appRecords.length > 0 ? (
             <ul className="space-y-2">
               {appRecords.map((app) => (

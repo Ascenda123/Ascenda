@@ -173,14 +173,14 @@ export function FilterBar({
         <div
             ref={containerRef}
             className={cn(
-                'glass-panel mb-6 flex flex-col gap-4 rounded-[24px] p-4 md:gap-5',
+                'surface-toolbar mb-6 flex flex-col gap-4 rounded-[24px] p-4 md:gap-5',
                 {
                     'sticky top-4 z-20': isSticky,
                     'relative z-0': !isSticky
                 }
             )}
         >
-            <div className="flex flex-col gap-3">
+            <div className="relative z-10 flex flex-col gap-3">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
                     <form
                         className="relative w-full sm:max-w-xl lg:max-w-2xl"
@@ -203,12 +203,12 @@ export function FilterBar({
                             {resultCount} result{resultCount !== 1 && 's'}
                         </span>
                         {showViewToggle ? (
-                            <div className="flex items-center rounded-xl border border-border bg-background p-1 shadow-sm">
+                            <div className="flex items-center rounded-2xl border border-border/70 bg-background/80 p-1.5 shadow-sm">
                                 <button
                                     onClick={() => onViewModeChange('grid')}
                                     className={cn(
-                                        'flex h-8 w-8 items-center justify-center rounded-lg transition-all',
-                                        viewMode === 'grid' ? 'bg-muted text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                                        'flex h-8 w-8 items-center justify-center rounded-xl transition-all',
+                                        viewMode === 'grid' ? 'bg-primary/10 text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'
                                     )}
                                     aria-label="Grid view"
                                 >
@@ -217,8 +217,8 @@ export function FilterBar({
                                 <button
                                     onClick={() => onViewModeChange('list')}
                                     className={cn(
-                                        'flex h-8 w-8 items-center justify-center rounded-lg transition-all',
-                                        viewMode === 'list' ? 'bg-muted text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                                        'flex h-8 w-8 items-center justify-center rounded-xl transition-all',
+                                        viewMode === 'list' ? 'bg-primary/10 text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'
                                     )}
                                     aria-label="List view"
                                 >

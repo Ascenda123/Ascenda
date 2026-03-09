@@ -14,6 +14,7 @@ import { getFitScoreVisuals } from '@/lib/theme/fit-score';
 import { cn } from '@/lib/utils';
 import { TrackProgramButton } from '@/components/programs/track-program-button';
 import { ACTION_TEXT, MATCHES_TEXT } from '@/lib/constants/text';
+import { StudentWorkspaceDock } from '@/components/layout/student-workspace-dock';
 
 export const metadata: Metadata = {
   title: 'Match suggestions | Ascenda'
@@ -133,9 +134,19 @@ export default async function MatchesPage() {
           </>
         }
       />
+      <StudentWorkspaceDock
+        current="matches"
+        metrics={{
+          dashboard: { value: 'Command', detail: 'priorities and deadlines' },
+          matches: { value: `${enriched.length}`, detail: 'ranked programs available' },
+          applications: { value: topMatch ? 'Track' : 'Planner', detail: topMatch ? 'save top programs to planner' : 'build your plan' },
+          profile: { value: 'Profile', detail: 'refine your fit signals' },
+          search: { value: 'Catalog', detail: 'expand beyond recommendations' }
+        }}
+      />
       {topMatch ? (
-        <div className="glass-panel sticky top-4 z-10 mb-4 rounded-[24px] p-4 shadow-[0_18px_45px_rgba(15,23,42,0.12)]">
-          <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="surface-toolbar sticky top-4 z-10 mb-4 rounded-[24px] p-4">
+          <div className="relative z-10 flex flex-wrap items-center justify-between gap-3">
             <div className="flex flex-col gap-1">
               <p className="text-[11px] uppercase tracking-[0.35em] text-muted-foreground">
                 {MATCHES_TEXT.topSnapshot.eyebrow}
