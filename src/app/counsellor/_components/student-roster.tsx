@@ -12,6 +12,9 @@ interface StudentRosterProps {
   students: CounsellorStudent[];
   externalFilter?: DashboardFilter;
   onClearExternalFilter?: () => void;
+  initialProgramme?: 'IB' | 'A_LEVEL';
+  initialField?: string;
+  initialFlagFilter?: 'flagged';
 }
 
 type SortKey = 'name' | 'completion' | 'matchScore' | 'lastActive';
@@ -36,12 +39,12 @@ function getAvgScore(s: CounsellorStudent) {
   return s.matches.reduce((acc, m) => acc + m.score, 0) / s.matches.length;
 }
 
-export const StudentRoster = ({ students, externalFilter, onClearExternalFilter }: StudentRosterProps) => {
+export const StudentRoster = ({ students, externalFilter, onClearExternalFilter, initialProgramme, initialFlagFilter }: StudentRosterProps) => {
   const [query, setQuery] = useState('');
   const [sortKey, setSortKey] = useState<SortKey>('name');
-  const [programme, setProgramme] = useState<ProgrammeFilter>('all');
-  const [flagFilter, setFlagFilter] = useState<FlagFilter>('all');
-  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [programme, setProgramme] = useState<ProgrammeFilter>(initialProgramme ?? 'all');
+  const [flagFilter, setFlagFilter] = useState<FlagFilter>(initialFlagFilter ?? 'all');
+  const [filtersOpen, setFiltersOpen] = useState(!!(initialProgramme || initialFlagFilter));
 
   const filtered = useMemo(() => {
     let list = [...students];

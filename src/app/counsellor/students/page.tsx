@@ -1,10 +1,15 @@
 import { PageHero } from '@/components/layout/page-hero';
 import { DUMMY_STUDENTS, getCohortStats } from '@/lib/data/counsellor-dummy-data';
-import { StudentRoster } from '../_components/student-roster';
+import { StudentsPageClient } from './_students-page-client';
 
 const stats = getCohortStats();
 
-export default function CounsellorStudentsPage() {
+interface Props {
+  searchParams: Promise<{ stage?: string; tier?: string; programme?: string; field?: string; filter?: string }>;
+}
+
+export default async function CounsellorStudentsPage({ searchParams }: Props) {
+  const params = await searchParams;
   const flagged = DUMMY_STUDENTS.filter((s) => s.flags.length > 0).length;
   const complete = DUMMY_STUDENTS.filter((s) => s.profile.completionPct === 100).length;
 
@@ -23,7 +28,14 @@ export default function CounsellorStudentsPage() {
           { label: 'Avg Completion', value: `${stats.avgCompletion}%`, detail: 'Across all students' }
         ]}
       />
-      <StudentRoster students={DUMMY_STUDENTS} />
+      <StudentsPageClient
+        students={DUMMY_STUDENTS}
+        initialStage={params.stage}
+        initialTier={params.tier}
+        initialProgramme={params.programme}
+        initialField={params.field}
+        initialFlagFilter={params.filter === 'flagged' ? 'flagged' : undefined}
+      />
     </div>
   );
 }

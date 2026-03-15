@@ -1,3 +1,7 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -13,6 +17,36 @@ interface TaskListProps {
   tasks: TaskItem[];
   onToggle?: (id: string) => void;
   disabled?: boolean;
+}
+
+const listStagger = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.06 } }
+};
+
+const taskVariant = {
+  hidden: { opacity: 0, y: 10 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.3, ease: 'easeOut' as const } },
+  exit: { opacity: 0, x: 20, transition: { duration: 0.2 } }
+};
+
+function AnimatedProgress({ value }: { value: number }) {
+  const [width, setWidth] = useState(0);
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setWidth(value));
+    return () => cancelAnimationFrame(id);
+  }, [value]);
+
+  return (
+    <div className="h-1.5 rounded-full bg-muted/60" aria-hidden>
+      <motion.div
+        className="h-1.5 rounded-full bg-primary"
+        initial={{ width: 0 }}
+        animate={{ width: `${width}%` }}
+        transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] as const }}
+      />
+    </div>
+  );
 }
 
 export const TaskList = ({ title, tasks, onToggle, disabled }: TaskListProps) => {
@@ -41,44 +75,58 @@ export const TaskList = ({ title, tasks, onToggle, disabled }: TaskListProps) =>
           </Button>
         </div>
       </div>
-      <div className="h-1.5 rounded-full bg-muted/60" aria-hidden>
-        <div className="h-1.5 rounded-full bg-primary transition-all" style={{ width: `${progress}%` }} />
-      </div>
-      <div className="space-y-3">
-        {tasks.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-border/70 bg-background px-4 py-3 text-sm text-muted-foreground">
-            No tasks yet—add programs to generate a checklist.
-          </div>
-        ) : (
-          tasks.map((task) => (
-            <article
-              key={task.id}
-              className={cn(
-                'relative flex flex-col gap-2 rounded-2xl border px-4 py-3 text-foreground transition hover:translate-x-1 hover:shadow-[0_10px_30px_rgba(15,23,42,0.08)]',
-                statusTone[task.status]
-              )}
+      <AnimatedProgress value={progress} />
+      <motion.div
+        className="space-y-3"
+        variants={listStagger}
+        initial="hidden"
+        animate="show"
+      >
+        <AnimatePresence mode="popLayout">
+          {tasks.length === 0 ? (
+            <motion.div
+              key="empty"
+              className="rounded-2xl border border-dashed border-border/70 bg-background px-4 py-3 text-sm text-muted-foreground"
+              variants={taskVariant}
+              initial="hidden"
+              animate="show"
+              exit="exit"
             >
-              <div className="flex items-center justify-between gap-3">
-                <p className="text-sm font-semibold text-foreground">{task.name}</p>
-                {onToggle ? (
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant={task.status === 'done' ? 'secondary' : 'outline'}
-                    onClick={() => onToggle(task.id)}
-                    disabled={disabled}
-                  >
-                    {task.status === 'done' ? 'Undo' : 'Mark done'}
-                  </Button>
-                ) : (
-                  <span className="text-xs uppercase tracking-[0.3em] text-muted-foreground">{task.status}</span>
+              No tasks yet—add programs to generate a checklist.
+            </motion.div>
+          ) : (
+            tasks.map((task) => (
+              <motion.article
+                key={task.id}
+                className={cn(
+                  'relative flex flex-col gap-2 rounded-2xl border px-4 py-3 text-foreground transition hover:translate-x-1 hover:shadow-[0_10px_30px_rgba(15,23,42,0.08)]',
+                  statusTone[task.status]
                 )}
-              </div>
-              {task.dueDate ? <p className="text-xs font-semibold text-muted-foreground">Live due date · {task.dueDate}</p> : null}
-            </article>
-          ))
-        )}
-      </div>
+                variants={taskVariant}
+                layout
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <p className={cn('text-sm font-semibold text-foreground transition-all', task.status === 'done' && 'line-through opacity-60')}>{task.name}</p>
+                  {onToggle ? (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant={task.status === 'done' ? 'secondary' : 'outline'}
+                      onClick={() => onToggle(task.id)}
+                      disabled={disabled}
+                    >
+                      {task.status === 'done' ? 'Undo' : 'Mark done'}
+                    </Button>
+                  ) : (
+                    <span className="text-xs uppercase tracking-[0.3em] text-muted-foreground">{task.status}</span>
+                  )}
+                </div>
+                {task.dueDate ? <p className="text-xs font-semibold text-muted-foreground">Live due date · {task.dueDate}</p> : null}
+              </motion.article>
+            ))
+          )}
+        </AnimatePresence>
+      </motion.div>
     </div>
   );
 };

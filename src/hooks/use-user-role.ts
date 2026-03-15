@@ -4,15 +4,17 @@ import { useEffect, useState } from 'react';
 import { getBrowserSupabaseClient } from '@/lib/supabase/client';
 
 export const useUserRole = () => {
-  const [role, setRole] = useState<string | null>(() => {
-    if (typeof window === 'undefined') return null;
-    // Session-selected role takes priority (set by /role-select, cleared on browser session end)
-    return sessionStorage.getItem('ascenda-session-role') ?? localStorage.getItem('ascenda-role') ?? null;
-  });
+  const [role, setRole] = useState<string | null>(null);
 
   useEffect(() => {
-    // If the user explicitly selected a role this session, don't overwrite it with the DB value
+    // Initialise from storage first (fast path, avoids nav flicker on subsequent loads)
     const sessionRole = sessionStorage.getItem('ascenda-session-role');
+    const localRole = localStorage.getItem('ascenda-role');
+    if (sessionRole || localRole) {
+      setRole(sessionRole ?? localRole);
+    }
+
+    // If the user explicitly selected a role this session, don't overwrite it with the DB value
     if (sessionRole) return;
 
     const supabase = getBrowserSupabaseClient();

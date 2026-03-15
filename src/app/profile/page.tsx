@@ -13,6 +13,7 @@ import { ProfileProgressCard } from './_components/profile-progress-card';
 import { recalculateStudentScore, resubmitStudentProfile } from './actions';
 import { Compass, GraduationCap, MapPin, Target } from 'lucide-react';
 import { StudentWorkspaceDock } from '@/components/layout/student-workspace-dock';
+import { AnimatedSection, AnimatedGrid, AnimatedGridItem } from '@/components/layout/animated-section';
 
 export const metadata: Metadata = {
   title: 'Profile | Ascenda'
@@ -159,8 +160,8 @@ export default async function ProfilePage() {
           search: { value: 'Explore', detail: 'browse catalog with better context' }
         }}
       />
-      <div className="mt-8 grid gap-8 lg:grid-cols-2">
-        <div className="surface-card surface-card--static relative rounded-[32px] p-8">
+      <AnimatedGrid className="mt-8 grid gap-8 lg:grid-cols-2">
+        <AnimatedGridItem className="surface-card surface-card--static relative rounded-[32px] p-8">
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-emerald-400/10 opacity-70" aria-hidden />
           <div className="relative z-10 flex items-start justify-between gap-4">
             <div className="space-y-1">
@@ -242,8 +243,8 @@ export default async function ProfilePage() {
               </Button>
             </form>
           </div>
-        </div>
-        <div className="space-y-8">
+        </AnimatedGridItem>
+        <AnimatedGridItem className="space-y-8">
           <div className="surface-card relative rounded-[32px] p-6">
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-emerald-400/10 opacity-70" aria-hidden />
             <div className="relative z-10 flex items-start justify-between gap-4">
@@ -348,9 +349,9 @@ export default async function ProfilePage() {
               </Button>
             </div>
           </div>
-        </div>
-      </div>
-      <div className="mt-8 grid gap-8 lg:grid-cols-[2fr,1fr]">
+        </AnimatedGridItem>
+      </AnimatedGrid>
+      <AnimatedGrid className="mt-8 grid gap-8 lg:grid-cols-[2fr,1fr]">
         <ProfileProgressCard
           completionPercent={completionPercent}
           completedCount={completedCount}
@@ -373,8 +374,8 @@ export default async function ProfilePage() {
             </p>
           </div>
         </div>
-      </div>
-      <div className="mt-8">
+      </AnimatedGrid>
+      <AnimatedSection className="mt-8" delay={0.1}>
         <div className="surface-card surface-card--static relative rounded-[32px] p-8 text-sm text-muted-foreground">
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-emerald-400/10 opacity-70" aria-hidden />
           <div className="relative z-10 space-y-4">
@@ -415,16 +416,18 @@ export default async function ProfilePage() {
             </div>
           </div>
         </div>
-      </div>
-      <div className="mt-8 rounded-[32px] border border-border bg-card p-8 text-muted-foreground shadow-2xl transition-all duration-300">
-        <p className="text-base font-semibold text-foreground">Profile complete</p>
-        <p className="mt-2 text-sm">
-          You&apos;ve already finished onboarding. You can revisit the wizard anytime if you need to update details.
-        </p>
-        <Button className="mt-6 rounded-xl px-8" size="sm" asChild>
-          <Link href="/profile/wizard">Open profile wizard</Link>
-        </Button>
-      </div>
+      </AnimatedSection>
+      <AnimatedSection className="mt-8" delay={0.15}>
+        <div className="rounded-[32px] border border-border bg-card p-8 text-muted-foreground shadow-2xl transition-all duration-300 hover:shadow-[0_20px_50px_rgba(15,23,42,0.12)]">
+          <p className="text-base font-semibold text-foreground">Profile complete</p>
+          <p className="mt-2 text-sm">
+            You&apos;ve already finished onboarding. You can revisit the wizard anytime if you need to update details.
+          </p>
+          <Button className="mt-6 rounded-xl px-8" size="sm" asChild>
+            <Link href="/profile/wizard">Open profile wizard</Link>
+          </Button>
+        </div>
+      </AnimatedSection>
     </DashboardShell>
   );
 }

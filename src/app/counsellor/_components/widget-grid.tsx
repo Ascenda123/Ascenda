@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   LayoutDashboard, AlertTriangle, TrendingUp, BarChart2,
-  Clock, Activity, PieChart, Trophy, X, SlidersHorizontal
+  Clock, Activity, PieChart, Trophy, X, SlidersHorizontal,
+  GripVertical, Maximize2, Minimize2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -22,21 +23,26 @@ export interface WidgetConfig {
   label: string;
   description: string;
   icon: typeof LayoutDashboard;
-  span?: 'full' | 'half';
 }
 
 export const WIDGET_CONFIGS: WidgetConfig[] = [
   { id: 'alerts', label: 'Student Alerts', description: 'Students needing attention', icon: AlertTriangle },
-  { id: 'funnel', label: 'Application Funnel', description: 'Application stage distribution', icon: TrendingUp, span: 'half' },
-  { id: 'matchDist', label: 'Match Distribution', description: 'Reach / Match / Safe breakdown', icon: BarChart2, span: 'half' },
+  { id: 'funnel', label: 'Application Funnel', description: 'Application stage distribution', icon: TrendingUp },
+  { id: 'matchDist', label: 'Match Distribution', description: 'Reach / Match / Safe breakdown', icon: BarChart2 },
   { id: 'deadlines', label: 'Upcoming Deadlines', description: 'Deadlines in the next 7 days', icon: Clock },
   { id: 'activity', label: 'Recent Activity', description: 'Latest counsellor notes and updates', icon: Activity },
-  { id: 'cohortBreakdown', label: 'Cohort Breakdown', description: 'Programme type and field distribution', icon: PieChart, span: 'full' },
+  { id: 'cohortBreakdown', label: 'Cohort Breakdown', description: 'Programme type and field distribution', icon: PieChart },
   { id: 'topStudents', label: 'Top Students', description: 'Ranked by average match score', icon: Trophy }
 ];
 
 const STORAGE_KEY = 'ascenda-counsellor-widgets';
+const STORAGE_KEY_ORDER = 'ascenda-counsellor-widgets-order';
+const STORAGE_KEY_SIZES = 'ascenda-counsellor-widgets-sizes';
 const DEFAULT_VISIBLE: WidgetId[] = ['alerts', 'funnel', 'matchDist', 'deadlines', 'activity', 'cohortBreakdown', 'topStudents'];
+const DEFAULT_SIZES: Record<WidgetId, 'normal' | 'wide'> = {
+  alerts: 'normal', funnel: 'normal', matchDist: 'normal',
+  deadlines: 'normal', activity: 'normal', cohortBreakdown: 'wide', topStudents: 'normal'
+};
 
 function loadPrefs(): WidgetId[] {
   if (typeof window === 'undefined') return DEFAULT_VISIBLE;
@@ -49,23 +55,63 @@ function loadPrefs(): WidgetId[] {
   return DEFAULT_VISIBLE;
 }
 
-function savePrefs(visible: WidgetId[]) {
+function loadOrder(): WidgetId[] {
+  if (typeof window === 'undefined') return DEFAULT_VISIBLE;
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(visible));
+    const stored = localStorage.getItem(STORAGE_KEY_ORDER);
+    if (!stored) return DEFAULT_VISIBLE;
+    const parsed = JSON.parse(stored) as WidgetId[];
+    if (Array.isArray(parsed)) return parsed;
   } catch { }
+  return DEFAULT_VISIBLE;
 }
 
+function loadSizes(): Record<WidgetId, 'normal' | 'wide'> {
+  if (typeof window === 'undefined') return DEFAULT_SIZES;
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY_SIZES);
+    if (!stored) return DEFAULT_SIZES;
+    const parsed = JSON.parse(stored);
+    if (parsed && typeof parsed === 'object') return { ...DEFAULT_SIZES, ...parsed };
+  } catch { }
+  return DEFAULT_SIZES;
+}
+
+function savePrefs(v: WidgetId[]) { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(v)); } catch { } }
+function saveOrder(v: WidgetId[]) { try { localStorage.setItem(STORAGE_KEY_ORDER, JSON.stringify(v)); } catch { } }
+function saveSizes(v: Record<WidgetId, 'normal' | 'wide'>) { try { localStorage.setItem(STORAGE_KEY_SIZES, JSON.stringify(v)); } catch { } }
+
+export type DragHandlers = {
+  onDragStart: (id: WidgetId) => void;
+  onDragOver: (e: React.DragEvent, id: WidgetId) => void;
+  onDrop: (id: WidgetId) => void;
+  onDragEnd: () => void;
+  dragOver: WidgetId | null;
+};
+
 interface WidgetGridProps {
-  children: (visibleWidgets: WidgetId[], removeWidget: (id: WidgetId) => void) => React.ReactNode;
+  children: (
+    visibleWidgets: WidgetId[],
+    removeWidget: (id: WidgetId) => void,
+    sizes: Record<WidgetId, 'normal' | 'wide'>,
+    toggleSize: (id: WidgetId) => void,
+    dragHandlers: DragHandlers
+  ) => React.ReactNode;
 }
 
 export const WidgetGrid = ({ children }: WidgetGridProps) => {
   const [visibleWidgets, setVisibleWidgets] = useState<WidgetId[]>(DEFAULT_VISIBLE);
+  const [order, setOrder] = useState<WidgetId[]>(DEFAULT_VISIBLE);
+  const [sizes, setSizes] = useState<Record<WidgetId, 'normal' | 'wide'>>(DEFAULT_SIZES);
   const [panelOpen, setPanelOpen] = useState(false);
   const [hydrated, setHydrated] = useState(false);
+  const [dragOver, setDragOver] = useState<WidgetId | null>(null);
+  const dragId = useRef<WidgetId | null>(null);
 
   useEffect(() => {
     setVisibleWidgets(loadPrefs());
+    setOrder(loadOrder());
+    setSizes(loadSizes());
     setHydrated(true);
   }, []);
 
@@ -77,14 +123,59 @@ export const WidgetGrid = ({ children }: WidgetGridProps) => {
     });
   };
 
+  const toggleSize = (id: WidgetId) => {
+    setSizes((prev) => {
+      const next = { ...prev, [id]: prev[id] === 'wide' ? 'normal' : 'wide' };
+      saveSizes(next);
+      return next;
+    });
+  };
+
+  const dragHandlers: DragHandlers = {
+    dragOver,
+    onDragStart: (id) => { dragId.current = id; },
+    onDragOver: (e, id) => {
+      e.preventDefault();
+      if (dragId.current && dragId.current !== id) setDragOver(id);
+    },
+    onDrop: (targetId) => {
+      const fromId = dragId.current;
+      dragId.current = null;
+      setDragOver(null);
+      if (!fromId || fromId === targetId) return;
+      setOrder((prev) => {
+        // Ensure all visible widgets are in the order array
+        const allIds = [...new Set([...prev, ...visibleWidgets])];
+        const next = [...allIds];
+        const fromIdx = next.indexOf(fromId);
+        const toIdx = next.indexOf(targetId);
+        if (fromIdx === -1 || toIdx === -1) return prev;
+        next.splice(fromIdx, 1);
+        next.splice(toIdx, 0, fromId);
+        saveOrder(next);
+        return next;
+      });
+    },
+    onDragEnd: () => {
+      dragId.current = null;
+      setDragOver(null);
+    }
+  };
+
   if (!hydrated) return null;
+
+  // Merge order with visible — preserve drag order, append newly added widgets at end
+  const orderedVisible = [
+    ...order.filter((id) => visibleWidgets.includes(id)),
+    ...visibleWidgets.filter((id) => !order.includes(id))
+  ];
 
   return (
     <div className="space-y-6">
       {/* Toolbar */}
       <div className="flex items-center justify-between">
         <p className="text-xs text-muted-foreground">
-          {visibleWidgets.length} of {WIDGET_CONFIGS.length} widgets visible
+          {visibleWidgets.length} of {WIDGET_CONFIGS.length} widgets · drag to reorder · resize with ⤢
         </p>
         <button
           onClick={() => setPanelOpen((o) => !o)}
@@ -154,7 +245,14 @@ export const WidgetGrid = ({ children }: WidgetGridProps) => {
             </div>
             <div className="mt-3 flex justify-end">
               <button
-                onClick={() => { setVisibleWidgets(DEFAULT_VISIBLE); savePrefs(DEFAULT_VISIBLE); }}
+                onClick={() => {
+                  setVisibleWidgets(DEFAULT_VISIBLE);
+                  setOrder(DEFAULT_VISIBLE);
+                  setSizes(DEFAULT_SIZES);
+                  savePrefs(DEFAULT_VISIBLE);
+                  saveOrder(DEFAULT_VISIBLE);
+                  saveSizes(DEFAULT_SIZES);
+                }}
                 className="text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
               >
                 Reset to defaults
@@ -166,7 +264,7 @@ export const WidgetGrid = ({ children }: WidgetGridProps) => {
 
       {/* Widget content */}
       <div className="min-h-0">
-        {children(visibleWidgets, toggleWidget)}
+        {children(orderedVisible, toggleWidget, sizes, toggleSize, dragHandlers)}
       </div>
     </div>
   );
@@ -178,12 +276,20 @@ export interface WidgetProps {
   description?: string;
   icon: typeof LayoutDashboard;
   onRemove: (id: WidgetId) => void;
+  onToggleSize?: (id: WidgetId) => void;
+  size?: 'normal' | 'wide';
   children: React.ReactNode;
   className?: string;
   index?: number;
+  dragHandlers?: DragHandlers;
 }
 
-export const Widget = ({ id, title, description, icon: Icon, onRemove, children, className, index = 0 }: WidgetProps) => {
+export const Widget = ({
+  id, title, description, icon: Icon, onRemove, onToggleSize, size = 'normal',
+  children, className, index = 0, dragHandlers
+}: WidgetProps) => {
+  const isDragOver = dragHandlers?.dragOver === id;
+
   return (
     <motion.div
       layout
@@ -191,10 +297,26 @@ export const Widget = ({ id, title, description, icon: Icon, onRemove, children,
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.97 }}
       transition={{ delay: index * 0.07, duration: 0.35 }}
-      className={cn('surface-card surface-card--static flex flex-col gap-4', className)}
+      draggable
+      onDragStart={() => dragHandlers?.onDragStart(id)}
+      onDragOver={(e) => dragHandlers?.onDragOver(e, id)}
+      onDrop={() => dragHandlers?.onDrop(id)}
+      onDragEnd={() => dragHandlers?.onDragEnd()}
+      className={cn(
+        'surface-card surface-card--static flex flex-col gap-4 transition-shadow duration-200',
+        isDragOver && 'ring-2 ring-primary ring-offset-2 shadow-lg scale-[1.01]',
+        size === 'wide' && 'md:col-span-2',
+        className
+      )}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2.5">
+          <div
+            className="flex h-8 w-8 cursor-grab items-center justify-center rounded-xl bg-muted/50 active:cursor-grabbing"
+            title="Drag to reorder"
+          >
+            <GripVertical className="h-4 w-4 text-muted-foreground" />
+          </div>
           <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10">
             <Icon className="h-4 w-4 text-primary" />
           </div>
@@ -203,13 +325,27 @@ export const Widget = ({ id, title, description, icon: Icon, onRemove, children,
             {description && <p className="text-xs text-muted-foreground">{description}</p>}
           </div>
         </div>
-        <button
-          onClick={() => onRemove(id)}
-          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border/60 text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive"
-          title="Remove widget"
-        >
-          <X className="h-3.5 w-3.5" />
-        </button>
+        <div className="flex items-center gap-1">
+          {onToggleSize && (
+            <button
+              onClick={() => onToggleSize(id)}
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border/60 text-muted-foreground transition hover:bg-muted/60 hover:text-foreground"
+              title={size === 'wide' ? 'Shrink widget' : 'Expand widget to full width'}
+            >
+              {size === 'wide'
+                ? <Minimize2 className="h-3.5 w-3.5" />
+                : <Maximize2 className="h-3.5 w-3.5" />
+              }
+            </button>
+          )}
+          <button
+            onClick={() => onRemove(id)}
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border/60 text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive"
+            title="Remove widget"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </div>
       </div>
       <div className="flex-1">{children}</div>
     </motion.div>

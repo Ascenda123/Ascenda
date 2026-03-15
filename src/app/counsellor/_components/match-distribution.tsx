@@ -5,6 +5,7 @@ interface MatchDistributionProps {
   tiers: CohortStats['matchTiers'];
   activeTier?: 'reach' | 'match' | 'safe' | null;
   onSelectTier?: (tier: 'reach' | 'match' | 'safe') => void;
+  onNavigateTier?: (tier: 'reach' | 'match' | 'safe') => void;
 }
 
 const TIERS = [
@@ -13,7 +14,7 @@ const TIERS = [
   { key: 'safe' as const, label: 'Safe', color: 'bg-emerald-500/80', text: 'text-emerald-600 dark:text-emerald-400', light: 'bg-emerald-500/10' }
 ];
 
-export const MatchDistribution = ({ tiers, activeTier, onSelectTier }: MatchDistributionProps) => {
+export const MatchDistribution = ({ tiers, activeTier, onSelectTier, onNavigateTier }: MatchDistributionProps) => {
   const total = tiers.reach + tiers.match + tiers.safe || 1;
 
   return (
@@ -65,6 +66,14 @@ export const MatchDistribution = ({ tiers, activeTier, onSelectTier }: MatchDist
                 <p className={`text-xl font-bold tabular-nums ${text}`}>{tiers[key]}</p>
                 <p className="text-xs font-semibold text-muted-foreground">{label}</p>
                 <p className="text-[11px] text-muted-foreground">{pct}%</p>
+                {onNavigateTier && tiers[key] > 0 && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onNavigateTier(key); }}
+                    className="mt-1 text-[10px] text-primary hover:underline underline-offset-2 font-medium"
+                  >
+                    View →
+                  </button>
+                )}
               </div>
             </div>
           );

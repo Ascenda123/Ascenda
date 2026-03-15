@@ -3,10 +3,11 @@
 import { useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { AlertTriangle, TrendingUp, BarChart2, Clock, Activity, PieChart, Trophy } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { PageHero } from '@/components/layout/page-hero';
 import { DUMMY_STUDENTS, getCohortStats, getUpcomingDeadlines, getRecentActivity, getFieldDistribution } from '@/lib/data/counsellor-dummy-data';
 import { WidgetGrid, Widget } from './_components/widget-grid';
-import type { WidgetId } from './_components/widget-grid';
+import type { WidgetId, DragHandlers } from './_components/widget-grid';
 import { StatsBar } from './_components/stats-bar';
 import { StudentAlerts } from './_components/student-alerts';
 import { ApplicationFunnel } from './_components/application-funnel';
@@ -44,43 +45,71 @@ const WIDGET_META: Record<WidgetId, { title: string; description: string }> = {
 
 export type DashboardFilter = { type: 'stage' | 'tier' | null; value: string | null };
 
-function renderWidget(
-  id: WidgetId,
-  index: number,
-  removeWidget: (id: WidgetId) => void,
-  filter: DashboardFilter,
-  setFilter: (f: DashboardFilter) => void
-) {
-  const icon = WIDGET_ICON_MAP[id];
-  const meta = WIDGET_META[id];
-
-  return (
-    <Widget key={id} id={id} title={meta.title} description={meta.description} icon={icon} onRemove={removeWidget} index={index}>
-      {id === 'alerts' && <StudentAlerts students={DUMMY_STUDENTS} />}
-      {id === 'funnel' && (
-        <ApplicationFunnel
-          funnel={stats.appFunnel}
-          activeStage={filter.type === 'stage' ? (filter.value as any) : null}
-          onSelectStage={(stage) => setFilter(filter.value === stage ? { type: null, value: null } : { type: 'stage', value: stage })}
-        />
-      )}
-      {id === 'matchDist' && (
-        <MatchDistribution
-          tiers={stats.matchTiers}
-          activeTier={filter.type === 'tier' ? (filter.value as any) : null}
-          onSelectTier={(tier) => setFilter(filter.value === tier ? { type: null, value: null } : { type: 'tier', value: tier })}
-        />
-      )}
-      {id === 'deadlines' && <DeadlineWidget deadlines={upcomingDeadlines} />}
-      {id === 'activity' && <ActivityFeed activity={recentActivity} />}
-      {id === 'cohortBreakdown' && <CohortBreakdown programmeBreakdown={stats.programmeBreakdown} fieldDistribution={fieldDistribution} />}
-      {id === 'topStudents' && <TopStudents students={DUMMY_STUDENTS} />}
-    </Widget>
-  );
-}
-
 export default function CounsellorOverviewPage() {
+  const router = useRouter();
   const [filter, setFilter] = useState<DashboardFilter>({ type: null, value: null });
+
+  function renderWidget(
+    id: WidgetId,
+    index: number,
+    removeWidget: (id: WidgetId) => void,
+    sizes: Record<WidgetId, 'normal' | 'wide'>,
+    toggleSize: (id: WidgetId) => void,
+    dragHandlers: DragHandlers
+  ) {
+    const icon = WIDGET_ICON_MAP[id];
+    const meta = WIDGET_META[id];
+    const size = sizes[id];
+
+    return (
+      <Widget
+        key={id}
+        id={id}
+        title={meta.title}
+        description={meta.description}
+        icon={icon}
+        onRemove={removeWidget}
+        onToggleSize={toggleSize}
+        size={size}
+        index={index}
+        dragHandlers={dragHandlers}
+      >
+        {id === 'alerts' && <StudentAlerts students={DUMMY_STUDENTS} />}
+        {id === 'funnel' && (
+          <ApplicationFunnel
+            funnel={stats.appFunnel}
+            activeStage={filter.type === 'stage' ? (filter.value as any) : null}
+            onSelectStage={(stage) =>
+              setFilter(filter.value === stage ? { type: null, value: null } : { type: 'stage', value: stage })
+            }
+            onNavigateStage={(stage) => router.push(`/counsellor/students?stage=${stage}`)}
+          />
+        )}
+        {id === 'matchDist' && (
+          <MatchDistribution
+            tiers={stats.matchTiers}
+            activeTier={filter.type === 'tier' ? (filter.value as any) : null}
+            onSelectTier={(tier) =>
+              setFilter(filter.value === tier ? { type: null, value: null } : { type: 'tier', value: tier })
+            }
+            onNavigateTier={(tier) => router.push(`/counsellor/students?tier=${tier}`)}
+          />
+        )}
+        {id === 'deadlines' && <DeadlineWidget deadlines={upcomingDeadlines} />}
+        {id === 'activity' && <ActivityFeed activity={recentActivity} />}
+        {id === 'cohortBreakdown' && (
+          <CohortBreakdown
+            programmeBreakdown={stats.programmeBreakdown}
+            fieldDistribution={fieldDistribution}
+            onNavigateProgramme={(prog) => router.push(`/counsellor/students?programme=${prog}`)}
+            onNavigateField={(field) => router.push(`/counsellor/students?field=${encodeURIComponent(field)}`)}
+          />
+        )}
+        {id === 'topStudents' && <TopStudents students={DUMMY_STUDENTS} />}
+      </Widget>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <PageHero
@@ -100,58 +129,33 @@ export default function CounsellorOverviewPage() {
       <StatsBar stats={stats} />
 
       <WidgetGrid>
-        {(visibleWidgets, removeWidget) => {
-          const spanned = new Set(['funnel', 'matchDist', 'cohortBreakdown']);
-          const half = visibleWidgets.filter((id) => id === 'funnel' || id === 'matchDist');
-          const full = visibleWidgets.filter((id) => id === 'cohortBreakdown');
-          const single = visibleWidgets.filter((id) => !spanned.has(id));
-
-          return (
-            <div className="space-y-6">
-              {/* Half-width pair: funnel + matchDist */}
-              {half.length > 0 && (
-                <div className={`grid gap-6 ${half.length === 2 ? 'md:grid-cols-2' : 'grid-cols-1'}`}>
-                  <AnimatePresence mode="popLayout">
-                    {half.map((id, idx) => renderWidget(id, idx, removeWidget, filter, setFilter))}
-                  </AnimatePresence>
-                </div>
-              )}
-
-              {/* Single-col widgets */}
-              {single.length > 0 && (
-                <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-                  <AnimatePresence mode="popLayout">
-                    {single.map((id, idx) => renderWidget(id, half.length + idx, removeWidget, filter, setFilter))}
-                  </AnimatePresence>
-                </div>
-              )}
-
-              {/* Full-width: cohortBreakdown */}
-              {full.length > 0 && (
-                <div className="grid grid-cols-1 gap-6">
-                  <AnimatePresence mode="popLayout">
-                    {full.map((id, idx) => renderWidget(id, half.length + single.length + idx, removeWidget, filter, setFilter))}
-                  </AnimatePresence>
-                </div>
-              )}
-
-              {/* Student Roster at the bottom */}
-              <div className="pt-4">
-                <div className="mb-6 flex items-center justify-between border-b border-border pb-4">
-                  <div>
-                    <h2 className="text-2xl font-semibold">Student Roster</h2>
-                    <p className="text-sm text-muted-foreground">Manage your cohort and track progress</p>
-                  </div>
-                </div>
-                <StudentRoster
-                  students={DUMMY_STUDENTS}
-                  externalFilter={filter}
-                  onClearExternalFilter={() => setFilter({ type: null, value: null })}
-                />
-              </div>
+        {(visibleWidgets, removeWidget, sizes, toggleSize, dragHandlers) => (
+          <div className="space-y-6">
+            {/* Responsive 2-col grid; wide widgets span 2 cols */}
+            <div className="grid gap-6 md:grid-cols-2 [&>*]:min-w-0">
+              <AnimatePresence mode="popLayout">
+                {visibleWidgets.map((id, idx) =>
+                  renderWidget(id, idx, removeWidget, sizes, toggleSize, dragHandlers)
+                )}
+              </AnimatePresence>
             </div>
-          );
-        }}
+
+            {/* Student Roster */}
+            <div className="pt-4">
+              <div className="mb-6 flex items-center justify-between border-b border-border pb-4">
+                <div>
+                  <h2 className="text-2xl font-semibold">Student Roster</h2>
+                  <p className="text-sm text-muted-foreground">Manage your cohort and track progress</p>
+                </div>
+              </div>
+              <StudentRoster
+                students={DUMMY_STUDENTS}
+                externalFilter={filter}
+                onClearExternalFilter={() => setFilter({ type: null, value: null })}
+              />
+            </div>
+          </div>
+        )}
       </WidgetGrid>
     </div>
   );

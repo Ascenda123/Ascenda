@@ -1,5 +1,6 @@
 'use client';
 
+import { motion } from 'framer-motion';
 import { ListPlus } from 'lucide-react';
 import { EmptyState } from '@/components/ui/empty-state';
 import { cn } from '@/lib/utils';
@@ -36,6 +37,16 @@ const STATUS_TONE = {
     'border border-emerald-200/60 bg-emerald-500/15 text-foreground ring-1 ring-emerald-300/50 dark:border-emerald-400/50 dark:bg-emerald-500/10 dark:text-foreground'
 };
 
+const boardStagger = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.09, delayChildren: 0.15 } }
+};
+
+const boardCard = {
+  hidden: { opacity: 0, y: 20, scale: 0.97 },
+  show: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.45, ease: 'easeOut' as const } }
+};
+
 export const ApplicationPriorityBoard = ({ items }: { items: PriorityItem[] }) => {
   if (items.length === 0) {
     return (
@@ -49,8 +60,13 @@ export const ApplicationPriorityBoard = ({ items }: { items: PriorityItem[] }) =
   }
 
   return (
-    <div className="surface-card surface-card--static space-y-5 rounded-[32px] p-6">
-      <header className="flex flex-wrap items-center justify-between gap-3">
+    <motion.div
+      className="surface-card surface-card--static space-y-5 rounded-[32px] p-6"
+      initial="hidden"
+      whileInView="show"
+      viewport={{ once: true, margin: '-60px' }}
+    >
+      <motion.header className="flex flex-wrap items-center justify-between gap-3" variants={boardCard}>
         <div>
           <h2 className="text-2xl font-semibold text-foreground">Application priorities</h2>
           <p className="text-sm text-muted-foreground">Fit score + scholarship weight + deadline intensity.</p>
@@ -58,10 +74,10 @@ export const ApplicationPriorityBoard = ({ items }: { items: PriorityItem[] }) =
         <div className="surface-chip px-4 py-1 uppercase tracking-[0.3em]">
           Live stack
         </div>
-      </header>
-      <div className="grid gap-4 md:grid-cols-2">
+      </motion.header>
+      <motion.div className="grid gap-4 md:grid-cols-2" variants={boardStagger}>
         {items.map((item) => (
-          <article
+          <motion.article
             key={item.id}
             className={cn(
               'group surface-subcard relative flex flex-col gap-4 overflow-hidden rounded-[28px] px-5 py-5 transition-all duration-300',
@@ -69,6 +85,7 @@ export const ApplicationPriorityBoard = ({ items }: { items: PriorityItem[] }) =
                 ? 'border-primary/40 bg-primary/5 ring-1 ring-primary/15 hover:-translate-y-1.5 hover:shadow-[0_24px_50px_-20px_rgba(79,70,229,0.35)]'
                 : 'hover:-translate-y-1'
             )}
+            variants={boardCard}
           >
             <span className="pointer-events-none absolute inset-0 rounded-[28px] bg-gradient-to-br from-primary/10 via-transparent to-emerald-500/10 opacity-70" aria-hidden />
             {item.priority === 'high' ? (
@@ -130,9 +147,9 @@ export const ApplicationPriorityBoard = ({ items }: { items: PriorityItem[] }) =
                 </span>
               ) : null}
             </div>
-          </article>
+          </motion.article>
         ))}
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 };

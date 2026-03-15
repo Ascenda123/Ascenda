@@ -5,6 +5,7 @@ interface ApplicationFunnelProps {
   funnel: CohortStats['appFunnel'];
   activeStage?: 'planning' | 'inProgress' | 'submitted' | 'decision' | null;
   onSelectStage?: (stage: 'planning' | 'inProgress' | 'submitted' | 'decision') => void;
+  onNavigateStage?: (stage: 'planning' | 'inProgress' | 'submitted' | 'decision') => void;
 }
 
 const STAGES = [
@@ -14,7 +15,7 @@ const STAGES = [
   { key: 'decision' as const, label: 'Decision', color: 'bg-emerald-500/15', text: 'text-emerald-700 dark:text-emerald-400', border: 'border-emerald-200/60 dark:border-emerald-500/30', active: 'ring-2 ring-emerald-500 ring-offset-2' }
 ];
 
-export const ApplicationFunnel = ({ funnel, activeStage, onSelectStage }: ApplicationFunnelProps) => {
+export const ApplicationFunnel = ({ funnel, activeStage, onSelectStage, onNavigateStage }: ApplicationFunnelProps) => {
   const total = Object.values(funnel).reduce((a, b) => a + b, 0) || 1;
   const maxVal = Math.max(...Object.values(funnel), 1);
 
@@ -38,7 +39,17 @@ export const ApplicationFunnel = ({ funnel, activeStage, onSelectStage }: Applic
           >
             <div className="flex items-center justify-between text-xs">
               <span className={cn("font-medium", isSelected ? "text-foreground font-bold" : "text-muted-foreground")}>{label}</span>
-              <span className={`font-bold ${text}`}>{count} <span className="font-normal text-muted-foreground">({pct}%)</span></span>
+              <div className="flex items-center gap-2">
+                <span className={`font-bold ${text}`}>{count} <span className="font-normal text-muted-foreground">({pct}%)</span></span>
+                {onNavigateStage && count > 0 && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onNavigateStage(key); }}
+                    className="text-[10px] text-primary hover:underline underline-offset-2 font-medium"
+                  >
+                    View →
+                  </button>
+                )}
+              </div>
             </div>
             <div className={cn(
               "h-7 overflow-hidden rounded-xl border border-border/50 bg-muted/40 transition-all",
