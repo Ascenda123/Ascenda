@@ -30,13 +30,13 @@ export const ImportPanel = () => {
       Papa.parse(file, {
         header: true,
         skipEmptyLines: true,
-        complete: async (result: any) => {
+        complete: async (result: { data: Record<string, unknown>[] }) => {
           setRowCount(result.data.length);
-          setRows(result.data as Record<string, unknown>[]);
+          setRows(result.data);
           setStatus(`Parsed ${result.data.length} rows for ${template}. Review & sync.`);
           showToast({ title: 'CSV parsed', description: `Parsed ${result.data.length} rows for ${template}.`, variant: 'success' });
         },
-        error: (parseError: any) => {
+        error: (parseError: Error) => {
           setStatus('Parsing failed');
           setError(parseError.message);
           showToast({ title: 'Parse failed', description: parseError.message, variant: 'error' });

@@ -370,7 +370,7 @@ export default async function ProfilePage() {
             </ul>
             <p className="mt-4 text-xs text-muted-foreground">
               Need help? Email <a className="underline" href="mailto:hello@ascenda.com">hello@ascenda.com</a> to reach a
-              counselor.
+              counsellor.
             </p>
           </div>
         </div>

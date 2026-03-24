@@ -58,16 +58,16 @@ export default function UniversitySearchPage() {
           return;
         }
 
-        const countries = uniqueSorted((universityData ?? []).map((uni: any) => uni.country));
+        const countries = uniqueSorted((universityData ?? []).map((uni) => uni.country));
         const lifestyle = uniqueSorted(
-          (universityData ?? []).flatMap((uni: any) => [uni.region, uni.city])
+          (universityData ?? []).flatMap((uni) => [uni.region, uni.city])
         );
         const subjects = uniqueSorted(
-          (programData ?? []).flatMap((program: any) => [program.field, program.study_level, program.level])
+          (programData ?? []).flatMap((program) => [program.field, program.study_level, program.level])
         );
         const fitFocus = uniqueSorted(
           (programData ?? [])
-            .map((program: any) => program.mode)
+            .map((program) => program.mode)
             .filter(Boolean),
           8
         );

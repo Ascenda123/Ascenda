@@ -172,7 +172,7 @@ export function HeroSection() {
                     transition={{ duration: 16, repeat: Infinity, ease: 'easeInOut' }}
                 />
                 <Image
-                    src="/Ascenda Banner.png"
+                    src="/ascenda-banner.png"
                     alt="Ascenda hero banner"
                     fill
                     priority
@@ -251,7 +251,7 @@ export function HeroSection() {
                                             {typedHeadline || ' '}
                                             <span
                                                 aria-hidden
-                                                className={`ml-1 inline-block h-[1.1em] w-px bg-accent align-middle ${isTypingDone ? 'animate-pulse' : 'animate-pulse'
+                                                className={`ml-1 inline-block h-[1.1em] w-px bg-accent align-middle ${isTypingDone ? 'opacity-0 transition-opacity duration-700' : 'animate-pulse'
                                                     }`}
                                             />
                                         </span>
@@ -286,7 +286,7 @@ export function HeroSection() {
                                         variant="outline"
                                         className="border-border bg-card/70 text-foreground hover:bg-muted/60"
                                     >
-                                        <Link href="/download">See product tour</Link>
+                                        <Link href="#features">See product tour</Link>
                                     </Button>
                                 </motion.div>
                                 <motion.ul

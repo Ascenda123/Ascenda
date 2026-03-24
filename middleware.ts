@@ -39,8 +39,8 @@ export async function middleware(req: NextRequest) {
   );
 
   const {
-    data: { session }
-  } = await supabase.auth.getSession();
+    data: { user }
+  } = await supabase.auth.getUser();
 
   const { pathname } = req.nextUrl;
   const isProtected = PROTECTED_PREFIXES.some((prefix) => pathname.startsWith(prefix));
@@ -54,12 +54,12 @@ export async function middleware(req: NextRequest) {
   };
 
   const getOnboardingStatus = async (response: NextResponse) => {
-    if (!session) {
+    if (!user) {
       return false;
     }
 
     const cachedUserId = req.cookies.get('onboarding_complete')?.value;
-    if (cachedUserId === session.user.id) {
+    if (cachedUserId === user.id) {
       return false;
     }
 
@@ -67,9 +67,9 @@ export async function middleware(req: NextRequest) {
     if (statusCookie) {
       const [userId, status, timestamp] = statusCookie.split(':');
       const ageMinutes = timestamp ? (Date.now() - Number(timestamp)) / (1000 * 60) : Number.POSITIVE_INFINITY;
-      if (userId === session.user.id) {
+      if (userId === user.id) {
         if (status === 'complete') {
-          response.cookies.set('onboarding_complete', session.user.id, {
+          response.cookies.set('onboarding_complete', user.id, {
             path: '/',
             maxAge: 60 * 60 * 24 * 30,
             httpOnly: true,
@@ -84,10 +84,10 @@ export async function middleware(req: NextRequest) {
     }
 
     const [personalResponse, academicResponse, lifestyleResponse, subjectsResponse] = await Promise.all([
-      supabase.from('student_personal_information').select('first_name,last_name,email,nationality,resident_country').eq('profile_id', session.user.id).maybeSingle(),
-      supabase.from('student_academic_input').select('programme_type,school_name,school_country,graduation_year,intended_clusters,english_required').eq('profile_id', session.user.id).maybeSingle(),
-      supabase.from('student_lifestyle_preference').select('extracurricular_interests').eq('profile_id', session.user.id).maybeSingle(),
-      supabase.from('student_subjects').select('id', { count: 'exact', head: true }).eq('profile_id', session.user.id)
+      supabase.from('student_personal_information').select('first_name,last_name,email,nationality,resident_country').eq('profile_id', user.id).maybeSingle(),
+      supabase.from('student_academic_input').select('programme_type,school_name,school_country,graduation_year,intended_clusters,english_required').eq('profile_id', user.id).maybeSingle(),
+      supabase.from('student_lifestyle_preference').select('extracurricular_interests').eq('profile_id', user.id).maybeSingle(),
+      supabase.from('student_subjects').select('id', { count: 'exact', head: true }).eq('profile_id', user.id)
     ]);
 
     const completionRecords = {
@@ -100,20 +100,20 @@ export async function middleware(req: NextRequest) {
     const needsOnboarding = !isProfileComplete(completionRecords);
 
     if (!needsOnboarding) {
-      response.cookies.set('onboarding_complete', session.user.id, {
+      response.cookies.set('onboarding_complete', user.id, {
         path: '/',
         maxAge: 60 * 60 * 24 * 30,
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production'
       });
-      response.cookies.set('onboarding_status', `${session.user.id}:complete:${Date.now()}`, {
+      response.cookies.set('onboarding_status', `${user.id}:complete:${Date.now()}`, {
         path: '/',
         maxAge: 60 * 60 * 24 * 7,
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production'
       });
     } else {
-      response.cookies.set('onboarding_status', `${session.user.id}:pending:${Date.now()}`, {
+      response.cookies.set('onboarding_status', `${user.id}:pending:${Date.now()}`, {
         path: '/',
         maxAge: 60 * 60 * 12,
         httpOnly: true,
@@ -124,7 +124,7 @@ export async function middleware(req: NextRequest) {
     return needsOnboarding;
   };
 
-  if (!session && isProtected) {
+  if (!user && isProtected) {
     const redirectUrl = req.nextUrl.clone();
     redirectUrl.pathname = '/login';
     redirectUrl.searchParams.set('redirectedFrom', pathname);
@@ -133,8 +133,8 @@ export async function middleware(req: NextRequest) {
     return redirectResponse;
   }
 
-  if (session && isAuthRoute) {
-    const { data: profile } = await supabase.from('profiles').select('role').eq('id', session.user.id).single();
+  if (user && isAuthRoute) {
+    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
     const role = profile?.role;
 
     const redirectUrl = req.nextUrl.clone();
@@ -155,8 +155,8 @@ export async function middleware(req: NextRequest) {
     return redirectResponse;
   }
 
-  if (session && isProtected && !pathname.startsWith('/profile') && !pathname.startsWith('/counsellor') && !pathname.startsWith('/role-select')) {
-    const { data: profile } = await supabase.from('profiles').select('role').eq('id', session.user.id).single();
+  if (user && isProtected && !pathname.startsWith('/profile') && !pathname.startsWith('/counsellor') && !pathname.startsWith('/role-select')) {
+    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
     const role = profile?.role;
 
     if (role !== 'counsellor') {

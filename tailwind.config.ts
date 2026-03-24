@@ -4,7 +4,7 @@ const {
   default: flattenColorPalette,
 } = require("tailwindcss/lib/util/flattenColorPalette");
 
-function addVariablesForColors({ addBase, theme }: any) {
+function addVariablesForColors({ addBase, theme }: { addBase: (styles: Record<string, Record<string, unknown>>) => void; theme: (path: string) => Record<string, string> }) {
   let allColors = flattenColorPalette(theme("colors"));
   let newVars = Object.fromEntries(
     Object.entries(allColors).map(([key, val]) => [`--${key}`, val])

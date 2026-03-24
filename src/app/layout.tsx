@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 import { Outfit, Inter } from 'next/font/google';
 import '@/app/globals.css';
@@ -22,9 +22,36 @@ const inter = Inter({
   display: 'swap',
 });
 
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: dark)', color: '#0a0a0a' }
+  ]
+};
+
 export const metadata: Metadata = {
-  title: 'Ascenda — Admissions studio for global students',
-  description: 'Plan essays, scholarships, and counselor updates in one playful workspace built for ambitious students.'
+  title: {
+    default: 'Ascenda — Admissions studio for global students',
+    template: '%s | Ascenda'
+  },
+  description: 'Plan essays, scholarships, and counselor updates in one playful workspace built for ambitious students.',
+  openGraph: {
+    title: 'Ascenda — Admissions studio for global students',
+    description: 'Plan essays, scholarships, and counselor updates in one playful workspace built for ambitious students.',
+    siteName: 'Ascenda',
+    type: 'website'
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Ascenda — Admissions studio for global students',
+    description: 'Plan essays, scholarships, and counselor updates in one playful workspace built for ambitious students.'
+  },
+  robots: {
+    index: true,
+    follow: true
+  }
 };
 
 export default function RootLayout({

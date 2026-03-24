@@ -86,7 +86,7 @@ export default async function StudentDetailPage({ params }: Props) {
               <h1 className="text-2xl font-bold text-foreground">
                 {student.personal.firstName} {student.personal.lastName}
               </h1>
-              <span className="text-2xl">{student.personal.flagEmoji}</span>
+              <span className="text-2xl" role="img" aria-label={`Flag of ${student.personal.nationality}`}>{student.personal.flagEmoji}</span>
               {student.flags.map((flag) => {
                 const cfg = FLAG_LABELS[flag];
                 return (
@@ -124,6 +124,7 @@ export default async function StudentDetailPage({ params }: Props) {
             {/* Message button */}
             <a
               href={`mailto:${student.personal.email}`}
+              aria-label={`Email ${student.personal.firstName} ${student.personal.lastName}`}
               className="flex items-center justify-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-2 text-sm font-semibold text-primary transition hover:-translate-y-0.5 hover:bg-primary/20"
             >
               <Mail className="h-4 w-4" />

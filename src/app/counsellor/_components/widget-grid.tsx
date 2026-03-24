@@ -208,6 +208,7 @@ export const WidgetGrid = ({ children }: WidgetGridProps) => {
               </div>
               <button
                 onClick={() => setPanelOpen(false)}
+                aria-label="Close widget panel"
                 className="flex h-8 w-8 items-center justify-center rounded-full border border-border hover:bg-muted/60"
               >
                 <X className="h-4 w-4 text-muted-foreground" />
@@ -329,6 +330,7 @@ export const Widget = ({
           {onToggleSize && (
             <button
               onClick={() => onToggleSize(id)}
+              aria-label={size === 'wide' ? `Shrink ${title} widget` : `Expand ${title} widget`}
               className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border/60 text-muted-foreground transition hover:bg-muted/60 hover:text-foreground"
               title={size === 'wide' ? 'Shrink widget' : 'Expand widget to full width'}
             >
@@ -340,6 +342,7 @@ export const Widget = ({
           )}
           <button
             onClick={() => onRemove(id)}
+            aria-label={`Remove ${title} widget`}
             className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border/60 text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive"
             title="Remove widget"
           >

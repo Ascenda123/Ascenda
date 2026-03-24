@@ -34,7 +34,7 @@ const fadeIn: Variants = {
 export function FeaturesSection() {
     const shouldReduceMotion = useReducedMotion();
     return (
-        <section className="section-fade w-full py-24 bg-secondary/40 sm:py-32">
+        <section id="features" className="section-fade w-full py-24 bg-secondary/40 sm:py-32">
             <div className="max-w-7xl mx-auto px-6 space-y-12">
                 <div className="max-w-3xl space-y-3">
                     <p className="text-sm font-medium uppercase tracking-widest text-primary/80">Why Ascenda</p>

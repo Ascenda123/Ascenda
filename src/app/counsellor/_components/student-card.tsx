@@ -126,7 +126,7 @@ export const StudentCard = ({ student, highlight = '' }: StudentCardProps) => {
             <p className="truncate font-semibold text-foreground group-hover:text-primary transition-colors">
               <Highlight text={`${student.personal.firstName} ${student.personal.lastName}`} query={highlight} />
             </p>
-            <span className="text-base">{student.personal.flagEmoji}</span>
+            <span className="text-base" role="img" aria-label={`Flag of ${student.personal.nationality}`}>{student.personal.flagEmoji}</span>
           </div>
           <p className="truncate text-xs text-muted-foreground">
             <Highlight text={student.personal.school} query={highlight} />

@@ -35,7 +35,7 @@ export default async function TasksPage() {
       </section>
       <TaskList
         title="Tasks to complete"
-        tasks={(tasks ?? []).map((task: any) => ({
+        tasks={(tasks ?? []).map((task) => ({
           id: task.id,
           name: task.task_name,
           status: task.status,

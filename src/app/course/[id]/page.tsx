@@ -49,7 +49,7 @@ type CourseView = {
 const normalizeLocation = (city?: string | null, region?: string | null, country?: string | null) =>
   [city, region, country].filter(Boolean).join(', ') || 'Location unavailable';
 
-const buildRequirements = (raw: any): Requirement[] => {
+const buildRequirements = (raw: Record<string, any>): Requirement[] => {
   if (!raw) return [];
   const reqs: Requirement[] = [];
   if (raw.min_ib) reqs.push({ label: 'IB minimum', value: `${raw.min_ib}` });
@@ -63,7 +63,7 @@ const buildRequirements = (raw: any): Requirement[] => {
   return reqs;
 };
 
-const buildOutcomes = (raw: any): Outcomes | null => {
+const buildOutcomes = (raw: Record<string, any>): Outcomes | null => {
   const satisfaction = raw.student_satisfaction ?? null;
   const employment = raw.employment_after_course ?? null;
   const outcomes = raw.student_outcomes ?? null;
@@ -482,7 +482,7 @@ export default function CoursePage({ params }: { params: { id: string } }) {
           return;
         }
 
-        const uni = (data as any).universities ?? {};
+        const uni = (data as Record<string, any>).universities ?? {};
         const uniMeta = uni && typeof uni.metadata === 'object' && uni.metadata !== null ? (uni.metadata as Record<string, unknown>) : {};
         const logoUrl =
           typeof uniMeta.logo_url === 'string'
@@ -497,7 +497,7 @@ export default function CoursePage({ params }: { params: { id: string } }) {
 
         const mapped: CourseView = {
           id: data.id,
-          title: (data as any).course_name,
+          title: (data as Record<string, any>).course_name,
           university: uni.name ?? 'University',
           logoUrl: logoUrl ?? null,
           location,
@@ -516,7 +516,7 @@ export default function CoursePage({ params }: { params: { id: string } }) {
           courseUrl: data.provider_course_url ?? null,
           applyUrl: data.provider_apply_url ?? null,
           outcomes: buildOutcomes(data),
-          openDays: parseOpenDays((data as any).open_days)
+          openDays: parseOpenDays((data as Record<string, any>).open_days)
         };
 
         mapped.quickFacts = buildQuickFacts(mapped);
