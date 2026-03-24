@@ -12,7 +12,9 @@ const PROTECTED_PREFIXES = [
   '/university-search',
   '/course',
   '/shortlist',
-  '/scholarships'
+  '/scholarships',
+  '/counsellor',
+  '/role-select'
 ];
 
 export async function middleware(req: NextRequest) {
@@ -153,7 +155,7 @@ export async function middleware(req: NextRequest) {
     return redirectResponse;
   }
 
-  if (session && isProtected && !pathname.startsWith('/profile') && !pathname.startsWith('/counsellor')) {
+  if (session && isProtected && !pathname.startsWith('/profile') && !pathname.startsWith('/counsellor') && !pathname.startsWith('/role-select')) {
     const { data: profile } = await supabase.from('profiles').select('role').eq('id', session.user.id).single();
     const role = profile?.role;
 
@@ -174,5 +176,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/(dashboard|profile|matches|applications|admin|university-search|course|shortlist|scholarships)(.*)', '/login', '/signup']
+  matcher: ['/(dashboard|profile|matches|applications|admin|university-search|course|shortlist|scholarships|counsellor|role-select)(.*)', '/login', '/signup']
 };

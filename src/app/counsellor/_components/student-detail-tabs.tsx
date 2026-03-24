@@ -445,7 +445,7 @@ export const StudentDetailTabs = ({ student }: StudentDetailTabsProps) => {
             <div className="rounded-[28px] border border-dashed border-border bg-muted/40 p-12 text-center">
               <FileText className="mx-auto mb-3 h-8 w-8 text-muted-foreground/40" />
               <p className="font-semibold text-foreground">No applications yet</p>
-              <p className="mt-1 text-sm text-muted-foreground">This student hasn't started any applications.</p>
+              <p className="mt-1 text-sm text-muted-foreground">This student hasn&apos;t started any applications.</p>
             </div>
           )}
         </div>

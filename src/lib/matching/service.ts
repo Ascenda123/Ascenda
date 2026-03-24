@@ -14,7 +14,7 @@ type StudentLifestyleRow = Database['public']['Tables']['student_lifestyle_prefe
 type StudentSubjectRow = Database['public']['Tables']['student_subjects']['Row'];
 type StudentAdmissionsTestRow = Database['public']['Tables']['student_admissions_tests']['Row'];
 type ProgramRow = Database['public']['Tables']['programs']['Row'];
-type CourseScoringRow = Database['public']['Views']['course_scoring_v1']['Row'];
+type CourseScoringRow = Record<string, unknown>;
 type ProgramSummaryRow = Pick<ProgramRow, 'id' | 'metadata'>;
 
 type Client = SupabaseClient<Database>;
@@ -359,7 +359,7 @@ const mapCourseScoringRow = (row: CourseScoringRow): CourseSource => {
     university_country: asString(row.university_country) ?? 'United Kingdom',
     university_rank_overall: asNumber(row.university_rank_overall),
     university_rank_source: asString(row.university_rank_source),
-    university_requires_test: row.university_requires_test ?? null
+    university_requires_test: (row.university_requires_test as boolean | null) ?? null
   };
 };
 
@@ -617,7 +617,7 @@ export const loadMatchesForProfile = async (
   const courseRows: CourseScoringRow[] = [];
   for (const batch of chunk(programIds, 200)) {
     const { data, error } = await supabase
-      .from('course_scoring_v1')
+      .from('course_scoring_v1' as any)
       .select(courseColumns)
       .in('course_id', batch);
     if (error) {
