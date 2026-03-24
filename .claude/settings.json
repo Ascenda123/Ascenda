@@ -17,7 +17,8 @@
       "Bash(curl -s \"https://alpkbobbasxvubogkark.supabase.co/auth/v1/settings\")",
       "Bash(python3 -m json.tool)",
       "Bash(curl -s https://alpkbobbasxvubogkark.supabase.co/auth/v1/settings -H 'apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFscGtib2JiYXN4dnVib2drYXJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI5Nzg2OTEsImV4cCI6MjA3ODU1NDY5MX0.Wp12PbRYVHimDB9IR6m6nX7GUa-zeBPKku1wOMx44MA')",
-      "Bash(kill 66838)"
+      "Bash(kill 66838)",
+      "Bash(git push:*)"
     ]
   }
 }
