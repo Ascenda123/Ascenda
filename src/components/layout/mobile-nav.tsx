@@ -13,7 +13,7 @@ export const MobileNav = () => {
   const router = useRouter();
   const supabase = useSupabase();
   const role = useUserRole();
-  const items = filterNavByRole(NAV_ITEMS, role);
+  const items = filterNavByRole(NAV_ITEMS, role, pathname);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();

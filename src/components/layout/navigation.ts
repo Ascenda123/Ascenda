@@ -135,10 +135,15 @@ export const isNavActive = (item: NavItem, pathname: string) => {
   return item.matchers?.some((matcher) => matcher(pathname)) ?? false;
 };
 
-export const filterNavByRole = (items: NavItem[], role: string | null | undefined) => {
-  if (role === 'counsellor') {
+export const filterNavByRole = (items: NavItem[], role: string | null | undefined, pathname?: string) => {
+  // Demo mode: determine active section from the current route so that
+  // a single profile can navigate both student and counsellor views.
+  const inCounsellor = pathname?.startsWith('/counsellor');
+
+  if (inCounsellor) {
     return items.filter((item) => item.segment === 'counsellor');
   }
+
   return items.filter(
     (item) => item.segment !== 'counsellor' && (item.segment !== 'admin' || role === 'admin')
   );

@@ -13,7 +13,7 @@ export const Sidebar = () => {
   const router = useRouter();
   const supabase = useSupabase();
   const role = useUserRole();
-  const items = filterNavByRole(NAV_ITEMS, role);
+  const items = filterNavByRole(NAV_ITEMS, role, pathname);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -50,7 +50,7 @@ export const Sidebar = () => {
           <span>Sign out</span>
         </button>
       </nav>
-      {role !== 'counsellor' && (
+      {!pathname.startsWith('/counsellor') && (
         <div className="mt-6 space-y-2 rounded-2xl border border-border bg-muted/40 p-4 text-foreground transition-colors">
           <p className="text-xs uppercase tracking-[0.35em] text-muted-foreground">Support</p>
           <p className="text-base font-semibold leading-tight text-foreground">Need a counselor nudge?</p>

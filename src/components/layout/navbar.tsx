@@ -10,15 +10,16 @@ import { useUserRole } from '@/hooks/use-user-role';
 import { NavLink } from './nav-link';
 
 import { LogOut } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useSupabase } from '@/hooks/useSupabase';
 import { Button } from '../ui/button';
 
 export const Navbar = () => {
   const role = useUserRole();
+  const pathname = usePathname();
   const router = useRouter();
   const supabase = useSupabase();
-  const navItems = filterNavByRole(NAV_ITEMS, role);
+  const navItems = filterNavByRole(NAV_ITEMS, role, pathname);
   const logoSrc = '/Ascenda_Logo-removebg-.png';
   const [scrolled, setScrolled] = useState(false);
 

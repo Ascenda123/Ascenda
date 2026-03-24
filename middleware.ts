@@ -134,21 +134,8 @@ export async function middleware(req: NextRequest) {
   }
 
   if (user && isAuthRoute) {
-    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-    const role = profile?.role;
-
     const redirectUrl = req.nextUrl.clone();
-
-    if (role !== 'counsellor') {
-      const needsOnboarding = await getOnboardingStatus(res);
-      redirectUrl.pathname = needsOnboarding ? '/profile/wizard' : '/dashboard';
-      if (needsOnboarding) {
-        redirectUrl.searchParams.set('onboarding', 'true');
-      }
-    } else {
-      redirectUrl.pathname = '/counsellor';
-    }
-
+    redirectUrl.pathname = '/role-select';
     redirectUrl.searchParams.delete('redirectedFrom');
     const redirectResponse = NextResponse.redirect(redirectUrl);
     applyCookies(res, redirectResponse);
@@ -156,19 +143,14 @@ export async function middleware(req: NextRequest) {
   }
 
   if (user && isProtected && !pathname.startsWith('/profile') && !pathname.startsWith('/counsellor') && !pathname.startsWith('/role-select')) {
-    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-    const role = profile?.role;
-
-    if (role !== 'counsellor') {
-      const needsOnboarding = await getOnboardingStatus(res);
-      if (needsOnboarding) {
-        const redirectUrl = req.nextUrl.clone();
-        redirectUrl.pathname = '/profile/wizard';
-        redirectUrl.searchParams.set('onboarding', 'true');
-        const redirectResponse = NextResponse.redirect(redirectUrl);
-        applyCookies(res, redirectResponse);
-        return redirectResponse;
-      }
+    const needsOnboarding = await getOnboardingStatus(res);
+    if (needsOnboarding) {
+      const redirectUrl = req.nextUrl.clone();
+      redirectUrl.pathname = '/profile/wizard';
+      redirectUrl.searchParams.set('onboarding', 'true');
+      const redirectResponse = NextResponse.redirect(redirectUrl);
+      applyCookies(res, redirectResponse);
+      return redirectResponse;
     }
   }
 
