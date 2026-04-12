@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { motion, type Variants } from 'framer-motion';
+import { motion } from 'framer-motion';
+import { fadeIn } from '@/lib/motion';
 
 const faqs = [
     {
@@ -34,11 +35,6 @@ const faqs = [
             'Absolutely. Email hello@ascenda.com for a live walkthrough, expert intro, or onboarding help.'
     }
 ];
-
-const fadeIn: Variants = {
-    hidden: { opacity: 0, y: 16 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: 'easeOut' } }
-};
 
 export function FAQSection() {
     const [openFaq, setOpenFaq] = useState<string | null>(faqs[0].question);

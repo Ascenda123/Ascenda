@@ -145,7 +145,7 @@ export default async function MatchesPage() {
         }}
       />
       {topMatch ? (
-        <div className="surface-toolbar sticky top-4 z-10 mb-4 rounded-[24px] p-4">
+        <div className="surface-toolbar sticky top-4 z-10 mb-4 rounded-2xl p-4">
           <div className="relative z-10 flex flex-wrap items-center justify-between gap-3">
             <div className="flex flex-col gap-1">
               <p className="text-[11px] uppercase tracking-[0.35em] text-muted-foreground">

@@ -2,7 +2,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { UniversityCardSkeleton } from '@/components/university-card-skeleton';
 
 export const StatsCardSkeleton = () => (
-  <div className="glass-card rounded-[24px] p-6">
+  <div className="glass-card rounded-2xl p-6">
     <div className="flex items-center justify-between">
       <Skeleton className="h-3 w-20" />
       <Skeleton className="h-5 w-5 rounded-full" />
@@ -15,7 +15,7 @@ export const StatsCardSkeleton = () => (
 );
 
 export const TaskListSkeleton = () => (
-  <div className="glass-panel rounded-[32px] p-6">
+  <div className="glass-panel rounded-[28px] p-6">
     <div className="flex flex-wrap items-center justify-between gap-3">
       <div className="space-y-2">
         <Skeleton className="h-6 w-40" />

@@ -136,8 +136,8 @@ export default function UniversitySearchPage() {
           search: { value: `${selectedFilters.size}`, detail: selectedFilters.size ? 'filters currently selected' : 'start with a broad scan' }
         }}
       />
-      <section className="surface-stage relative z-20 rounded-[32px] p-8">
-        <div className="absolute inset-0 overflow-hidden rounded-[32px]">
+      <section className="surface-stage relative z-20 rounded-[28px] p-8">
+        <div className="absolute inset-0 overflow-hidden rounded-[28px]">
           <AnimatedBlobBanner className="opacity-80" />
         </div>
         <div className="relative z-10 space-y-8">

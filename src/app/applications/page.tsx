@@ -15,7 +15,6 @@ import { Button } from '@/components/ui/button';
 import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import { SectionNav } from '@/components/layout/section-nav';
 import { PLANNER_SECTION_ITEMS } from '@/components/layout/navigation';
-import { StudentWorkspaceDock } from '@/components/layout/student-workspace-dock';
 
 export const metadata: Metadata = {
   title: 'Applications | Ascenda'
@@ -319,16 +318,6 @@ export default async function ApplicationsPage() {
       />
 
       <div className="space-y-8">
-        <StudentWorkspaceDock
-          current="applications"
-          metrics={{
-            dashboard: { value: `${dailySummary.tasks}`, detail: 'tasks due today' },
-            matches: { value: 'Matches', detail: 'send strong options to planner' },
-            applications: { value: `${appRecords.length}`, detail: 'active applications tracked' },
-            profile: { value: 'Profile', detail: 'keep requirements accurate' },
-            search: { value: 'Search', detail: 'discover more programs' }
-          }}
-        />
         <ApplicationPriorityBoard items={priorityItems} />
 
         {/* Quick links to documents & sandbox */}
@@ -398,54 +387,6 @@ export default async function ApplicationsPage() {
           </div>
         </div>
 
-        <section className="surface-stage space-y-4 rounded-[28px]">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <p className="text-[11px] uppercase tracking-[0.4em] text-muted-foreground">Just in case</p>
-              <h2 className="text-2xl font-semibold text-foreground">Resources you can grab</h2>
-            </div>
-            <p className="text-xs uppercase tracking-[0.4em] text-muted-foreground">Updated weekly</p>
-          </div>
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {resourceHighlights.map((resource) => (
-              <article
-                key={resource.id}
-                className="surface-subcard flex min-h-[180px] flex-col justify-between gap-3 transition-colors"
-              >
-                <div>
-                  <p className="text-[11px] uppercase tracking-[0.4em] text-muted-foreground">{resource.tag}</p>
-                  <h3 className="text-base font-semibold text-foreground">{resource.title}</h3>
-                  <p className="text-sm text-muted-foreground">{resource.description}</p>
-                </div>
-                <Link
-                  href={resource.href}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-[11px] font-semibold uppercase tracking-[0.4em] text-muted-foreground underline-offset-4 hover:text-foreground"
-                >
-                  Open resource →
-                </Link>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        <div className="surface-stage rounded-[28px] p-6 text-sm text-muted-foreground">
-          {appRecords.length > 0 ? (
-            <ul className="space-y-2">
-              {appRecords.map((app) => (
-                <li key={app.id}>
-                  <p className="font-semibold text-foreground">Application status</p>
-                  <p>
-                    {app.status} • {app.notes ?? 'No notes yet'}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p>No applications yet. Save programs from the matches page to begin planning.</p>
-          )}
-        </div>
       </div>
     </DashboardShell>
   );

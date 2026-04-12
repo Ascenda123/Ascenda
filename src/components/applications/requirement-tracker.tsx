@@ -23,7 +23,7 @@ const STATUS_TONE: Record<RequirementItem['status'], string> = {
 
 export const RequirementTracker = ({ items }: { items: RequirementItem[] }) => {
   return (
-    <div className="space-y-4 rounded-[36px] border border-border bg-card p-6 text-foreground shadow-[0_25px_60px_rgba(15,23,42,0.08)] transition-colors">
+    <div className="space-y-4 rounded-[28px] border border-border bg-card p-6 text-foreground shadow-[0_25px_60px_rgba(15,23,42,0.08)] transition-colors">
       <header className="flex items-center justify-between gap-3">
         <div>
           <h2 className="text-2xl font-semibold text-foreground">Documents & references</h2>

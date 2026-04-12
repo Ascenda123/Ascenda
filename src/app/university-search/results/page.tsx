@@ -664,11 +664,11 @@ export default function UniversitySearchResultsPage() {
             ))}
           </div>
         ) : error ? (
-          <div className="rounded-[32px] border border-dashed border-red-300 bg-red-50 p-6 text-sm text-red-700">
+          <div className="rounded-[28px] border border-dashed border-red-300 bg-red-50 p-6 text-sm text-red-700">
             {error}
           </div>
         ) : filteredResults.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-[32px] border border-dashed border-border bg-muted/30 py-20 text-center">
+          <div className="flex flex-col items-center justify-center rounded-[28px] border border-dashed border-border bg-muted/30 py-20 text-center">
             <div className="mb-4 rounded-full bg-muted p-4">
               <span className="text-4xl">🔍</span>
             </div>

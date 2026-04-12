@@ -15,7 +15,7 @@ export const SectionNav = ({ items, getIsActive }: SectionNavProps) => {
   const searchParams = useSearchParams();
 
   return (
-    <nav className="surface-toolbar flex flex-wrap items-center gap-3 rounded-[32px]">
+    <nav className="surface-toolbar flex flex-wrap items-center gap-3 rounded-[28px]">
       {items.map((item) => {
         const active = getIsActive
           ? getIsActive(item, pathname, searchParams)

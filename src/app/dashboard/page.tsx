@@ -14,12 +14,6 @@ import { TaskListPanel } from '@/components/dashboard/task-list-panel';
 import type { Database } from '@/lib/types/database';
 import { buildStepCompletion, isProfileComplete, ProfileRecordGroup } from '@/lib/profile/completion';
 import { PROFILE_STEPS } from '@/lib/profile/steps';
-import type { PulseCardIcon } from '@/components/dashboard/pulse-cards';
-import { StudentWorkspaceDock } from '@/components/layout/student-workspace-dock';
-import { PulseCards } from '@/components/dashboard/pulse-cards';
-import { DeadlineNudges } from '@/components/dashboard/deadline-nudges';
-import { OutcomeTracker } from '@/components/dashboard/outcome-tracker';
-import { DEMO_NUDGES, DEMO_OUTCOMES } from '@/lib/data/student-demo-data';
 import { AnimatedSection } from '@/components/layout/animated-section';
 
 type ChecklistRow = Database['public']['Tables']['application_checklist']['Row'];
@@ -241,37 +235,6 @@ export default async function DashboardPage() {
     { label: 'Match health', value: matchError ? '—' : averageMatchScore !== null ? `${averageMatchScore}%` : '-', detail: matchError ? 'Service unavailable' : matches.length ? `${matches[0].program.name}` : 'Finish profile to unlock' }
   ];
 
-  const pulseCards: { label: string; value: string; detail: string; icon: PulseCardIcon; accentClass: string }[] = [
-    {
-      label: 'Execution',
-      value: `${openTasks}`,
-      detail: openTasks === 1 ? 'open task to close' : 'open tasks in motion',
-      icon: 'CheckCircle2',
-      accentClass: 'text-emerald-600 bg-emerald-500/10 border-emerald-200/60'
-    },
-    {
-      label: 'Momentum',
-      value: `${dueSoonCount}`,
-      detail: dueSoonCount > 0 ? 'deadlines coming this week' : 'nothing pressing this week',
-      icon: 'Zap',
-      accentClass: 'text-amber-600 bg-amber-500/10 border-amber-200/60'
-    },
-    {
-      label: 'Tracked',
-      value: `${trackedProgramsCount}`,
-      detail: trackedProgramsCount > 0 ? 'programs on your radar' : 'build your shortlist',
-      icon: 'Compass',
-      accentClass: 'text-sky-600 bg-sky-500/10 border-sky-200/60'
-    },
-    {
-      label: 'Readiness',
-      value: `${completionPercent}%`,
-      detail: nextStep ? `${nextStep.title} is next` : 'profile fully ready',
-      icon: 'Target',
-      accentClass: 'text-violet-600 bg-violet-500/10 border-violet-200/60'
-    }
-  ];
-
   return (
     <DashboardShell>
       <PageHero
@@ -296,33 +259,6 @@ export default async function DashboardPage() {
       />
 
       <div className="space-y-6">
-        <StudentWorkspaceDock
-          current="dashboard"
-          metrics={{
-            dashboard: { value: heroHighlight, detail: 'Current operating state' },
-            matches: { value: matchError ? '—' : `${matches.length}`, detail: 'eligible matches ranked' },
-            applications: { value: `${trackedProgramsCount}`, detail: 'programs being tracked' },
-            profile: { value: `${completionPercent}%`, detail: nextStep ? nextStep.title : 'all sections complete' },
-            search: { value: 'Explore', detail: 'browse universities and courses' }
-          }}
-        />
-
-        <PulseCards cards={pulseCards} />
-
-        {/* Proactive deadline nudges */}
-        <AnimatedSection>
-          <div className="surface-card surface-card--static">
-            <div className="relative z-10 space-y-4">
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Action needed</p>
-                <p className="text-lg font-semibold text-foreground">Upcoming reminders</p>
-                <p className="text-xs text-muted-foreground">Proactive nudges so nothing slips through the cracks.</p>
-              </div>
-              <DeadlineNudges nudges={DEMO_NUDGES} />
-            </div>
-          </div>
-        </AnimatedSection>
-
         <DashboardOverview data={overviewPayload} />
 
         {deadlines.length > 0 ? (
@@ -366,21 +302,7 @@ export default async function DashboardPage() {
           </div>
         </AnimatedSection>
 
-        {/* Outcome recording */}
         <AnimatedSection delay={0.1}>
-          <div className="surface-card surface-card--static">
-            <div className="relative z-10 space-y-4">
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Outcomes</p>
-                <p className="text-lg font-semibold text-foreground">Application results</p>
-                <p className="text-xs text-muted-foreground">Track decisions as they come in from your universities.</p>
-              </div>
-              <OutcomeTracker outcomes={DEMO_OUTCOMES} />
-            </div>
-          </div>
-        </AnimatedSection>
-
-        <AnimatedSection delay={0.12}>
           <div className="surface-card surface-card--static">
             <div className="relative z-10 space-y-4">
               <div>

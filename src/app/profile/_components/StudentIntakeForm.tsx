@@ -902,7 +902,7 @@ export const StudentIntakeForm = ({
     <form className="relative font-sans" style={{ fontFamily: 'var(--font-outfit), sans-serif' }} onSubmit={handleSubmit}>
       <div className="flex flex-col lg:flex-row gap-8">
         <aside className="w-full lg:w-72 lg:sticky lg:top-24 h-fit">
-          <div className="surface-card p-6 bg-background/60 backdrop-blur-xl rounded-[32px] border-border/50 shadow-2xl">
+          <div className="surface-card p-6 bg-background/60 backdrop-blur-xl rounded-[28px] border-border/50 shadow-2xl">
             <div className="mb-8">
               <div className="flex items-center gap-2 mb-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
@@ -1042,7 +1042,7 @@ export const StudentIntakeForm = ({
                     </label>
                   </div>
 
-                  <div className="p-6 rounded-[24px] border border-border/50 bg-muted/30 backdrop-blur-sm space-y-6">
+                  <div className="p-6 rounded-2xl border border-border/50 bg-muted/30 backdrop-blur-sm space-y-6">
                     <div className="flex justify-between items-start gap-3">
                       <div>
                         <span className="text-base font-semibold text-foreground">Nationality</span>
@@ -1244,7 +1244,7 @@ export const StudentIntakeForm = ({
                     </label>
                   </div>
 
-                  <div className="p-6 rounded-[24px] border border-border/50 bg-muted/30 backdrop-blur-sm space-y-6">
+                  <div className="p-6 rounded-2xl border border-border/50 bg-muted/30 backdrop-blur-sm space-y-6">
                     <div className="flex justify-between items-start gap-3">
                       <div>
                         <span className="text-base font-semibold text-foreground">What do you want to study?</span>
@@ -1285,7 +1285,7 @@ export const StudentIntakeForm = ({
                     {errors['academic_input.intended_clusters'] ? <em>{errors['academic_input.intended_clusters']}</em> : null}
                   </div>
 
-                  <div className="p-6 rounded-[24px] border border-border/50 bg-muted/30 backdrop-blur-sm space-y-6">
+                  <div className="p-6 rounded-2xl border border-border/50 bg-muted/30 backdrop-blur-sm space-y-6">
                     <div className="flex justify-between items-start gap-3">
                       <div>
                         <span className="text-base font-semibold text-foreground">Any secondary interests? (optional)</span>
@@ -1339,7 +1339,7 @@ export const StudentIntakeForm = ({
                 <section className="space-y-6 lg:space-y-8">
                   <h3>Academic details</h3>
 
-                  <div className="p-6 rounded-[24px] border border-border/50 bg-muted/30 backdrop-blur-sm space-y-6">
+                  <div className="p-6 rounded-2xl border border-border/50 bg-muted/30 backdrop-blur-sm space-y-6">
                     <div className="flex justify-between items-start gap-3">
                       <div>
                         <span className="text-base font-semibold text-foreground">Your subjects and predicted grades</span>
@@ -1570,7 +1570,7 @@ export const StudentIntakeForm = ({
                     </>
                   ) : null}
 
-                  <div className="p-6 rounded-[24px] border border-border/50 bg-muted/30 backdrop-blur-sm space-y-6">
+                  <div className="p-6 rounded-2xl border border-border/50 bg-muted/30 backdrop-blur-sm space-y-6">
                     <div className="flex justify-between items-start gap-3">
                       <div>
                         <span className="text-base font-semibold text-foreground">English proficiency</span>
@@ -1670,7 +1670,7 @@ export const StudentIntakeForm = ({
                   </div>
 
                   {showAdmissionsTests ? (
-                    <div className="p-6 rounded-[24px] border border-border/50 bg-muted/30 backdrop-blur-sm space-y-6">
+                    <div className="p-6 rounded-2xl border border-border/50 bg-muted/30 backdrop-blur-sm space-y-6">
                       <div className="flex justify-between items-start gap-3">
                         <div>
                           <span className="text-base font-semibold text-foreground">Admissions tests</span>
@@ -1861,7 +1861,7 @@ export const StudentIntakeForm = ({
                       ))}
                     </div>
                   </div>
-                  <div className="p-6 rounded-[24px] border border-border/50 bg-muted/30 backdrop-blur-sm space-y-6">
+                  <div className="p-6 rounded-2xl border border-border/50 bg-muted/30 backdrop-blur-sm space-y-6">
                     <div className="flex justify-between items-start gap-3">
                       <div>
                         <span className="text-base font-semibold text-foreground">Extracurricular interests</span>
@@ -2012,7 +2012,7 @@ export const StudentIntakeForm = ({
             </motion.div>
           </AnimatePresence>
 
-          <div className="mt-12 flex items-center justify-between gap-4 p-6 surface-card bg-background/40 backdrop-blur-md rounded-[24px] border-border/50 shadow-xl">
+          <div className="mt-12 flex items-center justify-between gap-4 p-6 surface-card bg-background/40 backdrop-blur-md rounded-2xl border-border/50 shadow-xl">
             <Button
               type="button"
               variant="outline"
@@ -2097,7 +2097,7 @@ export const StudentIntakeForm = ({
 
         /* Field Groups (The main sections) */
         :global(.field-group) {
-          @apply p-8 rounded-[40px] border border-slate-200/60 bg-white/70 backdrop-blur-sm shadow-[0_8px_30px_rgb(0,0,0,0.04)] space-y-8 transition-all duration-500;
+          @apply p-8 rounded-[28px] border border-slate-200/60 bg-white/70 backdrop-blur-sm shadow-[0_8px_30px_rgb(0,0,0,0.04)] space-y-8 transition-all duration-500;
         }
 
         :global(.dark .field-group) {

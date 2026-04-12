@@ -460,6 +460,160 @@ export const DEMO_COUNSELLOR_DOCS: CounsellorDocument[] = [
   { id: 'cdoc-12', studentId: 'student-5', studentName: 'Yuki Tanaka', documentName: 'IB Transcript (Predicted)', type: 'transcript', status: 'received', uploadedDate: relDate(-20) }
 ];
 
+// ─── Chances Calculator ─────────────────────────────────────────────────────
+
+export interface DemoStudentGrades {
+  system: 'IB' | 'A-Level';
+  predicted: number;
+  subjects: { name: string; level: string; predicted: string }[];
+}
+
+export interface UniversityChance {
+  id: string;
+  university: string;
+  programme: string;
+  country: string;
+  flagEmoji: string;
+  typicalOffer: string;
+  minimumScore: number;
+  hlRequirements?: string[];
+  entranceExams?: string[];
+  interviewRequired?: boolean;
+  deadline: string;
+}
+
+export const DEMO_STUDENT_GRADES: DemoStudentGrades = {
+  system: 'IB',
+  predicted: 39,
+  subjects: [
+    { name: 'Physics', level: 'HL', predicted: '7' },
+    { name: 'Mathematics AA', level: 'HL', predicted: '6' },
+    { name: 'Chemistry', level: 'HL', predicted: '6' },
+    { name: 'English A', level: 'SL', predicted: '6' },
+    { name: 'Spanish B', level: 'SL', predicted: '7' },
+    { name: 'Economics', level: 'SL', predicted: '7' },
+  ],
+};
+
+export const DEMO_UNIVERSITY_CHANCES: UniversityChance[] = [
+  { id: 'ch-1', university: 'Imperial College London', programme: 'MEng Mechanical Engineering', country: 'UK', flagEmoji: '🇬🇧', typicalOffer: '39–40 IB (HL 7,6,6)', minimumScore: 39, hlRequirements: ['Physics HL 7', 'Maths AA HL 6'], interviewRequired: true, deadline: relDate(45) },
+  { id: 'ch-2', university: 'ETH Zürich', programme: 'BSc Mechanical Engineering', country: 'Switzerland', flagEmoji: '🇨🇭', typicalOffer: '36+ IB', minimumScore: 36, hlRequirements: ['Physics HL 6+', 'Maths HL 6+'], entranceExams: ['Comprehensive entrance exam'], deadline: relDate(60) },
+  { id: 'ch-3', university: 'TU Delft', programme: 'BSc Mechanical Engineering', country: 'Netherlands', flagEmoji: '🇳🇱', typicalOffer: '34+ IB', minimumScore: 34, hlRequirements: ['Physics HL 5+', 'Maths HL 5+'], deadline: relDate(90) },
+  { id: 'ch-4', university: 'EPFL', programme: 'BSc Mechanical Engineering', country: 'Switzerland', flagEmoji: '🇨🇭', typicalOffer: '35+ IB', minimumScore: 35, hlRequirements: ['Physics HL 5+', 'Maths HL 5+'], entranceExams: ['EPFL entrance exam (conditional)'], deadline: relDate(75) },
+  { id: 'ch-5', university: 'University of Bath', programme: 'MEng Mechanical Engineering', country: 'UK', flagEmoji: '🇬🇧', typicalOffer: '36 IB', minimumScore: 36, hlRequirements: ['Physics HL 6', 'Maths HL 6'], deadline: relDate(45) },
+  { id: 'ch-6', university: 'University of Leeds', programme: 'BEng Mechanical Engineering', country: 'UK', flagEmoji: '🇬🇧', typicalOffer: '34 IB', minimumScore: 34, hlRequirements: ['Physics HL 5', 'Maths HL 5'], deadline: relDate(45) },
+];
+
+// ─── Activity Portfolio ─────────────────────────────────────────────────────
+
+export interface ActivityEntry {
+  id: string;
+  name: string;
+  role: string;
+  organization: string;
+  category: 'academic' | 'leadership' | 'service' | 'athletics' | 'arts' | 'work' | 'other';
+  startDate: string;
+  endDate?: string;
+  hoursPerWeek: number;
+  weeksPerYear: number;
+  description: string;
+  tier: 1 | 2 | 3 | 4;
+}
+
+export const DEMO_ACTIVITIES: ActivityEntry[] = [
+  { id: 'act-1', name: 'Engineering Society', role: 'President', organization: 'International School', category: 'leadership', startDate: relDate(-365), hoursPerWeek: 6, weeksPerYear: 40, description: 'Led team of 8 to build autonomous robot for national competition. Managed budget, schedule, and technical decisions.', tier: 1 },
+  { id: 'act-2', name: 'Mathematics Tutoring', role: 'Volunteer Tutor', organization: 'Community Learning Centre', category: 'service', startDate: relDate(-730), endDate: relDate(-30), hoursPerWeek: 3, weeksPerYear: 36, description: 'Tutored IGCSE and IB maths to younger students. Developed custom worksheets for struggling learners.', tier: 2 },
+  { id: 'act-3', name: 'Fintech Internship', role: 'Engineering Intern', organization: 'PayFlow Technologies', category: 'work', startDate: relDate(-180), endDate: relDate(-120), hoursPerWeek: 35, weeksPerYear: 8, description: 'Built internal dashboards and API integrations. Saw how engineering and business intersect in product development.', tier: 2 },
+  { id: 'act-4', name: 'National Engineering Challenge', role: 'Team Lead', organization: 'National STEM Foundation', category: 'academic', startDate: relDate(-150), endDate: relDate(-120), hoursPerWeek: 10, weeksPerYear: 4, description: 'Team placed 3rd nationally. Presented autonomous navigation project to panel of industry judges.', tier: 1 },
+  { id: 'act-5', name: 'Extended Essay Research', role: 'Researcher', organization: 'IB Programme', category: 'academic', startDate: relDate(-300), endDate: relDate(-90), hoursPerWeek: 4, weeksPerYear: 30, description: 'Researched solar panel efficiency across climate zones. Grade A. Presented findings at school symposium.', tier: 2 },
+];
+
+// ─── Requirements Checker ───────────────────────────────────────────────────
+
+export type RequirementStatus = 'complete' | 'in-progress' | 'missing' | 'not-required';
+export type RequirementCategory = 'subjects' | 'exams' | 'interviews' | 'documents' | 'essays';
+
+export interface RequirementCell {
+  category: RequirementCategory;
+  status: RequirementStatus;
+  detail?: string;
+}
+
+export interface RequirementRow {
+  id: string;
+  university: string;
+  programme: string;
+  flagEmoji: string;
+  cells: RequirementCell[];
+  progress: number;
+}
+
+export const DEMO_REQUIREMENTS: RequirementRow[] = [
+  { id: 'rq-1', university: 'Imperial College London', programme: 'MEng Mechanical Engineering', flagEmoji: '🇬🇧', progress: 75, cells: [
+    { category: 'subjects', status: 'complete', detail: 'Physics HL 7 and Maths HL 6 meet requirements' },
+    { category: 'exams', status: 'not-required' },
+    { category: 'interviews', status: 'in-progress', detail: 'Interview scheduled in 5 days' },
+    { category: 'documents', status: 'in-progress', detail: 'Transcript uploaded, 1 reference pending' },
+    { category: 'essays', status: 'complete', detail: 'UCAS personal statement submitted' },
+  ] },
+  { id: 'rq-2', university: 'ETH Zürich', programme: 'BSc Mechanical Engineering', flagEmoji: '🇨🇭', progress: 50, cells: [
+    { category: 'subjects', status: 'complete', detail: 'Meets HL requirements' },
+    { category: 'exams', status: 'in-progress', detail: 'Entrance exam registration closing soon' },
+    { category: 'interviews', status: 'not-required' },
+    { category: 'documents', status: 'in-progress', detail: '2 references needed' },
+    { category: 'essays', status: 'in-progress', detail: 'Motivation letter in draft' },
+  ] },
+  { id: 'rq-3', university: 'TU Delft', programme: 'BSc Mechanical Engineering', flagEmoji: '🇳🇱', progress: 70, cells: [
+    { category: 'subjects', status: 'complete' },
+    { category: 'exams', status: 'not-required' },
+    { category: 'interviews', status: 'not-required' },
+    { category: 'documents', status: 'complete', detail: 'All documents uploaded' },
+    { category: 'essays', status: 'missing', detail: 'Motivation letter not started' },
+  ] },
+  { id: 'rq-4', university: 'EPFL', programme: 'BSc Mechanical Engineering', flagEmoji: '🇨🇭', progress: 40, cells: [
+    { category: 'subjects', status: 'complete' },
+    { category: 'exams', status: 'in-progress', detail: 'Conditional entrance exam' },
+    { category: 'interviews', status: 'not-required' },
+    { category: 'documents', status: 'in-progress', detail: 'Transcript pending' },
+    { category: 'essays', status: 'missing', detail: 'Application essay not started' },
+  ] },
+  { id: 'rq-5', university: 'University of Bath', programme: 'MEng Mechanical Engineering', flagEmoji: '🇬🇧', progress: 100, cells: [
+    { category: 'subjects', status: 'complete' },
+    { category: 'exams', status: 'not-required' },
+    { category: 'interviews', status: 'not-required' },
+    { category: 'documents', status: 'complete' },
+    { category: 'essays', status: 'complete', detail: 'UCAS personal statement submitted' },
+  ] },
+];
+
+// ─── Deadline Timeline Tool ─────────────────────────────────────────────────
+
+export type TimelineDeadlineType = 'submission' | 'exam' | 'interview' | 'document';
+
+export interface TimelineDeadline {
+  id: string;
+  title: string;
+  date: string;
+  university: string;
+  type: TimelineDeadlineType;
+  detail?: string;
+}
+
+export const DEMO_TIMELINE_DEADLINES: TimelineDeadline[] = [
+  { id: 'tl-1', title: 'Imperial interview', date: relDate(5), university: 'Imperial College London', type: 'interview', detail: 'Online panel interview' },
+  { id: 'tl-2', title: 'ETH entrance exam registration', date: relDate(12), university: 'ETH Zürich', type: 'exam', detail: 'Registration closes' },
+  { id: 'tl-3', title: 'Ms. Nair reference letter', date: relDate(14), university: 'Multiple', type: 'document', detail: 'Maths recommendation' },
+  { id: 'tl-4', title: 'Bath offer confirmation', date: relDate(21), university: 'University of Bath', type: 'submission', detail: 'Accept/decline deadline' },
+  { id: 'tl-5', title: 'Final transcript request', date: relDate(30), university: 'Multiple', type: 'document', detail: 'IB final transcript' },
+  { id: 'tl-6', title: 'EPFL application submission', date: relDate(75), university: 'EPFL', type: 'submission', detail: 'Full application package' },
+  { id: 'tl-7', title: 'ETH entrance exam', date: relDate(80), university: 'ETH Zürich', type: 'exam', detail: 'Comprehensive written exam' },
+  { id: 'tl-8', title: 'TU Delft application deadline', date: relDate(90), university: 'TU Delft', type: 'submission', detail: 'Online portal submission' },
+  { id: 'tl-9', title: 'EPFL entrance exam (conditional)', date: relDate(100), university: 'EPFL', type: 'exam' },
+  { id: 'tl-10', title: 'IB results release', date: relDate(120), university: 'Multiple', type: 'document', detail: 'Official IB results' },
+];
+
+// ─── Essay Prompts (for prompt matcher) ──────────────────────────────────────
+
 export const DEMO_ESSAY_PROMPTS: EssayPrompt[] = [
   {
     id: 'prompt-1',

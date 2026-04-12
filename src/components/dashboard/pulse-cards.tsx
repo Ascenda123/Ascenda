@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { CheckCircle2, Compass, Target, Zap } from 'lucide-react';
+import { stagger, cardFade as cardVariant } from '@/lib/motion';
 
 const ICON_MAP = {
   CheckCircle2,
@@ -23,16 +24,6 @@ interface PulseCard {
 interface PulseCardsProps {
   cards: PulseCard[];
 }
-
-const stagger = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.08, delayChildren: 0.1 } }
-};
-
-const cardVariant = {
-  hidden: { opacity: 0, y: 16, scale: 0.96 },
-  show: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.4, ease: 'easeOut' as const } }
-};
 
 export function PulseCards({ cards }: PulseCardsProps) {
   return (

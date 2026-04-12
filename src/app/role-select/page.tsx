@@ -142,7 +142,7 @@ export default function RoleSelectPage() {
               onClick={() => handleSelect(role)}
               disabled={loading}
               className={cn(
-                'group relative flex flex-col items-start gap-4 rounded-[24px] border bg-card/80 p-6 text-left shadow-sm backdrop-blur transition-all duration-200',
+                'group relative flex flex-col items-start gap-4 rounded-2xl border bg-card/80 p-6 text-left shadow-sm backdrop-blur transition-all duration-200',
                 'hover:-translate-y-1 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
                 role.accent === 'violet'
                   ? 'hover:border-violet-400/60 hover:ring-1 hover:ring-violet-400/20'

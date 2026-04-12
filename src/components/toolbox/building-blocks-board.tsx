@@ -12,6 +12,7 @@ import {
   User
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { stagger, blockFade } from '@/lib/motion';
 import type { BlockCategory, BlockSource, EssayBuildingBlock } from '@/lib/data/student-demo-data';
 
 // ─── Config ──────────────────────────────────────────────────────────────────
@@ -33,19 +34,6 @@ const SOURCE_CONFIG: Record<BlockSource, { label: string; className: string }> =
 
 const ALL_CATEGORIES: BlockCategory[] = ['identity', 'experience', 'strength', 'interest', 'achievement', 'counsellor_insight'];
 const ALL_SOURCES: BlockSource[] = ['profile', 'counsellor', 'chatbot'];
-
-// ─── Animation ───────────────────────────────────────────────────────────────
-
-const stagger = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.04, delayChildren: 0.05 } }
-};
-
-const blockFade = {
-  hidden: { opacity: 0, scale: 0.95, y: 8 },
-  show: { opacity: 1, scale: 1, y: 0, transition: { duration: 0.3, ease: 'easeOut' as const } },
-  exit: { opacity: 0, scale: 0.95, transition: { duration: 0.15 } }
-};
 
 // ─── Component ───────────────────────────────────────────────────────────────
 

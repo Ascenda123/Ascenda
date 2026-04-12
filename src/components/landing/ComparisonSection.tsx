@@ -1,6 +1,7 @@
 'use client';
 
-import { motion, type Variants, useReducedMotion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
+import { fadeIn } from '@/lib/motion';
 import { cn } from '@/lib/utils';
 
 const comparisons = [
@@ -39,11 +40,6 @@ const comparisonPairs = comparisons[0].bullets.map((bullet, index) => {
         with: splitComparisonCopy(withBullet)
     };
 });
-
-const fadeIn: Variants = {
-    hidden: { opacity: 0, y: 16 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: 'easeOut' } }
-};
 
 export function ComparisonSection() {
     const shouldReduceMotion = useReducedMotion();
@@ -101,7 +97,7 @@ export function ComparisonSection() {
                                 >
                                     <div
                                         className={cn(
-                                            'rounded-[24px] p-5 transition-colors',
+                                            'rounded-2xl p-5 transition-colors',
                                             'border border-border bg-muted/50 shadow-sm',
                                             'dark:bg-card'
                                         )}
@@ -141,7 +137,7 @@ export function ComparisonSection() {
                                     </div>
                                     <div
                                         className={cn(
-                                            'rounded-[24px] p-5 text-foreground transition-colors',
+                                            'rounded-2xl p-5 text-foreground transition-colors',
                                             'border border-emerald-500/25 bg-emerald-50/80 shadow-[0_12px_30px_rgba(16,185,129,0.2)]',
                                             'dark:border-emerald-500/20 dark:bg-emerald-500/5 dark:shadow-lg'
                                         )}

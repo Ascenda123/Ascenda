@@ -48,7 +48,7 @@ export function CompareBar({ selectedItems, onClear, onRemove, onCompare, maxIte
             {/* Main Bar Container */}
             <div
                 className={cn(
-                    "flex flex-col gap-1.5 rounded-[30px] border border-border/80 bg-card/90 p-2.5 text-foreground shadow-2xl backdrop-blur-xl transition-all duration-300",
+                    "flex flex-col gap-1.5 rounded-[28px] border border-border/80 bg-card/90 p-2.5 text-foreground shadow-2xl backdrop-blur-xl transition-all duration-300",
                     !isExpanded ? "hidden sm:flex" : "flex",
                 )}
             >

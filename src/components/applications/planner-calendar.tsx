@@ -126,7 +126,7 @@ export const PlannerCalendar = ({ events }: { events: PlannerEvent[] }) => {
   const connectedSources = feedData?.connectedSources ?? [];
 
   return (
-    <div className="space-y-6 rounded-[36px] border border-border bg-card p-6 shadow-[0_30px_80px_rgba(15,23,42,0.08)]">
+    <div className="space-y-6 rounded-[28px] border border-border bg-card p-6 shadow-[0_30px_80px_rgba(15,23,42,0.08)]">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-2xl font-semibold text-foreground">Calendar view</h2>
@@ -152,7 +152,7 @@ export const PlannerCalendar = ({ events }: { events: PlannerEvent[] }) => {
         </div>
       </header>
       <div className="grid gap-6 lg:grid-cols-[3fr,1fr]">
-        <div className="overflow-hidden rounded-[32px] border border-border bg-card shadow-[0_25px_60px_rgba(15,23,42,0.06)]">
+        <div className="overflow-hidden rounded-[28px] border border-border bg-card shadow-[0_25px_60px_rgba(15,23,42,0.06)]">
           <Calendar<MyCalendarEvent>
             className="bg-card text-foreground"
             localizer={localizer}
@@ -187,7 +187,7 @@ export const PlannerCalendar = ({ events }: { events: PlannerEvent[] }) => {
             style={{ minHeight: selectedView === 'month' ? 420 : 340 }}
           />
         </div>
-        <aside className="space-y-4 rounded-[32px] border border-border bg-card p-5 shadow-[0_22px_55px_rgba(15,23,42,0.08)]">
+        <aside className="space-y-4 rounded-[28px] border border-border bg-card p-5 shadow-[0_22px_55px_rgba(15,23,42,0.08)]">
           <div className="flex flex-col gap-1">
             <div className="flex items-center justify-between">
               <p className="text-sm font-semibold text-foreground">Upcoming events</p>

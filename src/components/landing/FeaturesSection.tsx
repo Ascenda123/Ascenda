@@ -1,7 +1,8 @@
 'use client';
 
-import { motion, type Variants, useReducedMotion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { Sparkles, Search, Mail, NotepadText } from 'lucide-react';
+import { fadeIn } from '@/lib/motion';
 
 const features = [
     {
@@ -25,11 +26,6 @@ const features = [
         icon: NotepadText
     }
 ];
-
-const fadeIn: Variants = {
-    hidden: { opacity: 0, y: 16 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: 'easeOut' } }
-};
 
 export function FeaturesSection() {
     const shouldReduceMotion = useReducedMotion();

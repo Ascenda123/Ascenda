@@ -173,7 +173,7 @@ export function FilterBar({
         <div
             ref={containerRef}
             className={cn(
-                'surface-toolbar mb-6 flex flex-col gap-4 rounded-[24px] p-4 md:gap-5',
+                'surface-toolbar mb-6 flex flex-col gap-4 rounded-2xl p-4 md:gap-5',
                 {
                     'sticky top-4 z-20': isSticky,
                     'relative z-0': !isSticky

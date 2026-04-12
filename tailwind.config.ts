@@ -24,12 +24,6 @@ const customUtilitiesPlugin = plugin(function ({ addComponents, theme }) {
     '.glass-card': {
       '@apply border border-border bg-card shadow-sm dark:bg-card dark:border-white/10': {},
     },
-    '.glass-muted': {
-      '@apply border border-border bg-muted/50 dark:bg-muted/30 dark:border-white/5': {},
-    },
-    '.glass-pill': {
-      '@apply border border-border bg-card shadow-sm dark:bg-card dark:border-white/10': {},
-    },
     '.glass': {
       '@apply glass-panel': {},
     },

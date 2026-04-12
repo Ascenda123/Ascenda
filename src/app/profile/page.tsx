@@ -12,10 +12,7 @@ import { SectionNav } from '@/components/layout/section-nav';
 import { ProfileProgressCard } from './_components/profile-progress-card';
 import { recalculateStudentScore, resubmitStudentProfile } from './actions';
 import { Compass, GraduationCap, MapPin, Target } from 'lucide-react';
-import { StudentWorkspaceDock } from '@/components/layout/student-workspace-dock';
 import { AnimatedSection, AnimatedGrid, AnimatedGridItem } from '@/components/layout/animated-section';
-import { EvolutionTimeline } from '@/components/profile/evolution-timeline';
-import { DEMO_EVOLUTION } from '@/lib/data/student-demo-data';
 
 export const metadata: Metadata = {
   title: 'Profile | Ascenda'
@@ -151,16 +148,6 @@ export default async function ProfilePage() {
             </Button>
           </>
         }
-      />
-      <StudentWorkspaceDock
-        current="profile"
-        metrics={{
-          dashboard: { value: 'Dashboard', detail: 'return to priorities and action items' },
-          matches: { value: typeof scores?.total_score === 'number' ? `${scores.total_score}` : 'Match', detail: 'profile score and recommendation quality' },
-          applications: { value: 'Planner', detail: 'deadlines use this data' },
-          profile: { value: `${completionPercent}%`, detail: nextStep ? nextStep.title : 'all sections complete' },
-          search: { value: 'Explore', detail: 'browse catalog with better context' }
-        }}
       />
       <AnimatedGrid className="mt-8 grid gap-8 lg:grid-cols-2">
         <AnimatedGridItem className="surface-card surface-card--static">
@@ -414,27 +401,19 @@ export default async function ProfilePage() {
           </div>
         </div>
       </AnimatedSection>
-      <AnimatedSection className="mt-8" delay={0.12}>
-        <div className="surface-card surface-card--static">
-          <div className="relative z-10">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Evolution timeline</p>
-            <p className="text-lg font-semibold text-foreground mb-1">Your journey so far</p>
-            <p className="text-xs text-muted-foreground mb-6">See how your goals and interests have evolved over time.</p>
-            <EvolutionTimeline entries={DEMO_EVOLUTION} />
+      {completionPercent === 100 && (
+        <AnimatedSection className="mt-8" delay={0.12}>
+          <div className="rounded-[28px] border border-emerald-200/60 bg-emerald-500/5 p-8">
+            <p className="text-base font-semibold text-emerald-700">Profile complete</p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              All sections are filled in. You can revisit the wizard anytime to update details.
+            </p>
+            <Button className="mt-6 rounded-xl px-8" size="sm" asChild>
+              <Link href="/profile/wizard">Open profile wizard</Link>
+            </Button>
           </div>
-        </div>
-      </AnimatedSection>
-      <AnimatedSection className="mt-8" delay={0.15}>
-        <div className="rounded-[32px] border border-border bg-card p-8 text-muted-foreground shadow-2xl transition-all duration-300 hover:shadow-[0_20px_50px_rgba(15,23,42,0.12)]">
-          <p className="text-base font-semibold text-foreground">Profile complete</p>
-          <p className="mt-2 text-sm">
-            You&apos;ve already finished onboarding. You can revisit the wizard anytime if you need to update details.
-          </p>
-          <Button className="mt-6 rounded-xl px-8" size="sm" asChild>
-            <Link href="/profile/wizard">Open profile wizard</Link>
-          </Button>
-        </div>
-      </AnimatedSection>
+        </AnimatedSection>
+      )}
     </DashboardShell>
   );
 }

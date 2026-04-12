@@ -109,7 +109,7 @@ export default async function ProfileWizardPage({ searchParams }: ProfileWizardP
             { label: 'Status', value: hasCompletedProfile ? 'Ready' : 'In progress', detail: hasCompletedProfile ? 'Update anytime' : 'More detail improves matches' }
           ]}
         />
-        <div className="surface-card surface-card--static rounded-[32px] p-6">
+        <div className="surface-card surface-card--static rounded-[28px] p-6">
           <StudentIntakeForm initialStep={initialStep} initialPayload={initialPayload} />
         </div>
       </div>

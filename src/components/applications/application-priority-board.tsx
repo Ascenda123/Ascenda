@@ -61,7 +61,7 @@ export const ApplicationPriorityBoard = ({ items }: { items: PriorityItem[] }) =
 
   return (
     <motion.div
-      className="surface-card surface-card--static space-y-5 rounded-[32px] p-6"
+      className="surface-card surface-card--static space-y-5 rounded-[28px] p-6"
       initial="hidden"
       whileInView="show"
       viewport={{ once: true, margin: '-60px' }}

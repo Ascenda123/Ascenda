@@ -192,7 +192,7 @@ export function ComparisonModal({ isOpen, onClose, universities, onRemove, maxIt
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="max-w-5xl overflow-hidden p-0 sm:rounded-[32px]">
+            <DialogContent className="max-w-5xl overflow-hidden p-0 sm:rounded-[28px]">
                 <div className="flex h-[80vh] flex-col">
                     {/* Header */}
                     <div className="flex flex-col gap-3 border-b border-border bg-card px-6 py-4">

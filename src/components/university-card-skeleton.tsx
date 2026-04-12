@@ -7,7 +7,7 @@ export const UniversityCardSkeleton = ({ variant = 'default' }: { variant?: 'def
   return (
     <article
       className={cn(
-        'group relative flex h-full flex-col rounded-[24px] border border-border bg-card p-5 shadow-sm',
+        'group relative flex h-full flex-col rounded-2xl border border-border bg-card p-5 shadow-sm',
         isCompact ? 'p-4' : 'p-5'
       )}
       aria-hidden

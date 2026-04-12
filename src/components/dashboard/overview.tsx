@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { stagger, cardFade, itemSlide as focusFade } from '@/lib/motion';
 
 export type HighlightTone = 'positive' | 'warning' | 'muted' | undefined;
 
@@ -36,21 +37,6 @@ const toneClass = (tone?: HighlightTone) =>
       : tone === 'muted'
         ? 'border-border bg-muted/60'
     : 'border-border bg-muted/40';
-
-const stagger = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.08, delayChildren: 0.1 } }
-};
-
-const cardFade = {
-  hidden: { opacity: 0, y: 14, scale: 0.98 },
-  show: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.4, ease: 'easeOut' as const } }
-};
-
-const focusFade = {
-  hidden: { opacity: 0, x: -10 },
-  show: { opacity: 1, x: 0, transition: { duration: 0.35, ease: 'easeOut' as const } }
-};
 
 export const DashboardOverview = ({ data }: { data: OverviewPayload }) => {
   const focusList = data.focusItems.slice(0, 4);
@@ -107,7 +93,7 @@ export const DashboardOverview = ({ data }: { data: OverviewPayload }) => {
           )}
         </motion.div>
 
-        <motion.div className="surface-stat rounded-[24px] p-5 hover:-translate-y-0.5" variants={cardFade}>
+        <motion.div className="surface-stat rounded-2xl p-5 hover:-translate-y-0.5" variants={cardFade}>
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="text-sm font-semibold text-foreground">Focus radar</p>

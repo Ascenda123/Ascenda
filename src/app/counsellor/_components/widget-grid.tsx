@@ -199,7 +199,7 @@ export const WidgetGrid = ({ children }: WidgetGridProps) => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.2 }}
-            className="rounded-[24px] border border-border bg-card p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)]"
+            className="rounded-2xl border border-border bg-card p-5 shadow-[0_18px_50px_rgba(15,23,42,0.08)]"
           >
             <div className="mb-4 flex items-center justify-between">
               <div>
