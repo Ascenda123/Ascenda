@@ -1,0 +1,349 @@
+'use client';
+
+import { useState, useCallback, useRef, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Sparkles, MessageSquare, Wand2, ListTree,
+  Loader2, X, Copy, Check, ChevronDown,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+import type { EssayBuildingBlock } from '@/lib/data/student-demo-data';
+
+type Action = 'feedback' | 'expand' | 'outline';
+
+interface EssayAIPanelProps {
+  essay: string;
+  platform: string;
+  selectedBlocks: EssayBuildingBlock[];
+  allBlocks: EssayBuildingBlock[];
+  onInsertText?: (text: string) => void;
+}
+
+const ACTIONS: { key: Action; label: string; icon: typeof Sparkles; description: string; color: string }[] = [
+  { key: 'feedback', label: 'Get Feedback', icon: MessageSquare, description: 'AI reviews your draft with specific rewrites', color: 'text-violet-500 bg-violet-500/10' },
+  { key: 'expand', label: 'Expand Block', icon: Wand2, description: 'Turn a building block into a paragraph', color: 'text-amber-500 bg-amber-500/10' },
+  { key: 'outline', label: 'Suggest Outline', icon: ListTree, description: 'Generate essay structure from your blocks', color: 'text-emerald-500 bg-emerald-500/10' },
+];
+
+export function EssayAIPanel({ essay, platform, selectedBlocks, allBlocks, onInsertText }: EssayAIPanelProps) {
+  const [isOpen, setIsOpen] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<string>('');
+  const [error, setError] = useState<string | null>(null);
+  const [activeAction, setActiveAction] = useState<Action | null>(null);
+  const [showBlockPicker, setShowBlockPicker] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const resultRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (resultRef.current && loading) {
+      resultRef.current.scrollTop = resultRef.current.scrollHeight;
+    }
+  }, [result, loading]);
+
+  const runAction = useCallback(async (action: Action, block?: EssayBuildingBlock) => {
+    setLoading(true);
+    setResult('');
+    setError(null);
+    setActiveAction(action);
+    setShowBlockPicker(false);
+
+    try {
+      // Build rich student context from all available data
+      const selectedDetails = selectedBlocks
+        .map((b) => `- ${b.label}${b.detail ? `: ${b.detail}` : ''}`)
+        .join('\n');
+
+      const studentContext = [
+        'IB Diploma student, predicted 39 points.',
+        'Applying to Mechanical Engineering programmes.',
+        'Subjects: Physics HL (7), Maths AA HL (6), Chemistry HL (6).',
+        selectedBlocks.length > 0 ? `\nSelected building blocks:\n${selectedDetails}` : '',
+        essay && essay.trim().length > 20 ? `\nCurrent essay draft (${essay.trim().split(/\s+/).length} words) is included separately.` : '',
+      ].filter(Boolean).join('\n');
+
+      const body: Record<string, unknown> = {
+        action,
+        platform,
+        studentContext,
+        essay: essay && essay.trim().length > 0 ? essay : undefined,
+      };
+
+      if (action === 'feedback') {
+        if (!essay || essay.trim().length < 20) {
+          setError('Write at least a few sentences in the editor before requesting feedback.');
+          setLoading(false);
+          return;
+        }
+      }
+
+      if (action === 'expand') {
+        const target = block;
+        if (!target) {
+          setError('Select a building block to expand.');
+          setLoading(false);
+          return;
+        }
+        body.block = { label: target.label, detail: target.detail };
+      }
+
+      if (action === 'outline') {
+        if (selectedBlocks.length === 0) {
+          setError('Select at least one building block from the left panel first.');
+          setLoading(false);
+          return;
+        }
+        body.blocks = selectedBlocks.map((b) => ({ label: b.label, detail: b.detail }));
+      }
+
+      const res = await fetch('/api/essay-assist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: 'Request failed' }));
+        setError(err.error ?? 'Something went wrong');
+        setLoading(false);
+        return;
+      }
+
+      const reader = res.body?.getReader();
+      if (!reader) {
+        setError('No response stream');
+        setLoading(false);
+        return;
+      }
+
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() ?? '';
+
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          const data = line.slice(6);
+          if (data === '[DONE]') break;
+          try {
+            const parsed = JSON.parse(data);
+            if (parsed.text) {
+              setResult((prev) => prev + parsed.text);
+            }
+            if (parsed.error) {
+              setError(parsed.error);
+            }
+          } catch {
+            // skip malformed chunks
+          }
+        }
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to connect');
+    } finally {
+      setLoading(false);
+    }
+  }, [essay, platform, selectedBlocks, allBlocks]);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(result);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleInsert = () => {
+    if (onInsertText && result) {
+      onInsertText(result);
+    }
+  };
+
+  const essayWordCount = essay.trim().split(/\s+/).filter(Boolean).length;
+
+  return (
+    <div className="space-y-3">
+      {/* Header */}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.15em] w-full"
+      >
+        <div className="flex h-5 w-5 items-center justify-center rounded-md bg-primary/10">
+          <Sparkles className="h-3 w-3 text-primary" />
+        </div>
+        <span className="text-primary">AI Essay Assistant</span>
+        <span className="text-[9px] font-bold text-primary/60 bg-primary/5 px-1.5 py-0.5 rounded-full">LIVE</span>
+        <ChevronDown className={cn('h-3 w-3 text-primary/60 ml-auto transition-transform', isOpen && 'rotate-180')} />
+      </button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="overflow-hidden"
+          >
+            <div className="space-y-3">
+              {/* Status indicator */}
+              <div className="rounded-lg bg-muted/30 px-3 py-2 text-[11px] text-muted-foreground space-y-0.5">
+                <p>
+                  <span className="font-semibold text-foreground">{essayWordCount}</span> words in editor
+                  {essayWordCount < 5 && ' — start writing to enable feedback'}
+                </p>
+                <p>
+                  <span className="font-semibold text-foreground">{selectedBlocks.length}</span> blocks selected
+                  {selectedBlocks.length === 0 && ' — select blocks for outline'}
+                </p>
+              </div>
+
+              {/* Action buttons */}
+              {ACTIONS.map(({ key, label, icon: Icon, description, color }) => {
+                const disabled = loading ||
+                  (key === 'feedback' && essayWordCount < 5) ||
+                  (key === 'outline' && selectedBlocks.length === 0);
+
+                return (
+                  <button
+                    key={key}
+                    onClick={() => {
+                      if (key === 'expand') {
+                        setShowBlockPicker(true);
+                        setActiveAction('expand');
+                      } else {
+                        runAction(key);
+                      }
+                    }}
+                    disabled={disabled}
+                    className={cn(
+                      'w-full text-left rounded-xl border border-border/50 p-3 transition-all group',
+                      disabled
+                        ? 'opacity-40 cursor-not-allowed'
+                        : 'hover:border-primary/20 hover:bg-muted/20',
+                      activeAction === key && result && 'border-primary/30 bg-primary/[0.03]'
+                    )}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div className={cn('flex h-7 w-7 items-center justify-center rounded-lg transition-transform group-hover:scale-110', color)}>
+                        <Icon className="h-3.5 w-3.5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[13px] font-semibold text-foreground">{label}</p>
+                        <p className="text-[11px] text-muted-foreground leading-snug">{description}</p>
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+
+              {/* Block picker for expand */}
+              <AnimatePresence>
+                {showBlockPicker && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="rounded-xl border border-amber-200/50 bg-amber-500/5 p-3 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <p className="text-[11px] font-semibold text-amber-600">Pick a block to expand</p>
+                        <button onClick={() => setShowBlockPicker(false)} className="text-muted-foreground hover:text-foreground">
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                      <div className="max-h-40 overflow-y-auto space-y-1 scrollbar-thin">
+                        {allBlocks.map((block) => (
+                          <button
+                            key={block.id}
+                            onClick={() => runAction('expand', block)}
+                            className="w-full text-left rounded-lg px-2.5 py-2 text-xs hover:bg-amber-500/10 transition-colors"
+                          >
+                            <span className="font-medium text-foreground">{block.label}</span>
+                            {block.detail && (
+                              <span className="block text-[10px] text-muted-foreground mt-0.5 truncate">{block.detail}</span>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Loading indicator */}
+              {loading && (
+                <div className="flex items-center gap-2 text-xs text-primary">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  <span className="font-medium">
+                    {activeAction === 'feedback' ? 'Reading your essay...' :
+                     activeAction === 'expand' ? 'Drafting paragraph...' :
+                     'Building outline...'}
+                  </span>
+                </div>
+              )}
+
+              {/* Error */}
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="rounded-xl border border-rose-200/50 bg-rose-500/5 p-3"
+                >
+                  <p className="text-xs text-rose-600">{error}</p>
+                </motion.div>
+              )}
+
+              {/* Result */}
+              {result && (
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="space-y-2"
+                >
+                  <div className="flex items-center justify-between">
+                    <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                      {activeAction === 'feedback' ? 'Feedback' :
+                       activeAction === 'expand' ? 'Draft Paragraph' :
+                       'Outline'}
+                    </p>
+                    <div className="flex gap-1">
+                      <button
+                        onClick={handleCopy}
+                        className="flex items-center gap-1 rounded-lg px-2 py-0.5 text-[10px] font-medium text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors"
+                      >
+                        {copied ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
+                        {copied ? 'Copied' : 'Copy'}
+                      </button>
+                      {(activeAction === 'expand') && onInsertText && (
+                        <button
+                          onClick={handleInsert}
+                          className="flex items-center gap-1 rounded-lg bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary hover:bg-primary/20 transition-colors"
+                        >
+                          <Wand2 className="h-3 w-3" />
+                          Insert into essay
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  <div
+                    ref={resultRef}
+                    className="max-h-72 overflow-y-auto rounded-xl border border-border/50 bg-card p-3 scrollbar-thin"
+                  >
+                    <div className="prose prose-sm dark:prose-invert max-w-none text-[13px] leading-relaxed text-foreground/90 whitespace-pre-wrap">
+                      {result}
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}

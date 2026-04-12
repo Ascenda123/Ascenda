@@ -8,11 +8,12 @@ import Placeholder from '@tiptap/extension-placeholder';
 import CharacterCount from '@tiptap/extension-character-count';
 import {
   PenTool, ChevronDown, Bold, Italic, List, ListOrdered, Undo, Redo,
-  Sparkles, GripVertical, FileText, RotateCcw, Copy, Check,
+  GripVertical, FileText, RotateCcw, Copy, Check,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { stagger, childFade } from '@/lib/motion';
 import type { EssayBuildingBlock, EssayPrompt } from '@/lib/data/student-demo-data';
+import { EssayAIPanel } from './essay-ai-panel';
 
 const PLATFORMS = ['UCAS', 'Common App', 'UC PIQs', 'Custom'] as const;
 type Platform = (typeof PLATFORMS)[number];
@@ -31,67 +32,6 @@ const PLATFORM_NOTES: Record<Platform, string> = {
   'Custom': 'Custom essays — set your own target word count.',
 };
 
-// Simulated AI writing tips based on content analysis
-function getWritingTips(text: string, platform: Platform): string[] {
-  const tips: string[] = [];
-  const words = text.trim().split(/\s+/).filter(Boolean);
-  const wordCount = words.length;
-  const charCount = text.length;
-  const limit = PLATFORM_LIMITS[platform];
-  const current = limit.unit === 'words' ? wordCount : charCount;
-  const ratio = limit.max > 0 ? current / limit.max : 0;
-
-  if (current === 0) {
-    tips.push('Start with a vivid, specific moment — avoid generic openings like "I have always been interested in..."');
-    tips.push('Consider opening with action or dialogue to hook the reader immediately.');
-    return tips;
-  }
-
-  if (ratio < 0.3) {
-    tips.push('Good start! Focus on developing one or two key experiences in depth rather than listing many.');
-  }
-
-  // Check for weak openers
-  const lower = text.toLowerCase();
-  if (lower.startsWith('i have always') || lower.startsWith('ever since i was')) {
-    tips.push('Your opening is a common cliché. Try starting with a specific moment, image, or question instead.');
-  }
-
-  // Check for "show don't tell" opportunities
-  const tellWords = ['passionate', 'motivated', 'dedicated', 'hardworking', 'driven'];
-  const found = tellWords.filter((w) => lower.includes(w));
-  if (found.length > 0) {
-    tips.push(`Instead of saying you're "${found[0]}", show it through a specific example or story.`);
-  }
-
-  // Check sentence variety
-  const sentences = text.split(/[.!?]+/).filter((s) => s.trim().length > 0);
-  if (sentences.length > 3) {
-    const startsWithI = sentences.filter((s) => s.trim().toLowerCase().startsWith('i ')).length;
-    if (startsWithI / sentences.length > 0.5) {
-      tips.push('Too many sentences start with "I". Vary your sentence structure for better flow.');
-    }
-  }
-
-  // Platform-specific advice
-  if (platform === 'UCAS' && ratio > 0.5 && !lower.includes('course') && !lower.includes('programme')) {
-    tips.push('UCAS personal statements should clearly connect your experiences to the course you\'re applying for.');
-  }
-
-  if (ratio > 0.85 && ratio < 1) {
-    tips.push('You\'re close to the limit. Review for any redundant phrases or filler words you can cut.');
-  }
-
-  if (ratio > 1) {
-    tips.push('You\'re over the limit. Look for sentences that can be tightened or combined.');
-  }
-
-  if (tips.length === 0) {
-    tips.push('Looking good! Make sure each paragraph has a clear purpose and transitions smoothly to the next.');
-  }
-
-  return tips;
-}
 
 interface EssayWorkshopProps {
   blocks: EssayBuildingBlock[];
@@ -104,7 +44,6 @@ export function EssayWorkshop({ blocks, prompts }: EssayWorkshopProps) {
   const [selectedBlocks, setSelectedBlocks] = useState<Set<string>>(new Set());
   const [expandedPrompt, setExpandedPrompt] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-  const [showTips, setShowTips] = useState(true);
   const [draggedBlock, setDraggedBlock] = useState<string | null>(null);
 
   const draftText = drafts[platform] ?? '';
@@ -140,8 +79,6 @@ export function EssayWorkshop({ blocks, prompts }: EssayWorkshopProps) {
   const charCount = editorText.length;
   const current = limit.unit === 'words' ? wordCount : charCount;
   const ratio = limit.max > 0 ? current / limit.max : 0;
-
-  const writingTips = useMemo(() => getWritingTips(editorText, platform), [editorText, platform]);
 
   const filteredPrompts = useMemo(
     () => prompts.filter((p) => p.platform === platform || platform === 'Custom'),
@@ -453,43 +390,20 @@ export function EssayWorkshop({ blocks, prompts }: EssayWorkshopProps) {
           )}
         </div>
 
-        {/* Right: Prompts + AI Tips */}
+        {/* Right: AI Assistant + Prompts */}
         <div className="space-y-5">
-          {/* AI Writing Tips */}
-          <div className="space-y-2">
-            <button
-              onClick={() => setShowTips(!showTips)}
-              className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.15em] text-primary"
-            >
-              <Sparkles className="h-3.5 w-3.5" />
-              Writing Tips
-              <ChevronDown className={cn('h-3 w-3 transition-transform', showTips && 'rotate-180')} />
-            </button>
-            <AnimatePresence>
-              {showTips && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  className="overflow-hidden"
-                >
-                  <div className="space-y-2">
-                    {writingTips.map((tip, i) => (
-                      <motion.div
-                        key={tip}
-                        initial={{ opacity: 0, x: 10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: i * 0.1 }}
-                        className="rounded-xl border border-primary/10 bg-primary/5 p-3"
-                      >
-                        <p className="text-xs text-foreground/80 leading-relaxed">{tip}</p>
-                      </motion.div>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+          {/* AI Essay Assistant */}
+          <EssayAIPanel
+            essay={editorText}
+            platform={platform}
+            selectedBlocks={blocks.filter((b) => selectedBlocks.has(b.id))}
+            allBlocks={blocks}
+            onInsertText={(text) => {
+              if (editor) {
+                editor.chain().focus().insertContent(`<p>${text.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>')}</p>`).run();
+              }
+            }}
+          />
 
           {/* Prompts */}
           <div className="space-y-2">
