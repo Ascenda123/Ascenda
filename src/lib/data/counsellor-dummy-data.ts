@@ -5,6 +5,8 @@ export type ApplicationStatus = 'planning' | 'in_progress' | 'submitted' | 'deci
 export type NoteType = 'session' | 'flag' | 'update';
 export type DeadlineType = 'early_decision' | 'regular' | 'scholarship' | 'interview';
 export type StudentFlag = 'profile_incomplete' | 'deadline_urgent' | 'no_matches' | 'stalled';
+export type OutcomeResult = 'accepted' | 'rejected' | 'waitlisted' | 'pending' | 'withdrawn';
+export type ApplicationPlatform = 'UCAS' | 'Common App' | 'Direct' | 'Coalition' | 'OUAC';
 
 export interface CounsellorMatch {
   university: string;
@@ -19,6 +21,8 @@ export interface CounsellorApplication {
   program: string;
   status: ApplicationStatus;
   deadline: string;
+  platform?: ApplicationPlatform;
+  country?: string;
 }
 
 export interface CounsellorDeadline {
@@ -727,3 +731,286 @@ export const getFieldDistribution = () => {
     .map(([key, count]) => ({ key, label: labels[key] || key, count }))
     .sort((a, b) => b.count - a.count);
 };
+
+// ─── Outcome Tracking ───────────────────────────────────────────────────────
+
+export interface CounsellorOutcome {
+  id: string;
+  studentId: string;
+  studentName: string;
+  university: string;
+  program: string;
+  country: string;
+  tier: MatchTier;
+  platform: ApplicationPlatform;
+  result: OutcomeResult;
+  responseDate: string | null;
+  conditions: string | null;
+}
+
+function inferPlatform(uni: string): ApplicationPlatform {
+  if (uni.includes('Arts London') || uni.includes('Goldsmiths')) return 'UCAS';
+  return 'UCAS'; // All UK universities use UCAS in this demo
+}
+
+function inferCountry(_uni: string): string {
+  return 'UK'; // All demo universities are UK-based
+}
+
+export const DUMMY_OUTCOMES: CounsellorOutcome[] = (() => {
+  const results: CounsellorOutcome[] = [];
+  const outcomePool: { result: OutcomeResult; weight: number }[] = [
+    { result: 'accepted', weight: 40 },
+    { result: 'rejected', weight: 20 },
+    { result: 'waitlisted', weight: 15 },
+    { result: 'pending', weight: 20 },
+    { result: 'withdrawn', weight: 5 },
+  ];
+  let idx = 0;
+  DUMMY_STUDENTS.forEach((student) => {
+    const name = `${student.personal.firstName} ${student.personal.lastName}`;
+    student.applications.forEach((app) => {
+      const tier: MatchTier = student.matches.find((m) => m.university === app.university)?.tier ?? 'Match';
+      // Deterministic result based on index
+      const poolIdx = idx % 20;
+      let cumulative = 0;
+      let result: OutcomeResult = 'pending';
+      for (const o of outcomePool) {
+        cumulative += o.weight;
+        if (poolIdx < cumulative / 5) { result = o.result; break; }
+      }
+      // Override: planning/in_progress apps are always pending
+      if (app.status === 'planning' || app.status === 'in_progress') result = 'pending';
+
+      results.push({
+        id: `outcome-${student.id}-${idx}`,
+        studentId: student.id,
+        studentName: name,
+        university: app.university,
+        program: app.program,
+        country: inferCountry(app.university),
+        tier,
+        platform: inferPlatform(app.university),
+        result,
+        responseDate: result !== 'pending' ? relDate(-Math.floor(Math.random() * 30 + 5)) : null,
+        conditions: result === 'accepted' && tier === 'Reach' ? 'Conditional on final grades' : null,
+      });
+      idx++;
+    });
+  });
+  return results;
+})();
+
+export const getOutcomeStats = () => {
+  const total = DUMMY_OUTCOMES.length;
+  const accepted = DUMMY_OUTCOMES.filter((o) => o.result === 'accepted').length;
+  const rejected = DUMMY_OUTCOMES.filter((o) => o.result === 'rejected').length;
+  const waitlisted = DUMMY_OUTCOMES.filter((o) => o.result === 'waitlisted').length;
+  const pending = DUMMY_OUTCOMES.filter((o) => o.result === 'pending').length;
+  const withdrawn = DUMMY_OUTCOMES.filter((o) => o.result === 'withdrawn').length;
+  const decided = total - pending;
+  const acceptanceRate = decided > 0 ? Math.round((accepted / decided) * 100) : 0;
+  return { total, accepted, rejected, waitlisted, pending, withdrawn, acceptanceRate };
+};
+
+// ─── At-Risk Alerts ─────────────────────────────────────────────────────────
+
+export type RiskType = 'essay_not_started' | 'missing_documents' | 'stalled_application' | 'low_completion' | 'deadline_approaching';
+export type RiskUrgency = 'critical' | 'high' | 'medium';
+
+export interface AtRiskAlert {
+  studentId: string;
+  studentName: string;
+  flagEmoji: string;
+  riskType: RiskType;
+  urgency: RiskUrgency;
+  description: string;
+  suggestedAction: string;
+}
+
+export const getAtRiskAlerts = (): AtRiskAlert[] => {
+  const alerts: AtRiskAlert[] = [];
+  const now = Date.now();
+
+  DUMMY_STUDENTS.forEach((s) => {
+    const name = `${s.personal.firstName} ${s.personal.lastName}`;
+    const emoji = s.personal.flagEmoji;
+
+    // Low profile completion
+    if (s.profile.completionPct < 70) {
+      alerts.push({
+        studentId: s.id, studentName: name, flagEmoji: emoji,
+        riskType: 'low_completion',
+        urgency: s.profile.completionPct < 50 ? 'critical' : 'high',
+        description: `Profile only ${s.profile.completionPct}% complete — missing sections limit match quality.`,
+        suggestedAction: 'Schedule a session to complete their profile together.',
+      });
+    }
+
+    // Stalled applications (last active > 14 days ago)
+    const daysSinceActive = Math.round((now - new Date(s.lastActive).getTime()) / (1000 * 60 * 60 * 24));
+    if (daysSinceActive > 14 && s.applications.some((a) => a.status === 'planning' || a.status === 'in_progress')) {
+      alerts.push({
+        studentId: s.id, studentName: name, flagEmoji: emoji,
+        riskType: 'stalled_application',
+        urgency: daysSinceActive > 30 ? 'critical' : 'high',
+        description: `No activity for ${daysSinceActive} days with ${s.applications.filter((a) => a.status !== 'submitted' && a.status !== 'decision').length} incomplete application(s).`,
+        suggestedAction: 'Send a check-in message or schedule a meeting.',
+      });
+    }
+
+    // Deadline approaching with planning-stage application
+    s.deadlines.forEach((dl) => {
+      const daysUntil = Math.round((new Date(dl.date).getTime() - now) / (1000 * 60 * 60 * 24));
+      const matchingApp = s.applications.find((a) => a.university === dl.university);
+      if (daysUntil > 0 && daysUntil <= 14 && matchingApp && matchingApp.status === 'planning') {
+        alerts.push({
+          studentId: s.id, studentName: name, flagEmoji: emoji,
+          riskType: 'deadline_approaching',
+          urgency: daysUntil <= 5 ? 'critical' : 'high',
+          description: `${dl.university} deadline in ${daysUntil} days but application is still in planning stage.`,
+          suggestedAction: 'Prioritise this application immediately.',
+        });
+      }
+    });
+
+    // Flagged students
+    if (s.flags.includes('deadline_urgent')) {
+      const existing = alerts.find((a) => a.studentId === s.id && a.riskType === 'deadline_approaching');
+      if (!existing) {
+        alerts.push({
+          studentId: s.id, studentName: name, flagEmoji: emoji,
+          riskType: 'deadline_approaching',
+          urgency: 'critical',
+          description: 'Flagged as having an urgent deadline.',
+          suggestedAction: 'Review deadlines and ensure all materials are ready.',
+        });
+      }
+    }
+
+    if (s.flags.includes('no_matches') && s.matches.length === 0) {
+      alerts.push({
+        studentId: s.id, studentName: name, flagEmoji: emoji,
+        riskType: 'missing_documents',
+        urgency: 'medium',
+        description: 'No university matches generated — profile may need more detail.',
+        suggestedAction: 'Run match generation and review shortlist.',
+      });
+    }
+  });
+
+  // Sort by urgency
+  const urgencyOrder: Record<RiskUrgency, number> = { critical: 0, high: 1, medium: 2 };
+  return alerts.sort((a, b) => urgencyOrder[a.urgency] - urgencyOrder[b.urgency]);
+};
+
+// ─── Multi-Country Application View ─────────────────────────────────────────
+
+export interface EnrichedApplication {
+  studentId: string;
+  studentName: string;
+  flagEmoji: string;
+  university: string;
+  program: string;
+  status: ApplicationStatus;
+  deadline: string;
+  platform: ApplicationPlatform;
+  country: string;
+}
+
+export const getAllApplicationsWithPlatform = (): EnrichedApplication[] => {
+  const apps: EnrichedApplication[] = [];
+  DUMMY_STUDENTS.forEach((s) => {
+    const name = `${s.personal.firstName} ${s.personal.lastName}`;
+    s.applications.forEach((app) => {
+      apps.push({
+        studentId: s.id,
+        studentName: name,
+        flagEmoji: s.personal.flagEmoji,
+        university: app.university,
+        program: app.program,
+        status: app.status,
+        deadline: app.deadline,
+        platform: app.platform ?? inferPlatform(app.university),
+        country: app.country ?? inferCountry(app.university),
+      });
+    });
+  });
+  return apps;
+};
+
+// ─── Parent Communication ───────────────────────────────────────────────────
+
+export interface ParentContact {
+  id: string;
+  studentId: string;
+  studentName: string;
+  flagEmoji: string;
+  parentName: string;
+  relationship: 'Mother' | 'Father' | 'Guardian';
+  email: string;
+  phone: string;
+  lastContacted: string;
+  status: 'active' | 'needs-response' | 'resolved';
+}
+
+export interface ParentMessage {
+  id: string;
+  parentContactId: string;
+  studentId: string;
+  sender: 'counsellor' | 'parent';
+  content: string;
+  date: string;
+  read: boolean;
+  template: string | null;
+}
+
+export const DUMMY_PARENT_CONTACTS: ParentContact[] = [
+  { id: 'pc-1', studentId: 'student-1', studentName: 'Aarav Sharma', flagEmoji: '🇮🇳', parentName: 'Priya Sharma', relationship: 'Mother', email: 'priya.sharma@email.com', phone: '+91 98765 43210', lastContacted: relDate(-3), status: 'active' },
+  { id: 'pc-2', studentId: 'student-2', studentName: 'Sofia Müller', flagEmoji: '🇩🇪', parentName: 'Klaus Müller', relationship: 'Father', email: 'klaus.mueller@email.de', phone: '+49 151 2345 6789', lastContacted: relDate(-7), status: 'needs-response' },
+  { id: 'pc-3', studentId: 'student-3', studentName: 'Liam O\'Brien', flagEmoji: '🇮🇪', parentName: 'Siobhan O\'Brien', relationship: 'Mother', email: 'siobhan.obrien@email.ie', phone: '+353 87 123 4567', lastContacted: relDate(-14), status: 'needs-response' },
+  { id: 'pc-4', studentId: 'student-4', studentName: 'Yuki Tanaka', flagEmoji: '🇯🇵', parentName: 'Takeshi Tanaka', relationship: 'Father', email: 'takeshi.tanaka@email.jp', phone: '+81 90 1234 5678', lastContacted: relDate(-2), status: 'active' },
+  { id: 'pc-5', studentId: 'student-5', studentName: 'Amara Okafor', flagEmoji: '🇳🇬', parentName: 'Chioma Okafor', relationship: 'Mother', email: 'chioma.okafor@email.ng', phone: '+234 803 456 7890', lastContacted: relDate(-5), status: 'resolved' },
+  { id: 'pc-6', studentId: 'student-6', studentName: 'Chen Wei', flagEmoji: '🇨🇳', parentName: 'Chen Mei', relationship: 'Mother', email: 'chen.mei@email.cn', phone: '+86 138 1234 5678', lastContacted: relDate(-1), status: 'active' },
+  { id: 'pc-7', studentId: 'student-7', studentName: 'Isabella Rossi', flagEmoji: '🇮🇹', parentName: 'Marco Rossi', relationship: 'Father', email: 'marco.rossi@email.it', phone: '+39 333 456 7890', lastContacted: relDate(-21), status: 'needs-response' },
+  { id: 'pc-8', studentId: 'student-8', studentName: 'Fatima Al-Hassan', flagEmoji: '🇦🇪', parentName: 'Ahmed Al-Hassan', relationship: 'Father', email: 'ahmed.alhassan@email.ae', phone: '+971 50 123 4567', lastContacted: relDate(-4), status: 'active' },
+  { id: 'pc-9', studentId: 'student-9', studentName: 'Carlos Silva', flagEmoji: '🇧🇷', parentName: 'Maria Silva', relationship: 'Mother', email: 'maria.silva@email.br', phone: '+55 11 98765 4321', lastContacted: relDate(-10), status: 'resolved' },
+  { id: 'pc-10', studentId: 'student-10', studentName: 'Anika Patel', flagEmoji: '🇮🇳', parentName: 'Rajesh Patel', relationship: 'Father', email: 'rajesh.patel@email.in', phone: '+91 99876 54321', lastContacted: relDate(-6), status: 'active' },
+];
+
+export const DUMMY_PARENT_MESSAGES: ParentMessage[] = [
+  // Priya Sharma (student-1)
+  { id: 'pm-1', parentContactId: 'pc-1', studentId: 'student-1', sender: 'counsellor', content: 'Hi Priya, just wanted to update you on Aarav\'s application progress. He\'s submitted to UCL and is working on his Imperial application. Everything is on track.', date: relDate(-7), read: true, template: 'progress_update' },
+  { id: 'pm-2', parentContactId: 'pc-1', studentId: 'student-1', sender: 'parent', content: 'Thank you for the update! We\'re a bit worried about the Edinburgh deadline — has he started on that one?', date: relDate(-6), read: true, template: null },
+  { id: 'pm-3', parentContactId: 'pc-1', studentId: 'student-1', sender: 'counsellor', content: 'Good question — the Edinburgh application is in planning stage. I\'ll make sure he prioritises it this week. Will update you by Friday.', date: relDate(-3), read: true, template: null },
+  // Klaus Müller (student-2)
+  { id: 'pm-4', parentContactId: 'pc-2', studentId: 'student-2', sender: 'counsellor', content: 'Dear Mr. Müller, Sofia has submitted all four of her UCAS applications on time. We\'re now waiting for decisions. I\'ll keep you posted on any updates.', date: relDate(-14), read: true, template: 'progress_update' },
+  { id: 'pm-5', parentContactId: 'pc-2', studentId: 'student-2', sender: 'parent', content: 'Thank you. Has she heard back from Oxford yet? We\'re anxious to know.', date: relDate(-7), read: true, template: null },
+  // Siobhan O'Brien (student-3)
+  { id: 'pm-6', parentContactId: 'pc-3', studentId: 'student-3', sender: 'counsellor', content: 'Hi Siobhan, I wanted to flag that Liam\'s Imperial application deadline is approaching but he hasn\'t progressed beyond the planning stage. Could we schedule a call to discuss how to support him?', date: relDate(-14), read: true, template: 'deadline_reminder' },
+  // Takeshi Tanaka (student-4)
+  { id: 'pm-7', parentContactId: 'pc-4', studentId: 'student-4', sender: 'parent', content: 'Hello, Yuki mentioned she is preparing for her UCAT. Is she on track for the January deadline?', date: relDate(-5), read: true, template: null },
+  { id: 'pm-8', parentContactId: 'pc-4', studentId: 'student-4', sender: 'counsellor', content: 'Yes, Yuki is well prepared. She scored well in her practice tests and the UCAT is booked. Her medical school applications are all submitted. Very strong candidate.', date: relDate(-2), read: true, template: null },
+  // Chioma Okafor (student-5)
+  { id: 'pm-9', parentContactId: 'pc-5', studentId: 'student-5', sender: 'counsellor', content: 'Hi Chioma, great news — Amara has received an offer from Cambridge for Mathematics! She also has offers from Oxford and Bristol. We should discuss her decision soon.', date: relDate(-5), read: true, template: null },
+  { id: 'pm-10', parentContactId: 'pc-5', studentId: 'student-5', sender: 'parent', content: 'That is wonderful news! We are so proud. Can we schedule a meeting to discuss which offer to accept?', date: relDate(-5), read: true, template: null },
+  // Chen Mei (student-6)
+  { id: 'pm-11', parentContactId: 'pc-6', studentId: 'student-6', sender: 'counsellor', content: 'Dear Mrs. Chen, Wei has been inactive on the platform for a few weeks. I know he\'s been focused on the LNAT preparation. Just wanted to check in — is everything okay at home?', date: relDate(-3), read: true, template: null },
+  { id: 'pm-12', parentContactId: 'pc-6', studentId: 'student-6', sender: 'parent', content: 'Thank you for checking. Wei has been stressed about the exam. We\'ll encourage him to get back on track with his applications.', date: relDate(-1), read: true, template: null },
+  // Marco Rossi (student-7)
+  { id: 'pm-13', parentContactId: 'pc-7', studentId: 'student-7', sender: 'counsellor', content: 'Hi Marco, I wanted to remind you that Isabella\'s portfolio submission deadline for UAL is in 2 weeks. She needs to finalise her portfolio by then. Could you help ensure she has time to work on it?', date: relDate(-21), read: true, template: 'deadline_reminder' },
+  // Ahmed Al-Hassan (student-8)
+  { id: 'pm-14', parentContactId: 'pc-8', studentId: 'student-8', sender: 'parent', content: 'Hello, Fatima wants to study in London specifically. Are there other options besides LSE and Warwick that you would recommend?', date: relDate(-6), read: true, template: null },
+  { id: 'pm-15', parentContactId: 'pc-8', studentId: 'student-8', sender: 'counsellor', content: 'Great question! For Economics in London, she could also consider King\'s College London or SOAS. I\'ll send her some programme details this week. Warwick isn\'t in London but has excellent placement rates.', date: relDate(-4), read: true, template: null },
+];
+
+export const getParentContacts = (): ParentContact[] =>
+  DUMMY_PARENT_CONTACTS.sort((a, b) => {
+    const order = { 'needs-response': 0, active: 1, resolved: 2 };
+    return order[a.status] - order[b.status];
+  });
+
+export const getParentMessages = (contactId: string): ParentMessage[] =>
+  DUMMY_PARENT_MESSAGES
+    .filter((m) => m.parentContactId === contactId)
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());

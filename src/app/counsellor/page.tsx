@@ -5,7 +5,8 @@ import { AnimatePresence } from 'framer-motion';
 import { AlertTriangle, TrendingUp, BarChart2, Clock, Activity, PieChart, Trophy } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { PageHero } from '@/components/layout/page-hero';
-import { DUMMY_STUDENTS, getCohortStats, getUpcomingDeadlines, getRecentActivity, getFieldDistribution } from '@/lib/data/counsellor-dummy-data';
+import { DUMMY_STUDENTS, getCohortStats, getUpcomingDeadlines, getRecentActivity, getFieldDistribution, getAtRiskAlerts } from '@/lib/data/counsellor-dummy-data';
+import { AtRiskPanel } from './_components/at-risk-panel';
 import { WidgetGrid, Widget } from './_components/widget-grid';
 import type { WidgetId, DragHandlers } from './_components/widget-grid';
 import { StatsBar } from './_components/stats-bar';
@@ -22,6 +23,7 @@ const stats = getCohortStats();
 const upcomingDeadlines = getUpcomingDeadlines(7);
 const recentActivity = getRecentActivity();
 const fieldDistribution = getFieldDistribution();
+const atRiskAlerts = getAtRiskAlerts();
 
 const WIDGET_ICON_MAP: Record<WidgetId, typeof AlertTriangle> = {
   alerts: AlertTriangle,
@@ -127,6 +129,20 @@ export default function CounsellorOverviewPage() {
       />
 
       <StatsBar stats={stats} />
+
+      {/* At-Risk Students */}
+      {atRiskAlerts.length > 0 && (
+        <div className="surface-card surface-card--static">
+          <div className="relative z-10 space-y-4">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Proactive</p>
+              <h2 className="text-lg font-semibold text-foreground">At-risk students</h2>
+              <p className="text-xs text-muted-foreground">Students who may need your attention based on activity and deadline patterns.</p>
+            </div>
+            <AtRiskPanel alerts={atRiskAlerts} />
+          </div>
+        </div>
+      )}
 
       <WidgetGrid>
         {(visibleWidgets, removeWidget, sizes, toggleSize, dragHandlers) => (

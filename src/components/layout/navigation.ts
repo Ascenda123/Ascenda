@@ -10,7 +10,9 @@ import {
   Settings,
   Sparkles,
   UserCircle,
-  Users
+  Users,
+  Target,
+  MessageSquare
 } from 'lucide-react';
 
 export type NavItem = {
@@ -113,6 +115,24 @@ export const NAV_ITEMS: NavItem[] = [
     href: '/counsellor/documents',
     icon: FileText,
     segment: 'counsellor'
+  },
+  {
+    label: 'Outcomes',
+    href: '/counsellor/outcomes',
+    icon: Target,
+    segment: 'counsellor'
+  },
+  {
+    label: 'Applications',
+    href: '/counsellor/applications',
+    icon: ClipboardCheck,
+    segment: 'counsellor'
+  },
+  {
+    label: 'Parents',
+    href: '/counsellor/parents',
+    icon: MessageSquare,
+    segment: 'counsellor'
   }
 ];
 
@@ -151,7 +171,10 @@ export const COUNSELLOR_SECTION_ITEMS: SectionNavItem[] = [
   { label: 'Students', href: '/counsellor/students' },
   { label: 'Analytics', href: '/counsellor/analytics' },
   { label: 'Deadlines', href: '/counsellor/deadlines' },
-  { label: 'Documents', href: '/counsellor/documents' }
+  { label: 'Documents', href: '/counsellor/documents' },
+  { label: 'Outcomes', href: '/counsellor/outcomes' },
+  { label: 'Applications', href: '/counsellor/applications' },
+  { label: 'Parents', href: '/counsellor/parents' },
 ];
 
 export const isNavActive = (item: NavItem, pathname: string) => {

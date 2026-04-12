@@ -11,5 +11,9 @@ export default async function CounsellorLayout({ children }: { children: ReactNo
     redirect('/login');
   }
 
+  // In production, uncomment the role check below to restrict access:
+  // const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+  // if (profile?.role !== 'counsellor') redirect('/dashboard');
+
   return <DashboardShell>{children}</DashboardShell>;
 }
