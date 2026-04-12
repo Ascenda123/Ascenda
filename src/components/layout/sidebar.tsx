@@ -22,7 +22,7 @@ export const Sidebar = () => {
   };
 
   return (
-    <aside className="glass-panel sticky top-28 hidden w-60 self-start rounded-[24px] p-5 text-foreground transition-colors md:block">
+    <aside className="sticky top-28 hidden w-56 self-start rounded-2xl border border-border bg-card p-4 text-foreground shadow-sm transition-colors md:block dark:border-white/10 dark:bg-card">
       <nav className="space-y-1">
         {items.map((item) => {
           const active = isNavActive(item, pathname);
@@ -32,8 +32,8 @@ export const Sidebar = () => {
               key={item.href}
               href={item.href}
               className={cn(
-                'flex items-center gap-3 rounded-2xl px-3 py-2 text-sm font-medium text-muted-foreground transition hover:bg-muted/40 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-                active && 'bg-muted/60 text-foreground shadow-inner'
+                'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                active && 'bg-primary/10 text-foreground font-semibold'
               )}
             >
               <Icon className={cn('h-4 w-4', active ? 'text-foreground' : 'text-muted-foreground')} aria-hidden />

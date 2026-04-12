@@ -32,7 +32,21 @@
       "Bash(grep -n \"getUser\\\\|redirect\\\\|createServerSupabaseClient\" /Users/gregfranck/Ascenda/src/app/counsellor/students/[id]/page.tsx)",
       "Bash(grep -r \"ErrorBoundary\\\\|Suspense\" /Users/gregfranck/Ascenda/src/components/layout/*.tsx)",
       "Bash(git checkout:*)",
-      "Bash(git diff:*)"
+      "Bash(git diff:*)",
+      "Bash(python3 -c \"import docx; print\\('ok'\\)\")",
+      "Bash(python3 -m pip install python-docx -q)",
+      "Bash(python3)",
+      "WebSearch",
+      "WebFetch(domain:www.cialfo.co)",
+      "WebFetch(domain:edtechimpact.com)",
+      "WebFetch(domain:www.unifrog.org)",
+      "WebFetch(domain:thepharcyte.com)",
+      "WebFetch(domain:www.scoir.com)",
+      "WebFetch(domain:www.powerschool.com)",
+      "WebFetch(domain:www.trustradius.com)",
+      "Read(//Users/gregfranck/Downloads/**)",
+      "Bash(grep -E \"\\\\.\\(ts|tsx\\)$\")",
+      "Bash(xargs ls:*)"
     ]
   }
 }

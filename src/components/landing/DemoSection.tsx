@@ -56,7 +56,7 @@ export function DemoSection() {
                     </div>
                 </div>
 
-                <div className="relative overflow-hidden rounded-[28px] border border-border/50 bg-black/5 dark:bg-white/5 p-4 shadow-2xl">
+                <div className="relative overflow-hidden rounded-2xl border border-border bg-black/5 dark:bg-white/5 p-4 shadow-md">
                     <div className="absolute inset-x-4 top-4 h-12 rounded-full bg-primary/20 blur-3xl opacity-50" />
                     <Image
                         src="/demo-loop.gif"

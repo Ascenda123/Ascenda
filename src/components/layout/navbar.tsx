@@ -41,8 +41,8 @@ export const Navbar = () => {
       <div className="container mx-auto px-4 pb-3 pt-3 md:px-6">
         <div
           className={cn(
-            'flex w-full items-center justify-between rounded-[28px] border border-white/30 bg-background/70 px-4 py-2 text-foreground backdrop-blur-md backdrop-saturate-150 transition-all supports-[backdrop-filter]:bg-background/70 dark:border-white/10 dark:bg-card/70',
-            scrolled ? 'shadow-[0_18px_60px_-30px_rgba(15,23,42,0.45)]' : 'shadow-nav'
+            'flex w-full items-center justify-between rounded-2xl border border-border bg-card/95 px-4 py-2 text-foreground backdrop-blur-lg transition-all dark:border-white/10 dark:bg-card/90',
+            scrolled ? 'shadow-md' : 'shadow-sm'
           )}
         >
           <Link href="/dashboard" className="flex items-center gap-3 text-lg font-semibold text-foreground">

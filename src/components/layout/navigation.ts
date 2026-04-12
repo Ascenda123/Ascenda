@@ -4,9 +4,11 @@ import {
   BarChart2,
   CalendarClock,
   ClipboardCheck,
+  FileText,
   LayoutDashboard,
   Search,
   Settings,
+  Sparkles,
   UserCircle,
   Users
 } from 'lucide-react';
@@ -17,7 +19,7 @@ export type NavItem = {
   icon: LucideIcon;
   exact?: boolean;
   matchers?: Array<(pathname: string) => boolean>;
-  segment: 'home' | 'explore' | 'planner' | 'scholarships' | 'profile' | 'admin' | 'counsellor';
+  segment: 'home' | 'explore' | 'planner' | 'scholarships' | 'profile' | 'toolbox' | 'admin' | 'counsellor';
 };
 
 export type SectionNavItem = {
@@ -67,6 +69,13 @@ export const NAV_ITEMS: NavItem[] = [
     segment: 'profile'
   },
   {
+    label: 'Toolbox',
+    href: '/toolbox',
+    icon: Sparkles,
+    segment: 'toolbox',
+    matchers: [(pathname) => pathname.startsWith('/toolbox')]
+  },
+  {
     label: 'Admin',
     href: '/admin',
     icon: Settings,
@@ -98,6 +107,12 @@ export const NAV_ITEMS: NavItem[] = [
     href: '/counsellor/deadlines',
     icon: CalendarClock,
     segment: 'counsellor'
+  },
+  {
+    label: 'Documents',
+    href: '/counsellor/documents',
+    icon: FileText,
+    segment: 'counsellor'
   }
 ];
 
@@ -110,7 +125,9 @@ export const EXPLORE_SECTION_ITEMS: SectionNavItem[] = [
 
 export const PLANNER_SECTION_ITEMS: SectionNavItem[] = [
   { label: 'Applications', href: '/applications', exact: true },
-  { label: 'Tasks', href: '/applications/tasks' }
+  { label: 'Tasks', href: '/applications/tasks' },
+  { label: 'Documents', href: '/applications/documents' },
+  { label: 'Sandbox', href: '/applications/sandbox' }
 ];
 
 export const PROFILE_SECTION_ITEMS: SectionNavItem[] = [
@@ -120,11 +137,17 @@ export const PROFILE_SECTION_ITEMS: SectionNavItem[] = [
   { label: 'Aspirations', href: '/profile?step=aspirations', matchParam: { key: 'step', value: 'aspirations' } }
 ];
 
+export const TOOLBOX_SECTION_ITEMS: SectionNavItem[] = [
+  { label: 'Building Blocks', href: '/toolbox', exact: true },
+  { label: 'Ascendi Chat', href: '/toolbox/chat' }
+];
+
 export const COUNSELLOR_SECTION_ITEMS: SectionNavItem[] = [
   { label: 'Overview', href: '/counsellor', exact: true },
   { label: 'Students', href: '/counsellor/students' },
   { label: 'Analytics', href: '/counsellor/analytics' },
-  { label: 'Deadlines', href: '/counsellor/deadlines' }
+  { label: 'Deadlines', href: '/counsellor/deadlines' },
+  { label: 'Documents', href: '/counsellor/documents' }
 ];
 
 export const isNavActive = (item: NavItem, pathname: string) => {

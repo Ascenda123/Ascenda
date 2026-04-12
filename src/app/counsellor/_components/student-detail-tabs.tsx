@@ -5,19 +5,22 @@ import { cn } from '@/lib/utils';
 import { CheckCircle2, XCircle, Clock as ClockIcon, BookOpen, MapPin, GraduationCap, Target, FileText, Sparkles, Loader2 } from 'lucide-react';
 import type { CounsellorStudent, CounsellorMatch } from '@/lib/data/counsellor-dummy-data';
 import { NotesPanel } from './notes-panel';
+import { EvolutionTimeline } from '@/components/profile/evolution-timeline';
+import { DEMO_EVOLUTION } from '@/lib/data/student-demo-data';
 
 interface StudentDetailTabsProps {
   student: CounsellorStudent;
 }
 
-type Tab = 'overview' | 'academic' | 'matches' | 'applications' | 'notes';
+type Tab = 'overview' | 'academic' | 'matches' | 'applications' | 'notes' | 'timeline';
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'overview', label: 'Overview' },
   { id: 'academic', label: 'Academic' },
   { id: 'matches', label: 'Matches' },
   { id: 'applications', label: 'Applications' },
-  { id: 'notes', label: 'Notes' }
+  { id: 'notes', label: 'Notes' },
+  { id: 'timeline', label: 'Timeline' }
 ];
 
 const TIER_COLORS = {
@@ -453,6 +456,20 @@ export const StudentDetailTabs = ({ student }: StudentDetailTabsProps) => {
 
       {/* Notes tab */}
       {active === 'notes' && <NotesPanel notes={student.notes} studentId={student.id} />}
+
+      {/* Timeline tab */}
+      {active === 'timeline' && (
+        <div className="surface-card surface-card--static space-y-4">
+          <div>
+            <p className="font-semibold text-foreground">Profile Evolution</p>
+            <p className="text-sm text-muted-foreground">How this student&apos;s goals and interests have evolved over time.</p>
+          </div>
+          <EvolutionTimeline
+            entries={DEMO_EVOLUTION}
+            studentName={`${student.personal.firstName} ${student.personal.lastName}`}
+          />
+        </div>
+      )}
     </div>
   );
 };

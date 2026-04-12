@@ -48,7 +48,7 @@ export function FeaturesSection() {
                     {features.map((feature, index) => (
                         <motion.div
                             key={feature.title}
-                            className="group flex flex-col gap-5 rounded-3xl border border-border/50 bg-background/60 backdrop-blur-sm p-8 shadow-sm hover:shadow-md hover:bg-background/80 transition-all duration-300"
+                            className="group flex flex-col gap-5 rounded-2xl border border-border bg-card p-8 shadow-sm hover:shadow-md hover:bg-card transition-all duration-300"
                             initial={shouldReduceMotion ? false : 'hidden'}
                             whileInView={shouldReduceMotion ? undefined : 'visible'}
                             viewport={{ once: true, amount: 0.3 }}

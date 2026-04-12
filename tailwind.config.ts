@@ -19,22 +19,22 @@ function addVariablesForColors({ addBase, theme }: { addBase: (styles: Record<st
 const customUtilitiesPlugin = plugin(function ({ addComponents, theme }) {
   addComponents({
     '.glass-panel': {
-      '@apply border border-border/60 bg-card/70 backdrop-blur-xl shadow-[0_18px_50px_rgba(15,23,42,0.08)] dark:bg-muted/10 dark:border-white/10 dark:shadow-none': {},
+      '@apply border border-border bg-card shadow-sm dark:bg-card dark:border-white/10': {},
     },
     '.glass-card': {
-      '@apply border border-border/60 bg-card/60 backdrop-blur-lg shadow-[0_18px_45px_rgba(15,23,42,0.08)] dark:bg-muted/20 dark:border-white/10 dark:shadow-none': {},
+      '@apply border border-border bg-card shadow-sm dark:bg-card dark:border-white/10': {},
     },
     '.glass-muted': {
-      '@apply border border-border/60 bg-muted/60 backdrop-blur-md shadow-[0_12px_30px_rgba(15,23,42,0.06)] dark:bg-muted/30 dark:border-white/5': {},
+      '@apply border border-border bg-muted/50 dark:bg-muted/30 dark:border-white/5': {},
     },
     '.glass-pill': {
-      '@apply border border-border/60 bg-background/70 backdrop-blur-md shadow-sm dark:bg-muted/40 dark:border-white/10': {},
+      '@apply border border-border bg-card shadow-sm dark:bg-card dark:border-white/10': {},
     },
     '.glass': {
       '@apply glass-panel': {},
     },
     '.text-glow': {
-      'text-shadow': '0 0 20px rgba(90, 88, 238, 0.55)',
+      'text-shadow': '0 0 20px rgba(90, 88, 238, 0.35)',
     },
     // Form utilities
     '.form-grid': {

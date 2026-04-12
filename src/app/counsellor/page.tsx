@@ -142,10 +142,11 @@ export default function CounsellorOverviewPage() {
 
             {/* Student Roster */}
             <div className="pt-4">
-              <div className="mb-6 flex items-center justify-between border-b border-border pb-4">
+              <div className="mb-6 flex items-center justify-between pb-4">
                 <div>
-                  <h2 className="text-2xl font-semibold">Student Roster</h2>
-                  <p className="text-sm text-muted-foreground">Manage your cohort and track progress</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Cohort</p>
+                  <h2 className="text-2xl font-semibold text-foreground">Student Roster</h2>
+                  <p className="text-xs text-muted-foreground">Manage your cohort and track progress</p>
                 </div>
               </div>
               <StudentRoster

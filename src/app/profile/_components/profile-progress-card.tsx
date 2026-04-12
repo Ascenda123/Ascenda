@@ -47,7 +47,6 @@ export function ProfileProgressCard({
 
   return (
     <div className="surface-card surface-card--static relative overflow-hidden rounded-[28px] p-6">
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-sky-500/10 opacity-70" aria-hidden />
       <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm font-medium text-muted-foreground">Profile completion</p>

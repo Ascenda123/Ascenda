@@ -1,6 +1,7 @@
 import { PageHero } from '@/components/layout/page-hero';
 import { getAllDeadlines, getCohortStats } from '@/lib/data/counsellor-dummy-data';
 import { DeadlineMonitor } from '../_components/deadline-monitor';
+import { AnimatedSection } from '@/components/layout/animated-section';
 
 const stats = getCohortStats();
 const allDeadlines = getAllDeadlines();
@@ -35,7 +36,9 @@ export default function CounsellorDeadlinesPage() {
           { label: 'This Month', value: String(thisMonth), detail: 'Due in ≤30 days' }
         ]}
       />
-      <DeadlineMonitor deadlines={allDeadlines} />
+      <AnimatedSection>
+        <DeadlineMonitor deadlines={allDeadlines} />
+      </AnimatedSection>
     </div>
   );
 }

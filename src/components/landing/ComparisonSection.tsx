@@ -59,9 +59,9 @@ export function ComparisonSection() {
             >
                 <div
                     className={cn(
-                        'relative overflow-hidden rounded-[30px] text-foreground transition-colors',
+                        'relative overflow-hidden rounded-2xl text-foreground transition-colors',
                         'border border-border bg-card shadow-[0_18px_45px_rgba(15,23,42,0.08)]',
-                        'dark:bg-card/80 dark:shadow-2xl'
+                        'dark:bg-card dark:shadow-md'
                     )}
                 >
                     <div className="pointer-events-none absolute inset-0 opacity-20">
@@ -103,7 +103,7 @@ export function ComparisonSection() {
                                         className={cn(
                                             'rounded-[24px] p-5 transition-colors',
                                             'border border-border bg-muted/50 shadow-sm',
-                                            'dark:bg-card/70'
+                                            'dark:bg-card'
                                         )}
                                     >
                                         <p className="text-xs font-semibold uppercase tracking-[0.4em] text-destructive">
@@ -125,7 +125,7 @@ export function ComparisonSection() {
                                             className={cn(
                                                 'flex h-12 w-12 items-center justify-center rounded-full text-[0.65rem] font-semibold uppercase tracking-[0.3em] text-muted-foreground transition-colors',
                                                 'border border-border bg-card',
-                                                'dark:bg-card/70'
+                                                'dark:bg-card'
                                             )}
                                         >
                                             vs

@@ -330,13 +330,47 @@ export default async function ApplicationsPage() {
           }}
         />
         <ApplicationPriorityBoard items={priorityItems} />
+
+        {/* Quick links to documents & sandbox */}
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Link
+            href="/applications/documents"
+            className="surface-card group flex items-center gap-4 rounded-[28px] p-5 transition hover:-translate-y-0.5"
+          >
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-violet-500/10 text-violet-600 ring-1 ring-violet-500/20 dark:text-violet-400">
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-foreground">Document centre</p>
+              <p className="text-xs text-muted-foreground">Rec letters, transcripts, and uploads</p>
+            </div>
+          </Link>
+          <Link
+            href="/applications/sandbox"
+            className="surface-card group flex items-center gap-4 rounded-[28px] p-5 transition hover:-translate-y-0.5"
+          >
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600 ring-1 ring-emerald-500/20 dark:text-emerald-400">
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.59 14.37a6 6 0 01-5.84 7.38v-4.8m5.84-2.58a14.98 14.98 0 006.16-12.12A14.98 14.98 0 009.631 8.41m5.96 5.96a14.926 14.926 0 01-5.841 2.58m-.119-8.54a6 6 0 00-7.381 5.84h4.8m2.581-5.84a14.927 14.927 0 00-2.58 5.841m2.699 2.7c-.103.021-.207.041-.311.06a15.09 15.09 0 01-2.448-2.448 14.9 14.9 0 01.06-.312m-2.24 2.39a4.493 4.493 0 00-1.757 4.306 4.493 4.493 0 004.306-1.758M16.5 9a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-foreground">Application sandbox</p>
+              <p className="text-xs text-muted-foreground">Preview unified submission</p>
+            </div>
+          </Link>
+        </div>
+
         <PlannerCalendar events={plannerEvents} />
         <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
           <RequirementTracker items={requirementItems} />
           <div className="surface-stage space-y-4">
             <div>
-              <p className="text-sm font-semibold text-foreground">Today’s focus</p>
-              <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Daily brief</p>
+              <p className="text-lg font-semibold text-foreground">Today&apos;s focus</p>
+              <p className="mt-1 text-sm text-muted-foreground leading-relaxed">
                 {dailySummary.tasks} {dailySummary.tasks === 1 ? 'task' : 'tasks'} • {dailySummary.deadlines}{' '}
                 {dailySummary.deadlines === 1 ? 'deadline' : 'deadlines'} • {dailySummary.interviews}{' '}
                 {dailySummary.interviews === 1 ? 'interview' : 'interviews'}
@@ -348,12 +382,18 @@ export default async function ApplicationsPage() {
 
         <div className="grid gap-6 lg:grid-cols-3">
           <div className="surface-stage space-y-4 rounded-[28px]">
-            <h2 className="text-2xl font-semibold text-foreground">Upload documents</h2>
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Files</p>
+              <p className="text-lg font-semibold text-foreground">Upload documents</p>
+            </div>
             <DocumentUploader applicationId={appRecords[0]?.id ?? null} />
           </div>
           <SignalCenter signals={signalItems} />
           <div className="surface-stage space-y-4 rounded-[28px]">
-            <h2 className="text-2xl font-semibold text-foreground">Upcoming deadlines</h2>
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Timeline</p>
+              <p className="text-lg font-semibold text-foreground">Upcoming deadlines</p>
+            </div>
             <DeadlineTimeline items={timelineItems} />
           </div>
         </div>

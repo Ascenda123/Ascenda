@@ -9,6 +9,7 @@ import {
   CompletionBreakdown
 } from '../_components/analytics-charts';
 import { ExportButton } from '../_components/export-button';
+import { AnimatedSection, AnimatedGrid, AnimatedGridItem } from '@/components/layout/animated-section';
 
 const stats = getCohortStats();
 const fieldDistribution = getFieldDistribution();
@@ -51,85 +52,92 @@ export default function CounsellorAnalyticsPage() {
       />
 
       {/* Row 1: Programme + IB distribution */}
-      <div className="grid gap-4 md:grid-cols-2">
-        <ProgrammeSplit breakdown={stats.programmeBreakdown} />
-        <IbDistribution buckets={ibBuckets} />
-      </div>
+      <AnimatedGrid className="grid gap-4 md:grid-cols-2">
+        <AnimatedGridItem><ProgrammeSplit breakdown={stats.programmeBreakdown} /></AnimatedGridItem>
+        <AnimatedGridItem><IbDistribution buckets={ibBuckets} /></AnimatedGridItem>
+      </AnimatedGrid>
 
       {/* Row 2: Fields + completion */}
-      <div className="grid gap-4 md:grid-cols-2">
-        <FieldChart fields={fieldDistribution} />
-        <CompletionBreakdown students={completionData} />
-      </div>
+      <AnimatedGrid className="grid gap-4 md:grid-cols-2">
+        <AnimatedGridItem><FieldChart fields={fieldDistribution} /></AnimatedGridItem>
+        <AnimatedGridItem><CompletionBreakdown students={completionData} /></AnimatedGridItem>
+      </AnimatedGrid>
 
       {/* Row 3: Funnel + match tiers */}
-      <div className="grid gap-4 md:grid-cols-2">
-        <FullFunnel funnel={stats.appFunnel} />
-        <MatchTierSummary tiers={stats.matchTiers} />
-      </div>
+      <AnimatedGrid className="grid gap-4 md:grid-cols-2">
+        <AnimatedGridItem><FullFunnel funnel={stats.appFunnel} /></AnimatedGridItem>
+        <AnimatedGridItem><MatchTierSummary tiers={stats.matchTiers} /></AnimatedGridItem>
+      </AnimatedGrid>
 
       {/* Key insights */}
+      <AnimatedSection delay={0.1}>
       <div className="surface-card surface-card--static space-y-4">
-        <p className="text-sm font-semibold text-foreground">Key Insights</p>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {[
-            {
-              label: 'Profile gaps',
-              value: `${stats.flagged} student${stats.flagged !== 1 ? 's' : ''}`,
-              detail: 'have incomplete profiles affecting match quality',
-              color: 'text-amber-600',
-              bg: 'bg-amber-500/10',
-              border: 'border-amber-200/50 dark:border-amber-500/20'
-            },
-            {
-              label: 'Top destination',
-              value: 'United Kingdom',
-              detail: 'is the #1 preferred study destination across the cohort',
-              color: 'text-violet-600',
-              bg: 'bg-violet-500/10',
-              border: 'border-violet-200/50 dark:border-violet-500/20'
-            },
-            {
-              label: 'Submission rate',
-              value: `${Math.round((stats.appFunnel.submitted / (totalApps || 1)) * 100)}%`,
-              detail: 'of all applications have been submitted',
-              color: 'text-emerald-600',
-              bg: 'bg-emerald-500/10',
-              border: 'border-emerald-200/50 dark:border-emerald-500/20'
-            },
-            {
-              label: 'Deadlines this week',
-              value: String(stats.deadlinesThisWeek),
-              detail: `deadline${stats.deadlinesThisWeek !== 1 ? 's' : ''} require immediate attention`,
-              color: 'text-red-500',
-              bg: 'bg-red-500/10',
-              border: 'border-red-200/50 dark:border-red-500/20'
-            },
-            {
-              label: 'Reach applications',
-              value: `${stats.matchTiers.reach}`,
-              detail: 'matches are Reach-tier — worth monitoring closely',
-              color: 'text-rose-600',
-              bg: 'bg-rose-500/10',
-              border: 'border-rose-200/50 dark:border-rose-500/20'
-            },
-            {
-              label: 'Safe coverage',
-              value: `${DUMMY_STUDENTS.filter((s) => s.matches.some((m) => m.tier === 'Safe')).length} / ${stats.total}`,
-              detail: 'students have at least one Safe-tier option',
-              color: 'text-sky-600',
-              bg: 'bg-sky-500/10',
-              border: 'border-sky-200/50 dark:border-sky-500/20'
-            }
-          ].map(({ label, value, detail, color, bg, border }) => (
-            <div key={label} className={`rounded-2xl border px-4 py-4 ${bg} ${border}`}>
-              <p className={`text-lg font-bold ${color}`}>{value}</p>
-              <p className="text-xs font-semibold text-foreground">{label}</p>
-              <p className="mt-0.5 text-xs text-muted-foreground">{detail}</p>
-            </div>
-          ))}
+        <div className="relative z-10 space-y-4">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Insights</p>
+            <p className="text-lg font-semibold text-foreground">Key takeaways</p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {[
+              {
+                label: 'Profile gaps',
+                value: `${stats.flagged} student${stats.flagged !== 1 ? 's' : ''}`,
+                detail: 'have incomplete profiles affecting match quality',
+                color: 'text-amber-600',
+                bg: 'bg-amber-500/10',
+                border: 'border-amber-200/50 dark:border-amber-500/20'
+              },
+              {
+                label: 'Top destination',
+                value: 'United Kingdom',
+                detail: 'is the #1 preferred study destination across the cohort',
+                color: 'text-violet-600',
+                bg: 'bg-violet-500/10',
+                border: 'border-violet-200/50 dark:border-violet-500/20'
+              },
+              {
+                label: 'Submission rate',
+                value: `${Math.round((stats.appFunnel.submitted / (totalApps || 1)) * 100)}%`,
+                detail: 'of all applications have been submitted',
+                color: 'text-emerald-600',
+                bg: 'bg-emerald-500/10',
+                border: 'border-emerald-200/50 dark:border-emerald-500/20'
+              },
+              {
+                label: 'Deadlines this week',
+                value: String(stats.deadlinesThisWeek),
+                detail: `deadline${stats.deadlinesThisWeek !== 1 ? 's' : ''} require immediate attention`,
+                color: 'text-red-500',
+                bg: 'bg-red-500/10',
+                border: 'border-red-200/50 dark:border-red-500/20'
+              },
+              {
+                label: 'Reach applications',
+                value: `${stats.matchTiers.reach}`,
+                detail: 'matches are Reach-tier — worth monitoring closely',
+                color: 'text-rose-600',
+                bg: 'bg-rose-500/10',
+                border: 'border-rose-200/50 dark:border-rose-500/20'
+              },
+              {
+                label: 'Safe coverage',
+                value: `${DUMMY_STUDENTS.filter((s) => s.matches.some((m) => m.tier === 'Safe')).length} / ${stats.total}`,
+                detail: 'students have at least one Safe-tier option',
+                color: 'text-sky-600',
+                bg: 'bg-sky-500/10',
+                border: 'border-sky-200/50 dark:border-sky-500/20'
+              }
+            ].map(({ label, value, detail, color, bg, border }) => (
+              <div key={label} className={`rounded-2xl border px-4 py-4 ${bg} ${border}`}>
+                <p className={`text-lg font-bold ${color}`}>{value}</p>
+                <p className="text-xs font-semibold text-foreground">{label}</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">{detail}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
+      </AnimatedSection>
     </div>
   );
 }

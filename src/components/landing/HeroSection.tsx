@@ -215,7 +215,7 @@ export function HeroSection() {
                                 asChild
                                 size="sm"
                                 variant="outline"
-                                className="bg-background/50 backdrop-blur-md border-border text-foreground hover:bg-muted/60"
+                                className="bg-card border-border text-foreground hover:bg-muted/60"
                             >
                                 <Link href={launchHref} className="flex items-center gap-2">
                                     <Laptop className="h-4 w-4" />
@@ -284,7 +284,7 @@ export function HeroSection() {
                                         asChild
                                         size="lg"
                                         variant="outline"
-                                        className="border-border bg-card/70 text-foreground hover:bg-muted/60"
+                                        className="border-border bg-card text-foreground hover:bg-muted/60"
                                     >
                                         <Link href="#features">See product tour</Link>
                                     </Button>
@@ -311,7 +311,7 @@ export function HeroSection() {
                                 </motion.ul>
                             </div>
                             <motion.div
-                                className="rounded-[36px] border border-border bg-card/50 p-6 text-card-foreground shadow-2xl backdrop-blur-xl"
+                                className="rounded-2xl border border-border bg-card p-5 text-card-foreground shadow-md"
                                 initial="hidden"
                                 animate={isTypingDone ? 'visible' : 'hidden'}
                                 variants={dashboardContainerVariants}
@@ -327,7 +327,7 @@ export function HeroSection() {
                                     </span>
                                     <div className="flex gap-2">
                                         <motion.span
-                                            className="flex items-center gap-1 rounded-full border border-border bg-card/70 px-3 py-0.5 text-[0.55rem] text-foreground"
+                                            className="flex items-center gap-1 rounded-full border border-border bg-card px-3 py-0.5 text-[0.55rem] text-foreground"
                                             animate={isTypingDone ? { scale: [1, 1.06, 1], opacity: [0.8, 1, 0.8] } : undefined}
                                             transition={{ duration: 1.2, delay: 1.4, repeat: 1 }}
                                         >
@@ -335,7 +335,7 @@ export function HeroSection() {
                                             Plan
                                         </motion.span>
                                         <motion.span
-                                            className="flex items-center gap-1 rounded-full border border-border bg-card/70 px-3 py-0.5 text-[0.55rem] text-foreground"
+                                            className="flex items-center gap-1 rounded-full border border-border bg-card px-3 py-0.5 text-[0.55rem] text-foreground"
                                             animate={isTypingDone ? { scale: [1, 1.06, 1], opacity: [0.8, 1, 0.8] } : undefined}
                                             transition={{ duration: 1.2, delay: 1.6, repeat: 1 }}
                                         >
@@ -343,7 +343,7 @@ export function HeroSection() {
                                             Signals
                                         </motion.span>
                                         <motion.span
-                                            className="flex items-center gap-1 rounded-full border border-border bg-card/70 px-3 py-0.5 text-[0.55rem] text-foreground"
+                                            className="flex items-center gap-1 rounded-full border border-border bg-card px-3 py-0.5 text-[0.55rem] text-foreground"
                                             animate={isTypingDone ? { scale: [1, 1.06, 1], opacity: [0.8, 1, 0.8] } : undefined}
                                             transition={{ duration: 1.2, delay: 1.8, repeat: 1 }}
                                         >
@@ -354,7 +354,7 @@ export function HeroSection() {
                                 </motion.div>
                                 <div className="mt-6 space-y-4">
                                     <motion.div
-                                        className="rounded-[24px] border border-border bg-card/70 px-5 py-4"
+                                        className="rounded-xl border border-border bg-card px-5 py-4"
                                         variants={dashboardItemVariants}
                                     >
                                         <div className="flex items-center justify-between">
@@ -387,7 +387,7 @@ export function HeroSection() {
                                     </motion.div>
                                     <div className="grid gap-3 md:grid-cols-2">
                                         <motion.div
-                                            className="rounded-[24px] border border-border bg-card/70 px-5 py-4"
+                                            className="rounded-xl border border-border bg-card px-5 py-4"
                                             variants={dashboardItemVariants}
                                         >
                                             <p className="text-xs uppercase tracking-[0.35em] text-muted-foreground">Next actions</p>
@@ -397,7 +397,7 @@ export function HeroSection() {
                                                         <span className="h-2.5 w-2.5 rounded-full bg-gradient-to-b from-emerald-400 to-cyan-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]" />
                                                         <span className="font-medium">Scholarship essay</span>
                                                     </div>
-                                                    <span className="rounded-full border border-border bg-card/70 px-3 py-1 text-[0.6rem] uppercase tracking-[0.35em] text-muted-foreground">
+                                                    <span className="rounded-full border border-border bg-card px-3 py-1 text-[0.6rem] uppercase tracking-[0.35em] text-muted-foreground">
                                                         Due Fri
                                                     </span>
                                                 </li>
@@ -406,14 +406,14 @@ export function HeroSection() {
                                                         <span className="h-2.5 w-2.5 rounded-full bg-gradient-to-b from-amber-300 to-rose-400 shadow-[0_0_8px_rgba(251,191,36,0.6)]" />
                                                         <span className="font-medium">Portfolio upload</span>
                                                     </div>
-                                                    <span className="rounded-full border border-border bg-card/70 px-3 py-1 text-[0.6rem] uppercase tracking-[0.35em] text-muted-foreground">
+                                                    <span className="rounded-full border border-border bg-card px-3 py-1 text-[0.6rem] uppercase tracking-[0.35em] text-muted-foreground">
                                                         Review
                                                     </span>
                                                 </li>
                                             </ul>
                                         </motion.div>
                                         <motion.div
-                                            className="rounded-[24px] border border-border bg-card/70 px-5 py-4"
+                                            className="rounded-xl border border-border bg-card px-5 py-4"
                                             variants={dashboardItemVariants}
                                         >
                                             <p className="text-xs uppercase tracking-[0.35em] text-muted-foreground">Notes sync</p>
@@ -430,7 +430,7 @@ export function HeroSection() {
                                         </motion.div>
                                     </div>
                                     <motion.div
-                                        className="rounded-[24px] border border-border px-5 py-4 bg-card/70"
+                                        className="rounded-xl border border-border px-5 py-4 bg-card"
                                         variants={dashboardItemVariants}
                                     >
                                         <p className="text-xs uppercase tracking-[0.35em] text-muted-foreground">Active signals</p>

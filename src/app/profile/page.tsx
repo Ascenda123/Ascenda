@@ -14,6 +14,8 @@ import { recalculateStudentScore, resubmitStudentProfile } from './actions';
 import { Compass, GraduationCap, MapPin, Target } from 'lucide-react';
 import { StudentWorkspaceDock } from '@/components/layout/student-workspace-dock';
 import { AnimatedSection, AnimatedGrid, AnimatedGridItem } from '@/components/layout/animated-section';
+import { EvolutionTimeline } from '@/components/profile/evolution-timeline';
+import { DEMO_EVOLUTION } from '@/lib/data/student-demo-data';
 
 export const metadata: Metadata = {
   title: 'Profile | Ascenda'
@@ -161,8 +163,7 @@ export default async function ProfilePage() {
         }}
       />
       <AnimatedGrid className="mt-8 grid gap-8 lg:grid-cols-2">
-        <AnimatedGridItem className="surface-card surface-card--static relative rounded-[32px] p-8">
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-emerald-400/10 opacity-70" aria-hidden />
+        <AnimatedGridItem className="surface-card surface-card--static">
           <div className="relative z-10 flex items-start justify-between gap-4">
             <div className="space-y-1">
               <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Profile</p>
@@ -245,8 +246,7 @@ export default async function ProfilePage() {
           </div>
         </AnimatedGridItem>
         <AnimatedGridItem className="space-y-8">
-          <div className="surface-card relative rounded-[32px] p-6">
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-emerald-400/10 opacity-70" aria-hidden />
+          <div className="surface-card">
             <div className="relative z-10 flex items-start justify-between gap-4">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Lifestyle</p>
@@ -287,8 +287,7 @@ export default async function ProfilePage() {
               </Button>
             </div>
           </div>
-          <div className="surface-card relative rounded-[32px] p-6">
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-emerald-400/10 opacity-70" aria-hidden />
+          <div className="surface-card">
             <div className="relative z-10 flex items-start justify-between gap-4">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Academics</p>
@@ -359,8 +358,7 @@ export default async function ProfilePage() {
           nextStepTitle={nextStep?.title}
           stepCompletion={stepCompletion}
         />
-        <div className="surface-card surface-card--static relative rounded-[32px] p-8 text-sm text-muted-foreground">
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-emerald-400/10 opacity-70" aria-hidden />
+        <div className="surface-card surface-card--static text-sm text-muted-foreground">
           <div className="relative z-10">
             <p className="text-base font-semibold text-foreground">Why it matters</p>
             <ul className="mt-4 space-y-3 text-foreground/80">
@@ -376,8 +374,7 @@ export default async function ProfilePage() {
         </div>
       </AnimatedGrid>
       <AnimatedSection className="mt-8" delay={0.1}>
-        <div className="surface-card surface-card--static relative rounded-[32px] p-8 text-sm text-muted-foreground">
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-emerald-400/10 opacity-70" aria-hidden />
+        <div className="surface-card surface-card--static text-sm text-muted-foreground">
           <div className="relative z-10 space-y-4">
             <div className="flex items-start justify-between gap-3">
               <div>
@@ -414,6 +411,16 @@ export default async function ProfilePage() {
                 <Link href="/matches">Preview matches</Link>
               </Button>
             </div>
+          </div>
+        </div>
+      </AnimatedSection>
+      <AnimatedSection className="mt-8" delay={0.12}>
+        <div className="surface-card surface-card--static">
+          <div className="relative z-10">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Evolution timeline</p>
+            <p className="text-lg font-semibold text-foreground mb-1">Your journey so far</p>
+            <p className="text-xs text-muted-foreground mb-6">See how your goals and interests have evolved over time.</p>
+            <EvolutionTimeline entries={DEMO_EVOLUTION} />
           </div>
         </div>
       </AnimatedSection>

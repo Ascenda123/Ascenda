@@ -17,6 +17,10 @@ import { PROFILE_STEPS } from '@/lib/profile/steps';
 import type { PulseCardIcon } from '@/components/dashboard/pulse-cards';
 import { StudentWorkspaceDock } from '@/components/layout/student-workspace-dock';
 import { PulseCards } from '@/components/dashboard/pulse-cards';
+import { DeadlineNudges } from '@/components/dashboard/deadline-nudges';
+import { OutcomeTracker } from '@/components/dashboard/outcome-tracker';
+import { DEMO_NUDGES, DEMO_OUTCOMES } from '@/lib/data/student-demo-data';
+import { AnimatedSection } from '@/components/layout/animated-section';
 
 type ChecklistRow = Database['public']['Tables']['application_checklist']['Row'];
 type DeadlineRow = Database['public']['Tables']['deadlines']['Row'];
@@ -305,56 +309,108 @@ export default async function DashboardPage() {
 
         <PulseCards cards={pulseCards} />
 
+        {/* Proactive deadline nudges */}
+        <AnimatedSection>
+          <div className="surface-card surface-card--static">
+            <div className="relative z-10 space-y-4">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Action needed</p>
+                <p className="text-lg font-semibold text-foreground">Upcoming reminders</p>
+                <p className="text-xs text-muted-foreground">Proactive nudges so nothing slips through the cracks.</p>
+              </div>
+              <DeadlineNudges nudges={DEMO_NUDGES} />
+            </div>
+          </div>
+        </AnimatedSection>
+
         <DashboardOverview data={overviewPayload} />
 
         {deadlines.length > 0 ? (
-          <div className="surface-card surface-card--static space-y-4">
-            <h2 className="text-2xl font-semibold text-foreground">Upcoming deadlines</h2>
-            <DeadlineTimeline
-              items={deadlines.map((deadline) => ({
-                id: deadline.id,
-                name: deadline.name,
-                date: deadline.deadline_date ?? 'TBD',
-                context: deadline.intake ?? 'Application period'
-              }))}
-            />
-          </div>
-        ) : null}
-
-        <TaskListPanel
-          title="Application checklist"
-          tasks={checklist.map((item) => ({
-            id: item.id,
-            name: item.task_name,
-            status: item.status,
-            dueDate: item.due_date ?? undefined
-          }))}
-        />
-
-        <div className="surface-card surface-card--static space-y-4 overflow-hidden">
-          <h2 className="text-2xl font-semibold text-foreground">Recommended programs</h2>
-          {matchError ? (
-            <div className="space-y-3 text-sm text-muted-foreground">
-              <p className="text-base font-semibold text-foreground">Matches are temporarily unavailable</p>
-              <p>We couldn&apos;t load recommendations. Please try again shortly.</p>
-            </div>
-          ) : matches.length > 0 ? (
-            <MatchList matches={matches} />
-          ) : (
-            <div className="space-y-3 text-sm text-muted-foreground">
-              <p className="text-base font-semibold text-foreground">No recommendations yet</p>
-              <p>Complete your profile and add preferred destinations to see personalized matches.</p>
-              <div className="flex flex-wrap gap-2">
-                <Button asChild size="sm">
-                  <Link href="/profile">Finish profile</Link>
-                </Button>
-                <Button asChild size="sm" variant="outline">
-                  <Link href="/matches">See all matches</Link>
-                </Button>
+          <AnimatedSection delay={0.05}>
+            <div className="surface-card surface-card--static">
+              <div className="relative z-10 space-y-4">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Timeline</p>
+                  <p className="text-lg font-semibold text-foreground">Upcoming deadlines</p>
+                </div>
+                <DeadlineTimeline
+                  items={deadlines.map((deadline) => ({
+                    id: deadline.id,
+                    name: deadline.name,
+                    date: deadline.deadline_date ?? 'TBD',
+                    context: deadline.intake ?? 'Application period'
+                  }))}
+                />
               </div>
             </div>
-          )}
-        </div>
+          </AnimatedSection>
+        ) : null}
+
+        <AnimatedSection delay={0.08}>
+          <div className="surface-card surface-card--static">
+            <div className="relative z-10 space-y-4">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Tasks</p>
+                <p className="text-lg font-semibold text-foreground">Application checklist</p>
+              </div>
+              <TaskListPanel
+                title=""
+                tasks={checklist.map((item) => ({
+                  id: item.id,
+                  name: item.task_name,
+                  status: item.status,
+                  dueDate: item.due_date ?? undefined
+                }))}
+              />
+            </div>
+          </div>
+        </AnimatedSection>
+
+        {/* Outcome recording */}
+        <AnimatedSection delay={0.1}>
+          <div className="surface-card surface-card--static">
+            <div className="relative z-10 space-y-4">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Outcomes</p>
+                <p className="text-lg font-semibold text-foreground">Application results</p>
+                <p className="text-xs text-muted-foreground">Track decisions as they come in from your universities.</p>
+              </div>
+              <OutcomeTracker outcomes={DEMO_OUTCOMES} />
+            </div>
+          </div>
+        </AnimatedSection>
+
+        <AnimatedSection delay={0.12}>
+          <div className="surface-card surface-card--static">
+            <div className="relative z-10 space-y-4">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Matches</p>
+                <p className="text-lg font-semibold text-foreground">Recommended programs</p>
+              </div>
+              {matchError ? (
+                <div className="space-y-3 text-sm text-muted-foreground">
+                  <p className="text-base font-semibold text-foreground">Matches are temporarily unavailable</p>
+                  <p>We couldn&apos;t load recommendations. Please try again shortly.</p>
+                </div>
+              ) : matches.length > 0 ? (
+                <MatchList matches={matches} />
+              ) : (
+                <div className="space-y-3 text-sm text-muted-foreground">
+                  <p className="text-base font-semibold text-foreground">No recommendations yet</p>
+                  <p>Complete your profile and add preferred destinations to see personalized matches.</p>
+                  <div className="flex flex-wrap gap-2">
+                    <Button asChild size="sm">
+                      <Link href="/profile">Finish profile</Link>
+                    </Button>
+                    <Button asChild size="sm" variant="outline">
+                      <Link href="/matches">See all matches</Link>
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </AnimatedSection>
       </div>
     </DashboardShell>
   );
