@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { motion } from 'framer-motion';
-import { CalendarClock, Filter } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { CalendarClock, Filter, LayoutGrid, List, ChevronLeft, ChevronRight, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { stagger, cardFade } from '@/lib/motion';
 import type { TimelineDeadline, TimelineDeadlineType } from '@/lib/data/student-demo-data';
@@ -16,6 +16,7 @@ const TYPE_CONFIG: Record<TimelineDeadlineType, { color: string; bg: string; dot
 
 const dateFormatter = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 const monthFormatter = new Intl.DateTimeFormat('en-GB', { month: 'short', year: 'numeric' });
+const dayOfWeek = new Intl.DateTimeFormat('en-GB', { weekday: 'short' });
 
 function daysUntil(dateStr: string): number {
   const now = new Date();
@@ -25,6 +26,23 @@ function daysUntil(dateStr: string): number {
   return Math.round((target.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 }
 
+function urgencyColor(days: number): string {
+  if (days <= 0) return 'text-rose-600 bg-rose-500/10';
+  if (days <= 3) return 'text-rose-600 bg-rose-500/10';
+  if (days <= 7) return 'text-amber-600 bg-amber-500/10';
+  return 'text-muted-foreground bg-muted/30';
+}
+
+function getCalendarDays(year: number, month: number): (Date | null)[] {
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+  const startPad = (firstDay.getDay() + 6) % 7; // Monday start
+  const days: (Date | null)[] = [];
+  for (let i = 0; i < startPad; i++) days.push(null);
+  for (let d = 1; d <= lastDay.getDate(); d++) days.push(new Date(year, month, d));
+  return days;
+}
+
 interface DeadlineTimelineToolProps {
   deadlines: TimelineDeadline[];
 }
@@ -32,6 +50,13 @@ interface DeadlineTimelineToolProps {
 export function DeadlineTimelineTool({ deadlines }: DeadlineTimelineToolProps) {
   const [filterType, setFilterType] = useState<TimelineDeadlineType | null>(null);
   const [filterUniversity, setFilterUniversity] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'timeline' | 'calendar'>('timeline');
+  const [selectedDeadline, setSelectedDeadline] = useState<string | null>(null);
+
+  // Calendar state
+  const now = new Date();
+  const [calMonth, setCalMonth] = useState(now.getMonth());
+  const [calYear, setCalYear] = useState(now.getFullYear());
 
   const universities = useMemo(() => [...new Set(deadlines.map((d) => d.university))], [deadlines]);
 
@@ -43,11 +68,12 @@ export function DeadlineTimelineTool({ deadlines }: DeadlineTimelineToolProps) {
   }, [deadlines, filterType, filterUniversity]);
 
   const focusDeadlines = filtered.filter((d) => daysUntil(d.date) <= 14 && daysUntil(d.date) >= 0);
+  const overdueDeadlines = filtered.filter((d) => daysUntil(d.date) < 0);
 
-  // Group by month
+  // Group by month for timeline
   const grouped = useMemo(() => {
     const map = new Map<string, TimelineDeadline[]>();
-    filtered.forEach((d) => {
+    filtered.filter((d) => daysUntil(d.date) >= 0).forEach((d) => {
       const key = monthFormatter.format(new Date(d.date));
       if (!map.has(key)) map.set(key, []);
       map.get(key)!.push(d);
@@ -55,27 +81,90 @@ export function DeadlineTimelineTool({ deadlines }: DeadlineTimelineToolProps) {
     return [...map.entries()];
   }, [filtered]);
 
+  // Calendar data
+  const calendarDays = useMemo(() => getCalendarDays(calYear, calMonth), [calYear, calMonth]);
+  const deadlinesByDate = useMemo(() => {
+    const map = new Map<string, TimelineDeadline[]>();
+    filtered.forEach((d) => {
+      const key = d.date;
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(d);
+    });
+    return map;
+  }, [filtered]);
+
+  const navigateMonth = (delta: number) => {
+    const d = new Date(calYear, calMonth + delta, 1);
+    setCalMonth(d.getMonth());
+    setCalYear(d.getFullYear());
+  };
+
   return (
     <div className="space-y-6">
+      {/* Overdue warning */}
+      {overdueDeadlines.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="rounded-2xl border border-rose-200/60 bg-rose-500/5 p-4 flex items-start gap-3"
+        >
+          <AlertCircle className="h-5 w-5 text-rose-500 shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-semibold text-rose-600">{overdueDeadlines.length} overdue deadline{overdueDeadlines.length !== 1 ? 's' : ''}</p>
+            <div className="flex flex-wrap gap-2 mt-1.5">
+              {overdueDeadlines.map((d) => (
+                <span key={d.id} className="text-xs text-rose-600/80">{d.title} ({Math.abs(daysUntil(d.date))}d ago)</span>
+              ))}
+            </div>
+          </div>
+        </motion.div>
+      )}
+
       {/* Focus cards: next 14 days */}
       {focusDeadlines.length > 0 && (
         <div className="space-y-3">
-          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Next 14 days</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">Next 14 days</p>
           <motion.div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" variants={stagger} initial="hidden" animate="show">
             {focusDeadlines.map((d) => {
               const cfg = TYPE_CONFIG[d.type];
               const days = daysUntil(d.date);
               return (
-                <motion.div key={d.id} variants={cardFade} className={cn('rounded-2xl border p-4 space-y-2', cfg.bg)}>
+                <motion.div
+                  key={d.id}
+                  variants={cardFade}
+                  whileHover={{ scale: 1.02, y: -2 }}
+                  className={cn('rounded-2xl border p-4 space-y-2 cursor-pointer transition-shadow hover:shadow-lg', cfg.bg)}
+                  onClick={() => setSelectedDeadline(selectedDeadline === d.id ? null : d.id)}
+                >
                   <div className="flex items-center justify-between">
                     <span className={cn('rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase', cfg.bg, cfg.color)}>{cfg.label}</span>
-                    <span className={cn('text-xs font-semibold', days <= 3 ? 'text-rose-600' : days <= 7 ? 'text-amber-600' : 'text-muted-foreground')}>
+                    <span className={cn('rounded-full px-2 py-0.5 text-[10px] font-bold', urgencyColor(days))}>
                       {days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : `${days} days`}
                     </span>
                   </div>
                   <p className="text-sm font-semibold text-foreground">{d.title}</p>
                   <p className="text-xs text-muted-foreground">{d.university}</p>
-                  {d.detail && <p className="text-xs text-muted-foreground">{d.detail}</p>}
+                  {/* Urgency bar */}
+                  <div className="h-1 rounded-full bg-muted/30 overflow-hidden">
+                    <motion.div
+                      className={cn('h-full rounded-full', days <= 3 ? 'bg-rose-500' : days <= 7 ? 'bg-amber-500' : 'bg-emerald-500')}
+                      initial={{ width: '100%' }}
+                      animate={{ width: `${Math.max(100 - (days / 14) * 100, 5)}%` }}
+                      transition={{ duration: 0.5 }}
+                    />
+                  </div>
+                  <AnimatePresence>
+                    {selectedDeadline === d.id && d.detail && (
+                      <motion.p
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="text-xs text-muted-foreground pt-1 overflow-hidden"
+                      >
+                        {d.detail}
+                      </motion.p>
+                    )}
+                  </AnimatePresence>
                 </motion.div>
               );
             })}
@@ -83,25 +172,27 @@ export function DeadlineTimelineTool({ deadlines }: DeadlineTimelineToolProps) {
         </div>
       )}
 
-      {/* Filters */}
-      <div className="flex flex-wrap items-center gap-2">
-        <Filter className="h-4 w-4 text-muted-foreground" />
-        {(Object.keys(TYPE_CONFIG) as TimelineDeadlineType[]).map((type) => {
-          const cfg = TYPE_CONFIG[type];
-          return (
-            <button
-              key={type}
-              onClick={() => setFilterType(filterType === type ? null : type)}
-              className={cn(
-                'flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors',
-                filterType === type ? cn(cfg.bg, cfg.color, 'border') : 'bg-muted/50 text-muted-foreground hover:bg-muted'
-              )}
-            >
-              <div className={cn('h-2 w-2 rounded-full', cfg.dot)} />
-              {cfg.label}
-            </button>
-          );
-        })}
+      {/* Controls: filters + view toggle */}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-2">
+          <Filter className="h-4 w-4 text-muted-foreground" />
+          {(Object.keys(TYPE_CONFIG) as TimelineDeadlineType[]).map((type) => {
+            const cfg = TYPE_CONFIG[type];
+            return (
+              <button
+                key={type}
+                onClick={() => setFilterType(filterType === type ? null : type)}
+                className={cn(
+                  'flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors',
+                  filterType === type ? cn(cfg.bg, cfg.color, 'border') : 'bg-muted/50 text-muted-foreground hover:bg-muted'
+                )}
+              >
+                <div className={cn('h-2 w-2 rounded-full', cfg.dot)} />
+                {cfg.label}
+              </button>
+            );
+          })}
+        </div>
         <select
           value={filterUniversity ?? ''}
           onChange={(e) => setFilterUniversity(e.target.value || null)}
@@ -110,45 +201,152 @@ export function DeadlineTimelineTool({ deadlines }: DeadlineTimelineToolProps) {
           <option value="">All universities</option>
           {universities.map((u) => <option key={u} value={u}>{u}</option>)}
         </select>
+
+        <div className="ml-auto flex gap-1 surface-subcard p-1 rounded-xl">
+          <button
+            onClick={() => setViewMode('timeline')}
+            className={cn('flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-medium transition-colors', viewMode === 'timeline' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground')}
+          >
+            <List className="h-3.5 w-3.5" /> Timeline
+          </button>
+          <button
+            onClick={() => setViewMode('calendar')}
+            className={cn('flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-medium transition-colors', viewMode === 'calendar' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground')}
+          >
+            <LayoutGrid className="h-3.5 w-3.5" /> Calendar
+          </button>
+        </div>
       </div>
 
-      {/* Timeline (vertical, grouped by month) */}
-      <div className="space-y-8">
-        {grouped.map(([month, items]) => (
-          <div key={month}>
-            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">{month}</p>
-            <div className="relative border-l-2 border-border pl-6 space-y-4">
-              {items.map((d) => {
-                const cfg = TYPE_CONFIG[d.type];
-                const days = daysUntil(d.date);
-                return (
-                  <div key={d.id} className="relative">
-                    {/* Dot on timeline */}
-                    <div className={cn('absolute -left-[31px] top-1 h-3.5 w-3.5 rounded-full border-2 border-background', cfg.dot)} />
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-sm font-semibold text-foreground">{d.title}</span>
-                        <span className={cn('rounded-full px-2 py-0.5 text-[10px] font-semibold', cfg.bg, cfg.color)}>{cfg.label}</span>
-                        {days >= 0 && days <= 7 && (
-                          <span className="text-[10px] font-semibold text-rose-600">
-                            {days === 0 ? 'Today!' : days === 1 ? 'Tomorrow' : `${days} days left`}
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-xs text-muted-foreground">{d.university} · {dateFormatter.format(new Date(d.date))}</p>
-                      {d.detail && <p className="text-xs text-muted-foreground">{d.detail}</p>}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+      {/* Calendar View */}
+      {viewMode === 'calendar' && (
+        <div className="space-y-4">
+          {/* Month navigation */}
+          <div className="flex items-center justify-between">
+            <button onClick={() => navigateMonth(-1)} className="rounded-lg p-2 hover:bg-muted/60 transition-colors">
+              <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+            </button>
+            <p className="text-sm font-semibold text-foreground">
+              {new Intl.DateTimeFormat('en-GB', { month: 'long', year: 'numeric' }).format(new Date(calYear, calMonth))}
+            </p>
+            <button onClick={() => navigateMonth(1)} className="rounded-lg p-2 hover:bg-muted/60 transition-colors">
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            </button>
           </div>
-        ))}
-      </div>
+
+          {/* Day headers */}
+          <div className="grid grid-cols-7 gap-1">
+            {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((d) => (
+              <div key={d} className="text-center text-[10px] font-semibold uppercase tracking-wider text-muted-foreground py-1">
+                {d}
+              </div>
+            ))}
+
+            {/* Calendar cells */}
+            {calendarDays.map((date, i) => {
+              if (!date) return <div key={`empty-${i}`} className="h-20" />;
+
+              const dateStr = date.toISOString().slice(0, 10);
+              const dayDeadlines = deadlinesByDate.get(dateStr) ?? [];
+              const isToday = dateStr === now.toISOString().slice(0, 10);
+              const isPast = date < now && !isToday;
+
+              return (
+                <div
+                  key={dateStr}
+                  className={cn(
+                    'h-20 rounded-xl border p-1.5 transition-colors overflow-hidden',
+                    isToday ? 'border-primary/40 bg-primary/5' : 'border-border/50 hover:bg-muted/20',
+                    isPast && 'opacity-50',
+                    dayDeadlines.length > 0 && 'ring-1 ring-primary/10'
+                  )}
+                >
+                  <p className={cn(
+                    'text-[11px] font-medium',
+                    isToday ? 'text-primary font-bold' : 'text-muted-foreground'
+                  )}>
+                    {date.getDate()}
+                  </p>
+                  <div className="space-y-0.5 mt-0.5">
+                    {dayDeadlines.slice(0, 2).map((d) => {
+                      const cfg = TYPE_CONFIG[d.type];
+                      return (
+                        <div
+                          key={d.id}
+                          className={cn('rounded px-1 py-0.5 text-[9px] font-medium truncate', cfg.bg, cfg.color)}
+                          title={`${d.title} — ${d.university}`}
+                        >
+                          {d.title}
+                        </div>
+                      );
+                    })}
+                    {dayDeadlines.length > 2 && (
+                      <p className="text-[9px] text-muted-foreground pl-1">+{dayDeadlines.length - 2} more</p>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Timeline View */}
+      {viewMode === 'timeline' && (
+        <div className="space-y-8">
+          {grouped.map(([month, items]) => (
+            <div key={month}>
+              <div className="flex items-center gap-3 mb-4">
+                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{month}</p>
+                <span className="rounded-full bg-muted/50 px-2 py-0.5 text-[10px] font-medium text-muted-foreground">{items.length} items</span>
+                <div className="flex-1 h-px bg-border/50" />
+              </div>
+              <div className="relative border-l-2 border-border pl-6 space-y-4">
+                {items.map((d) => {
+                  const cfg = TYPE_CONFIG[d.type];
+                  const days = daysUntil(d.date);
+                  return (
+                    <motion.div
+                      key={d.id}
+                      className="relative"
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      whileHover={{ x: 4 }}
+                    >
+                      {/* Dot on timeline */}
+                      <div className={cn('absolute -left-[31px] top-1.5 h-3.5 w-3.5 rounded-full border-2 border-background shadow-sm', cfg.dot)} />
+                      <div className="space-y-1.5 surface-subcard p-3 rounded-xl hover:shadow-md transition-shadow">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-sm font-semibold text-foreground">{d.title}</span>
+                          <span className={cn('rounded-full px-2 py-0.5 text-[10px] font-semibold', cfg.bg, cfg.color)}>{cfg.label}</span>
+                          {days >= 0 && days <= 7 && (
+                            <span className={cn('rounded-full px-2 py-0.5 text-[10px] font-bold', urgencyColor(days))}>
+                              {days === 0 ? 'Today!' : days === 1 ? 'Tomorrow' : `${days} days left`}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                          <span>{d.university}</span>
+                          <span>·</span>
+                          <span>{dateFormatter.format(new Date(d.date))}</span>
+                          <span>·</span>
+                          <span>{dayOfWeek.format(new Date(d.date))}</span>
+                        </div>
+                        {d.detail && <p className="text-xs text-muted-foreground/80">{d.detail}</p>}
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {filtered.length === 0 && (
-        <div className="rounded-2xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
-          No deadlines match your filters.
+        <div className="rounded-2xl border border-dashed border-border p-12 text-center space-y-3">
+          <CalendarClock className="h-8 w-8 mx-auto text-muted-foreground/40" />
+          <p className="text-sm text-muted-foreground">No deadlines match your filters.</p>
         </div>
       )}
     </div>

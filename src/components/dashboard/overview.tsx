@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { ArrowRight, Zap } from 'lucide-react';
 import { stagger, cardFade, itemSlide as focusFade } from '@/lib/motion';
 
 export type HighlightTone = 'positive' | 'warning' | 'muted' | undefined;
@@ -31,19 +32,26 @@ export interface OverviewPayload {
 
 const toneClass = (tone?: HighlightTone) =>
   tone === 'positive'
-    ? 'border-emerald-300/60 bg-emerald-500/10'
+    ? 'border-emerald-300/60 bg-emerald-500/5'
     : tone === 'warning'
-      ? 'border-amber-300/60 bg-amber-500/10'
+      ? 'border-amber-300/60 bg-amber-500/5'
       : tone === 'muted'
-        ? 'border-border bg-muted/60'
-    : 'border-border bg-muted/40';
+        ? 'border-border bg-muted/40'
+    : 'border-border/60 bg-card/60';
+
+const toneDot = (tone?: HighlightTone) =>
+  tone === 'positive'
+    ? 'bg-emerald-500'
+    : tone === 'warning'
+      ? 'bg-amber-500'
+      : 'bg-primary';
 
 export const DashboardOverview = ({ data }: { data: OverviewPayload }) => {
   const focusList = data.focusItems.slice(0, 4);
 
   return (
     <motion.section
-      className="surface-stage space-y-8 text-foreground"
+      className="surface-stage space-y-6 text-foreground"
       variants={stagger}
       initial="hidden"
       whileInView="show"
@@ -51,68 +59,92 @@ export const DashboardOverview = ({ data }: { data: OverviewPayload }) => {
     >
       <motion.div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between" variants={cardFade}>
         <div className="space-y-1">
-          <p className="text-xs uppercase tracking-[0.35em] text-muted-foreground">Overview</p>
+          <p className="text-[11px] uppercase tracking-[0.35em] text-muted-foreground font-semibold">Overview</p>
           <h2 className="text-2xl font-semibold text-foreground">Calm control center</h2>
           <p className="text-sm text-muted-foreground">
             {data.nextStepTitle ? `${data.nextStepTitle} is the smartest next move.` : 'Everything is aligned. Keep momentum steady.'}
           </p>
         </div>
       </motion.div>
-      <div className="space-y-6">
+
+      <div className="space-y-5">
+        {/* Highlight cards */}
         <motion.div className="grid gap-4 sm:grid-cols-2" variants={stagger}>
-          {data.highlightCards.map((card) =>
-            card.href ? (
-              <motion.div key={card.id} variants={cardFade}>
-                <Link href={card.href} className="group block h-full" aria-label={card.label}>
-                  <div
-                    className={cn(
-                      'surface-stat h-full p-5 text-foreground group-hover:-translate-y-0.5',
-                      toneClass(card.tone)
-                    )}
-                  >
-                    <p className="text-[11px] uppercase tracking-[0.35em] text-muted-foreground">{card.label}</p>
-                    <p className="mt-3 text-3xl font-semibold text-foreground">{card.value}</p>
-                    <p className="helper-text">{card.detail}</p>
+          {data.highlightCards.map((card) => {
+            const content = (
+              <div className={cn(
+                'group relative overflow-hidden surface-stat h-full p-5 text-foreground transition-all duration-300',
+                toneClass(card.tone),
+                card.href && 'hover:-translate-y-1 hover:shadow-lg cursor-pointer'
+              )}>
+                {/* Gradient overlay */}
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+
+                <div className="relative z-10">
+                  <div className="flex items-center gap-2">
+                    <span className={cn('h-2 w-2 rounded-full', toneDot(card.tone))} />
+                    <p className="text-[11px] uppercase tracking-[0.3em] text-muted-foreground font-semibold">{card.label}</p>
                   </div>
-                </Link>
+                  <p className="mt-3 text-2xl font-bold text-foreground leading-tight">{card.value}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">{card.detail}</p>
+                  {card.href && (
+                    <div className="mt-3 flex items-center gap-1 text-xs font-medium text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+                      View details <ArrowRight className="h-3 w-3" />
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+
+            return (
+              <motion.div key={card.id} variants={cardFade}>
+                {card.href ? (
+                  <Link href={card.href} className="block h-full" aria-label={card.label}>
+                    {content}
+                  </Link>
+                ) : content}
               </motion.div>
-            ) : (
-              <motion.div
-                key={card.id}
-                className={cn(
-                  'surface-stat h-full p-5 text-foreground hover:-translate-y-0.5',
-                  toneClass(card.tone)
-                )}
-                variants={cardFade}
-              >
-                <p className="text-[11px] uppercase tracking-[0.35em] text-muted-foreground">{card.label}</p>
-                <p className="mt-3 text-3xl font-semibold text-foreground">{card.value}</p>
-                <p className="helper-text">{card.detail}</p>
-              </motion.div>
-            )
-          )}
+            );
+          })}
         </motion.div>
 
-        <motion.div className="surface-stat rounded-2xl p-5 hover:-translate-y-0.5" variants={cardFade}>
+        {/* Focus radar */}
+        <motion.div className="surface-stat rounded-2xl p-5" variants={cardFade}>
           <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="text-sm font-semibold text-foreground">Focus radar</p>
-              <p className="helper-text">Only the items that keep you moving.</p>
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/5 text-primary ring-1 ring-primary/10">
+                <Zap className="h-4 w-4" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-foreground">Focus radar</p>
+                <p className="text-xs text-muted-foreground">Only the items that keep you moving.</p>
+              </div>
             </div>
           </div>
-          <motion.ul className="mt-4 space-y-4" variants={stagger}>
-            {focusList.map((item) => (
-              <motion.li key={item.id} className="surface-subcard p-4 transition-all duration-300 hover:-translate-y-0.5" variants={focusFade}>
-                <p className="text-[11px] uppercase tracking-[0.3em] text-muted-foreground">{item.label}</p>
-                <p className="text-base font-semibold text-foreground">{item.title}</p>
-                <p className="helper-text">{item.detail}</p>
+          <motion.ul className="mt-4 space-y-3" variants={stagger}>
+            {focusList.map((item, index) => (
+              <motion.li
+                key={item.id}
+                className="group surface-subcard p-4 transition-all duration-300 hover:-translate-y-px hover:shadow-sm"
+                variants={focusFade}
+              >
+                <div className="flex items-start gap-3">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-[10px] font-bold text-primary mt-0.5">
+                    {index + 1}
+                  </span>
+                  <div>
+                    <p className="text-[11px] uppercase tracking-[0.25em] text-muted-foreground font-semibold">{item.label}</p>
+                    <p className="text-sm font-semibold text-foreground mt-0.5">{item.title}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{item.detail}</p>
+                  </div>
+                </div>
               </motion.li>
             ))}
-            {focusList.length === 0 ? (
+            {focusList.length === 0 && (
               <motion.li className="surface-subcard p-4 text-sm text-muted-foreground" variants={focusFade}>
                 Nothing urgent right now. Keep logging progress or add programs to reveal new actions.
               </motion.li>
-            ) : null}
+            )}
           </motion.ul>
         </motion.div>
       </div>

@@ -5,9 +5,11 @@ import Link from 'next/link';
 import { motion, useReducedMotion } from 'framer-motion';
 import { fadeIn } from '@/lib/motion';
 import { Button } from '@/components/ui/button';
+import { Play, ArrowRight, Zap, Globe, NotebookPen } from 'lucide-react';
 
 export function DemoSection() {
     const shouldReduceMotion = useReducedMotion();
+
     return (
         <section className="section-fade w-full bg-secondary/40 py-24 sm:py-32">
             <motion.div
@@ -22,29 +24,35 @@ export function DemoSection() {
                         <p className="text-sm font-medium uppercase tracking-widest text-primary/80">Quick demo</p>
                         <h2 className="text-4xl font-heading font-bold text-foreground tracking-tight">Aim higher. Land smarter.</h2>
                         <p className="text-lg text-muted-foreground leading-relaxed">
-                            Paste predicted grades, hit enter, and Ascenda animates Fit Scores, timelines, and required actions in real time. No extra UI
-                            noise, just the next move.
+                            Paste predicted grades, hit enter, and Ascenda animates Fit Scores, timelines, and required actions in real time. No extra UI noise — just the next move.
                         </p>
                     </div>
 
-                    <ul className="space-y-3">
-                        <li className="flex items-center gap-3 text-muted-foreground">
-                            <span className="h-2 w-2 rounded-full bg-accent" />
-                            Live Fit Score recalculations
-                        </li>
-                        <li className="flex items-center gap-3 text-muted-foreground">
-                            <span className="h-2 w-2 rounded-full bg-accent" />
-                            Scholarships + visa checks in-line
-                        </li>
-                        <li className="flex items-center gap-3 text-muted-foreground">
-                            <span className="h-2 w-2 rounded-full bg-accent" />
-                            Notes stay synced automatically
-                        </li>
+                    <ul className="space-y-4">
+                        {[
+                            { icon: Zap, text: 'Live Fit Score recalculations', color: 'text-amber-500 bg-amber-500/10' },
+                            { icon: Globe, text: 'Scholarships + visa checks in-line', color: 'text-emerald-500 bg-emerald-500/10' },
+                            { icon: NotebookPen, text: 'Notes stay synced automatically', color: 'text-sky-500 bg-sky-500/10' },
+                        ].map((item) => {
+                            const Icon = item.icon;
+                            return (
+                                <li key={item.text} className="flex items-center gap-3 text-muted-foreground group">
+                                    <span className={`flex h-8 w-8 items-center justify-center rounded-lg ${item.color} transition-transform group-hover:scale-110`}>
+                                        <Icon className="h-4 w-4" />
+                                    </span>
+                                    <span className="text-[15px]">{item.text}</span>
+                                </li>
+                            );
+                        })}
                     </ul>
 
                     <div className="flex flex-wrap gap-4 pt-4">
-                        <Button asChild size="lg" className="rounded-full shadow-lg hover:shadow-xl transition-all">
-                            <Link href="/demo">Watch 45s demo</Link>
+                        <Button asChild size="lg" className="rounded-full shadow-lg hover:shadow-xl transition-all group">
+                            <Link href="/demo" className="flex items-center gap-2">
+                                <Play className="h-4 w-4" />
+                                Watch 45s demo
+                                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                            </Link>
                         </Button>
                         <Button asChild size="lg" variant="outline" className="rounded-full border-border hover:bg-background/80">
                             <Link href="/stories">See student reels</Link>
@@ -52,17 +60,40 @@ export function DemoSection() {
                     </div>
                 </div>
 
-                <div className="relative overflow-hidden rounded-2xl border border-border bg-black/5 dark:bg-white/5 p-4 shadow-md">
-                    <div className="absolute inset-x-4 top-4 h-12 rounded-full bg-primary/20 blur-3xl opacity-50" />
-                    <Image
-                        src="/demo-loop.gif"
-                        alt="Ascenda demo loop"
-                        width={960}
-                        height={540}
-                        className="relative h-auto w-full rounded-2xl border border-border/20 shadow-sm"
-                        priority
-                    />
-                </div>
+                <motion.div
+                    className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-xl group"
+                    whileHover={{ scale: 1.01 }}
+                    transition={{ type: 'spring', stiffness: 300 }}
+                >
+                    {/* Glow effect */}
+                    <div className="absolute inset-x-4 top-4 h-16 rounded-full bg-primary/15 blur-3xl opacity-60 group-hover:opacity-80 transition-opacity" />
+
+                    {/* Browser chrome */}
+                    <div className="flex items-center gap-2 px-4 py-3 border-b border-border/50 bg-muted/30">
+                        <div className="flex gap-1.5">
+                            <div className="h-2.5 w-2.5 rounded-full bg-rose-400/60" />
+                            <div className="h-2.5 w-2.5 rounded-full bg-amber-400/60" />
+                            <div className="h-2.5 w-2.5 rounded-full bg-emerald-400/60" />
+                        </div>
+                        <div className="flex-1 mx-8">
+                            <div className="h-5 rounded-full bg-muted/50 max-w-xs mx-auto flex items-center justify-center">
+                                <span className="text-[10px] text-muted-foreground/50 font-mono">app.ascenda.com</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="p-3">
+                        <Image
+                            src="/demo-loop.gif"
+                            alt="Ascenda demo showing fit score calculations, timeline, and actions in real time"
+                            width={960}
+                            height={540}
+                            sizes="(max-width: 768px) 100vw, 50vw"
+                            className="relative h-auto w-full rounded-xl"
+                            loading="lazy"
+                        />
+                    </div>
+                </motion.div>
             </motion.div>
         </section>
     );

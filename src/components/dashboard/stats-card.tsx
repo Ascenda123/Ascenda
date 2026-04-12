@@ -1,6 +1,9 @@
+'use client';
+
 import { cn } from '@/lib/utils';
-import { ArrowUpRight, Minus } from 'lucide-react';
-import React from 'react';
+import { ArrowUpRight, Minus, ArrowDownRight } from 'lucide-react';
+import { motion } from 'framer-motion';
+import type React from 'react';
 
 interface StatsCardProps {
     label: string;
@@ -13,35 +16,59 @@ interface StatsCardProps {
 
 export function StatsCard({ label, value, detail, icon, trend, className }: StatsCardProps) {
     return (
-        <div
+        <motion.div
             className={cn(
-                'group relative overflow-hidden rounded-2xl border border-border/50 bg-card/60 backdrop-blur-xl shadow-soft p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_-5px_rgba(0,0,0,0.1)] hover:border-border/80 dark:bg-muted/20 dark:border-white/10 dark:shadow-none dark:hover:border-primary/50 dark:hover:bg-muted/30',
+                'group relative overflow-hidden rounded-2xl border border-border/50 bg-card/80 backdrop-blur-xl p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:border-border/80 dark:border-white/10 dark:hover:border-primary/30',
                 className
             )}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            whileHover={{ scale: 1.01 }}
         >
-            <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100 dark:from-white/5" />
+            {/* Hover gradient */}
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.03] to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100 pointer-events-none" />
 
             <div className="relative z-10 flex items-start justify-between">
                 <div className="space-y-1">
-                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
                         {label}
                     </p>
-                    <h3 className="text-3xl font-bold tracking-tight text-foreground">
+                    <motion.h3
+                        className="text-3xl font-bold tracking-tight text-foreground"
+                        key={value}
+                        initial={{ scale: 1.05, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ duration: 0.3 }}
+                    >
                         {value}
-                    </h3>
+                    </motion.h3>
                 </div>
                 {icon && (
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-background/50 text-foreground shadow-sm ring-1 ring-border/50 backdrop-blur-md transition-transform duration-300 group-hover:scale-110 group-hover:text-primary">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/5 text-primary ring-1 ring-primary/10 transition-all duration-300 group-hover:scale-110 group-hover:bg-primary/10">
                         {icon}
                     </div>
                 )}
             </div>
 
             <div className="relative z-10 mt-4 flex items-center gap-2">
-                {trend === 'up' && <ArrowUpRight className="h-4 w-4 text-emerald-500" />}
-                {trend === 'neutral' && <Minus className="h-4 w-4 text-muted-foreground" />}
-                <p className="text-sm font-medium text-muted-foreground">{detail}</p>
+                {trend === 'up' && (
+                    <div className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500/10">
+                        <ArrowUpRight className="h-3 w-3 text-emerald-500" />
+                    </div>
+                )}
+                {trend === 'down' && (
+                    <div className="flex h-5 w-5 items-center justify-center rounded-full bg-rose-500/10">
+                        <ArrowDownRight className="h-3 w-3 text-rose-500" />
+                    </div>
+                )}
+                {trend === 'neutral' && (
+                    <div className="flex h-5 w-5 items-center justify-center rounded-full bg-muted/50">
+                        <Minus className="h-3 w-3 text-muted-foreground" />
+                    </div>
+                )}
+                <p className="text-sm text-muted-foreground">{detail}</p>
             </div>
-        </div>
+        </motion.div>
     );
 }

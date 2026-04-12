@@ -10,11 +10,11 @@ export default function DashboardLoading() {
                 eyebrow="Mission control"
                 title="Welcome back"
                 description="Track every checklist, deadline, and match signal in one calm dashboard. Keep momentum rolling."
-                highlight="Loading..."
+                highlight="Syncing"
                 stats={[
-                    { label: 'Profile', value: '...', detail: 'Loading...' },
-                    { label: 'Checklist', value: '...', detail: 'Loading...' },
-                    { label: 'Signals', value: '...', detail: 'Loading...' }
+                    { label: 'Profile', value: '—', detail: 'Loading' },
+                    { label: 'Checklist', value: '—', detail: 'Loading' },
+                    { label: 'Signals', value: '—', detail: 'Loading' }
                 ]}
                 actions={
                     <div className="flex gap-2">

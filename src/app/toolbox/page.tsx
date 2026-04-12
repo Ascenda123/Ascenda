@@ -7,7 +7,7 @@ import { PageHero } from '@/components/layout/page-hero';
 import { SectionNav } from '@/components/layout/section-nav';
 import { TOOLBOX_SECTION_ITEMS } from '@/components/layout/navigation';
 import { AnimatedSection, AnimatedGrid, AnimatedGridItem } from '@/components/layout/animated-section';
-import { PenTool, BarChart3, Users, ClipboardCheck, CalendarClock } from 'lucide-react';
+import { PenTool, BarChart3, Users, ClipboardCheck, CalendarClock, ArrowRight, Sparkles } from 'lucide-react';
 import {
   DEMO_BUILDING_BLOCKS,
   DEMO_ESSAY_PROMPTS,
@@ -16,15 +16,23 @@ import {
   DEMO_REQUIREMENTS,
   DEMO_TIMELINE_DEADLINES,
 } from '@/lib/data/student-demo-data';
+import { ToolboxProgressRing, ToolboxCountdown } from '@/components/toolbox/toolbox-landing-widgets';
 
 export const metadata: Metadata = { title: 'Toolbox | Ascenda' };
 
 const totalHours = DEMO_ACTIVITIES.reduce((sum, a) => sum + a.hoursPerWeek * a.weeksPerYear, 0);
 const avgProgress = Math.round(DEMO_REQUIREMENTS.reduce((sum, r) => sum + r.progress, 0) / DEMO_REQUIREMENTS.length);
+const upcoming14 = DEMO_TIMELINE_DEADLINES.filter((d) => {
+  const diff = (new Date(d.date).getTime() - Date.now()) / (1000 * 60 * 60 * 24);
+  return diff >= 0 && diff <= 14;
+}).length;
 const upcoming30 = DEMO_TIMELINE_DEADLINES.filter((d) => {
   const diff = (new Date(d.date).getTime() - Date.now()) / (1000 * 60 * 60 * 24);
   return diff >= 0 && diff <= 30;
 }).length;
+
+const reachCount = DEMO_UNIVERSITY_CHANCES.filter((u) => (39 - u.minimumScore) < 1).length;
+const safetyCount = DEMO_UNIVERSITY_CHANCES.filter((u) => (39 - u.minimumScore) >= 5).length;
 
 const TOOL_CARDS = [
   {
@@ -32,40 +40,65 @@ const TOOL_CARDS = [
     href: '/toolbox/essay-workshop',
     icon: PenTool,
     iconBg: 'bg-violet-500/10 text-violet-600',
-    description: 'Draft essays with your building blocks and platform-specific limits.',
-    miniSummary: `${DEMO_BUILDING_BLOCKS.length} blocks, ${DEMO_ESSAY_PROMPTS.length} prompts matched`,
+    gradient: 'from-violet-500/5 to-transparent',
+    description: 'Rich text editor with building blocks, platform-specific limits, and AI writing tips.',
+    stats: [
+      { label: 'Blocks', value: DEMO_BUILDING_BLOCKS.length },
+      { label: 'Prompts', value: DEMO_ESSAY_PROMPTS.length },
+      { label: 'Platforms', value: 4 },
+    ],
   },
   {
     title: 'Chances Calculator',
     href: '/toolbox/chances',
     icon: BarChart3,
     iconBg: 'bg-emerald-500/10 text-emerald-600',
-    description: 'See reach, match, and safety schools based on your predicted grades.',
-    miniSummary: `${DEMO_UNIVERSITY_CHANCES.length} universities assessed`,
+    gradient: 'from-emerald-500/5 to-transparent',
+    description: 'Visual probability gauges and what-if score slider for each university.',
+    stats: [
+      { label: 'Universities', value: DEMO_UNIVERSITY_CHANCES.length },
+      { label: 'Reach', value: reachCount },
+      { label: 'Safety', value: safetyCount },
+    ],
   },
   {
     title: 'Activity Portfolio',
     href: '/toolbox/activities',
     icon: Users,
     iconBg: 'bg-sky-500/10 text-sky-600',
-    description: 'Log extracurriculars and format for Common App or UC applications.',
-    miniSummary: `${DEMO_ACTIVITIES.length} activities, ${totalHours.toLocaleString()} total hours`,
+    gradient: 'from-sky-500/5 to-transparent',
+    description: 'Drag-to-reorder activities with impact visualization and format previews.',
+    stats: [
+      { label: 'Activities', value: DEMO_ACTIVITIES.length },
+      { label: 'Hours', value: totalHours },
+      { label: 'Tier 1', value: DEMO_ACTIVITIES.filter((a) => a.tier === 1).length },
+    ],
   },
   {
     title: 'Requirements Checker',
     href: '/toolbox/requirements',
     icon: ClipboardCheck,
     iconBg: 'bg-amber-500/10 text-amber-600',
-    description: 'Track what each university needs — subjects, exams, documents, essays.',
-    miniSummary: `${avgProgress}% average readiness across ${DEMO_REQUIREMENTS.length} universities`,
+    gradient: 'from-amber-500/5 to-transparent',
+    description: 'Interactive status toggles and progress rings for each university\'s requirements.',
+    stats: [
+      { label: 'Universities', value: DEMO_REQUIREMENTS.length },
+      { label: 'Readiness', value: `${avgProgress}%` },
+      { label: 'Complete', value: DEMO_REQUIREMENTS.filter((r) => r.progress === 100).length },
+    ],
   },
   {
     title: 'Deadline Timeline',
     href: '/toolbox/timeline',
     icon: CalendarClock,
     iconBg: 'bg-rose-500/10 text-rose-600',
-    description: 'Visual timeline of all deadlines across applications and countries.',
-    miniSummary: `${upcoming30} deadlines in the next 30 days`,
+    gradient: 'from-rose-500/5 to-transparent',
+    description: 'Calendar and timeline views with urgency indicators and filtering.',
+    stats: [
+      { label: 'Next 14d', value: upcoming14 },
+      { label: 'Next 30d', value: upcoming30 },
+      { label: 'Total', value: DEMO_TIMELINE_DEADLINES.length },
+    ],
   },
 ];
 
@@ -92,28 +125,46 @@ export default async function ToolboxPage() {
         description="Five purpose-built tools to plan, write, and track every part of your applications."
         stats={[
           { label: 'Tools', value: '5', detail: 'Available' },
-          { label: 'Blocks', value: String(DEMO_BUILDING_BLOCKS.length), detail: 'Story pieces' },
-          { label: 'Activities', value: String(DEMO_ACTIVITIES.length), detail: 'Logged' },
+          { label: 'Readiness', value: `${avgProgress}%`, detail: 'Overall' },
+          { label: 'Upcoming', value: String(upcoming14), detail: 'Next 14 days' },
         ]}
       />
 
-      {/* Next action card */}
-      {nextDeadline && (
-        <AnimatedSection>
-          <Link href="/toolbox/timeline" className="block surface-card border-l-4 border-l-primary hover:border-l-primary/80 transition-colors">
-            <div className="relative z-10">
-              <p className="text-[11px] font-semibold uppercase tracking-widest text-primary">Your next action</p>
-              <p className="text-lg font-semibold text-foreground mt-1">{nextDeadline.title}</p>
-              <p className="text-sm text-muted-foreground">
-                {nextDeadline.university} — {daysUntil !== null && daysUntil <= 7
-                  ? <span className="text-rose-600 font-medium">{daysUntil === 0 ? 'Today' : daysUntil === 1 ? 'Tomorrow' : `${daysUntil} days left`}</span>
-                  : new Date(nextDeadline.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
-                }
-              </p>
+      {/* Next action + overall progress */}
+      <AnimatedSection>
+        <div className="grid gap-4 md:grid-cols-[1fr,auto]">
+          {/* Next action card */}
+          {nextDeadline && (
+            <Link href="/toolbox/timeline" className="block surface-card border-l-4 border-l-primary hover:border-l-primary/80 transition-all hover:shadow-lg group">
+              <div className="relative z-10 flex items-center gap-4">
+                <ToolboxCountdown days={daysUntil ?? 0} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-primary">Your next action</p>
+                  <p className="text-lg font-semibold text-foreground mt-0.5 truncate">{nextDeadline.title}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {nextDeadline.university} — {daysUntil !== null && daysUntil <= 7
+                      ? <span className="text-rose-600 font-medium">{daysUntil === 0 ? 'Today' : daysUntil === 1 ? 'Tomorrow' : `${daysUntil} days left`}</span>
+                      : new Date(nextDeadline.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+                    }
+                  </p>
+                </div>
+                <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all shrink-0" />
+              </div>
+            </Link>
+          )}
+
+          {/* Requirements progress ring */}
+          <div className="surface-card flex items-center gap-4 min-w-[200px]">
+            <div className="relative z-10 flex items-center gap-4 w-full">
+              <ToolboxProgressRing value={avgProgress} />
+              <div>
+                <p className="text-sm font-semibold text-foreground">Requirements</p>
+                <p className="text-xs text-muted-foreground">{DEMO_REQUIREMENTS.filter((r) => r.progress === 100).length} of {DEMO_REQUIREMENTS.length} ready</p>
+              </div>
             </div>
-          </Link>
-        </AnimatedSection>
-      )}
+          </div>
+        </div>
+      </AnimatedSection>
 
       {/* Tool cards grid */}
       <AnimatedGrid className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -121,19 +172,30 @@ export default async function ToolboxPage() {
           const Icon = tool.icon;
           return (
             <AnimatedGridItem key={tool.href}>
-              <Link href={tool.href} className="surface-card group flex h-full flex-col">
+              <Link href={tool.href} className="surface-card group flex h-full flex-col hover:shadow-lg transition-all hover:-translate-y-0.5">
+                <div className={`absolute inset-0 bg-gradient-to-br ${tool.gradient} rounded-[inherit] pointer-events-none`} />
                 <div className="relative z-10 flex-1 space-y-3">
                   <div className="flex items-start gap-3">
-                    <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${tool.iconBg}`}>
+                    <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${tool.iconBg}`}>
                       <Icon className="h-5 w-5" />
                     </div>
-                    <div>
-                      <p className="text-base font-semibold text-foreground">{tool.title}</p>
-                      <p className="text-sm text-muted-foreground">{tool.description}</p>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="text-base font-semibold text-foreground">{tool.title}</p>
+                        <ArrowRight className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                      </div>
+                      <p className="text-sm text-muted-foreground leading-relaxed">{tool.description}</p>
                     </div>
                   </div>
-                  <div className="surface-subcard px-3 py-2">
-                    <p className="text-xs text-muted-foreground">{tool.miniSummary}</p>
+
+                  {/* Mini stats */}
+                  <div className="grid grid-cols-3 gap-2">
+                    {tool.stats.map((stat) => (
+                      <div key={stat.label} className="surface-subcard px-2.5 py-2 text-center rounded-xl">
+                        <p className="text-sm font-bold text-foreground">{stat.value}</p>
+                        <p className="text-[10px] text-muted-foreground">{stat.label}</p>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </Link>

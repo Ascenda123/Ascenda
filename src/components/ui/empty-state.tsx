@@ -1,41 +1,58 @@
-import { cn } from "@/lib/utils";
-import { LucideIcon } from "lucide-react";
+'use client';
 
-interface EmptyStateProps extends React.HTMLAttributes<HTMLDivElement> {
+import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
+import type { LucideIcon } from "lucide-react";
+
+interface EmptyStateProps {
     icon?: LucideIcon;
     title: string;
     description?: string;
+    hint?: string;
     action?: React.ReactNode;
+    className?: string;
 }
 
 export function EmptyState({
     icon: Icon,
     title,
     description,
+    hint,
     action,
     className,
-    ...props
 }: EmptyStateProps) {
     return (
-        <div
+        <motion.div
             className={cn(
-                "flex min-h-[400px] flex-col items-center justify-center rounded-2xl border border-dashed border-border p-8 text-center animate-in fade-in-50",
+                "flex min-h-[350px] flex-col items-center justify-center rounded-2xl border border-dashed border-border/60 bg-muted/10 p-10 text-center",
                 className
             )}
-            {...props}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
         >
             {Icon && (
-                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-muted/50 ring-8 ring-muted/20">
-                    <Icon className="h-10 w-10 text-muted-foreground" />
-                </div>
+                <motion.div
+                    className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/5 ring-1 ring-primary/10"
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 0.1, duration: 0.3 }}
+                >
+                    <Icon className="h-7 w-7 text-primary/40" />
+                </motion.div>
             )}
-            <h3 className="mt-6 text-xl font-semibold text-foreground">{title}</h3>
+            <h3 className="mt-5 text-lg font-semibold text-foreground">{title}</h3>
             {description && (
-                <p className="mt-2 max-w-sm text-center text-sm text-muted-foreground">
+                <p className="mt-2 max-w-sm text-center text-sm text-muted-foreground leading-relaxed">
                     {description}
                 </p>
             )}
-            {action && <div className="mt-6">{action}</div>}
-        </div>
+            {hint && (
+                <p className="mt-1.5 max-w-sm text-center text-xs text-muted-foreground/60">
+                    {hint}
+                </p>
+            )}
+            {action && <div className="mt-5">{action}</div>}
+        </motion.div>
     );
 }
