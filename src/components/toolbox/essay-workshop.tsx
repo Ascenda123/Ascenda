@@ -7,43 +7,39 @@ import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import CharacterCount from '@tiptap/extension-character-count';
 import {
-  PenTool, ChevronDown, Bold, Italic, List, ListOrdered, Undo, Redo,
-  GripVertical, FileText, RotateCcw, Copy, Check,
+  ChevronDown, Bold, Italic, List, ListOrdered, Undo, Redo,
+  GripVertical, FileText, RotateCcw, Copy, Check, PenTool,
   Globe, Star, Heart, Trophy, User, MessageSquare, Users, ChevronRight,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { stagger, childFade } from '@/lib/motion';
 import type { EssayBuildingBlock, EssayPrompt, BlockCategory, ActivityEntry } from '@/lib/data/student-demo-data';
+import { EssayAIPanel } from './essay-ai-panel';
 
-const CATEGORY_CONFIG: Record<BlockCategory, { icon: typeof Globe; label: string; color: string }> = {
-  identity: { icon: User, label: 'Identity', color: 'text-violet-600' },
-  experience: { icon: Globe, label: 'Experience', color: 'text-sky-600' },
-  strength: { icon: Star, label: 'Strengths', color: 'text-amber-600' },
-  interest: { icon: Heart, label: 'Interests', color: 'text-rose-600' },
-  achievement: { icon: Trophy, label: 'Achievements', color: 'text-emerald-600' },
-  counsellor_insight: { icon: MessageSquare, label: 'Counsellor Insights', color: 'text-violet-600' },
+/* ─── Config ─────────────────────────────────────────────────────────────── */
+
+const CATEGORY_CONFIG: Record<BlockCategory, { icon: typeof Globe; label: string; color: string; bg: string }> = {
+  identity: { icon: User, label: 'Identity', color: 'text-violet-600', bg: 'bg-violet-500/10' },
+  experience: { icon: Globe, label: 'Experience', color: 'text-sky-600', bg: 'bg-sky-500/10' },
+  strength: { icon: Star, label: 'Strengths', color: 'text-amber-600', bg: 'bg-amber-500/10' },
+  interest: { icon: Heart, label: 'Interests', color: 'text-rose-600', bg: 'bg-rose-500/10' },
+  achievement: { icon: Trophy, label: 'Achievements', color: 'text-emerald-600', bg: 'bg-emerald-500/10' },
+  counsellor_insight: { icon: MessageSquare, label: 'Counsellor', color: 'text-violet-600', bg: 'bg-violet-500/10' },
 };
 
 const CATEGORY_ORDER: BlockCategory[] = ['identity', 'experience', 'strength', 'interest', 'achievement', 'counsellor_insight'];
-import { EssayAIPanel } from './essay-ai-panel';
 
 const PLATFORMS = ['UCAS', 'Common App', 'UC PIQs', 'Custom'] as const;
 type Platform = (typeof PLATFORMS)[number];
 
-const PLATFORM_LIMITS: Record<Platform, { unit: 'characters' | 'words'; max: number }> = {
-  'UCAS': { unit: 'characters', max: 4000 },
-  'Common App': { unit: 'words', max: 650 },
-  'UC PIQs': { unit: 'words', max: 350 },
-  'Custom': { unit: 'words', max: 1000 },
+const PLATFORM_LIMITS: Record<Platform, { unit: 'characters' | 'words'; max: number; tip: string }> = {
+  'UCAS': { unit: 'characters', max: 4000, tip: 'Characters including spaces. Stay focused and specific.' },
+  'Common App': { unit: 'words', max: 650, tip: 'Sweet spot is 600-650 words.' },
+  'UC PIQs': { unit: 'words', max: 350, tip: 'Strict limit. Be concise and direct.' },
+  'Custom': { unit: 'words', max: 1000, tip: 'Set your own target.' },
 };
 
-const PLATFORM_NOTES: Record<Platform, string> = {
-  'UCAS': 'UCAS counts characters including spaces. Keep your statement focused and specific.',
-  'Common App': 'Common App counts words. The sweet spot is 600–650 words.',
-  'UC PIQs': 'Each PIQ has a strict 350-word limit. Be concise and direct.',
-  'Custom': 'Custom essays — set your own target word count.',
-};
-
+/* ─── Component ──────────────────────────────────────────────────────────── */
 
 interface EssayWorkshopProps {
   blocks: EssayBuildingBlock[];
@@ -58,35 +54,29 @@ export function EssayWorkshop({ blocks, prompts, activities = [] }: EssayWorksho
   const [expandedPrompt, setExpandedPrompt] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [draggedBlock, setDraggedBlock] = useState<string | null>(null);
+  const [collapsedCats, setCollapsedCats] = useState<Set<BlockCategory>>(new Set());
+  const [showActivities, setShowActivities] = useState(false);
 
-  const draftText = drafts[platform] ?? '';
   const limit = PLATFORM_LIMITS[platform];
 
-  // Tiptap editor
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
       StarterKit,
-      Placeholder.configure({
-        placeholder: `Start writing your ${platform} essay...`,
-      }),
-      CharacterCount.configure({
-        limit: limit.unit === 'characters' ? limit.max : undefined,
-      }),
+      Placeholder.configure({ placeholder: `Start writing your ${platform} essay...` }),
+      CharacterCount.configure({ limit: limit.unit === 'characters' ? limit.max : undefined }),
     ],
-    content: draftText ? `<p>${draftText.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>')}</p>` : '',
+    content: '',
     editorProps: {
       attributes: {
-        class: 'prose prose-sm dark:prose-invert max-w-none focus:outline-none min-h-[350px] px-5 py-4 text-foreground',
+        class: 'prose prose-sm dark:prose-invert max-w-none focus:outline-none min-h-[400px] px-6 py-5 text-foreground leading-relaxed',
       },
     },
     onUpdate: ({ editor }) => {
-      const text = editor.getText();
-      setDrafts((prev) => ({ ...prev, [platform]: text }));
+      setDrafts((prev) => ({ ...prev, [platform]: editor.getText() }));
     },
   });
 
-  // Calculate counts from editor
   const editorText = editor?.getText() ?? '';
   const wordCount = editorText.trim().split(/\s+/).filter(Boolean).length;
   const charCount = editorText.length;
@@ -98,30 +88,24 @@ export function EssayWorkshop({ blocks, prompts, activities = [] }: EssayWorksho
     [prompts, platform]
   );
 
-  // Load saved drafts
+  // Persist drafts
   useEffect(() => {
     try {
       const saved = localStorage.getItem('ascenda-essay-drafts');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        setDrafts(parsed);
-      }
+      if (saved) setDrafts(JSON.parse(saved));
     } catch { /* ignore */ }
   }, []);
 
-  // Save drafts
   useEffect(() => {
     if (Object.keys(drafts).length > 0) {
       localStorage.setItem('ascenda-essay-drafts', JSON.stringify(drafts));
     }
   }, [drafts]);
 
-  // Sync editor content when platform changes
   useEffect(() => {
     if (editor) {
       const text = drafts[platform] ?? '';
-      const currentText = editor.getText();
-      if (text !== currentText) {
+      if (text !== editor.getText()) {
         editor.commands.setContent(
           text ? `<p>${text.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>')}</p>` : ''
         );
@@ -130,373 +114,292 @@ export function EssayWorkshop({ blocks, prompts, activities = [] }: EssayWorksho
   }, [platform, editor, drafts]);
 
   const toggleBlock = (id: string) => {
-    setSelectedBlocks((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
+    setSelectedBlocks((prev) => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
   };
 
   const insertBlock = useCallback((block: EssayBuildingBlock) => {
     if (!editor) return;
-    const text = block.detail || block.label;
-    editor.chain().focus().insertContent(`<p><em>[${block.label}]</em> ${text}</p>`).run();
+    editor.chain().focus().insertContent(`<p><em>[${block.label}]</em> ${block.detail || block.label}</p>`).run();
     setSelectedBlocks((prev) => new Set(prev).add(block.id));
   }, [editor]);
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(editorText);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const toggleCat = (cat: BlockCategory) => {
+    setCollapsedCats((prev) => { const n = new Set(prev); n.has(cat) ? n.delete(cat) : n.add(cat); return n; });
   };
 
-  const handleClear = () => {
-    editor?.commands.clearContent();
-    setDrafts((prev) => ({ ...prev, [platform]: '' }));
-  };
+  const handleCopy = () => { navigator.clipboard.writeText(editorText); setCopied(true); setTimeout(() => setCopied(false), 2000); };
+  const handleClear = () => { editor?.commands.clearContent(); setDrafts((prev) => ({ ...prev, [platform]: '' })); };
 
   return (
-    <div className="space-y-5">
-      {/* Platform switcher + stats */}
-      <div className="flex flex-wrap items-center gap-3">
-        {PLATFORMS.map((p) => (
-          <button
-            key={p}
-            onClick={() => setPlatform(p)}
-            className={cn(
-              'rounded-full px-4 py-1.5 text-sm font-medium transition-all',
-              platform === p
-                ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20'
-                : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground'
-            )}
-          >
-            {p}
-          </button>
-        ))}
-        <div className="ml-auto flex items-center gap-3 text-xs text-muted-foreground">
-          <span>{PLATFORM_LIMITS[platform].max} {PLATFORM_LIMITS[platform].unit} max</span>
+    <div className="space-y-4">
+      {/* ── Top bar: platform + progress ────────────────────────────────────── */}
+      <div className="surface-subcard rounded-2xl p-3 flex flex-wrap items-center gap-3">
+        <div className="flex gap-1.5 bg-muted/40 p-1 rounded-xl">
+          {PLATFORMS.map((p) => (
+            <button
+              key={p}
+              onClick={() => setPlatform(p)}
+              className={cn(
+                'rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-all',
+                platform === p
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              {p}
+            </button>
+          ))}
+        </div>
+
+        <p className="text-[11px] text-muted-foreground/70 italic hidden sm:block">{limit.tip}</p>
+
+        <div className="ml-auto flex items-center gap-3">
+          {/* Compact progress */}
+          <div className="flex items-center gap-2">
+            <div className="relative h-8 w-8">
+              <svg className="h-8 w-8 -rotate-90" viewBox="0 0 32 32">
+                <circle cx="16" cy="16" r="13" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-muted/20" />
+                <circle
+                  cx="16" cy="16" r="13" fill="none" strokeWidth="2.5" strokeLinecap="round"
+                  strokeDasharray={`${Math.min(ratio, 1) * 81.68} 81.68`}
+                  className={cn('transition-all duration-500', ratio < 0.8 ? 'stroke-emerald-500' : ratio < 0.95 ? 'stroke-amber-500' : 'stroke-rose-500')}
+                />
+              </svg>
+              <span className={cn('absolute inset-0 flex items-center justify-center text-[8px] font-bold', ratio < 0.8 ? 'text-emerald-600' : ratio < 0.95 ? 'text-amber-600' : 'text-rose-600')}>
+                {Math.round(ratio * 100)}%
+              </span>
+            </div>
+            <div className="text-xs leading-tight">
+              <p className={cn('font-semibold tabular-nums', ratio < 0.8 ? 'text-emerald-600' : ratio < 0.95 ? 'text-amber-600' : 'text-rose-600')}>
+                {current.toLocaleString()}<span className="text-muted-foreground font-normal">/{limit.max.toLocaleString()}</span>
+              </p>
+              <p className="text-muted-foreground/70 text-[10px]">{limit.unit}</p>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Platform note */}
-      <p className="text-xs text-muted-foreground/70 italic">{PLATFORM_NOTES[platform]}</p>
+      {/* ── Main 3-column layout ───────────────────────────────────────────── */}
+      <div className="grid gap-4 lg:grid-cols-[260px,1fr,280px]">
 
-      {/* Main 3-column layout */}
-      <div className="grid gap-5 lg:grid-cols-[240px,1fr,260px]">
+        {/* ── LEFT: Blocks + Activities ─────────────────────────────────────── */}
+        <div className="space-y-1 lg:border-r lg:border-border/40 lg:pr-4">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground mb-2">Building Blocks</p>
 
-        {/* Left: Block picker grouped by category */}
-        <div className="space-y-3">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">Building Blocks</p>
-          <p className="text-[11px] text-muted-foreground">Click to select, double-click to insert into essay</p>
-          <div className="space-y-4 max-h-[520px] overflow-y-auto pr-1 scrollbar-thin">
+          <div className="space-y-3 max-h-[560px] overflow-y-auto pr-1 scrollbar-thin">
             {CATEGORY_ORDER.map((cat) => {
               const catBlocks = blocks.filter((b) => b.category === cat);
               if (catBlocks.length === 0) return null;
               const cfg = CATEGORY_CONFIG[cat];
               const CatIcon = cfg.icon;
+              const isCollapsed = collapsedCats.has(cat);
               return (
                 <div key={cat}>
-                  <div className="flex items-center gap-1.5 mb-1.5">
-                    <CatIcon className={cn('h-3.5 w-3.5', cfg.color)} />
-                    <span className={cn('text-[11px] font-semibold', cfg.color)}>{cfg.label}</span>
-                    <span className="text-[10px] text-muted-foreground/60">({catBlocks.length})</span>
-                  </div>
-                  <motion.div className="space-y-1.5" variants={stagger} initial="hidden" animate="show">
-                    {catBlocks.map((block) => {
-                      const isSelected = selectedBlocks.has(block.id);
-                      return (
-                        <motion.div
-                          key={block.id}
-                          variants={childFade}
-                          draggable
-                          onDragStart={() => setDraggedBlock(block.id)}
-                          onDragEnd={() => setDraggedBlock(null)}
-                          className="group"
-                        >
-                          <button
-                            onClick={() => toggleBlock(block.id)}
-                            onDoubleClick={() => insertBlock(block)}
-                            className={cn(
-                              'w-full text-left rounded-xl border px-3 py-2 text-sm transition-all',
-                              isSelected
-                                ? 'border-primary/40 bg-primary/5 text-foreground ring-1 ring-primary/20'
-                                : 'border-border bg-card text-muted-foreground hover:border-primary/20 hover:bg-muted/30',
-                              draggedBlock === block.id && 'opacity-50 scale-95'
-                            )}
-                          >
-                            <div className="flex items-start gap-2">
-                              <GripVertical className="h-3.5 w-3.5 mt-0.5 text-muted-foreground/40 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
-                              <div className="flex-1 min-w-0">
-                                <span className="font-medium text-foreground text-[13px] leading-snug">{block.label}</span>
-                                {isSelected && block.detail && (
-                                  <motion.p
-                                    initial={{ height: 0, opacity: 0 }}
-                                    animate={{ height: 'auto', opacity: 1 }}
-                                    className="mt-1.5 text-xs text-muted-foreground leading-relaxed overflow-hidden"
-                                  >
-                                    {block.detail}
-                                  </motion.p>
-                                )}
-                              </div>
-                              {isSelected && (
-                                <div className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                                  <Check className="h-3 w-3 text-primary" />
-                                </div>
-                              )}
-                            </div>
-                          </button>
+                  <button
+                    onClick={() => toggleCat(cat)}
+                    className="flex items-center gap-1.5 w-full text-left mb-1 group"
+                  >
+                    <div className={cn('flex h-5 w-5 items-center justify-center rounded-md', cfg.bg)}>
+                      <CatIcon className={cn('h-3 w-3', cfg.color)} />
+                    </div>
+                    <span className={cn('text-[11px] font-semibold flex-1', cfg.color)}>{cfg.label}</span>
+                    <span className="text-[10px] text-muted-foreground/50">{catBlocks.length}</span>
+                    <ChevronDown className={cn('h-3 w-3 text-muted-foreground/40 transition-transform', isCollapsed && '-rotate-90')} />
+                  </button>
+
+                  <AnimatePresence initial={false}>
+                    {!isCollapsed && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="overflow-hidden"
+                      >
+                        <motion.div className="space-y-1 pb-2" variants={stagger} initial="hidden" animate="show">
+                          {catBlocks.map((block) => {
+                            const isSelected = selectedBlocks.has(block.id);
+                            return (
+                              <motion.div key={block.id} variants={childFade} className="group/block">
+                                <button
+                                  onClick={() => toggleBlock(block.id)}
+                                  onDoubleClick={() => insertBlock(block)}
+                                  draggable
+                                  onDragStart={() => setDraggedBlock(block.id)}
+                                  onDragEnd={() => setDraggedBlock(null)}
+                                  className={cn(
+                                    'w-full text-left rounded-lg border px-2.5 py-1.5 text-[12px] transition-all',
+                                    isSelected
+                                      ? 'border-primary/30 bg-primary/5 ring-1 ring-primary/10'
+                                      : 'border-transparent hover:border-border hover:bg-muted/30',
+                                    draggedBlock === block.id && 'opacity-40'
+                                  )}
+                                >
+                                  <div className="flex items-center gap-1.5">
+                                    <GripVertical className="h-3 w-3 text-muted-foreground/30 opacity-0 group-hover/block:opacity-100 transition-opacity shrink-0" />
+                                    <span className="font-medium text-foreground flex-1 truncate">{block.label}</span>
+                                    {isSelected && <Check className="h-3 w-3 text-primary shrink-0" />}
+                                  </div>
+                                  {isSelected && block.detail && (
+                                    <motion.p
+                                      initial={{ height: 0, opacity: 0 }}
+                                      animate={{ height: 'auto', opacity: 1 }}
+                                      className="mt-1 text-[11px] text-muted-foreground leading-relaxed pl-[18px] overflow-hidden"
+                                    >
+                                      {block.detail}
+                                    </motion.p>
+                                  )}
+                                </button>
+                              </motion.div>
+                            );
+                          })}
                         </motion.div>
-                      );
-                    })}
-                  </motion.div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               );
             })}
-          </div>
-          {selectedBlocks.size > 0 && (
-            <div className="surface-subcard px-3 py-2">
-              <p className="text-[11px] font-semibold text-muted-foreground">{selectedBlocks.size} block{selectedBlocks.size !== 1 ? 's' : ''} selected</p>
-              <div className="flex flex-wrap gap-1 mt-1.5">
-                {blocks.filter((b) => selectedBlocks.has(b.id)).map((b) => (
-                  <span key={b.id} className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
-                    {b.label}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
 
-          {/* Activities sub-section (folded from standalone tool) */}
-          {activities.length > 0 && (
-            <div className="mt-4 pt-4 border-t border-border/50">
-              <div className="flex items-center gap-1.5 mb-2">
-                <Users className="h-3.5 w-3.5 text-sky-600" />
-                <span className="text-[11px] font-semibold text-sky-600">Activities</span>
-                <span className="text-[10px] text-muted-foreground/60">({activities.length})</span>
+            {/* Activities */}
+            {activities.length > 0 && (
+              <div>
+                <button
+                  onClick={() => setShowActivities(!showActivities)}
+                  className="flex items-center gap-1.5 w-full text-left mb-1 group"
+                >
+                  <div className="flex h-5 w-5 items-center justify-center rounded-md bg-sky-500/10">
+                    <Users className="h-3 w-3 text-sky-600" />
+                  </div>
+                  <span className="text-[11px] font-semibold flex-1 text-sky-600">Activities</span>
+                  <span className="text-[10px] text-muted-foreground/50">{activities.length}</span>
+                  <ChevronDown className={cn('h-3 w-3 text-muted-foreground/40 transition-transform', !showActivities && '-rotate-90')} />
+                </button>
+                <AnimatePresence initial={false}>
+                  {showActivities && (
+                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+                      <div className="space-y-1 pb-2">
+                        {activities.map((act) => (
+                          <button
+                            key={act.id}
+                            onClick={() => {
+                              if (!editor) return;
+                              editor.chain().focus().insertContent(`<p><em>[${act.name}]</em> ${act.role} at ${act.organization} — ${act.description}</p>`).run();
+                            }}
+                            className="w-full text-left rounded-lg px-2.5 py-1.5 text-[12px] transition-colors hover:bg-muted/30 group/act"
+                          >
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-medium text-foreground flex-1 truncate">{act.name}</span>
+                              <ChevronRight className="h-3 w-3 text-muted-foreground/30 group-hover/act:text-sky-500 transition-colors shrink-0" />
+                            </div>
+                            <p className="text-[10px] text-muted-foreground truncate">{act.role} · {act.organization}</p>
+                          </button>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
-              <div className="space-y-1.5">
-                {activities.map((act) => (
+            )}
+          </div>
+
+          {/* Selected summary */}
+          {selectedBlocks.size > 0 && (
+            <div className="pt-2 border-t border-border/30">
+              <p className="text-[10px] font-semibold text-muted-foreground mb-1">{selectedBlocks.size} selected</p>
+              <div className="flex flex-wrap gap-1">
+                {blocks.filter((b) => selectedBlocks.has(b.id)).map((b) => (
                   <button
-                    key={act.id}
-                    onClick={() => {
-                      if (!editor) return;
-                      editor.chain().focus().insertContent(`<p><em>[${act.name}]</em> ${act.role} at ${act.organization} — ${act.description}</p>`).run();
-                    }}
-                    className="w-full text-left rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs transition-colors hover:border-sky-200/60 hover:bg-sky-500/5 group"
+                    key={b.id}
+                    onClick={() => insertBlock(b)}
+                    className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary hover:bg-primary/20 transition-colors"
+                    title="Click to insert"
                   >
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium text-foreground text-[12px]">{act.name}</span>
-                      <ChevronRight className="h-3 w-3 text-muted-foreground/40 group-hover:text-sky-500 transition-colors" />
-                    </div>
-                    <p className="text-[10px] text-muted-foreground">{act.role} · {act.organization}</p>
+                    {b.label}
                   </button>
                 ))}
               </div>
-              <p className="text-[10px] text-muted-foreground/60 mt-1.5">Click to insert into essay</p>
             </div>
           )}
         </div>
 
-        {/* Center: Rich text editor */}
-        <div className="space-y-3">
+        {/* ── CENTER: Editor ───────────────────────────────────────────────── */}
+        <div className="space-y-2">
           {/* Toolbar */}
-          <div className="surface-subcard flex items-center gap-1 px-2 py-1.5 rounded-xl overflow-x-auto">
-            <ToolbarButton
-              icon={Bold}
-              active={editor?.isActive('bold') ?? false}
-              onClick={() => editor?.chain().focus().toggleBold().run()}
-              title="Bold"
-            />
-            <ToolbarButton
-              icon={Italic}
-              active={editor?.isActive('italic') ?? false}
-              onClick={() => editor?.chain().focus().toggleItalic().run()}
-              title="Italic"
-            />
-            <div className="w-px h-5 bg-border mx-1" />
-            <ToolbarButton
-              icon={List}
-              active={editor?.isActive('bulletList') ?? false}
-              onClick={() => editor?.chain().focus().toggleBulletList().run()}
-              title="Bullet List"
-            />
-            <ToolbarButton
-              icon={ListOrdered}
-              active={editor?.isActive('orderedList') ?? false}
-              onClick={() => editor?.chain().focus().toggleOrderedList().run()}
-              title="Numbered List"
-            />
-            <div className="w-px h-5 bg-border mx-1" />
-            <ToolbarButton
-              icon={Undo}
-              active={false}
-              onClick={() => editor?.chain().focus().undo().run()}
-              title="Undo"
-              disabled={!editor?.can().undo()}
-            />
-            <ToolbarButton
-              icon={Redo}
-              active={false}
-              onClick={() => editor?.chain().focus().redo().run()}
-              title="Redo"
-              disabled={!editor?.can().redo()}
-            />
+          <div className="flex items-center gap-0.5 px-1">
+            <ToolbarBtn icon={Bold} active={editor?.isActive('bold') ?? false} onClick={() => editor?.chain().focus().toggleBold().run()} title="Bold" />
+            <ToolbarBtn icon={Italic} active={editor?.isActive('italic') ?? false} onClick={() => editor?.chain().focus().toggleItalic().run()} title="Italic" />
+            <Sep />
+            <ToolbarBtn icon={List} active={editor?.isActive('bulletList') ?? false} onClick={() => editor?.chain().focus().toggleBulletList().run()} title="Bullet list" />
+            <ToolbarBtn icon={ListOrdered} active={editor?.isActive('orderedList') ?? false} onClick={() => editor?.chain().focus().toggleOrderedList().run()} title="Numbered list" />
+            <Sep />
+            <ToolbarBtn icon={Undo} active={false} onClick={() => editor?.chain().focus().undo().run()} title="Undo" disabled={!editor?.can().undo()} />
+            <ToolbarBtn icon={Redo} active={false} onClick={() => editor?.chain().focus().redo().run()} title="Redo" disabled={!editor?.can().redo()} />
             <div className="flex-1" />
-            <button
-              onClick={handleCopy}
-              className="flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors"
-              title="Copy plain text"
-            >
-              {copied ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
+            <button onClick={handleCopy} className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors">
+              {copied ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
               {copied ? 'Copied' : 'Copy'}
             </button>
-            <button
-              onClick={handleClear}
-              className="flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium text-muted-foreground hover:bg-rose-500/10 hover:text-rose-600 transition-colors"
-              title="Clear essay"
-            >
-              <RotateCcw className="h-3.5 w-3.5" /> Clear
+            <button onClick={handleClear} className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium text-muted-foreground hover:bg-rose-500/10 hover:text-rose-600 transition-colors">
+              <RotateCcw className="h-3 w-3" /> Clear
             </button>
           </div>
 
-          {/* Editor area */}
+          {/* Editor */}
           <div
-            className="surface-subcard rounded-2xl overflow-hidden ring-1 ring-border/50 focus-within:ring-primary/30 transition-all"
+            className="rounded-2xl border border-border/60 bg-card shadow-sm focus-within:border-primary/30 focus-within:shadow-md transition-all"
             onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; }}
-            onDrop={(e) => {
-              e.preventDefault();
-              if (draggedBlock) {
-                const block = blocks.find((b) => b.id === draggedBlock);
-                if (block) insertBlock(block);
-              }
-            }}
+            onDrop={(e) => { e.preventDefault(); if (draggedBlock) { const b = blocks.find((bl) => bl.id === draggedBlock); if (b) insertBlock(b); } }}
           >
             <EditorContent editor={editor} />
           </div>
 
-          {/* Progress bar */}
-          <div className="flex items-center gap-4">
-            {/* Circular progress */}
-            <div className="relative h-12 w-12 shrink-0">
-              <svg className="h-12 w-12 -rotate-90" viewBox="0 0 48 48">
-                <circle cx="24" cy="24" r="20" fill="none" stroke="currentColor" strokeWidth="3" className="text-muted/30" />
-                <circle
-                  cx="24" cy="24" r="20" fill="none" strokeWidth="3"
-                  strokeDasharray={`${Math.min(ratio, 1) * 125.66} 125.66`}
-                  strokeLinecap="round"
-                  className={cn(
-                    'transition-all duration-500',
-                    ratio < 0.8 ? 'stroke-emerald-500' : ratio < 0.95 ? 'stroke-amber-500' : 'stroke-rose-500'
-                  )}
-                />
-              </svg>
-              <span className={cn(
-                'absolute inset-0 flex items-center justify-center text-[10px] font-bold',
-                ratio < 0.8 ? 'text-emerald-600' : ratio < 0.95 ? 'text-amber-600' : 'text-rose-600'
-              )}>
-                {Math.round(ratio * 100)}%
-              </span>
-            </div>
-            <div className="flex-1 space-y-1">
-              <div className="flex items-center justify-between text-xs">
-                <span className={cn(
-                  'font-semibold',
-                  ratio < 0.8 ? 'text-emerald-600' : ratio < 0.95 ? 'text-amber-600' : 'text-rose-600'
-                )}>
-                  {current.toLocaleString()} / {limit.max.toLocaleString()} {limit.unit}
-                </span>
-                <span className="text-muted-foreground">
-                  {limit.unit === 'characters' ? `${wordCount} words` : `${charCount.toLocaleString()} characters`}
-                </span>
-              </div>
-              <div className="h-2 w-full rounded-full bg-muted/40 overflow-hidden">
-                <motion.div
-                  className={cn(
-                    'h-full rounded-full',
-                    ratio < 0.8 ? 'bg-emerald-500' : ratio < 0.95 ? 'bg-amber-500' : 'bg-rose-500'
-                  )}
-                  initial={{ width: 0 }}
-                  animate={{ width: `${Math.min(ratio * 100, 100)}%` }}
-                  transition={{ duration: 0.5, ease: 'easeOut' }}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Selected blocks reference strip */}
-          {selectedBlocks.size > 0 && (
+          {/* Progress bar under editor */}
+          <div className="h-1.5 w-full rounded-full bg-muted/30 overflow-hidden">
             <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              className="overflow-hidden"
-            >
-              <div className="surface-subcard p-3 rounded-xl">
-                <p className="text-[11px] font-semibold text-muted-foreground mb-2">Blocks in use</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {blocks.filter((b) => selectedBlocks.has(b.id)).map((b) => (
-                    <button
-                      key={b.id}
-                      onClick={() => insertBlock(b)}
-                      className="inline-flex items-center gap-1 rounded-full border border-primary/20 bg-primary/5 px-2.5 py-1 text-[11px] font-semibold text-primary hover:bg-primary/10 transition-colors"
-                      title={`Click to insert "${b.label}" into your essay`}
-                    >
-                      <PenTool className="h-3 w-3" />
-                      {b.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </motion.div>
-          )}
+              className={cn('h-full rounded-full', ratio < 0.8 ? 'bg-emerald-500' : ratio < 0.95 ? 'bg-amber-500' : 'bg-rose-500')}
+              initial={{ width: 0 }}
+              animate={{ width: `${Math.min(ratio * 100, 100)}%` }}
+              transition={{ duration: 0.4, ease: 'easeOut' }}
+            />
+          </div>
         </div>
 
-        {/* Right: AI Assistant + Prompts */}
-        <div className="space-y-5">
-          {/* AI Essay Assistant */}
+        {/* ── RIGHT: AI + Prompts ──────────────────────────────────────────── */}
+        <div className="space-y-4 lg:border-l lg:border-border/40 lg:pl-4">
           <EssayAIPanel
             essay={editorText}
             platform={platform}
             selectedBlocks={blocks.filter((b) => selectedBlocks.has(b.id))}
             allBlocks={blocks}
             onInsertText={(text) => {
-              if (editor) {
-                editor.chain().focus().insertContent(`<p>${text.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>')}</p>`).run();
-              }
+              if (editor) editor.chain().focus().insertContent(`<p>${text.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>')}</p>`).run();
             }}
           />
 
           {/* Prompts */}
           <div className="space-y-2">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
-              <FileText className="h-3.5 w-3.5 inline mr-1 align-text-bottom" />
-              Prompts
+            <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
+              <FileText className="h-3 w-3 inline mr-1 align-text-bottom" />
+              Prompts for {platform}
             </p>
             {filteredPrompts.length === 0 ? (
-              <p className="text-xs text-muted-foreground">No prompts for this platform yet.</p>
+              <p className="text-[11px] text-muted-foreground/60">No prompts for this platform yet.</p>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 {filteredPrompts.map((prompt) => (
                   <button
                     key={prompt.id}
                     onClick={() => setExpandedPrompt(expandedPrompt === prompt.id ? null : prompt.id)}
-                    className="w-full text-left surface-subcard p-3 space-y-1.5 hover:bg-muted/30 transition-colors rounded-xl"
+                    className="w-full text-left rounded-xl border border-border/50 p-2.5 hover:bg-muted/20 transition-colors"
                   >
-                    <div className="flex items-center justify-between">
-                      <span className="text-[13px] font-medium text-foreground leading-snug">{prompt.title}</span>
-                      <ChevronDown className={cn('h-3.5 w-3.5 text-muted-foreground transition-transform shrink-0', expandedPrompt === prompt.id && 'rotate-180')} />
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[12px] font-medium text-foreground leading-snug">{prompt.title}</span>
+                      <ChevronDown className={cn('h-3 w-3 text-muted-foreground/40 transition-transform shrink-0', expandedPrompt === prompt.id && 'rotate-180')} />
                     </div>
-                    <span className="inline-block rounded-full border border-border/60 bg-muted/40 px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
-                      {prompt.platform}
-                    </span>
                     <AnimatePresence>
                       {expandedPrompt === prompt.id && (
-                        <motion.div
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: 'auto', opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          className="overflow-hidden"
-                        >
-                          <p className="text-xs text-muted-foreground mt-2 leading-relaxed">{prompt.prompt}</p>
+                        <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+                          <p className="text-[11px] text-muted-foreground mt-2 leading-relaxed">{prompt.prompt}</p>
                           {prompt.relatedBlockIds.length > 0 && (
                             <div className="mt-2 flex flex-wrap gap-1">
                               {prompt.relatedBlockIds.map((id) => {
@@ -527,35 +430,23 @@ export function EssayWorkshop({ blocks, prompts, activities = [] }: EssayWorksho
   );
 }
 
-// ─── Toolbar Button ─────────────────────────────────────────────────────────
+/* ─── Small helpers ──────────────────────────────────────────────────────── */
 
-function ToolbarButton({
-  icon: Icon,
-  active,
-  onClick,
-  title,
-  disabled,
-}: {
-  icon: typeof Bold;
-  active: boolean;
-  onClick: () => void;
-  title: string;
-  disabled?: boolean;
-}) {
+function ToolbarBtn({ icon: Icon, active, onClick, title, disabled }: { icon: typeof Bold; active: boolean; onClick: () => void; title: string; disabled?: boolean }) {
   return (
     <button
-      onClick={onClick}
-      disabled={disabled}
-      title={title}
+      onClick={onClick} disabled={disabled} title={title}
       className={cn(
-        'flex h-8 w-8 items-center justify-center rounded-lg transition-colors',
-        active
-          ? 'bg-primary/10 text-primary'
-          : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground',
-        disabled && 'opacity-30 cursor-not-allowed'
+        'flex h-7 w-7 items-center justify-center rounded-md transition-colors',
+        active ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground',
+        disabled && 'opacity-25 cursor-not-allowed'
       )}
     >
-      <Icon className="h-4 w-4" />
+      <Icon className="h-3.5 w-3.5" />
     </button>
   );
+}
+
+function Sep() {
+  return <div className="w-px h-4 bg-border/50 mx-0.5" />;
 }
