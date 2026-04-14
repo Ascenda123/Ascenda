@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 import { filterNavByRole, isNavActive, NAV_ITEMS } from './navigation';
 import { useUserRole } from '@/hooks/use-user-role';
 import { useSupabase } from '@/hooks/useSupabase';
-import { LogOut } from 'lucide-react';
+import { LogOut, CalendarPlus } from 'lucide-react';
 
 export const Sidebar = () => {
   const pathname = usePathname();
@@ -51,15 +51,16 @@ export const Sidebar = () => {
         </button>
       </nav>
       {!pathname.startsWith('/counsellor') && (
-        <div className="mt-6 space-y-2 rounded-2xl border border-border bg-muted/40 p-4 text-foreground transition-colors">
-          <p className="text-xs uppercase tracking-[0.35em] text-muted-foreground">Support</p>
-          <p className="text-base font-semibold leading-tight text-foreground">Need a counselor nudge?</p>
-          <p className="text-sm text-muted-foreground">Live response in under 5 min during office hours.</p>
+        <div className="mt-6 space-y-2 rounded-2xl border border-primary/20 bg-primary/5 p-4 text-foreground transition-colors">
+          <p className="text-[10px] uppercase tracking-[0.3em] text-primary font-semibold">Your counsellor</p>
+          <p className="text-base font-semibold leading-tight text-foreground">Mrs. Sarah Mitchell</p>
+          <p className="text-xs text-muted-foreground">Request a session to discuss essays, applications, or university choices.</p>
           <Link
-            href="mailto:hello@ascenda.com"
-            className="inline-flex items-center justify-center rounded-full bg-card px-4 py-2 text-sm font-semibold text-foreground shadow-sm transition hover:bg-muted/50"
+            href="/counsellor/appointment"
+            className="inline-flex items-center gap-2 justify-center rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition hover:-translate-y-0.5 hover:shadow-md w-full"
           >
-            Ping support →
+            <CalendarPlus className="h-4 w-4" />
+            Request appointment
           </Link>
         </div>
       )}

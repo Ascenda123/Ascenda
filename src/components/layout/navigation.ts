@@ -161,7 +161,6 @@ export const TOOLBOX_SECTION_ITEMS: SectionNavItem[] = [
   { label: 'Hub', href: '/toolbox', exact: true },
   { label: 'Essay Workshop', href: '/toolbox/essay-workshop' },
   { label: 'Chances', href: '/toolbox/chances' },
-  { label: 'Activities', href: '/toolbox/activities' },
   { label: 'Requirements', href: '/toolbox/requirements' },
   { label: 'Timeline', href: '/toolbox/timeline' },
 ];

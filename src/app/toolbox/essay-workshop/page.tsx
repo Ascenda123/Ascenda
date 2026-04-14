@@ -6,7 +6,7 @@ import { PageHero } from '@/components/layout/page-hero';
 import { SectionNav } from '@/components/layout/section-nav';
 import { TOOLBOX_SECTION_ITEMS } from '@/components/layout/navigation';
 import { EssayWorkshop } from '@/components/toolbox/essay-workshop';
-import { DEMO_BUILDING_BLOCKS, DEMO_ESSAY_PROMPTS } from '@/lib/data/student-demo-data';
+import { DEMO_BUILDING_BLOCKS, DEMO_ESSAY_PROMPTS, DEMO_ACTIVITIES } from '@/lib/data/student-demo-data';
 
 export const metadata: Metadata = { title: 'Essay Workshop | Ascenda' };
 
@@ -28,7 +28,7 @@ export default async function EssayWorkshopPage() {
           { label: 'Platforms', value: '4', detail: 'UCAS, Common App, UC, Custom' },
         ]}
       />
-      <EssayWorkshop blocks={DEMO_BUILDING_BLOCKS} prompts={DEMO_ESSAY_PROMPTS} />
+      <EssayWorkshop blocks={DEMO_BUILDING_BLOCKS} prompts={DEMO_ESSAY_PROMPTS} activities={DEMO_ACTIVITIES} />
     </DashboardShell>
   );
 }

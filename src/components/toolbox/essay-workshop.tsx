@@ -9,10 +9,22 @@ import CharacterCount from '@tiptap/extension-character-count';
 import {
   PenTool, ChevronDown, Bold, Italic, List, ListOrdered, Undo, Redo,
   GripVertical, FileText, RotateCcw, Copy, Check,
+  Globe, Star, Heart, Trophy, User, MessageSquare, Users, ChevronRight,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { stagger, childFade } from '@/lib/motion';
-import type { EssayBuildingBlock, EssayPrompt } from '@/lib/data/student-demo-data';
+import type { EssayBuildingBlock, EssayPrompt, BlockCategory, ActivityEntry } from '@/lib/data/student-demo-data';
+
+const CATEGORY_CONFIG: Record<BlockCategory, { icon: typeof Globe; label: string; color: string }> = {
+  identity: { icon: User, label: 'Identity', color: 'text-violet-600' },
+  experience: { icon: Globe, label: 'Experience', color: 'text-sky-600' },
+  strength: { icon: Star, label: 'Strengths', color: 'text-amber-600' },
+  interest: { icon: Heart, label: 'Interests', color: 'text-rose-600' },
+  achievement: { icon: Trophy, label: 'Achievements', color: 'text-emerald-600' },
+  counsellor_insight: { icon: MessageSquare, label: 'Counsellor Insights', color: 'text-violet-600' },
+};
+
+const CATEGORY_ORDER: BlockCategory[] = ['identity', 'experience', 'strength', 'interest', 'achievement', 'counsellor_insight'];
 import { EssayAIPanel } from './essay-ai-panel';
 
 const PLATFORMS = ['UCAS', 'Common App', 'UC PIQs', 'Custom'] as const;
@@ -36,9 +48,10 @@ const PLATFORM_NOTES: Record<Platform, string> = {
 interface EssayWorkshopProps {
   blocks: EssayBuildingBlock[];
   prompts: EssayPrompt[];
+  activities?: ActivityEntry[];
 }
 
-export function EssayWorkshop({ blocks, prompts }: EssayWorkshopProps) {
+export function EssayWorkshop({ blocks, prompts, activities = [] }: EssayWorkshopProps) {
   const [platform, setPlatform] = useState<Platform>('UCAS');
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [selectedBlocks, setSelectedBlocks] = useState<Set<string>>(new Set());
@@ -171,58 +184,75 @@ export function EssayWorkshop({ blocks, prompts }: EssayWorkshopProps) {
       {/* Main 3-column layout */}
       <div className="grid gap-5 lg:grid-cols-[240px,1fr,260px]">
 
-        {/* Left: Block picker with drag */}
+        {/* Left: Block picker grouped by category */}
         <div className="space-y-3">
           <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">Building Blocks</p>
           <p className="text-[11px] text-muted-foreground">Click to select, double-click to insert into essay</p>
-          <motion.div className="space-y-2 max-h-[520px] overflow-y-auto pr-1 scrollbar-thin" variants={stagger} initial="hidden" animate="show">
-            {blocks.map((block) => {
-              const isSelected = selectedBlocks.has(block.id);
+          <div className="space-y-4 max-h-[520px] overflow-y-auto pr-1 scrollbar-thin">
+            {CATEGORY_ORDER.map((cat) => {
+              const catBlocks = blocks.filter((b) => b.category === cat);
+              if (catBlocks.length === 0) return null;
+              const cfg = CATEGORY_CONFIG[cat];
+              const CatIcon = cfg.icon;
               return (
-                <motion.div
-                  key={block.id}
-                  variants={childFade}
-                  draggable
-                  onDragStart={() => setDraggedBlock(block.id)}
-                  onDragEnd={() => setDraggedBlock(null)}
-                  className="group"
-                >
-                  <button
-                    onClick={() => toggleBlock(block.id)}
-                    onDoubleClick={() => insertBlock(block)}
-                    className={cn(
-                      'w-full text-left rounded-xl border px-3 py-2.5 text-sm transition-all',
-                      isSelected
-                        ? 'border-primary/40 bg-primary/5 text-foreground ring-1 ring-primary/20'
-                        : 'border-border bg-card text-muted-foreground hover:border-primary/20 hover:bg-muted/30',
-                      draggedBlock === block.id && 'opacity-50 scale-95'
-                    )}
-                  >
-                    <div className="flex items-start gap-2">
-                      <GripVertical className="h-3.5 w-3.5 mt-0.5 text-muted-foreground/40 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <span className="font-medium text-foreground text-[13px] leading-snug">{block.label}</span>
-                        {isSelected && block.detail && (
-                          <motion.p
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: 'auto', opacity: 1 }}
-                            className="mt-1.5 text-xs text-muted-foreground leading-relaxed overflow-hidden"
+                <div key={cat}>
+                  <div className="flex items-center gap-1.5 mb-1.5">
+                    <CatIcon className={cn('h-3.5 w-3.5', cfg.color)} />
+                    <span className={cn('text-[11px] font-semibold', cfg.color)}>{cfg.label}</span>
+                    <span className="text-[10px] text-muted-foreground/60">({catBlocks.length})</span>
+                  </div>
+                  <motion.div className="space-y-1.5" variants={stagger} initial="hidden" animate="show">
+                    {catBlocks.map((block) => {
+                      const isSelected = selectedBlocks.has(block.id);
+                      return (
+                        <motion.div
+                          key={block.id}
+                          variants={childFade}
+                          draggable
+                          onDragStart={() => setDraggedBlock(block.id)}
+                          onDragEnd={() => setDraggedBlock(null)}
+                          className="group"
+                        >
+                          <button
+                            onClick={() => toggleBlock(block.id)}
+                            onDoubleClick={() => insertBlock(block)}
+                            className={cn(
+                              'w-full text-left rounded-xl border px-3 py-2 text-sm transition-all',
+                              isSelected
+                                ? 'border-primary/40 bg-primary/5 text-foreground ring-1 ring-primary/20'
+                                : 'border-border bg-card text-muted-foreground hover:border-primary/20 hover:bg-muted/30',
+                              draggedBlock === block.id && 'opacity-50 scale-95'
+                            )}
                           >
-                            {block.detail}
-                          </motion.p>
-                        )}
-                      </div>
-                      {isSelected && (
-                        <div className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                          <Check className="h-3 w-3 text-primary" />
-                        </div>
-                      )}
-                    </div>
-                  </button>
-                </motion.div>
+                            <div className="flex items-start gap-2">
+                              <GripVertical className="h-3.5 w-3.5 mt-0.5 text-muted-foreground/40 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                              <div className="flex-1 min-w-0">
+                                <span className="font-medium text-foreground text-[13px] leading-snug">{block.label}</span>
+                                {isSelected && block.detail && (
+                                  <motion.p
+                                    initial={{ height: 0, opacity: 0 }}
+                                    animate={{ height: 'auto', opacity: 1 }}
+                                    className="mt-1.5 text-xs text-muted-foreground leading-relaxed overflow-hidden"
+                                  >
+                                    {block.detail}
+                                  </motion.p>
+                                )}
+                              </div>
+                              {isSelected && (
+                                <div className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                                  <Check className="h-3 w-3 text-primary" />
+                                </div>
+                              )}
+                            </div>
+                          </button>
+                        </motion.div>
+                      );
+                    })}
+                  </motion.div>
+                </div>
               );
             })}
-          </motion.div>
+          </div>
           {selectedBlocks.size > 0 && (
             <div className="surface-subcard px-3 py-2">
               <p className="text-[11px] font-semibold text-muted-foreground">{selectedBlocks.size} block{selectedBlocks.size !== 1 ? 's' : ''} selected</p>
@@ -233,6 +263,36 @@ export function EssayWorkshop({ blocks, prompts }: EssayWorkshopProps) {
                   </span>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* Activities sub-section (folded from standalone tool) */}
+          {activities.length > 0 && (
+            <div className="mt-4 pt-4 border-t border-border/50">
+              <div className="flex items-center gap-1.5 mb-2">
+                <Users className="h-3.5 w-3.5 text-sky-600" />
+                <span className="text-[11px] font-semibold text-sky-600">Activities</span>
+                <span className="text-[10px] text-muted-foreground/60">({activities.length})</span>
+              </div>
+              <div className="space-y-1.5">
+                {activities.map((act) => (
+                  <button
+                    key={act.id}
+                    onClick={() => {
+                      if (!editor) return;
+                      editor.chain().focus().insertContent(`<p><em>[${act.name}]</em> ${act.role} at ${act.organization} — ${act.description}</p>`).run();
+                    }}
+                    className="w-full text-left rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs transition-colors hover:border-sky-200/60 hover:bg-sky-500/5 group"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium text-foreground text-[12px]">{act.name}</span>
+                      <ChevronRight className="h-3 w-3 text-muted-foreground/40 group-hover:text-sky-500 transition-colors" />
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">{act.role} · {act.organization}</p>
+                  </button>
+                ))}
+              </div>
+              <p className="text-[10px] text-muted-foreground/60 mt-1.5">Click to insert into essay</p>
             </div>
           )}
         </div>
