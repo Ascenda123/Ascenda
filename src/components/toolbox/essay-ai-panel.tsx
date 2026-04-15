@@ -4,7 +4,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Sparkles, MessageSquare, Wand2, ListTree,
-  Loader2, X, Copy, Check, ChevronDown,
+  Loader2, X, Copy, Check, ChevronDown, RefreshCw, CheckCircle2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { EssayBuildingBlock } from '@/lib/data/student-demo-data';
@@ -77,6 +77,7 @@ const ACTIONS: { key: Action; label: string; icon: typeof Sparkles; description:
 export function EssayAIPanel({ essay, platform, selectedBlocks, allBlocks, onInsertText }: EssayAIPanelProps) {
   const [isOpen, setIsOpen] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [done, setDone] = useState(false);
   const [result, setResult] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   const [activeAction, setActiveAction] = useState<Action | null>(null);
@@ -92,6 +93,7 @@ export function EssayAIPanel({ essay, platform, selectedBlocks, allBlocks, onIns
 
   const runAction = useCallback(async (action: Action, block?: EssayBuildingBlock) => {
     setLoading(true);
+    setDone(false);
     setResult('');
     setError(null);
     setActiveAction(action);
@@ -193,6 +195,7 @@ export function EssayAIPanel({ essay, platform, selectedBlocks, allBlocks, onIns
           }
         }
       }
+      setDone(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to connect');
     } finally {
@@ -355,12 +358,27 @@ export function EssayAIPanel({ essay, platform, selectedBlocks, allBlocks, onIns
                   className="space-y-2"
                 >
                   <div className="flex items-center justify-between">
-                    <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                      {activeAction === 'feedback' ? 'Feedback' :
-                       activeAction === 'expand' ? 'Draft Paragraph' :
-                       'Outline'}
-                    </p>
+                    <div className="flex items-center gap-1.5">
+                      {done && !loading && (
+                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                      )}
+                      <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                        {activeAction === 'feedback' ? 'Feedback' :
+                         activeAction === 'expand' ? 'Draft Paragraph' :
+                         'Outline'}
+                      </p>
+                    </div>
                     <div className="flex gap-1">
+                      {done && !loading && activeAction && (
+                        <button
+                          onClick={() => runAction(activeAction)}
+                          className="flex items-center gap-1 rounded-lg px-2 py-0.5 text-[10px] font-medium text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors"
+                          title="Run again"
+                        >
+                          <RefreshCw className="h-3 w-3" />
+                          Re-run
+                        </button>
+                      )}
                       <button
                         onClick={handleCopy}
                         className="flex items-center gap-1 rounded-lg px-2 py-0.5 text-[10px] font-medium text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors"
@@ -368,13 +386,13 @@ export function EssayAIPanel({ essay, platform, selectedBlocks, allBlocks, onIns
                         {copied ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
                         {copied ? 'Copied' : 'Copy'}
                       </button>
-                      {(activeAction === 'expand') && onInsertText && (
+                      {(activeAction === 'expand' || activeAction === 'outline') && onInsertText && (
                         <button
                           onClick={handleInsert}
                           className="flex items-center gap-1 rounded-lg bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary hover:bg-primary/20 transition-colors"
                         >
                           <Wand2 className="h-3 w-3" />
-                          Insert into essay
+                          Insert
                         </button>
                       )}
                     </div>

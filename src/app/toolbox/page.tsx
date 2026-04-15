@@ -135,20 +135,24 @@ export default async function ToolboxPage() {
         <div className="grid gap-4 md:grid-cols-[1fr,auto]">
           {/* Next action card */}
           {nextDeadline && (
-            <Link href="/toolbox/timeline" className="block surface-card border-l-4 border-l-primary hover:border-l-primary/80 transition-all hover:shadow-lg group">
+            <Link href="/toolbox/timeline" className="block surface-card border-l-4 border-l-primary hover:border-l-primary hover:shadow-xl transition-all hover:-translate-y-0.5 group overflow-hidden">
+              <div className="pointer-events-none absolute -top-6 -right-6 h-24 w-24 rounded-full bg-primary/5 blur-2xl group-hover:bg-primary/10 transition-colors" />
               <div className="relative z-10 flex items-center gap-4">
                 <ToolboxCountdown days={daysUntil ?? 0} />
                 <div className="flex-1 min-w-0">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-primary">Your next action</p>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary flex items-center gap-1.5">
+                    <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                    Your next action
+                  </p>
                   <p className="text-lg font-semibold text-foreground mt-0.5 truncate">{nextDeadline.title}</p>
                   <p className="text-sm text-muted-foreground">
                     {nextDeadline.university} — {daysUntil !== null && daysUntil <= 7
-                      ? <span className="text-rose-600 font-medium">{daysUntil === 0 ? 'Today' : daysUntil === 1 ? 'Tomorrow' : `${daysUntil} days left`}</span>
+                      ? <span className="text-rose-600 font-semibold">{daysUntil === 0 ? 'Today' : daysUntil === 1 ? 'Tomorrow' : `${daysUntil} days left`}</span>
                       : new Date(nextDeadline.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
                     }
                   </p>
                 </div>
-                <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all shrink-0" />
+                <ArrowRight className="h-5 w-5 text-muted-foreground/30 group-hover:text-primary group-hover:translate-x-1 transition-all shrink-0" />
               </div>
             </Link>
           )}
@@ -172,28 +176,32 @@ export default async function ToolboxPage() {
           const Icon = tool.icon;
           return (
             <AnimatedGridItem key={tool.href}>
-              <Link href={tool.href} className="surface-card group flex h-full flex-col hover:shadow-lg transition-all hover:-translate-y-0.5">
+              <Link href={tool.href} className="surface-card group flex h-full flex-col hover:shadow-xl transition-all hover:-translate-y-1 overflow-hidden">
+                {/* Gradient header strip */}
                 <div className={`absolute inset-0 bg-gradient-to-br ${tool.gradient} rounded-[inherit] pointer-events-none`} />
-                <div className="relative z-10 flex-1 space-y-3">
+                <div className="pointer-events-none absolute -top-10 -right-10 h-32 w-32 rounded-full opacity-20 blur-2xl transition-opacity group-hover:opacity-40" style={{ background: 'var(--primary)' }} />
+
+                <div className="relative z-10 flex-1 flex flex-col gap-4">
+                  {/* Icon + title row */}
                   <div className="flex items-start gap-3">
-                    <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${tool.iconBg}`}>
+                    <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${tool.iconBg} ring-1 ring-black/5 dark:ring-white/5 shadow-sm`}>
                       <Icon className="h-5 w-5" />
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
+                    <div className="flex-1 min-w-0 pt-0.5">
+                      <div className="flex items-center gap-1.5">
                         <p className="text-base font-semibold text-foreground">{tool.title}</p>
-                        <ArrowRight className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                        <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/40 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
                       </div>
-                      <p className="text-sm text-muted-foreground leading-relaxed">{tool.description}</p>
+                      <p className="text-sm text-muted-foreground leading-relaxed mt-0.5">{tool.description}</p>
                     </div>
                   </div>
 
                   {/* Mini stats */}
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-3 gap-2 mt-auto">
                     {tool.stats.map((stat) => (
-                      <div key={stat.label} className="surface-subcard px-2.5 py-2 text-center rounded-xl">
-                        <p className="text-sm font-bold text-foreground">{stat.value}</p>
-                        <p className="text-[10px] text-muted-foreground">{stat.label}</p>
+                      <div key={stat.label} className="surface-subcard px-2.5 py-2.5 text-center rounded-xl">
+                        <p className="text-sm font-bold text-foreground tabular-nums">{stat.value}</p>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">{stat.label}</p>
                       </div>
                     ))}
                   </div>

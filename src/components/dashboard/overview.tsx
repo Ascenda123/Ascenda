@@ -77,18 +77,21 @@ export const DashboardOverview = ({ data }: { data: OverviewPayload }) => {
                 toneClass(card.tone),
                 card.href && 'hover:-translate-y-1 hover:shadow-lg cursor-pointer'
               )}>
-                {/* Gradient overlay */}
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.02] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                {/* Gradient blobs */}
+                <div className={cn(
+                  'pointer-events-none absolute -top-8 -right-8 h-24 w-24 rounded-full blur-2xl opacity-40',
+                  card.tone === 'positive' ? 'bg-emerald-400' : card.tone === 'warning' ? 'bg-amber-400' : 'bg-primary'
+                )} />
 
                 <div className="relative z-10">
                   <div className="flex items-center gap-2">
-                    <span className={cn('h-2 w-2 rounded-full', toneDot(card.tone))} />
+                    <span className={cn('h-2 w-2 rounded-full shrink-0', toneDot(card.tone))} />
                     <p className="text-[11px] uppercase tracking-[0.3em] text-muted-foreground font-semibold">{card.label}</p>
                   </div>
-                  <p className="mt-3 text-2xl font-bold text-foreground leading-tight">{card.value}</p>
-                  <p className="mt-1 text-sm text-muted-foreground">{card.detail}</p>
+                  <p className="mt-3 text-3xl font-bold text-foreground leading-tight tracking-tight">{card.value}</p>
+                  <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed">{card.detail}</p>
                   {card.href && (
-                    <div className="mt-3 flex items-center gap-1 text-xs font-medium text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="mt-3 flex items-center gap-1 text-xs font-medium text-primary opacity-0 group-hover:opacity-100 transition-opacity translate-x-0 group-hover:translate-x-0.5 duration-200">
                       View details <ArrowRight className="h-3 w-3" />
                     </div>
                   )}
@@ -121,22 +124,24 @@ export const DashboardOverview = ({ data }: { data: OverviewPayload }) => {
               </div>
             </div>
           </div>
-          <motion.ul className="mt-4 space-y-3" variants={stagger}>
+          <motion.ul className="mt-4 space-y-2" variants={stagger}>
             {focusList.map((item, index) => (
               <motion.li
                 key={item.id}
-                className="group surface-subcard p-4 transition-all duration-300 hover:-translate-y-px hover:shadow-sm"
+                className="group surface-subcard p-4 transition-all duration-300 hover:-translate-y-px hover:shadow-sm hover:border-primary/10"
                 variants={focusFade}
+                whileHover={{ x: 2 }}
               >
                 <div className="flex items-start gap-3">
-                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-[10px] font-bold text-primary mt-0.5">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-[11px] font-bold text-primary mt-0.5 ring-1 ring-primary/10 group-hover:bg-primary/15 transition-colors">
                     {index + 1}
                   </span>
-                  <div>
-                    <p className="text-[11px] uppercase tracking-[0.25em] text-muted-foreground font-semibold">{item.label}</p>
-                    <p className="text-sm font-semibold text-foreground mt-0.5">{item.title}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{item.detail}</p>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground font-semibold">{item.label}</p>
+                    <p className="text-sm font-semibold text-foreground mt-0.5 truncate">{item.title}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{item.detail}</p>
                   </div>
+                  <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/30 group-hover:text-primary/50 group-hover:translate-x-0.5 transition-all shrink-0 mt-1" />
                 </div>
               </motion.li>
             ))}

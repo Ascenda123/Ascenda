@@ -297,8 +297,16 @@ export function EssayWorkshop({ blocks, prompts, activities = [] }: EssayWorksho
 
           {/* Selected summary */}
           {selectedBlocks.size > 0 && (
-            <div className="p-3 border-t border-border/50">
-              <p className="text-[10px] font-semibold text-muted-foreground mb-1.5">{selectedBlocks.size} blocks selected</p>
+            <div className="p-3 border-t border-border/50 space-y-2">
+              <div className="flex items-center justify-between">
+                <p className="text-[10px] font-semibold text-muted-foreground">{selectedBlocks.size} block{selectedBlocks.size > 1 ? 's' : ''} selected</p>
+                <button
+                  onClick={() => setSelectedBlocks(new Set())}
+                  className="text-[10px] font-medium text-muted-foreground hover:text-rose-500 transition-colors"
+                >
+                  Clear all
+                </button>
+              </div>
               <div className="flex flex-wrap gap-1">
                 {blocks.filter((b) => selectedBlocks.has(b.id)).map((b) => (
                   <button key={b.id} onClick={() => insertBlock(b)} className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary hover:bg-primary/20 transition-colors" title="Click to insert">{b.label}</button>
@@ -341,14 +349,26 @@ export function EssayWorkshop({ blocks, prompts, activities = [] }: EssayWorksho
             </div>
           </div>
 
-          {/* Bottom progress bar */}
-          <div className="h-1 bg-muted/20 shrink-0">
-            <motion.div
-              className={cn('h-full', ratio < 0.8 ? 'bg-emerald-500' : ratio < 0.95 ? 'bg-amber-500' : 'bg-rose-500')}
-              initial={{ width: 0 }}
-              animate={{ width: `${Math.min(ratio * 100, 100)}%` }}
-              transition={{ duration: 0.4, ease: 'easeOut' }}
-            />
+          {/* Bottom status + progress */}
+          <div className="shrink-0 border-t border-border/30 bg-card/50">
+            <div className="flex items-center justify-between px-4 py-1.5">
+              <div className="flex items-center gap-3">
+                <span className={cn('text-[11px] font-semibold tabular-nums', ratio < 0.8 ? 'text-emerald-600' : ratio < 0.95 ? 'text-amber-600' : 'text-rose-600')}>
+                  {current.toLocaleString()} <span className="font-normal text-muted-foreground">/ {limit.max.toLocaleString()} {limit.unit}</span>
+                </span>
+                {ratio >= 0.95 && <span className="text-[10px] font-semibold text-rose-500 animate-pulse">At limit</span>}
+                {ratio >= 0.8 && ratio < 0.95 && <span className="text-[10px] text-amber-500">Getting close</span>}
+              </div>
+              <span className="text-[10px] text-muted-foreground/50">{limit.tip}</span>
+            </div>
+            <div className="h-0.5 bg-muted/20">
+              <motion.div
+                className={cn('h-full', ratio < 0.8 ? 'bg-emerald-500' : ratio < 0.95 ? 'bg-amber-500' : 'bg-rose-500')}
+                initial={{ width: 0 }}
+                animate={{ width: `${Math.min(ratio * 100, 100)}%` }}
+                transition={{ duration: 0.4, ease: 'easeOut' }}
+              />
+            </div>
           </div>
         </main>
 
