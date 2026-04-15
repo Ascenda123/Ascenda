@@ -7,7 +7,7 @@ import type { MatchTier } from './match-tier';
 import type { StudentProfilePayload } from '@/lib/profile/intake-types';
 import { scoreStudentProfile } from '@/lib/scoring/student_scoring';
 import type { CourseRecord, EnrichedCourseRecord } from '@/lib/tiering/course_tiering';
-import { rankCourseMatches, type RankedCourseMatch } from '@/lib/matching/matching_engine';
+import { rankCourseMatches, resolveTargetFields, type RankedCourseMatch } from '@/lib/matching/matching_engine';
 
 type StudentAcademicInputRow = Database['public']['Tables']['student_academic_input']['Row'];
 type StudentLifestyleRow = Database['public']['Tables']['student_lifestyle_preference']['Row'];
@@ -32,7 +32,7 @@ export type MatchComputationResult = {
   error?: { stage: 'profile' | 'programs' | 'universities' | 'requirements'; message: string };
 };
 
-const PROGRAM_PAGE_SIZE = 150;
+const PROGRAM_PAGE_SIZE = 500;
 const PROGRAM_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 const PROGRAM_CACHE_WINDOW_MS = 5 * 60 * 1000;
 const DEMO_PROFILE_EMAIL = 'greg@workiflow.com';
@@ -288,10 +288,27 @@ const toPlacementYear = (value: unknown, detail: string | null): string | null =
 };
 
 const mapCourseScoringRow = (row: CourseScoringRow): CourseSource => {
-  const universityScore = asNumber(row.university_score) ?? 0;
-  const selectivityScore = asNumber(row.course_selectivity_score) ?? 0;
-  const totalScore = asNumber(row.total_course_score) ?? Math.round(universityScore * 0.6 + selectivityScore * 0.4);
-  const courseTier = toTier(row.course_tier);
+  // The view computes university_score, course_selectivity_score, total_course_score
+  // from ranking columns — but for the all_countries_programs import those rankings are
+  // often null, producing default 30/40/5 values.  The real pre-computed scores live in
+  // programs.metadata.  We read them via extra columns the view now exposes (meta_*),
+  // or fall back to the view's computed values.
+  const metaTotalScore = asNumber((row as any).meta_total_course_score);
+  const metaSelectivity = asNumber((row as any).meta_selectivity_score);
+  const metaUniScore = asNumber((row as any).meta_university_score);
+  const metaTier = asNumber((row as any).meta_course_tier);
+
+  const viewUniScore = asNumber(row.university_score) ?? 0;
+  const viewSelectivity = asNumber(row.course_selectivity_score) ?? 0;
+  const viewTotal = asNumber(row.total_course_score) ?? Math.round(viewUniScore * 0.6 + viewSelectivity * 0.4);
+  const viewTier = toTier(row.course_tier);
+
+  const universityScore = metaUniScore ?? viewUniScore;
+  const selectivityScore = metaSelectivity ?? viewSelectivity;
+  const totalScore = metaTotalScore ?? viewTotal;
+  const courseTier = metaTier != null && metaTier >= 1 && metaTier <= 5
+    ? (metaTier as 1 | 2 | 3 | 4 | 5)
+    : viewTier;
   const genderRatio = row.gender_ratio_pct;
   const genderRatioText =
     typeof genderRatio === 'number' ? String(genderRatio) : asString(genderRatio);
@@ -384,8 +401,9 @@ export const loadMatchesForProfile = async (
   profileId: string,
   options: LoadMatchesOptions = {}
 ): Promise<MatchComputationResult> => {
-  const forceDemoTierMix = await isDemoProfile(supabase, profileId);
-  const programLimit = options.programLimit ?? 300;
+  // Demo tier override disabled — v4 engine handles tiers natively.
+  const forceDemoTierMix = false;
+  const programLimit = options.programLimit ?? 5000;
 
   const [
     { data: academicData, error: academicError },
@@ -445,12 +463,24 @@ export const loadMatchesForProfile = async (
       const isFreshAgainstProfile = profileFreshnessMs === null || latestCreatedAt.getTime() >= profileFreshnessMs;
       if (age >= 0 && age <= PROGRAM_CACHE_TTL_MS && isFreshAgainstProfile) {
         const windowStart = new Date(latestCreatedAt.getTime() - PROGRAM_CACHE_WINDOW_MS).toISOString();
-        const { data: cachedRows, error: cachedError } = await supabase
-          .from('student_matches')
-          .select('program_id, score, breakdown, created_at')
-          .eq('profile_id', profileId)
-          .gte('created_at', windowStart)
-          .order('score', { ascending: false });
+        // Paginate cache reads — Supabase defaults to 1000 rows max
+        const cachedRows: any[] = [];
+        let cacheOffset = 0;
+        const CACHE_PAGE = 1000;
+        while (true) {
+          const { data: page, error: pageError } = await supabase
+            .from('student_matches')
+            .select('program_id, score, breakdown, created_at')
+            .eq('profile_id', profileId)
+            .gte('created_at', windowStart)
+            .order('score', { ascending: false })
+            .range(cacheOffset, cacheOffset + CACHE_PAGE - 1);
+          if (pageError || !page || page.length === 0) break;
+          cachedRows.push(...page);
+          if (page.length < CACHE_PAGE) break;
+          cacheOffset += CACHE_PAGE;
+        }
+        const cachedError = null;
         if (!cachedError && cachedRows && cachedRows.length > 0) {
           const cachedMatches = cachedRows
             .map((row) => {
@@ -511,12 +541,26 @@ export const loadMatchesForProfile = async (
     }
   }
 
+  // Pre-compute target field labels from student clusters for DB-level filtering.
+  // This lets us load far more relevant programs within the limit rather than
+  // getting a random cross-section of the 120k catalog.
+  const studentClusters = [
+    ...(academicData?.intended_clusters ?? []),
+    ...(academicData?.secondary_clusters ?? [])
+  ] as import('@/lib/profile/intake-types').IntendedCluster[];
+  const targetFields = resolveTargetFields(studentClusters);
+  const fieldLabels = targetFields ? Array.from(targetFields) : null;
+
   const programsData: ProgramSummaryRow[] = [];
   let offset = 0;
   while (programsData.length < programLimit) {
     const rangeFrom = offset;
     const rangeTo = Math.min(offset + PROGRAM_PAGE_SIZE - 1, programLimit - 1);
     let programQuery = supabase.from('programs').select('id,metadata');
+    // If the student has field preferences, filter to matching programs at the DB level
+    if (fieldLabels && fieldLabels.length > 0) {
+      programQuery = programQuery.in('field', fieldLabels);
+    }
     programQuery = applyProgramVisibilityFilters(programQuery).range(rangeFrom, rangeTo);
     const { data, error: programsError } = await programQuery;
     if (programsError) {
@@ -565,6 +609,14 @@ export const loadMatchesForProfile = async (
   }
 
   const programIds = filteredPrograms.map((program) => program.id);
+
+  // Build a metadata lookup so we can inject pre-computed scores from the
+  // all_countries_programs import into the course rows after loading from the view.
+  const metadataByProgramId = new Map<string, Record<string, unknown>>();
+  for (const p of filteredPrograms) {
+    const meta = normalizeMetadata((p as any).metadata);
+    if (meta) metadataByProgramId.set(p.id, meta);
+  }
 
   const courseColumns = [
     'course_id',
@@ -641,7 +693,27 @@ export const loadMatchesForProfile = async (
     };
   }
 
-  const enrichedCourses = courseRows.map(mapCourseScoringRow);
+  // Inject pre-computed metadata scores into each course row before mapping,
+  // so mapCourseScoringRow can prefer them over the view's ranking-derived defaults.
+  const enrichedCourses = courseRows.map((row) => {
+    const pid = String(row.program_id ?? row.course_id ?? '');
+    const meta = metadataByProgramId.get(pid);
+    if (meta) {
+      if (meta.total_course_score != null && row.meta_total_course_score == null) {
+        (row as any).meta_total_course_score = meta.total_course_score;
+      }
+      if (meta.selectivity_score != null && row.meta_selectivity_score == null) {
+        (row as any).meta_selectivity_score = meta.selectivity_score;
+      }
+      if (meta.course_tier != null && row.meta_course_tier == null) {
+        (row as any).meta_course_tier = meta.course_tier;
+      }
+      if (meta.university_score != null && row.meta_university_score == null) {
+        (row as any).meta_university_score = meta.university_score;
+      }
+    }
+    return mapCourseScoringRow(row);
+  });
 
   const universitiesCount = new Set(enrichedCourses.map((course) => course.university_id)).size;
 
@@ -665,7 +737,19 @@ export const loadMatchesForProfile = async (
   }
   const ranked = rankCourseMatches(studentPayload, studentScore, enrichedCourses)
     .filter((match) => !match.excluded);
-  const limited = options.resultLimit ? ranked.slice(0, options.resultLimit) : ranked;
+
+  // Apply result limit per-tier to ensure balanced Reach/Match/Safe representation.
+  // Without this, a top-N cut returns only Safety results (highest admission %).
+  let limited: RankedCourseMatch[];
+  if (options.resultLimit) {
+    const perTier = Math.ceil(options.resultLimit / 3);
+    const safety = ranked.filter((m) => m.tier_fit === 'Safety').slice(0, perTier);
+    const target = ranked.filter((m) => m.tier_fit === 'Target').slice(0, perTier);
+    const reach = ranked.filter((m) => m.tier_fit === 'Reach' || m.tier_fit === 'Harder-than-reach').slice(0, perTier);
+    limited = [...reach, ...target, ...safety];
+  } else {
+    limited = ranked;
+  }
 
   const toKey = (value: { university: string; course: string; ucas_code?: string | null }) =>
     `${value.university}::${value.course}::${value.ucas_code ?? ''}`;
@@ -718,9 +802,11 @@ export const loadMatchesForProfile = async (
     })
     .filter((value): value is EnrichedMatch => value !== null);
 
-  if (forceDemoTierMix) {
-    matches = assignDemoTierMix(matches);
-  }
+  // Demo tier override disabled — the v4 matching engine now assigns tiers
+  // via its own sigmoid-based admission probability model.
+  // if (forceDemoTierMix) {
+  //   matches = assignDemoTierMix(matches);
+  // }
 
   if (matches.length > 0) {
     const cachePayload = matches.map((match) => ({
@@ -750,9 +836,14 @@ export const loadMatchesForProfile = async (
     if (deleteError) {
       console.warn('Failed to clear cached matches', deleteError);
     }
-    const { error: insertError } = await supabase.from('student_matches').insert(cachePayload);
-    if (insertError) {
-      console.warn('Failed to persist cached matches', insertError);
+    // Insert in batches to avoid payload size limits
+    for (let i = 0; i < cachePayload.length; i += 500) {
+      const batch = cachePayload.slice(i, i + 500);
+      const { error: insertError } = await supabase.from('student_matches').insert(batch);
+      if (insertError) {
+        console.warn(`Failed to persist cached matches batch ${i}`, insertError);
+        break;
+      }
     }
   }
 

@@ -1,8 +1,8 @@
 type FitScoreTone = 'strong' | 'solid' | 'risk' | 'unknown';
 
 const FIT_SCORE_BUCKETS: { min: number; badge: string; text: string; tone: FitScoreTone }[] = [
-  { min: 88, badge: 'text-emerald-700 ring-emerald-100 bg-emerald-50', text: 'text-emerald-700', tone: 'strong' },
-  { min: 70, badge: 'text-amber-700 ring-amber-100 bg-amber-50', text: 'text-amber-700', tone: 'solid' },
+  { min: 75, badge: 'text-emerald-700 ring-emerald-100 bg-emerald-50', text: 'text-emerald-700', tone: 'strong' },
+  { min: 45, badge: 'text-amber-700 ring-amber-100 bg-amber-50', text: 'text-amber-700', tone: 'solid' },
   { min: 0, badge: 'text-orange-700 ring-orange-100 bg-orange-50', text: 'text-orange-700', tone: 'risk' }
 ];
 

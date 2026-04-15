@@ -32,7 +32,7 @@ export default async function MatchesPage() {
     redirect('/login');
   }
 
-  const matchResult = await loadMatchesForProfile(supabase, user.id);
+  const matchResult = await loadMatchesForProfile(supabase, user.id, { resultLimit: 300 });
 
   if (matchResult.error) {
     return (

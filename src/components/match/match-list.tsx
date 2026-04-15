@@ -1,11 +1,11 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import { motion } from 'framer-motion';
+import { useMemo, useState, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { UniversityCard } from '@/components/university-card';
 import type { MatchTier } from '@/lib/matching/match-tier';
 import { cn } from '@/lib/utils';
-import { Grid, LayoutList } from 'lucide-react';
+import { Grid, LayoutList, ChevronDown } from 'lucide-react';
 import type { EnrichedMatch } from '@/lib/matching/types';
 import { MATCHES_TEXT } from '@/lib/constants/text';
 import { CompareBar } from '@/components/university-search/CompareBar';
@@ -19,19 +19,32 @@ interface MatchListProps {
 const TIER_ORDER: MatchTier[] = ['Reach', 'Match', 'Safe'];
 const TIER_DESCRIPTIONS: Record<MatchTier, string> = MATCHES_TEXT.tierDescriptions;
 
+const INITIAL_PER_TIER = 6;
+const EXPAND_STEP = 12;
+const MAX_PER_UNIVERSITY = 3;
+
 const tierCardVariants = {
   hidden: { opacity: 0, y: 16 },
   show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: 'easeOut' as any } }
 };
 
-const staggeredGrid = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.07, delayChildren: 0.1 } }
+const cardVariants = {
+  hidden: { opacity: 0, y: 12 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.3, ease: 'easeOut' as any } }
 };
 
-const cardVariants = {
-  hidden: { opacity: 0, y: 18, scale: 0.98 },
-  show: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.4, ease: 'easeOut' as any } }
+/** Deduplicate per-university, preserving sort order. */
+const dedupeByUniversity = (items: EnrichedMatch[], maxPerUni: number): EnrichedMatch[] => {
+  const uniCounts = new Map<string, number>();
+  const out: EnrichedMatch[] = [];
+  for (const item of items) {
+    const key = item.university.id || item.university.name;
+    const count = uniCounts.get(key) ?? 0;
+    if (count >= maxPerUni) continue;
+    uniCounts.set(key, count + 1);
+    out.push(item);
+  }
+  return out;
 };
 
 export const MatchList = ({ matches }: MatchListProps) => {
@@ -40,6 +53,11 @@ export const MatchList = ({ matches }: MatchListProps) => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [selectedForComparison, setSelectedForComparison] = useState<ProgramSearchResult[]>([]);
   const [isComparisonOpen, setIsComparisonOpen] = useState(false);
+  const [tierLimits, setTierLimits] = useState<Record<MatchTier, number>>({
+    Reach: INITIAL_PER_TIER,
+    Match: INITIAL_PER_TIER,
+    Safe: INITIAL_PER_TIER
+  });
 
   const filteredMatches = useMemo(() => {
     if (selectedTier === 'All') return matches;
@@ -55,8 +73,25 @@ export const MatchList = ({ matches }: MatchListProps) => {
     filteredMatches.forEach((match) => {
       accumulator[match.tier].push(match);
     });
-    return TIER_ORDER.map((tier) => ({ tier, matches: accumulator[tier] }));
-  }, [filteredMatches]);
+    return TIER_ORDER.map((tier) => {
+      const all = dedupeByUniversity(accumulator[tier], MAX_PER_UNIVERSITY);
+      const visible = all.slice(0, tierLimits[tier]);
+      return {
+        tier,
+        visible,
+        totalDeduped: all.length,
+        totalRaw: accumulator[tier].length,
+        hasMore: all.length > tierLimits[tier]
+      };
+    });
+  }, [filteredMatches, tierLimits]);
+
+  const handleShowMore = useCallback((tier: MatchTier) => {
+    setTierLimits((prev) => ({
+      ...prev,
+      [tier]: prev[tier] + EXPAND_STEP
+    }));
+  }, []);
 
   const handleToggleSelect = (match: EnrichedMatch) => {
     setSelectedForComparison((prev) => {
@@ -84,6 +119,8 @@ export const MatchList = ({ matches }: MatchListProps) => {
     });
   };
 
+  const totalShown = tierGroups.reduce((sum, g) => sum + g.visible.length, 0);
+
   return (
     <div className="space-y-8 pb-24">
       <div className="surface-toolbar flex flex-wrap items-center justify-between gap-3">
@@ -92,7 +129,7 @@ export const MatchList = ({ matches }: MatchListProps) => {
             {MATCHES_TEXT.list.headerEyebrow}
           </p>
           <p className="text-sm text-muted-foreground">
-            Showing {matches.length} program{matches.length === 1 ? '' : 's'} ranked by fit
+            {totalShown} of {matches.length} program{matches.length === 1 ? '' : 's'} ranked by admission probability
           </p>
         </div>
         <div className="relative z-10 flex flex-wrap items-center gap-2">
@@ -147,8 +184,8 @@ export const MatchList = ({ matches }: MatchListProps) => {
             {MATCHES_TEXT.list.noResults}
           </div>
         ) : (
-          tierGroups.map(({ tier, matches }) =>
-            selectedTier === 'All' || matches.length ? (
+          tierGroups.map(({ tier, visible, totalDeduped, hasMore }) =>
+            selectedTier === 'All' || visible.length ? (
               <motion.div
                 key={tier}
                 className="surface-stage space-y-5"
@@ -165,43 +202,71 @@ export const MatchList = ({ matches }: MatchListProps) => {
                     </span>
                   </div>
                   <div className="flex flex-col gap-1">
-                    <h3 className="text-2xl font-semibold text-foreground">{tier} programs</h3>
+                    <h3 className="text-2xl font-semibold text-foreground">
+                      {tier} programs
+                      <span className="ml-2 text-base font-normal text-muted-foreground">
+                        ({totalDeduped})
+                      </span>
+                    </h3>
                     <p className="text-sm text-muted-foreground">{TIER_DESCRIPTIONS[tier]}</p>
                   </div>
                 </div>
 
-                {matches.length ? (
-                  <motion.div
-                    className={cn(
-                      'grid gap-6',
-                      viewMode === 'grid'
-                        ? 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-3'
-                        : 'grid-cols-1'
+                {visible.length ? (
+                  <>
+                    <div
+                      className={cn(
+                        'grid gap-6',
+                        viewMode === 'grid'
+                          ? 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-3'
+                          : 'grid-cols-1'
+                      )}
+                    >
+                      <AnimatePresence initial={false}>
+                      {visible.map((match) => (
+                        <motion.div
+                          key={match.program.id}
+                          variants={cardVariants}
+                          initial="hidden"
+                          animate="show"
+                          layout
+                        >
+                          <UniversityCard
+                            id={match.program.id}
+                            name={match.university.name}
+                            program={match.program.name}
+                            location={match.university.country}
+                            fitScore={match.score}
+                            tier={match.tier}
+                            reasons={match.blockingReasons}
+                            highlights={[
+                              match.program.field ?? match.program.level ?? 'Program',
+                              match.program.tuition != null
+                                ? `${match.program.currency ?? 'GBP'} ${Math.round(match.program.tuition).toLocaleString()}/yr`
+                                : null,
+                              match.program.language && match.program.language !== 'English' ? match.program.language : null
+                            ].filter((h): h is string => h != null)}
+                            variant={viewMode === 'list' ? 'compact' : 'default'}
+                            trackingLabelVariant="planner"
+                            isSelected={selectedForComparison.some((item) => item.id === match.program.id)}
+                            onToggleSelect={() => handleToggleSelect(match)}
+                          />
+                        </motion.div>
+                      ))}
+                      </AnimatePresence>
+                    </div>
+                    {hasMore && (
+                      <div className="flex justify-center pt-2">
+                        <button
+                          onClick={() => handleShowMore(tier)}
+                          className="group flex items-center gap-2 rounded-2xl border border-border/70 bg-background/80 px-5 py-2.5 text-sm font-medium text-muted-foreground shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:text-foreground hover:shadow-md"
+                        >
+                          Show more {tier.toLowerCase()} programs
+                          <ChevronDown className="h-4 w-4 transition-transform group-hover:translate-y-0.5" />
+                        </button>
+                      </div>
                     )}
-                    variants={staggeredGrid}
-                  >
-                    {matches.map((match) => (
-                      <motion.div key={match.program.id} variants={cardVariants} layout>
-                        <UniversityCard
-                          id={match.program.id}
-                          name={match.university.name}
-                          program={match.program.name}
-                          location={match.university.country}
-                          fitScore={match.score}
-                          tier={match.tier}
-                          reasons={match.blockingReasons}
-                          highlights={[
-                            match.program.level ?? 'Program',
-                            match.program.language ?? 'English'
-                          ].filter(Boolean)}
-                          variant={viewMode === 'list' ? 'compact' : 'default'}
-                          trackingLabelVariant="planner"
-                          isSelected={selectedForComparison.some((item) => item.id === match.program.id)}
-                          onToggleSelect={() => handleToggleSelect(match)}
-                        />
-                      </motion.div>
-                    ))}
-                  </motion.div>
+                  </>
                 ) : (
                   <div className="rounded-2xl border border-dashed border-border bg-muted/40 px-4 py-6 text-sm text-muted-foreground">
                     No programs in this tier yet.

@@ -32,15 +32,15 @@ export const MATCHES_TEXT = {
   },
   topSnapshot: {
     eyebrow: 'Top fit snapshot',
-    scoreLabel: 'Score'
+    scoreLabel: 'Admit probability'
   },
   list: {
     headerEyebrow: 'Matches',
     noResults: 'No matches available.'
   },
   tierDescriptions: {
-    Reach: 'Highly selective universities that stretch your profile.',
-    Match: 'Programs that align closely with your academic and preference fit.',
-    Safe: 'Comfortable options where you exceed the entry expectations.'
+    Reach: 'Highly competitive programs where admission is a stretch — strong options if your application stands out.',
+    Match: 'Programs where your IB score and profile align well with typical admitted students.',
+    Safe: 'Programs where you comfortably exceed entry requirements — high confidence of admission.'
   }
 } as const;
