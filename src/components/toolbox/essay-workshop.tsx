@@ -11,7 +11,7 @@ import {
   ChevronDown, Bold, Italic, List, ListOrdered, Undo, Redo,
   GripVertical, RotateCcw, Copy, Check, PenTool, ArrowLeft,
   Globe, Star, Heart, Trophy, User, MessageSquare, Users, ChevronRight,
-  FileText, Sparkles, PanelRightOpen, PanelRightClose,
+  FileText, Sparkles, PanelRightOpen, PanelRightClose, Download,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { stagger, childFade } from '@/lib/motion';
@@ -100,9 +100,23 @@ export function EssayWorkshop({ blocks, prompts, activities = [] }: EssayWorksho
   const toggleCat = (cat: BlockCategory) => { setCollapsedCats((prev) => { const n = new Set(prev); n.has(cat) ? n.delete(cat) : n.add(cat); return n; }); };
   const handleCopy = () => { navigator.clipboard.writeText(editorText); setCopied(true); setTimeout(() => setCopied(false), 2000); };
   const handleClear = () => { editor?.commands.clearContent(); setDrafts((prev) => ({ ...prev, [platform]: '' })); };
+  const handleDownload = () => {
+    const blob = new Blob([editorText], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `essay-${platform.toLowerCase().replace(/\s+/g, '-')}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-background text-foreground">
+      {/* Mobile notice — essay workshop is desktop-optimised */}
+      <div className="flex items-center justify-center gap-2 bg-amber-500/10 border-b border-amber-200/50 px-4 py-2 text-xs font-medium text-amber-700 lg:hidden">
+        <FileText className="h-3.5 w-3.5 shrink-0" />
+        Essay Workshop works best on a larger screen. You can still read and edit below.
+      </div>
       {/* ── Top chrome ──────────────────────────────────────────────────────── */}
       <header className="flex items-center gap-3 border-b border-border/60 px-4 h-12 shrink-0 bg-card/80 backdrop-blur-sm">
         <Link href="/toolbox" className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors">
@@ -332,6 +346,14 @@ export function EssayWorkshop({ blocks, prompts, activities = [] }: EssayWorksho
             <button onClick={handleCopy} className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors">
               {copied ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
               {copied ? 'Copied' : 'Copy'}
+            </button>
+            <button
+              onClick={handleDownload}
+              disabled={!editorText.trim()}
+              className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              title="Download as .txt"
+            >
+              <Download className="h-3 w-3" /> Export
             </button>
             <button onClick={handleClear} className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium text-muted-foreground hover:bg-rose-500/10 hover:text-rose-600 transition-colors">
               <RotateCcw className="h-3 w-3" /> Clear

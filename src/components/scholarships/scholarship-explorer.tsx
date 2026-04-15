@@ -1,9 +1,9 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Search, X, Globe, GraduationCap, DollarSign, Calendar, ExternalLink, Bookmark, BookmarkCheck, Filter } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { trackEvent } from '@/lib/analytics';
 import type { Scholarship } from './types';
 import { filterScholarships } from './utils';
@@ -12,147 +12,293 @@ interface ScholarshipExplorerProps {
   scholarships: Scholarship[];
 }
 
+const CATEGORY_COLORS: Record<string, string> = {
+  Merit: 'bg-violet-500/10 text-violet-600 border-violet-200/50',
+  Regional: 'bg-sky-500/10 text-sky-600 border-sky-200/50',
+  STEM: 'bg-emerald-500/10 text-emerald-600 border-emerald-200/50',
+  Need: 'bg-amber-500/10 text-amber-600 border-amber-200/50',
+  Sports: 'bg-rose-500/10 text-rose-600 border-rose-200/50',
+  General: 'bg-muted/60 text-muted-foreground border-border/50',
+};
+
+const cardVariants = {
+  hidden: { opacity: 0, y: 12 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] as const } },
+  exit: { opacity: 0, scale: 0.97, transition: { duration: 0.15 } },
+};
+
+const listVariants = {
+  show: { transition: { staggerChildren: 0.06 } },
+};
+
+function formatDeadline(dateStr: string | null | undefined): string {
+  if (!dateStr) return 'Rolling';
+  try {
+    return new Date(dateStr).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  } catch {
+    return dateStr;
+  }
+}
+
+function isUrgent(dateStr: string | null | undefined): boolean {
+  if (!dateStr) return false;
+  const diff = (new Date(dateStr).getTime() - Date.now()) / (1000 * 60 * 60 * 24);
+  return diff >= 0 && diff <= 30;
+}
+
 export const ScholarshipExplorer = ({ scholarships }: ScholarshipExplorerProps) => {
+  const [query, setQuery] = useState('');
   const [country, setCountry] = useState('');
   const [level, setLevel] = useState('');
-  const [query, setQuery] = useState('');
   const [maxAmount, setMaxAmount] = useState('');
+  const [saved, setSaved] = useState<Set<string>>(new Set());
+  const [showFilters, setShowFilters] = useState(false);
 
-  const countries = useMemo(() => Array.from(new Set(scholarships.map((item) => item.country).filter(Boolean))) as string[], [scholarships]);
+  const countries = useMemo(
+    () => Array.from(new Set(scholarships.map((s) => s.country).filter(Boolean))) as string[],
+    [scholarships]
+  );
   const levels = useMemo(
-    () => Array.from(new Set(scholarships.map((item) => item.level ?? 'Any level'))).sort(),
+    () => Array.from(new Set(scholarships.map((s) => s.level ?? 'Any level'))).sort(),
     [scholarships]
   );
 
   const filtered = useMemo(
-    () =>
-      filterScholarships(scholarships, {
-        country,
-        level: level === 'Any level' ? undefined : level,
-        query,
-        maxAmount: maxAmount ? Number(maxAmount) : null
-      }),
+    () => filterScholarships(scholarships, {
+      country,
+      level: level === 'Any level' ? undefined : level,
+      query,
+      maxAmount: maxAmount ? Number(maxAmount) : null,
+    }),
     [scholarships, country, level, query, maxAmount]
   );
 
-  const resetFilters = () => {
-    setCountry('');
-    setLevel('');
-    setQuery('');
-    setMaxAmount('');
-  };
+  const hasFilters = query || country || level || maxAmount;
 
-  const handleSave = (scholarship: Scholarship) => {
-    trackEvent('scholarship_saved', { scholarshipId: scholarship.id });
+  const resetFilters = () => { setQuery(''); setCountry(''); setLevel(''); setMaxAmount(''); };
+
+  const toggleSave = (s: Scholarship) => {
+    setSaved((prev) => {
+      const next = new Set(prev);
+      if (next.has(s.id)) { next.delete(s.id); } else {
+        next.add(s.id);
+        trackEvent('scholarship_saved', { scholarshipId: s.id });
+      }
+      return next;
+    });
   };
 
   return (
-    <div className="space-y-6">
-      <section className="space-y-4 rounded-[28px] border border-border bg-card p-5 transition-colors">
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <label className="flex flex-col gap-2 text-sm">
-            <span className="font-semibold text-foreground">Search</span>
-            <Input
-              placeholder="Merit, STEM, regional..."
+    <div className="space-y-5">
+      {/* Search + filter bar */}
+      <div className="rounded-2xl border border-border bg-card p-4 shadow-sm space-y-4">
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <input
+              type="text"
+              placeholder="Search by name, category, or country…"
               value={query}
-              onChange={(event) => setQuery(event.target.value)}
+              onChange={(e) => setQuery(e.target.value)}
+              className="w-full rounded-xl border border-border bg-background pl-9 pr-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-ring"
             />
-          </label>
-          <div>
-            <Label htmlFor="country-filter">Country</Label>
-            <select
-              id="country-filter"
-              className="mt-2 w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              value={country}
-              onChange={(event) => setCountry(event.target.value)}
-            >
-              <option value="">All</option>
-              {countries.map((item) => (
-                <option key={item} value={item as string}>
-                  {item}
-                </option>
-              ))}
-            </select>
+            {query && (
+              <button onClick={() => setQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
           </div>
-          <div>
-            <Label htmlFor="level-filter">Level</Label>
-            <select
-              id="level-filter"
-              className="mt-2 w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              value={level}
-              onChange={(event) => setLevel(event.target.value)}
-            >
-              <option value="">All</option>
-              {levels.map((item) => (
-                <option key={item} value={item}>
-                  {item}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <Label htmlFor="amount-filter">Max award (USD)</Label>
-            <Input
-              id="amount-filter"
-              type="number"
-              placeholder="50000"
-              value={maxAmount}
-              onChange={(event) => setMaxAmount(event.target.value)}
-            />
-          </div>
+          <button
+            onClick={() => setShowFilters((f) => !f)}
+            className={cn(
+              'flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-medium transition-all hover:-translate-y-0.5',
+              showFilters || hasFilters
+                ? 'border-primary/30 bg-primary/5 text-primary'
+                : 'border-border bg-background text-muted-foreground hover:text-foreground hover:bg-muted/50'
+            )}
+          >
+            <Filter className="h-4 w-4" />
+            Filters
+            {hasFilters && <span className="h-2 w-2 rounded-full bg-primary" />}
+          </button>
         </div>
-        <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-          <span>{filtered.length} scholarships</span>
-          <Button type="button" variant="ghost" size="sm" onClick={resetFilters}>
-            Reset filters
-          </Button>
-        </div>
-      </section>
 
-      <section className="space-y-3">
-        {filtered.length === 0 ? (
-          <div className="rounded-[28px] border border-dashed border-border bg-muted/30 p-8 text-center text-muted-foreground">
-            No scholarships match these filters. Try widening your search.
-          </div>
-        ) : (
-          filtered.map((scholarship) => (
-            <article
-              key={scholarship.id}
-              className="rounded-[28px] border border-border bg-card p-6 shadow-[0_12px_30px_rgba(15,23,42,0.08)]"
+        <AnimatePresence>
+          {showFilters && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="overflow-hidden"
             >
-              <div className="flex flex-wrap items-start justify-between gap-4">
-                <div>
-                  <p className="text-[11px] uppercase tracking-[0.4em] text-muted-foreground">
-                    {scholarship.category ?? 'General'}
-                  </p>
-                  <h3 className="text-xl font-semibold text-foreground">{scholarship.name}</h3>
-                  <p className="text-sm text-muted-foreground">
-                    {scholarship.country ?? scholarship.region ?? 'Global'} • {scholarship.level ?? 'Any level'}
-                  </p>
+              <div className="grid gap-4 sm:grid-cols-3 pt-2 border-t border-border/50">
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-1.5">
+                    <Globe className="h-3 w-3" /> Country
+                  </label>
+                  <select
+                    value={country}
+                    onChange={(e) => setCountry(e.target.value)}
+                    className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    <option value="">All countries</option>
+                    {countries.map((c) => <option key={c} value={c}>{c}</option>)}
+                  </select>
                 </div>
-                <div className="text-right">
-                  <p className="text-2xl font-semibold text-foreground">
-                    {scholarship.currency ?? 'USD'} {scholarship.amount?.toLocaleString() ?? '—'}
-                  </p>
-                  <p className="text-xs text-muted-foreground">Deadline {scholarship.deadline ?? 'Rolling'}</p>
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-1.5">
+                    <GraduationCap className="h-3 w-3" /> Level
+                  </label>
+                  <select
+                    value={level}
+                    onChange={(e) => setLevel(e.target.value)}
+                    className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                  >
+                    <option value="">All levels</option>
+                    {levels.map((l) => <option key={l} value={l}>{l}</option>)}
+                  </select>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-1.5">
+                    <DollarSign className="h-3 w-3" /> Max award (USD)
+                  </label>
+                  <input
+                    type="number"
+                    placeholder="e.g. 50000"
+                    value={maxAmount}
+                    onChange={(e) => setMaxAmount(e.target.value)}
+                    className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
                 </div>
               </div>
-              <div className="mt-4 flex flex-wrap items-center gap-3">
-                <Button type="button" size="sm" onClick={() => handleSave(scholarship)}>
-                  Save to tracker
-                </Button>
-                {scholarship.url ? (
-                  <Button asChild type="button" size="sm" variant="outline">
-                    <a href={scholarship.url} target="_blank" rel="noreferrer">
-                      View details
-                    </a>
-                  </Button>
-                ) : null}
-              </div>
-            </article>
-          ))
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Status row */}
+        <div className="flex items-center justify-between">
+          <p className="text-[11px] text-muted-foreground">
+            <span className="font-semibold text-foreground">{filtered.length}</span> of {scholarships.length} scholarships
+            {saved.size > 0 && <span className="ml-2 text-emerald-600">· {saved.size} saved</span>}
+          </p>
+          {hasFilters && (
+            <button onClick={resetFilters} className="text-[11px] font-medium text-muted-foreground hover:text-rose-500 transition-colors flex items-center gap-1">
+              <X className="h-3 w-3" /> Clear filters
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Results */}
+      <AnimatePresence mode="wait">
+        {filtered.length === 0 ? (
+          <motion.div
+            key="empty"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            className="rounded-2xl border border-dashed border-border bg-muted/20 p-12 text-center"
+          >
+            <Search className="h-8 w-8 text-muted-foreground/30 mx-auto mb-3" />
+            <p className="text-sm font-medium text-muted-foreground">No scholarships match these filters</p>
+            <p className="text-xs text-muted-foreground/60 mt-1">Try widening your search or clearing filters</p>
+            <button onClick={resetFilters} className="mt-4 text-xs font-semibold text-primary hover:underline">Clear all filters</button>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="list"
+            className="space-y-3"
+            variants={listVariants}
+            initial="hidden"
+            animate="show"
+          >
+            {filtered.map((scholarship) => {
+              const catColor = CATEGORY_COLORS[scholarship.category ?? 'General'] ?? CATEGORY_COLORS.General;
+              const isSaved = saved.has(scholarship.id);
+              const urgent = isUrgent(scholarship.deadline);
+
+              return (
+                <motion.article
+                  key={scholarship.id}
+                  variants={cardVariants}
+                  layout
+                  className="group rounded-2xl border border-border bg-card p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md hover:border-primary/10 overflow-hidden relative"
+                >
+                  {/* Ambient blob */}
+                  <div className="pointer-events-none absolute -top-8 -right-8 h-24 w-24 rounded-full bg-primary/3 blur-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
+
+                  <div className="relative flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                    {/* Left: info */}
+                    <div className="flex-1 min-w-0 space-y-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className={cn('rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.15em]', catColor)}>
+                          {scholarship.category ?? 'General'}
+                        </span>
+                        {urgent && (
+                          <span className="rounded-full bg-rose-500/10 border border-rose-200/50 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.15em] text-rose-600 animate-pulse">
+                            Closing soon
+                          </span>
+                        )}
+                      </div>
+                      <h3 className="text-base font-semibold text-foreground leading-snug">{scholarship.name}</h3>
+                      <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <Globe className="h-3 w-3" />
+                          {scholarship.country ?? scholarship.region ?? 'Global'}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <GraduationCap className="h-3 w-3" />
+                          {scholarship.level ?? 'Any level'}
+                        </span>
+                        <span className={cn('flex items-center gap-1', urgent && 'text-rose-500 font-medium')}>
+                          <Calendar className="h-3 w-3" />
+                          {formatDeadline(scholarship.deadline)}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Right: amount + actions */}
+                    <div className="flex sm:flex-col items-center sm:items-end gap-3 sm:gap-2 shrink-0">
+                      <div className="text-right">
+                        <p className="text-xl font-bold text-foreground tabular-nums">
+                          {scholarship.amount ? `${scholarship.currency ?? 'USD'} ${scholarship.amount.toLocaleString()}` : '—'}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground">per award</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => toggleSave(scholarship)}
+                          className={cn(
+                            'flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold transition-all hover:-translate-y-0.5',
+                            isSaved
+                              ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-200/50'
+                              : 'border border-border text-muted-foreground hover:border-primary/20 hover:text-primary hover:bg-primary/5'
+                          )}
+                        >
+                          {isSaved ? <BookmarkCheck className="h-3.5 w-3.5" /> : <Bookmark className="h-3.5 w-3.5" />}
+                          {isSaved ? 'Saved' : 'Save'}
+                        </button>
+                        {scholarship.url && (
+                          <a
+                            href={scholarship.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="flex items-center gap-1.5 rounded-xl border border-border px-3 py-1.5 text-xs font-semibold text-muted-foreground transition-all hover:-translate-y-0.5 hover:border-primary/20 hover:text-foreground hover:bg-muted/40"
+                          >
+                            <ExternalLink className="h-3.5 w-3.5" />
+                            Details
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </motion.article>
+              );
+            })}
+          </motion.div>
         )}
-      </section>
+      </AnimatePresence>
     </div>
   );
 };

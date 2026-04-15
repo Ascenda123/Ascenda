@@ -215,16 +215,20 @@ export default function UniversitySearchPage() {
         </div>
         <div className="mt-6 flex flex-col gap-4 border-t border-border pt-6 md:flex-row md:items-center md:justify-between">
           <p className="helper-text">
-            These filters don’t run a live query yet—they help counselors understand what to curate next for you.
+            {selectedFilters.size > 0
+              ? `${selectedFilters.size} filter(s) selected - click Apply to search`
+              : "Select filters above to narrow your search"}
           </p>
           <div className="flex gap-3">
-            <button
-              type="button"
-              onClick={resetFilters}
-              className="text-sm font-semibold uppercase tracking-[0.25em] text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Reset filters
-            </button>
+            {selectedFilters.size > 0 && (
+              <button
+                type="button"
+                onClick={resetFilters}
+                className="text-sm font-semibold uppercase tracking-[0.25em] text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Reset filters
+              </button>
+            )}
             <Button size="sm" type="button" onClick={handleSubmit}>Apply filters</Button>
           </div>
         </div>
