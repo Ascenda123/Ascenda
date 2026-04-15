@@ -19,6 +19,55 @@ interface EssayAIPanelProps {
   onInsertText?: (text: string) => void;
 }
 
+function parseMarkdown(text: string): string {
+  const lines = text.split('\n');
+  const output: string[] = [];
+  let inUl = false;
+  let inOl = false;
+
+  const closeList = () => {
+    if (inUl) { output.push('</ul>'); inUl = false; }
+    if (inOl) { output.push('</ol>'); inOl = false; }
+  };
+
+  const inline = (s: string) =>
+    s
+      .replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>')
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.+?)\*/g, '<em>$1</em>')
+      .replace(/`(.+?)`/g, '<code>$1</code>');
+
+  for (const raw of lines) {
+    const line = raw.trimEnd();
+
+    if (/^### (.+)/.test(line)) {
+      closeList();
+      output.push(`<h3 class="font-semibold mt-4 mb-1">${inline(line.slice(4))}</h3>`);
+    } else if (/^## (.+)/.test(line)) {
+      closeList();
+      output.push(`<h2 class="font-semibold mt-4 mb-1">${inline(line.slice(3))}</h2>`);
+    } else if (/^# (.+)/.test(line)) {
+      closeList();
+      output.push(`<h1 class="font-semibold mt-4 mb-1">${inline(line.slice(2))}</h1>`);
+    } else if (/^\d+\. (.+)/.test(line)) {
+      if (!inOl) { closeList(); output.push('<ol class="list-decimal pl-5">'); inOl = true; }
+      output.push(`<li>${inline(line.replace(/^\d+\. /, ''))}</li>`);
+    } else if (/^[-*] (.+)/.test(line)) {
+      if (!inUl) { closeList(); output.push('<ul class="list-disc pl-5">'); inUl = true; }
+      output.push(`<li>${inline(line.slice(2))}</li>`);
+    } else if (line === '') {
+      closeList();
+      output.push('<br/>');
+    } else {
+      closeList();
+      output.push(`<p>${inline(line)}</p>`);
+    }
+  }
+
+  closeList();
+  return output.join('');
+}
+
 const ACTIONS: { key: Action; label: string; icon: typeof Sparkles; description: string; color: string }[] = [
   { key: 'feedback', label: 'Get Feedback', icon: MessageSquare, description: 'AI reviews your draft with specific rewrites', color: 'text-violet-500 bg-violet-500/10' },
   { key: 'expand', label: 'Expand Block', icon: Wand2, description: 'Turn a building block into a paragraph', color: 'text-amber-500 bg-amber-500/10' },
@@ -332,11 +381,12 @@ export function EssayAIPanel({ essay, platform, selectedBlocks, allBlocks, onIns
                   </div>
                   <div
                     ref={resultRef}
-                    className="max-h-72 overflow-y-auto rounded-xl border border-border/50 bg-card p-3 scrollbar-thin"
+                    className="max-h-[60vh] overflow-y-auto rounded-xl border border-border/50 bg-card p-4 scrollbar-thin"
                   >
-                    <div className="prose prose-sm dark:prose-invert max-w-none text-[13px] leading-relaxed text-foreground/90 whitespace-pre-wrap">
-                      {result}
-                    </div>
+                    <div
+                      className="prose prose-sm dark:prose-invert max-w-none text-[13px] leading-relaxed [&>h1]:text-base [&>h2]:text-[13px] [&>h3]:text-[13px] [&>p]:mb-3 [&>ul]:mb-3 [&>ol]:mb-3 [&>ul>li]:mb-1 [&>ol>li]:mb-1"
+                      dangerouslySetInnerHTML={{ __html: parseMarkdown(result) }}
+                    />
                   </div>
                 </motion.div>
               )}
