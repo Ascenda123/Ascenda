@@ -136,11 +136,11 @@ export default function UniversitySearchPage() {
           search: { value: `${selectedFilters.size}`, detail: selectedFilters.size ? 'filters currently selected' : 'start with a broad scan' }
         }}
       />
-      <section className="surface-stage relative z-20 rounded-[28px] p-8">
-        <div className="absolute inset-0 overflow-hidden rounded-[28px]">
+      <section className="surface-stage relative z-20 rounded-[28px] p-8 !overflow-visible">
+        <div className="absolute inset-0 overflow-hidden rounded-[28px] pointer-events-none">
           <AnimatedBlobBanner className="opacity-80" />
         </div>
-        <div className="relative z-10 space-y-8">
+        <div className="relative z-20 space-y-8">
           <div className="space-y-5">
             <p className="text-xs font-semibold uppercase tracking-[0.35em] text-muted-foreground">Search hub</p>
             <div className="space-y-4">
@@ -151,7 +151,7 @@ export default function UniversitySearchPage() {
             </div>
             <form
               onSubmit={handleSubmit}
-              className="surface-stat space-y-3 rounded-[28px] p-4"
+              className="surface-stat space-y-3 rounded-[28px] p-4 !overflow-visible"
             >
               <label htmlFor="search-keyword" className="text-xs font-semibold uppercase tracking-[0.35em] text-muted-foreground">
                 universities or courses
