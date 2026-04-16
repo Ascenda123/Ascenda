@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { motion, useReducedMotion } from 'framer-motion';
 import { fadeIn } from '@/lib/motion';
@@ -9,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Play, ArrowRight, Zap, Globe, NotebookPen } from 'lucide-react';
 import { useSupabase } from '@/hooks/useSupabase';
 import { RETURNING_USER_STORAGE_KEY } from '@/lib/constants';
+import { DemoPreview } from './DemoPreview';
 
 export function DemoSection() {
     const shouldReduceMotion = useReducedMotion();
@@ -99,17 +99,8 @@ export function DemoSection() {
                         </div>
                     </div>
 
-                    <div className="p-3">
-                        <Image
-                            src="/demo-loop.gif"
-                            alt="Ascenda demo showing fit score calculations, timeline, and actions in real time"
-                            width={960}
-                            height={540}
-                            sizes="(max-width: 768px) 100vw, 50vw"
-                            className="relative h-auto w-full rounded-xl"
-                            loading="lazy"
-                            unoptimized
-                        />
+                    <div className="p-3 min-h-[360px]">
+                        <DemoPreview />
                     </div>
                 </motion.div>
             </motion.div>
