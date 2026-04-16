@@ -1,7 +1,8 @@
 'use client';
 
-import { useRef, useEffect, useState } from 'react';
-import { motion, useInView } from 'framer-motion';
+import { useRef } from 'react';
+import { motion, useInView, useReducedMotion } from 'framer-motion';
+import { useAnimatedNumber } from '@/hooks/use-animated-number';
 
 const metrics = [
     { value: 40, suffix: '%', label: 'of students regret what/where they study.', color: 'text-rose-500' },
@@ -9,27 +10,20 @@ const metrics = [
     { value: 50, prefix: '~', suffix: '%', label: 'of grads work outside their field.', color: 'text-primary' }
 ];
 
-function AnimatedNumber({ value, prefix = '', suffix = '', color, inView }: { value: number; prefix?: string; suffix?: string; color: string; inView: boolean }) {
-    const [display, setDisplay] = useState(0);
-
-    useEffect(() => {
-        if (!inView) return;
-        let start = 0;
-        const duration = 1200;
-        const startTime = performance.now();
-        const ease = (t: number) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
-
-        const tick = (now: number) => {
-            const progress = Math.min(1, (now - startTime) / duration);
-            setDisplay(Math.round(ease(progress) * value));
-            if (progress < 1) requestAnimationFrame(tick);
-        };
-        requestAnimationFrame(tick);
-    }, [inView, value]);
+function AnimatedMetric({ metric, inView, reduceMotion }: {
+    metric: typeof metrics[number];
+    inView: boolean;
+    reduceMotion: boolean | null;
+}) {
+    const display = useAnimatedNumber(
+        metric.value,
+        reduceMotion ? true : inView,
+        reduceMotion ? 0 : 1200,
+    );
 
     return (
-        <span className={color}>
-            {prefix}{display}{suffix}
+        <span className={metric.color}>
+            {metric.prefix ?? ''}{display}{metric.suffix}
         </span>
     );
 }
@@ -37,6 +31,7 @@ function AnimatedNumber({ value, prefix = '', suffix = '', color, inView }: { va
 export function ProofPointsSection() {
     const ref = useRef<HTMLDivElement>(null);
     const inView = useInView(ref, { once: true, amount: 0.4 });
+    const shouldReduceMotion = useReducedMotion();
 
     return (
         <section className="w-full py-24 bg-background" ref={ref}>
@@ -44,7 +39,7 @@ export function ProofPointsSection() {
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16 border-b border-border/40 pb-8">
                     <motion.div
                         className="max-w-xl"
-                        initial={{ opacity: 0, y: 16 }}
+                        initial={shouldReduceMotion ? false : { opacity: 0, y: 16 }}
                         animate={inView ? { opacity: 1, y: 0 } : undefined}
                         transition={{ duration: 0.5 }}
                     >
@@ -53,7 +48,7 @@ export function ProofPointsSection() {
                     </motion.div>
                     <motion.p
                         className="text-muted-foreground max-w-md text-lg"
-                        initial={{ opacity: 0, y: 16 }}
+                        initial={shouldReduceMotion ? false : { opacity: 0, y: 16 }}
                         animate={inView ? { opacity: 1, y: 0 } : undefined}
                         transition={{ duration: 0.5, delay: 0.1 }}
                     >
@@ -66,7 +61,7 @@ export function ProofPointsSection() {
                         <motion.div
                             key={metric.label}
                             className="group relative flex flex-col justify-between p-8 rounded-3xl border border-border/30 bg-card hover:bg-card/80 transition-all duration-500 hover:shadow-lg hover:-translate-y-1 overflow-hidden"
-                            initial={{ opacity: 0, y: 24 }}
+                            initial={shouldReduceMotion ? false : { opacity: 0, y: 24 }}
                             animate={inView ? { opacity: 1, y: 0 } : undefined}
                             transition={{ duration: 0.5, delay: index * 0.15 }}
                         >
@@ -75,12 +70,10 @@ export function ProofPointsSection() {
 
                             <div className="relative z-10 space-y-4">
                                 <p className="text-5xl md:text-6xl font-bold tracking-tight">
-                                    <AnimatedNumber
-                                        value={metric.value}
-                                        prefix={metric.prefix}
-                                        suffix={metric.suffix}
-                                        color={metric.color}
+                                    <AnimatedMetric
+                                        metric={metric}
                                         inView={inView}
+                                        reduceMotion={shouldReduceMotion}
                                     />
                                 </p>
                                 <p className="text-lg text-muted-foreground font-medium leading-relaxed">{metric.label}</p>
