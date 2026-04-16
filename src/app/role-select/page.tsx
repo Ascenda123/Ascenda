@@ -44,37 +44,37 @@ export default function RoleSelectPage() {
 
     // Safety timeout: if verification takes > 8s, redirect to login
     const timeout = setTimeout(() => {
-      if (isMounted) {
+      if (isMounted && checkingAuth) {
         console.warn('RoleSelect: Auth verification timed out');
         router.replace('/login');
       }
     }, 8000);
 
+    // Listen for auth state changes — catches the session that arrives
+    // after an OAuth redirect even if getSession() misses it initially
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!isMounted) return;
+      if (session) {
+        setCheckingAuth(false);
+        clearTimeout(timeout);
+      }
+    });
+
     const performCheck = async () => {
       try {
-        // 1. Fast path: check current session (often cached)
-        const { data: { session } } = await supabase.auth.getSession();
-
-        if (!session) {
-          if (isMounted) router.replace('/login');
-          return;
-        }
-
-        // 2. Verification: verify the user is still valid
         const { data: { user }, error } = await supabase.auth.getUser();
 
         if (isMounted) {
           if (error || !user) {
-            router.replace('/login');
+            // Don't redirect immediately — give onAuthStateChange a chance
+            // to pick up the session from cookies
           } else {
             setCheckingAuth(false);
+            clearTimeout(timeout);
           }
         }
       } catch (err) {
         console.error('RoleSelect: Verification error', err);
-        if (isMounted) router.replace('/login');
-      } finally {
-        clearTimeout(timeout);
       }
     };
 
@@ -83,8 +83,9 @@ export default function RoleSelectPage() {
     return () => {
       isMounted = false;
       clearTimeout(timeout);
+      subscription.unsubscribe();
     };
-  }, [router, supabase]);
+  }, [router, supabase, checkingAuth]);
 
   if (checkingAuth) {
     return (
