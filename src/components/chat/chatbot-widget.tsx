@@ -1,14 +1,82 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageCircle, X, Send, Sparkles, Loader2 } from 'lucide-react';
+import {
+  Bot, X, Send, Loader2, Trash2, ArrowRight,
+  LayoutDashboard, Search, Zap, Briefcase, Heart, User,
+  Wrench, PenTool, BarChart3, ClipboardCheck, CalendarClock,
+  Gift, BarChart2,
+} from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 import { cn } from '@/lib/utils';
+
+// ─── Types ──────────────────────────────────────────────────────────────────
 
 interface Message {
   id: string;
   role: 'user' | 'assistant';
   content: string;
+}
+
+// ─── Page snippets for preview cards ────────────────────────────────────────
+
+interface PageSnippet {
+  route: string;
+  name: string;
+  description: string;
+  icon: React.ElementType;
+}
+
+const PAGE_SNIPPETS: PageSnippet[] = [
+  { route: '/dashboard', name: 'Dashboard', description: 'Your mission control — track priorities, deadlines, and match recommendations.', icon: LayoutDashboard },
+  { route: '/university-search', name: 'University Search', description: 'Browse and explore universities and programs worldwide with smart filters.', icon: Search },
+  { route: '/matches', name: 'Matches', description: 'AI-powered university matches ranked by compatibility with your profile.', icon: Zap },
+  { route: '/applications', name: 'Applications', description: 'Track all your applications, deadlines, documents, and checklists.', icon: Briefcase },
+  { route: '/shortlist', name: 'Shortlist', description: 'Save and compare universities before committing to applications.', icon: Heart },
+  { route: '/profile', name: 'Profile', description: 'Your academic and personal profile — grades, scores, and preferences.', icon: User },
+  { route: '/toolbox', name: 'Toolbox', description: 'Powerful tools: essay workshop, chances calculator, requirements, and timeline.', icon: Wrench },
+  { route: '/toolbox/essay-workshop', name: 'Essay Workshop', description: 'Write and refine personal statements with AI coaching and building blocks.', icon: PenTool },
+  { route: '/toolbox/chances', name: 'Chances Calculator', description: 'Estimate your admission chances at specific universities.', icon: BarChart3 },
+  { route: '/toolbox/requirements', name: 'Requirements Checker', description: 'See what each university needs — grades, tests, and documents.', icon: ClipboardCheck },
+  { route: '/toolbox/timeline', name: 'Timeline Planner', description: 'Visual timeline of all your deadlines and milestones.', icon: CalendarClock },
+  { route: '/scholarships', name: 'Scholarships', description: 'Explore scholarship opportunities matched to your profile.', icon: Gift },
+  { route: '/counsellor', name: 'Counsellor', description: 'Counsellor dashboard — student roster, analytics, and deadline monitoring.', icon: BarChart2 },
+];
+
+// ─── Helpers ────────────────────────────────────────────────────────────────
+
+const STORAGE_KEY = 'ascendi-chat-history';
+
+function loadMessages(): Message[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveMessages(messages: Message[]) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+  } catch { /* quota exceeded — ignore */ }
+}
+
+/** Extract route references like /dashboard, /toolbox/essay-workshop from text */
+function extractRoutes(text: string): string[] {
+  const matches = text.match(/\/[a-z][a-z0-9-/]*/gi) ?? [];
+  return [...new Set(matches)];
+}
+
+/** Find page snippets that match routes mentioned in a message */
+function getSnippetsForMessage(text: string): PageSnippet[] {
+  const routes = extractRoutes(text);
+  return PAGE_SNIPPETS.filter((s) =>
+    routes.some((r) => r === s.route || r.startsWith(s.route + '/'))
+  );
 }
 
 const SUGGESTIONS = [
@@ -18,13 +86,127 @@ const SUGGESTIONS = [
   'What should I do first?',
 ];
 
+// ─── Page snippet card ──────────────────────────────────────────────────────
+
+function PageCard({ snippet, onClick }: { snippet: PageSnippet; onClick: () => void }) {
+  const Icon = snippet.icon;
+  return (
+    <button
+      onClick={onClick}
+      className="flex w-full items-center gap-3 rounded-[14px] border border-border bg-background p-2.5 text-left transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-sm"
+    >
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-primary/10">
+        <Icon className="h-4 w-4 text-primary" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-xs font-semibold text-foreground">{snippet.name}</p>
+        <p className="truncate text-[11px] text-muted-foreground">{snippet.description}</p>
+      </div>
+      <ArrowRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+    </button>
+  );
+}
+
+// ─── Markdown message renderer ──────────────────────────────────────────────
+
+function MessageContent({ content, onNavigate }: { content: string; onNavigate: (route: string) => void }) {
+  return (
+    <ReactMarkdown
+      components={{
+        p: ({ children }) => <p className="mb-1.5 last:mb-0">{children}</p>,
+        strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+        ul: ({ children }) => <ul className="mb-1.5 ml-3 list-disc space-y-0.5 last:mb-0">{children}</ul>,
+        ol: ({ children }) => <ol className="mb-1.5 ml-3 list-decimal space-y-0.5 last:mb-0">{children}</ol>,
+        li: ({ children }) => <li className="text-[13px]">{children}</li>,
+        a: ({ href, children }) => {
+          // If it's an internal route, make it a navigation link
+          if (href?.startsWith('/')) {
+            return (
+              <button
+                onClick={() => onNavigate(href)}
+                className="inline-flex items-center gap-0.5 text-primary underline underline-offset-2 hover:text-primary/80"
+              >
+                {children}
+              </button>
+            );
+          }
+          return (
+            <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-2 hover:text-primary/80">
+              {children}
+            </a>
+          );
+        },
+        code: ({ children }) => (
+          <code className="rounded bg-muted px-1 py-0.5 text-[12px]">{children}</code>
+        ),
+      }}
+    >
+      {content}
+    </ReactMarkdown>
+  );
+}
+
+// ─── Auto-resize textarea ───────────────────────────────────────────────────
+
+function AutoResizeTextarea({
+  value,
+  onChange,
+  onSubmit,
+  disabled,
+  inputRef,
+}: {
+  value: string;
+  onChange: (val: string) => void;
+  onSubmit: () => void;
+  disabled: boolean;
+  inputRef: React.RefObject<HTMLTextAreaElement>;
+}) {
+  const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    onChange(e.target.value);
+    // Auto-resize
+    const el = e.target;
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 96) + 'px';
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      onSubmit();
+    }
+  };
+
+  return (
+    <textarea
+      ref={inputRef}
+      value={value}
+      onChange={handleInput}
+      onKeyDown={handleKeyDown}
+      placeholder="Ask Ascendi anything…"
+      disabled={disabled}
+      rows={1}
+      className="flex-1 resize-none bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none disabled:opacity-50"
+      style={{ maxHeight: 96 }}
+    />
+  );
+}
+
+// ─── Main widget ────────────────────────────────────────────────────────────
+
 export function ChatbotWidget() {
+  const pathname = usePathname();
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>(() => loadMessages());
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null) as React.RefObject<HTMLTextAreaElement>;
+
+  // Persist messages
+  useEffect(() => {
+    saveMessages(messages);
+  }, [messages]);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -40,6 +222,16 @@ export function ChatbotWidget() {
     }
   }, [isOpen]);
 
+  const clearChat = () => {
+    setMessages([]);
+    localStorage.removeItem(STORAGE_KEY);
+  };
+
+  const navigateTo = (route: string) => {
+    router.push(route);
+    setIsOpen(false);
+  };
+
   const sendMessage = async (content: string) => {
     if (!content.trim() || isLoading) return;
 
@@ -52,6 +244,8 @@ export function ChatbotWidget() {
     const updatedMessages = [...messages, userMessage];
     setMessages(updatedMessages);
     setInput('');
+    // Reset textarea height
+    if (inputRef.current) inputRef.current.style.height = 'auto';
     setIsLoading(true);
 
     const assistantMessage: Message = {
@@ -71,6 +265,7 @@ export function ChatbotWidget() {
             role: m.role,
             content: m.content,
           })),
+          currentPage: pathname,
         }),
       });
 
@@ -145,9 +340,9 @@ export function ChatbotWidget() {
             transition={{ duration: 0.3, ease: [0.34, 1.56, 0.64, 1] }}
             onClick={() => setIsOpen(true)}
             className="fixed bottom-5 right-5 z-[60] flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/30 active:translate-y-0 md:bottom-6 md:right-6"
-            aria-label="Open Ascenda AI assistant"
+            aria-label="Open Ascendi AI assistant"
           >
-            <MessageCircle className="h-5 w-5" />
+            <Bot className="h-5 w-5" />
           </motion.button>
         )}
       </AnimatePresence>
@@ -160,26 +355,38 @@ export function ChatbotWidget() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
-            className="fixed bottom-5 right-5 z-[60] flex h-[min(520px,calc(100vh-40px))] w-[min(380px,calc(100vw-40px))] flex-col overflow-hidden rounded-[24px] border border-border bg-card shadow-2xl md:bottom-6 md:right-6"
+            className="fixed bottom-5 right-5 z-[60] flex h-[min(560px,calc(100vh-40px))] w-[min(400px,calc(100vw-40px))] flex-col overflow-hidden rounded-[24px] border border-border bg-card shadow-2xl md:bottom-6 md:right-6"
           >
             {/* Header */}
             <div className="flex items-center justify-between border-b border-border bg-card px-4 py-3">
               <div className="flex items-center gap-2.5">
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
-                  <Sparkles className="h-4 w-4 text-primary" />
+                  <Bot className="h-4 w-4 text-primary" />
                 </div>
                 <div>
-                  <p className="font-heading text-sm font-semibold text-foreground">Ascenda AI</p>
-                  <p className="text-[11px] text-muted-foreground">Your admissions assistant</p>
+                  <p className="font-heading text-sm font-semibold text-foreground">Ascendi</p>
+                  <p className="text-[11px] text-muted-foreground">AI admissions assistant</p>
                 </div>
               </div>
-              <button
-                onClick={() => setIsOpen(false)}
-                className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                aria-label="Close chat"
-              >
-                <X className="h-4 w-4" />
-              </button>
+              <div className="flex items-center gap-1">
+                {messages.length > 0 && (
+                  <button
+                    onClick={clearChat}
+                    className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                    aria-label="Clear chat"
+                    title="Clear chat"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                )}
+                <button
+                  onClick={() => setIsOpen(false)}
+                  className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                  aria-label="Close chat"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
             </div>
 
             {/* Messages area */}
@@ -187,13 +394,13 @@ export function ChatbotWidget() {
               {messages.length === 0 ? (
                 <div className="flex h-full flex-col items-center justify-center text-center">
                   <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-                    <MessageCircle className="h-6 w-6 text-primary" />
+                    <Bot className="h-6 w-6 text-primary" />
                   </div>
                   <p className="font-heading text-sm font-semibold text-foreground">
-                    Hey! I&apos;m Ascenda AI
+                    Hey! I&apos;m Ascendi
                   </p>
                   <p className="mt-1 text-xs text-muted-foreground max-w-[240px]">
-                    I can help you navigate the platform, understand your profile, and plan your applications.
+                    Your AI admissions assistant. I can help you navigate, understand your profile, and plan applications.
                   </p>
                   <div className="mt-4 flex flex-wrap justify-center gap-1.5">
                     {SUGGESTIONS.map((s) => (
@@ -208,34 +415,59 @@ export function ChatbotWidget() {
                   </div>
                 </div>
               ) : (
-                messages.map((msg) => (
-                  <motion.div
-                    key={msg.id}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.25 }}
-                    className={cn(
-                      'flex',
-                      msg.role === 'user' ? 'justify-end' : 'justify-start'
-                    )}
-                  >
-                    <div
+                messages.map((msg) => {
+                  const snippets = msg.role === 'assistant' && msg.content
+                    ? getSnippetsForMessage(msg.content)
+                    : [];
+
+                  return (
+                    <motion.div
+                      key={msg.id}
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.25 }}
                       className={cn(
-                        'max-w-[85%] rounded-[16px] px-3.5 py-2.5 text-[13px] leading-relaxed',
-                        msg.role === 'user'
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-muted/60 text-foreground'
+                        'flex flex-col',
+                        msg.role === 'user' ? 'items-end' : 'items-start'
                       )}
                     >
-                      {msg.content || (
-                        <div className="flex items-center gap-1.5">
-                          <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
-                          <span className="text-xs text-muted-foreground">Thinking…</span>
+                      <div
+                        className={cn(
+                          'max-w-[85%] rounded-[16px] px-3.5 py-2.5 text-[13px] leading-relaxed',
+                          msg.role === 'user'
+                            ? 'bg-primary text-primary-foreground'
+                            : 'bg-muted/60 text-foreground'
+                        )}
+                      >
+                        {msg.content ? (
+                          msg.role === 'assistant' ? (
+                            <MessageContent content={msg.content} onNavigate={navigateTo} />
+                          ) : (
+                            msg.content
+                          )
+                        ) : (
+                          <div className="flex items-center gap-1.5">
+                            <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
+                            <span className="text-xs text-muted-foreground">Thinking…</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Page preview snippets */}
+                      {snippets.length > 0 && (
+                        <div className="mt-1.5 w-full max-w-[85%] space-y-1.5">
+                          {snippets.map((snippet) => (
+                            <PageCard
+                              key={snippet.route}
+                              snippet={snippet}
+                              onClick={() => navigateTo(snippet.route)}
+                            />
+                          ))}
                         </div>
                       )}
-                    </div>
-                  </motion.div>
-                ))
+                    </motion.div>
+                  );
+                })
               )}
               <div ref={messagesEndRef} />
             </div>
@@ -245,20 +477,18 @@ export function ChatbotWidget() {
               onSubmit={handleSubmit}
               className="border-t border-border bg-card px-3 py-2.5"
             >
-              <div className="flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1.5 transition-colors focus-within:border-primary/40">
-                <input
-                  ref={inputRef}
-                  type="text"
+              <div className="flex items-end gap-2 rounded-[18px] border border-border bg-background px-3 py-1.5 transition-colors focus-within:border-primary/40">
+                <AutoResizeTextarea
                   value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  placeholder="Ask me anything…"
+                  onChange={setInput}
+                  onSubmit={() => sendMessage(input)}
                   disabled={isLoading}
-                  className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none disabled:opacity-50"
+                  inputRef={inputRef}
                 />
                 <button
                   type="submit"
                   disabled={!input.trim() || isLoading}
-                  className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground transition-all hover:-translate-y-0.5 disabled:opacity-40 disabled:hover:translate-y-0"
+                  className="mb-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-all hover:-translate-y-0.5 disabled:opacity-40 disabled:hover:translate-y-0"
                   aria-label="Send message"
                 >
                   {isLoading ? (
