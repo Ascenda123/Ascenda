@@ -7,7 +7,7 @@ import {
   Bot, X, Send, Loader2, Trash2, ArrowRight,
   LayoutDashboard, Search, Zap, Briefcase, Heart, User,
   Wrench, PenTool, BarChart3, ClipboardCheck, CalendarClock,
-  Gift, BarChart2,
+  Gift, BarChart2, Users, FileText, TrendingUp, UserCircle,
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { cn } from '@/lib/utils';
@@ -29,7 +29,7 @@ interface PageSnippet {
   icon: React.ElementType;
 }
 
-const PAGE_SNIPPETS: PageSnippet[] = [
+const STUDENT_SNIPPETS: PageSnippet[] = [
   { route: '/dashboard', name: 'Dashboard', description: 'Your mission control — track priorities, deadlines, and match recommendations.', icon: LayoutDashboard },
   { route: '/university-search', name: 'University Search', description: 'Browse and explore universities and programs worldwide with smart filters.', icon: Search },
   { route: '/matches', name: 'Matches', description: 'AI-powered university matches ranked by compatibility with your profile.', icon: Zap },
@@ -42,27 +42,45 @@ const PAGE_SNIPPETS: PageSnippet[] = [
   { route: '/toolbox/requirements', name: 'Requirements Checker', description: 'See what each university needs — grades, tests, and documents.', icon: ClipboardCheck },
   { route: '/toolbox/timeline', name: 'Timeline Planner', description: 'Visual timeline of all your deadlines and milestones.', icon: CalendarClock },
   { route: '/scholarships', name: 'Scholarships', description: 'Explore scholarship opportunities matched to your profile.', icon: Gift },
-  { route: '/counsellor', name: 'Counsellor', description: 'Counsellor dashboard — student roster, analytics, and deadline monitoring.', icon: BarChart2 },
+];
+
+const COUNSELLOR_SNIPPETS: PageSnippet[] = [
+  { route: '/counsellor', name: 'Overview', description: 'Customisable widget dashboard — cohort health at a glance.', icon: LayoutDashboard },
+  { route: '/counsellor/students', name: 'Student Roster', description: 'Search, filter, and manage all your students in one place.', icon: Users },
+  { route: '/counsellor/analytics', name: 'Analytics', description: 'Cohort charts — application trends, acceptance rates, and grade distributions.', icon: BarChart2 },
+  { route: '/counsellor/deadlines', name: 'Deadlines', description: 'Cross-cohort deadline monitor — spot students falling behind.', icon: CalendarClock },
+  { route: '/counsellor/documents', name: 'Documents', description: 'Track references, transcripts, and predicted grade submissions.', icon: FileText },
+  { route: '/counsellor/outcomes', name: 'Outcomes', description: 'Analyse offer and rejection results across the cohort.', icon: TrendingUp },
+  { route: '/counsellor/applications', name: 'Applications', description: 'Overview of all student applications by status and deadline.', icon: Briefcase },
+  { route: '/counsellor/parents', name: 'Parent Portal', description: 'Communication hub for parent updates and engagement.', icon: UserCircle },
 ];
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
-const STORAGE_KEY = 'ascendi-chat-history';
+type ChatMode = 'student' | 'counsellor';
 
-function loadMessages(): Message[] {
+function storageKey(mode: ChatMode) {
+  return `ascendi-chat-${mode}`;
+}
+
+function loadMessages(mode: ChatMode): Message[] {
   if (typeof window === 'undefined') return [];
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(storageKey(mode));
     return raw ? JSON.parse(raw) : [];
   } catch {
     return [];
   }
 }
 
-function saveMessages(messages: Message[]) {
+function saveMessages(messages: Message[], mode: ChatMode) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+    localStorage.setItem(storageKey(mode), JSON.stringify(messages));
   } catch { /* quota exceeded — ignore */ }
+}
+
+function detectMode(pathname: string): ChatMode {
+  return pathname.startsWith('/counsellor') ? 'counsellor' : 'student';
 }
 
 /** Extract route references like /dashboard, /toolbox/essay-workshop from text */
@@ -72,18 +90,26 @@ function extractRoutes(text: string): string[] {
 }
 
 /** Find page snippets that match routes mentioned in a message */
-function getSnippetsForMessage(text: string): PageSnippet[] {
+function getSnippetsForMessage(text: string, mode: ChatMode): PageSnippet[] {
+  const snippets = mode === 'counsellor' ? COUNSELLOR_SNIPPETS : STUDENT_SNIPPETS;
   const routes = extractRoutes(text);
-  return PAGE_SNIPPETS.filter((s) =>
+  return snippets.filter((s) =>
     routes.some((r) => r === s.route || r.startsWith(s.route + '/'))
   );
 }
 
-const SUGGESTIONS = [
+const STUDENT_SUGGESTIONS = [
   'How do I improve my match score?',
   'Where can I track my applications?',
   'Help me get started with essays',
   'What should I do first?',
+];
+
+const COUNSELLOR_SUGGESTIONS = [
+  'How do I spot at-risk students?',
+  'Show me the analytics dashboard',
+  'How do I track deadlines across students?',
+  'What can I do from this section?',
 ];
 
 // ─── Page snippet card ──────────────────────────────────────────────────────
@@ -196,17 +222,27 @@ function AutoResizeTextarea({
 export function ChatbotWidget() {
   const pathname = usePathname();
   const router = useRouter();
+  const mode = detectMode(pathname);
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>(() => loadMessages());
+  const [messages, setMessages] = useState<Message[]>(() => loadMessages(mode));
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null) as React.RefObject<HTMLTextAreaElement>;
+  const prevModeRef = useRef(mode);
+
+  // Switch chat history when mode changes (student <-> counsellor)
+  useEffect(() => {
+    if (prevModeRef.current !== mode) {
+      setMessages(loadMessages(mode));
+      prevModeRef.current = mode;
+    }
+  }, [mode]);
 
   // Persist messages
   useEffect(() => {
-    saveMessages(messages);
-  }, [messages]);
+    saveMessages(messages, mode);
+  }, [messages, mode]);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -224,7 +260,7 @@ export function ChatbotWidget() {
 
   const clearChat = () => {
     setMessages([]);
-    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(storageKey(mode));
   };
 
   const navigateTo = (route: string) => {
@@ -266,6 +302,7 @@ export function ChatbotWidget() {
             content: m.content,
           })),
           currentPage: pathname,
+          mode,
         }),
       });
 
@@ -365,7 +402,9 @@ export function ChatbotWidget() {
                 </div>
                 <div>
                   <p className="font-heading text-sm font-semibold text-foreground">Ascendi</p>
-                  <p className="text-[11px] text-muted-foreground">AI admissions assistant</p>
+                  <p className="text-[11px] text-muted-foreground">
+                    {mode === 'counsellor' ? 'Counsellor assistant' : 'Student assistant'}
+                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-1">
@@ -400,10 +439,12 @@ export function ChatbotWidget() {
                     Hey! I&apos;m Ascendi
                   </p>
                   <p className="mt-1 text-xs text-muted-foreground max-w-[240px]">
-                    Your AI admissions assistant. I can help you navigate, understand your profile, and plan applications.
+                    {mode === 'counsellor'
+                      ? 'I can help you manage your cohort, track progress, and navigate the counsellor tools.'
+                      : 'I can help you navigate the platform, understand your profile, and plan applications.'}
                   </p>
                   <div className="mt-4 flex flex-wrap justify-center gap-1.5">
-                    {SUGGESTIONS.map((s) => (
+                    {(mode === 'counsellor' ? COUNSELLOR_SUGGESTIONS : STUDENT_SUGGESTIONS).map((s) => (
                       <button
                         key={s}
                         onClick={() => sendMessage(s)}
@@ -417,7 +458,7 @@ export function ChatbotWidget() {
               ) : (
                 messages.map((msg) => {
                   const snippets = msg.role === 'assistant' && msg.content
-                    ? getSnippetsForMessage(msg.content)
+                    ? getSnippetsForMessage(msg.content, mode)
                     : [];
 
                   return (
