@@ -51,6 +51,17 @@ const dashboardItemVariants: Variants = {
     visible: { opacity: 1, y: 0, transition: { duration: 0.38, ease: 'easeOut' } }
 };
 
+const radarItemVariants: Variants = {
+    hidden: { opacity: 0, x: -12, filter: 'blur(4px)' },
+    visible: { opacity: 1, x: 0, filter: 'blur(0px)', transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] } }
+};
+
+const radarContainerVariants: Variants = {
+    hidden: {},
+    visible: { transition: { staggerChildren: 0.12, delayChildren: 0.1 } }
+};
+
+
 export function HeroSection() {
     const [storyReady, setStoryReady] = useState(false);
     const [launchHref, setLaunchHref] = useState('/signup');
@@ -244,9 +255,12 @@ export function HeroSection() {
                                     <Button
                                         asChild
                                         size="lg"
-                                        className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_30px_-5px_rgba(99,102,241,0.4)]"
+                                        className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-[0_0_30px_-5px_rgba(99,102,241,0.4)] group"
                                     >
-                                        <Link href={launchHref}>Launch Ascenda</Link>
+                                        <Link href={launchHref} className="flex items-center gap-2">
+                                            Build your plan
+                                            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden />
+                                        </Link>
                                     </Button>
                                     <Button
                                         asChild
@@ -254,7 +268,7 @@ export function HeroSection() {
                                         variant="outline"
                                         className="border-border bg-card text-foreground hover:bg-muted/60"
                                     >
-                                        <Link href="#features">See product tour</Link>
+                                        <Link href="#features">See how it works</Link>
                                     </Button>
                                 </motion.div>
                                 <motion.ul
@@ -265,20 +279,20 @@ export function HeroSection() {
                                 >
                                     <li className="flex items-center gap-2">
                                         <span className="h-1.5 w-1.5 rounded-full bg-accent" />
-                                        Fit scores auto recalibrate with every edit.
+                                        Know which programs actually fit you.
                                     </li>
                                     <li className="flex items-center gap-2">
                                         <span className="h-1.5 w-1.5 rounded-full bg-accent" />
-                                        Notes stay perfectly in sync.
+                                        Never miss a deadline or requirement.
                                     </li>
                                     <li className="flex items-center gap-2">
                                         <span className="h-1.5 w-1.5 rounded-full bg-accent" />
-                                        Timeline nudges prevent deadline drift.
+                                        One workspace your whole team can share.
                                     </li>
                                 </motion.ul>
                             </div>
                             <motion.div
-                                className="relative rounded-2xl border border-border bg-card p-5 text-card-foreground shadow-md overflow-hidden"
+                                className="relative rounded-2xl border border-border/60 bg-card/70 p-5 text-card-foreground shadow-xl backdrop-blur-xl overflow-hidden"
                                 initial={shouldReduceMotion ? false : 'hidden'}
                                 animate={isTypingDone ? 'visible' : 'hidden'}
                                 variants={dashboardContainerVariants}
@@ -307,20 +321,26 @@ export function HeroSection() {
                                     </span>
                                 </motion.div>
 
-                                {/* Stat strip — mirrors hero stat tiles */}
-                                <motion.div className="relative mt-5 grid grid-cols-3 gap-3" variants={dashboardItemVariants}>
+                                {/* Stat strip — hero fit score + secondary stats */}
+                                <motion.div className="relative mt-5 grid grid-cols-[1.3fr_1fr_1fr] gap-3" variants={dashboardItemVariants}>
+                                    {/* Fit score — hero stat with extra weight */}
+                                    <div className="relative overflow-hidden rounded-2xl border border-emerald-500/20 bg-background px-4 py-4 text-center shadow-sm">
+                                        <div className="pointer-events-none absolute -top-8 -right-8 h-28 w-28 rounded-full bg-emerald-400 blur-2xl opacity-30" aria-hidden />
+                                        <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Fit score</p>
+                                        <p className="mt-1 text-4xl font-bold text-foreground leading-none tracking-tight">{fitScore}<span className="text-xl text-emerald-500">%</span></p>
+                                        <p className="mt-1 text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">Top match</p>
+                                    </div>
                                     {[
-                                        { label: 'Fit score', value: `${fitScore}%`, detail: 'Top match', tone: 'emerald' },
                                         { label: 'Due soon', value: '3', detail: 'This week', tone: 'amber' },
                                         { label: 'Profile', value: '4/5', detail: '80% complete', tone: 'primary' },
                                     ].map((stat) => (
                                         <div
                                             key={stat.label}
-                                            className="relative overflow-hidden rounded-2xl border border-border bg-background px-4 py-3 text-center shadow-sm"
+                                            className="relative overflow-hidden rounded-2xl border border-border bg-background px-4 py-4 text-center shadow-sm"
                                         >
                                             <div className={cn(
                                                 'pointer-events-none absolute -top-6 -right-6 h-24 w-24 rounded-full blur-2xl opacity-40',
-                                                stat.tone === 'emerald' ? 'bg-emerald-400' : stat.tone === 'amber' ? 'bg-amber-400' : 'bg-primary'
+                                                stat.tone === 'amber' ? 'bg-amber-400' : 'bg-primary'
                                             )} aria-hidden />
                                             <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">{stat.label}</p>
                                             <p className="mt-1 text-2xl font-semibold text-foreground leading-tight tracking-tight">{stat.value}</p>
@@ -345,20 +365,25 @@ export function HeroSection() {
                                     </div>
                                 </motion.div>
 
-                                {/* Focus radar — mirrors the real dashboard */}
-                                <motion.div className="relative mt-4 space-y-2" variants={dashboardItemVariants}>
-                                    <div className="flex items-center gap-2">
+                                {/* Focus radar — staggered entry */}
+                                <motion.div
+                                    className="relative mt-4 space-y-2"
+                                    variants={radarContainerVariants}
+                                    initial={shouldReduceMotion ? false : 'hidden'}
+                                    animate={isTypingDone ? 'visible' : 'hidden'}
+                                >
+                                    <motion.div className="flex items-center gap-2" variants={radarItemVariants}>
                                         <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Focus radar</p>
-                                    </div>
+                                    </motion.div>
                                     {[
-                                        { num: 1, label: 'Due today', title: 'Scholarship essay — Parsons Paris', detail: 'Final draft due Friday', border: 'border-l-rose-500', badge: 'bg-rose-500/10 text-rose-600' },
-                                        { num: 2, label: 'Milestone', title: 'UCAS submission opens', detail: 'In 4 days · ESADE + Imperial', border: 'border-l-amber-400', badge: 'bg-amber-500/10 text-amber-600' },
+                                        { num: 1, label: 'Due today', title: 'Scholarship essay — Parsons Paris', detail: 'Final draft due Friday', border: 'border-l-rose-500', badge: 'bg-rose-500/10 text-rose-600 dark:text-rose-400' },
+                                        { num: 2, label: 'Milestone', title: 'UCAS submission opens', detail: 'In 4 days · ESADE + Imperial', border: 'border-l-amber-400', badge: 'bg-amber-500/10 text-amber-600 dark:text-amber-400' },
                                         { num: 3, label: 'Checklist', title: 'Upload reference letter', detail: '2 of 3 references submitted', border: 'border-l-primary', badge: 'bg-primary/10 text-primary' },
                                     ].map((item) => (
                                         <motion.div
                                             key={item.num}
-                                            className={cn('flex items-start gap-3 rounded-xl border border-border bg-background/80 px-4 py-3 border-l-[3px]', item.border)}
-                                            variants={dashboardItemVariants}
+                                            className={cn('flex items-start gap-3 rounded-xl border border-border bg-background/80 backdrop-blur-sm px-4 py-3 border-l-[3px]', item.border)}
+                                            variants={radarItemVariants}
                                         >
                                             <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-primary/10 ring-1 ring-primary/10 text-[11px] font-bold text-primary">
                                                 {item.num}

@@ -1,14 +1,31 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion, useReducedMotion } from 'framer-motion';
 import { fadeIn } from '@/lib/motion';
 import { Button } from '@/components/ui/button';
 import { Play, ArrowRight, Zap, Globe, NotebookPen } from 'lucide-react';
+import { useSupabase } from '@/hooks/useSupabase';
+import { RETURNING_USER_STORAGE_KEY } from '@/lib/constants';
 
 export function DemoSection() {
     const shouldReduceMotion = useReducedMotion();
+    const supabase = useSupabase();
+    const [tryHref, setTryHref] = useState('/signup');
+
+    useEffect(() => {
+        const checkAuth = async () => {
+            const hasVisited =
+                typeof window !== 'undefined' &&
+                window.localStorage.getItem(RETURNING_USER_STORAGE_KEY) === 'true';
+            if (hasVisited) { setTryHref('/dashboard'); return; }
+            const { data, error } = await supabase.auth.getSession();
+            if (!error && data.session) setTryHref('/dashboard');
+        };
+        void checkAuth();
+    }, [supabase]);
 
     return (
         <section className="section-fade w-full bg-secondary/40 py-24 sm:py-32">
@@ -48,7 +65,7 @@ export function DemoSection() {
 
                     <div className="flex flex-wrap gap-4 pt-4">
                         <Button asChild size="lg" className="rounded-full shadow-lg hover:shadow-xl transition-all group">
-                            <Link href="/signup" className="flex items-center gap-2">
+                            <Link href={tryHref} className="flex items-center gap-2">
                                 <Play className="h-4 w-4" />
                                 Try it free
                                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />

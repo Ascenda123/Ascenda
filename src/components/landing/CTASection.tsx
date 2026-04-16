@@ -1,13 +1,35 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { motion, useReducedMotion } from 'framer-motion';
 import { fadeIn } from '@/lib/motion';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Sparkles } from 'lucide-react';
+import { useSupabase } from '@/hooks/useSupabase';
+import { RETURNING_USER_STORAGE_KEY } from '@/lib/constants';
 
 export function CTASection() {
     const shouldReduceMotion = useReducedMotion();
+    const supabase = useSupabase();
+    const [ctaHref, setCtaHref] = useState('/signup');
+
+    useEffect(() => {
+        const checkAuth = async () => {
+            const hasVisited =
+                typeof window !== 'undefined' &&
+                window.localStorage.getItem(RETURNING_USER_STORAGE_KEY) === 'true';
+            if (hasVisited) {
+                setCtaHref('/dashboard');
+                return;
+            }
+            const { data, error } = await supabase.auth.getSession();
+            if (!error && data.session) {
+                setCtaHref('/dashboard');
+            }
+        };
+        void checkAuth();
+    }, [supabase]);
 
     return (
         <section className="relative w-full py-32 bg-foreground text-background overflow-hidden">
@@ -70,8 +92,8 @@ export function CTASection() {
                             size="lg"
                             className="h-12 px-8 text-base bg-background text-foreground shadow-xl hover:bg-background/90 hover:shadow-2xl transition-all group"
                         >
-                            <Link href="/signup" className="flex items-center gap-2">
-                                Create free account
+                            <Link href={ctaHref} className="flex items-center gap-2">
+                                {ctaHref === '/dashboard' ? 'Go to dashboard' : 'Create free account'}
                                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                             </Link>
                         </Button>
