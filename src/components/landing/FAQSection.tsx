@@ -1,7 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { motion, type Variants } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { fadeIn } from '@/lib/motion';
+import { Plus, Minus } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 const faqs = [
     {
@@ -35,44 +38,96 @@ const faqs = [
     }
 ];
 
-const fadeIn: Variants = {
-    hidden: { opacity: 0, y: 16 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: 'easeOut' } }
-};
-
 export function FAQSection() {
-    const [openFaq, setOpenFaq] = useState(faqs[0].question);
+    const [openFaq, setOpenFaq] = useState<string | null>(faqs[0].question);
+    const shouldReduceMotion = useReducedMotion();
 
     return (
-        <section className="mt-16 space-y-8 rounded-[32px] border border-border bg-card/50 backdrop-blur-sm p-6 shadow-lg">
-            <div className="text-center text-muted-foreground md:text-left">
-                <p className="text-xs uppercase tracking-[0.4em] text-accent">Frequently asked questions</p>
-                <h2 className="mt-2 text-3xl font-heading font-semibold text-foreground">Answers before you even ask.</h2>
-                <p className="text-sm">
-                    We keep the playbook simple: transparent timelines, privacy controls, and human support whenever you need it.
-                </p>
-            </div>
-            <div className="grid gap-4 md:grid-cols-2">
-                {faqs.map((faq) => (
-                    <motion.div
-                        key={faq.question}
-                        className="rounded-[24px] border border-border bg-card/70 p-5 hover:bg-muted/60 transition-colors"
-                        initial="hidden"
-                        whileInView="visible"
-                        viewport={{ once: true, amount: 0.3 }}
-                        variants={fadeIn}
-                    >
-                        <button
-                            type="button"
-                            className="flex w-full items-center justify-between text-left text-base font-semibold text-foreground"
-                            onClick={() => setOpenFaq((prev) => (prev === faq.question ? '' : faq.question))}
-                        >
-                            <span>{faq.question}</span>
-                            <span className="text-sm text-muted-foreground">{openFaq === faq.question ? '−' : '+'}</span>
-                        </button>
-                        {openFaq === faq.question && <p className="mt-3 text-sm text-muted-foreground">{faq.answer}</p>}
-                    </motion.div>
-                ))}
+        <section className="w-full py-24 bg-background">
+            <div className="max-w-7xl mx-auto px-6 grid gap-12 lg:grid-cols-[0.4fr_0.6fr]">
+                <motion.div
+                    className="space-y-4"
+                    initial={shouldReduceMotion ? false : 'hidden'}
+                    whileInView={shouldReduceMotion ? undefined : 'visible'}
+                    viewport={{ once: true, amount: 0.3 }}
+                    variants={fadeIn}
+                >
+                    <p className="text-sm font-medium uppercase tracking-widest text-primary/80">FAQ</p>
+                    <h2 className="text-3xl md:text-4xl font-heading font-bold text-foreground tracking-tight">Answers before you even ask.</h2>
+                    <p className="text-lg text-muted-foreground leading-relaxed">
+                        We keep the playbook simple: transparent timelines, privacy controls, and human support whenever you need it.
+                    </p>
+                    <div className="hidden lg:block pt-4">
+                        <div className="rounded-2xl border border-primary/10 bg-primary/5 p-5 space-y-2">
+                            <p className="text-sm font-semibold text-foreground">Still have questions?</p>
+                            <p className="text-sm text-muted-foreground">Our team responds within 24 hours.</p>
+                            <a href="mailto:hello@ascenda.com" className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors mt-1">
+                                Get in touch
+                            </a>
+                        </div>
+                    </div>
+                </motion.div>
+
+                <div className="space-y-3">
+                    {faqs.map((faq, index) => {
+                        const isOpen = openFaq === faq.question;
+                        return (
+                            <motion.div
+                                key={faq.question}
+                                className={cn(
+                                    'rounded-2xl border overflow-hidden transition-all duration-300',
+                                    isOpen
+                                        ? 'border-primary/20 bg-primary/[0.03] shadow-sm'
+                                        : 'border-border/50 bg-card hover:bg-muted/20'
+                                )}
+                                initial={shouldReduceMotion ? false : 'hidden'}
+                                whileInView={shouldReduceMotion ? undefined : 'visible'}
+                                viewport={{ once: true, amount: 0.3 }}
+                                variants={{
+                                    hidden: { opacity: 0, y: 12 },
+                                    visible: { opacity: 1, y: 0, transition: { duration: 0.4, delay: index * 0.05 } }
+                                }}
+                            >
+                                <button
+                                    type="button"
+                                    id={`faq-btn-${index}`}
+                                    className="flex w-full items-center justify-between p-5 text-left group"
+                                    onClick={() => setOpenFaq((prev) => (prev === faq.question ? null : faq.question))}
+                                    aria-expanded={isOpen}
+                                    aria-controls={`faq-panel-${index}`}
+                                >
+                                    <span className="text-[15px] font-semibold text-foreground pr-4 leading-snug">{faq.question}</span>
+                                    <span className={cn(
+                                        'flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-all duration-300',
+                                        isOpen
+                                            ? 'bg-primary text-primary-foreground rotate-0'
+                                            : 'bg-muted/60 text-muted-foreground group-hover:bg-muted'
+                                    )}>
+                                        {isOpen ? <Minus className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+                                    </span>
+                                </button>
+                                <AnimatePresence initial={false}>
+                                    {isOpen && (
+                                        <motion.div
+                                            id={`faq-panel-${index}`}
+                                            role="region"
+                                            aria-labelledby={`faq-btn-${index}`}
+                                            initial={{ height: 0, opacity: 0 }}
+                                            animate={{ height: 'auto', opacity: 1 }}
+                                            exit={{ height: 0, opacity: 0 }}
+                                            transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+                                            className="overflow-hidden"
+                                        >
+                                            <div className="px-5 pb-5 pt-0">
+                                                <p className="text-[15px] text-muted-foreground leading-relaxed">{faq.answer}</p>
+                                            </div>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </motion.div>
+                        );
+                    })}
+                </div>
             </div>
         </section>
     );

@@ -28,6 +28,8 @@ Ascenda is a Next.js 14 EdTech platform that supports international high-school 
 npm install
 ```
 
+To work from another laptop: clone the repo, install dependencies, configure `.env.local`, and apply the Supabase schema/seed described below.
+
 If your environment does not already have the required toolchain, run the provided setup script (idempotent). It installs Node.js version 20 with `nvm`, ensures build dependencies, and installs npm packages automatically:
 
 ```bash
@@ -61,10 +63,13 @@ Run the schema and seed files using the Supabase SQL editor or CLI:
 
 1. Open `supabase/schema.sql` in the SQL editor and execute it to create tables, enums, policies, and the `application-documents` storage bucket with RLS.
 2. Run `supabase/seed.sql` to insert sample records.
-3. (Recommended) Regenerate types after applying schema updates:
+3. If you are normalizing the UK course catalog, apply the migration in `supabase/migrations/20250308120000_normalize_course_catalog.sql` to add `cities`, enhanced catalog columns, and the `course_scoring_v1` view.
+4. (Recommended) Regenerate types after applying schema updates:
    ```bash
-   npx supabase gen types typescript --project-id <your-project-ref> --schema public,storage > src/lib/types/database.ts
-   ```
+    npx supabase gen types typescript --project-id <your-project-ref> --schema public,storage > src/lib/types/database.ts
+    ```
+5. Run `supabase/validate_catalog.sql` to verify counts, FK integrity, and score ranges after import.
+6. Optional: run `npx ts-node scripts/validate-catalog.ts` to validate the live Supabase catalog via the API (requires service role key).
 4. Optional edge function scaffolding is located in `supabase/functions/update_deadlines`.
 
 ### Development

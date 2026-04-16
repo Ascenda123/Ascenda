@@ -1,22 +1,48 @@
-insert into profiles (id, role, full_name, country)
-values
-  ('11111111-1111-1111-1111-111111111111', 'admin', 'Admin User', 'SG')
-  on conflict (id) do update set role = excluded.role;
-
-insert into profiles (id, role, full_name, country)
-values
-  ('22222222-2222-2222-2222-222222222222', 'student', 'Student One', 'IN')
-  on conflict (id) do update set full_name = excluded.full_name;
-
 insert into universities (id, name, country, region, city, rank_overall, rank_source, website, intl_tuition_low, intl_tuition_high, currency, acceptance_rate, requires_test)
 values
   ('33333333-3333-3333-3333-333333333333', 'Global Tech University', 'United States', 'North America', 'San Francisco', 25, 'QS', 'https://gtech.example.com', 32000, 45000, 'USD', 0.35, true)
   on conflict (id) do update set name = excluded.name;
 
-insert into programs (id, university_id, name, field, level, duration_years, language, mode, intake_months, tuition, currency, url)
+insert into programs (
+  id,
+  university_id,
+  course_name,
+  study_level,
+  duration,
+  start_date,
+  campus,
+  course_summary,
+  provider_course_url,
+  provider_apply_url,
+  ucas_code,
+  min_alevel,
+  min_ib,
+  ucas_points,
+  english_requirements,
+  tuition_fees_international,
+  tuition_fees_home
+)
 values
-  ('44444444-4444-4444-4444-444444444444', '33333333-3333-3333-3333-333333333333', 'BSc Computer Science', 'Computer Science', 'Undergraduate', 4, 'English', 'On-campus', array['August'], 38000, 'USD', 'https://gtech.example.com/cs')
-  on conflict (id) do update set name = excluded.name;
+  (
+    '44444444-4444-4444-4444-444444444444',
+    '33333333-3333-3333-3333-333333333333',
+    'BSc Computer Science',
+    'Bachelor degrees (with or without Honours)',
+    '4 Years',
+    '01/09/2026',
+    'Main Campus',
+    'Full-time computer science degree with industry placement.',
+    'https://gtech.example.com/cs',
+    'https://gtech.example.com/cs/apply',
+    'CS01',
+    'AAA',
+    '36',
+    '152',
+    'IELTS 6.5 overall with no element below 6.0',
+    '38000',
+    '12000'
+  )
+  on conflict (id) do update set course_name = excluded.course_name;
 
 insert into program_requirements (program_id, curriculum, min_gpa, min_ib_total, min_sat, required_subjects, language_tests)
 values

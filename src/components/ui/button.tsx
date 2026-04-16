@@ -4,20 +4,20 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center rounded-full text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 max-w-full whitespace-normal text-center leading-snug shadow-sm",
+  "inline-flex items-center justify-center rounded-full text-sm font-medium ring-offset-background transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 disabled:pointer-events-none disabled:opacity-50 max-w-full whitespace-normal text-center leading-snug shadow-sm",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-md shadow-primary/20",
-        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-md shadow-destructive/15",
+        default: "bg-primary text-primary-foreground shadow-md shadow-primary/20",
+        destructive: "bg-destructive text-destructive-foreground shadow-md shadow-destructive/15",
         outline:
-          "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
+          "border border-input bg-background text-foreground",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-md shadow-secondary/15",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
+          "bg-secondary text-secondary-foreground shadow-md shadow-secondary/15",
+        ghost: "text-foreground",
         link: "text-primary underline-offset-4 hover:underline",
         soft:
-          "bg-accent/15 text-foreground border border-accent/30 hover:bg-accent/25 shadow-sm",
+          "bg-accent/15 text-foreground border border-accent/30 shadow-sm",
       },
       size: {
         default: "h-10 px-4 py-2",

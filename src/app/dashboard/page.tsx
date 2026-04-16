@@ -5,39 +5,33 @@ import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { DashboardShell } from '@/components/layout/shell';
 import { DeadlineTimeline } from '@/components/dashboard/deadline-timeline';
 import { MatchList } from '@/components/match/match-list';
-import type { EnrichedMatch } from '@/components/match/match-list';
-import { rankMatches, type MatchInput, type Program, type University, type ProgramRequirement } from '@/lib/matching/engine';
-import {
-  buildMatchInput,
-  mapAcademicsRow,
-  mapAspirationsRow,
-  mapPreferencesRow,
-  mapProgramRow,
-  mapRequirementRow,
-  mapUniversityRow
-} from '@/lib/matching/transform';
-import { DashboardOverview } from '@/components/dashboard/overview';
+import { loadMatchesForProfile } from '@/lib/matching/service';
+import type { EnrichedMatch } from '@/lib/matching/types';
+import { DashboardOverview, type OverviewPayload, type HighlightCard } from '@/components/dashboard/overview';
 import { PageHero } from '@/components/layout/page-hero';
 import { Button } from '@/components/ui/button';
-import { StatsCard } from '@/components/dashboard/stats-card';
 import { TaskListPanel } from '@/components/dashboard/task-list-panel';
+import type { Database } from '@/lib/types/database';
 
-interface ChecklistRow {
-  id: string;
-  task_name: string;
-  status: 'todo' | 'doing' | 'done';
-  due_date?: string | null;
-}
+export const dynamic = 'force-dynamic';
+import { buildStepCompletion, isProfileComplete, ProfileRecordGroup } from '@/lib/profile/completion';
+import { PROFILE_STEPS } from '@/lib/profile/steps';
+import { AnimatedSection } from '@/components/layout/animated-section';
+import { cn } from '@/lib/utils';
 
-interface DeadlineRow {
-  id: string;
-  name: string;
-  deadline_date?: string | null;
-  intake?: string | null;
-}
+type ChecklistRow = Database['public']['Tables']['application_checklist']['Row'];
+type DeadlineRow = Database['public']['Tables']['deadlines']['Row'];
+type ApplicationRow = Database['public']['Tables']['applications']['Row'];
 
 export const metadata: Metadata = {
   title: 'Dashboard | Ascenda'
+};
+
+const shortDateFormatter = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' });
+const formatShortDate = (value?: string | null) => {
+  if (!value) return 'TBD';
+  const timestamp = Date.parse(value);
+  return Number.isNaN(timestamp) ? 'TBD' : shortDateFormatter.format(new Date(timestamp));
 };
 
 export default async function DashboardPage() {
@@ -51,118 +45,205 @@ export default async function DashboardPage() {
   }
 
   const today = new Date().toISOString().slice(0, 10);
+  const todayString = new Date().toDateString();
 
   const { data: applications } = await supabase
     .from('applications')
     .select('id, program_id')
     .eq('profile_id', user.id);
 
-  const applicationIds = (applications ?? []).map((app: any) => app.id);
-  const applicationProgramIds = (applications ?? []).map((app: any) => app.program_id);
+  const applicationIds = (applications ?? []).map((app) => app.id);
+  const applicationProgramIds = (applications ?? []).map((app) => app.program_id);
 
   const [
     checklistResponse,
     deadlinesResponse,
-    academicsResponse,
-    preferencesResponse,
-    aspirationsResponse,
-    programsResponse,
-    universitiesResponse,
-    requirementsResponse
+    matchResult,
+    personalResponse,
+    academicResponse,
+    lifestyleResponse,
+    subjectsResponse
   ] = await Promise.all([
     applicationIds.length
       ? supabase.from('application_checklist').select('*').in('application_id', applicationIds).order('due_date', { ascending: true }).limit(5)
       : Promise.resolve({ data: [] }),
     applicationProgramIds.length
-      ? supabase
-        .from('deadlines')
-        .select('*')
-        .in('program_id', applicationProgramIds)
-        .gte('deadline_date', today)
-        .order('deadline_date', { ascending: true })
-        .limit(5)
+      ? supabase.from('deadlines').select('*').in('program_id', applicationProgramIds).gte('deadline_date', today).order('deadline_date', { ascending: true }).limit(5)
       : Promise.resolve({ data: [] }),
-    supabase.from('student_academics').select('*').eq('profile_id', user.id).single(),
-    supabase.from('student_preferences').select('*').eq('profile_id', user.id).single(),
-    supabase.from('student_aspirations').select('*').eq('profile_id', user.id).single(),
-    supabase.from('programs').select('*').limit(10),
-    supabase.from('universities').select('*'),
-    supabase.from('program_requirements').select('*')
+    loadMatchesForProfile(supabase, user.id),
+    supabase
+      .from('student_personal_information')
+      .select('first_name,last_name,email,nationality,resident_country')
+      .eq('profile_id', user.id)
+      .single(),
+    supabase
+      .from('student_academic_input')
+      .select('programme_type,school_name,school_country,graduation_year,intended_clusters,english_required')
+      .eq('profile_id', user.id)
+      .single(),
+    supabase.from('student_lifestyle_preference').select('extracurricular_interests').eq('profile_id', user.id).single(),
+    supabase.from('student_subjects').select('id').eq('profile_id', user.id)
   ]);
 
   const checklist = (checklistResponse.data ?? []) as ChecklistRow[];
   const deadlines = (deadlinesResponse.data ?? []) as DeadlineRow[];
-  const academicsData = academicsResponse.data;
-  const preferencesData = preferencesResponse.data;
-  const aspirationsData = aspirationsResponse.data;
-  const profileSectionsComplete = [academicsData, preferencesData, aspirationsData].filter(Boolean).length;
-  const profileCompletionPercent = Math.round((profileSectionsComplete / 3) * 100);
+  const matchError = Boolean(matchResult.error);
+  const matches: EnrichedMatch[] = matchError ? [] : matchResult.matches;
 
-  const programsRaw = programsResponse.data ?? [];
-  const universitiesRaw = universitiesResponse.data ?? [];
-  const requirementsRaw = requirementsResponse.data ?? [];
+  // Profile Completion Logic
+  const personal = personalResponse.data;
+  const academicInput = academicResponse.data;
+  const lifestyle = lifestyleResponse.data;
 
-  const programs: Program[] = programsRaw.map(mapProgramRow);
-  const universities: University[] = universitiesRaw.map(mapUniversityRow);
-  const requirements: ProgramRequirement[] = requirementsRaw.map(mapRequirementRow);
+  const records: ProfileRecordGroup = {
+    personal: personal ?? null,
+    academicInput: academicInput ?? null,
+    subjectCount: subjectsResponse.data?.length ?? 0,
+    lifestyle: lifestyle ?? null
+  };
 
-  let matches: EnrichedMatch[] = [];
+  const profileIncomplete = !isProfileComplete(records);
 
-  if (academicsData && preferencesData && aspirationsData && programs.length > 0 && universities.length > 0) {
-    const requirementMap = new Map(requirements.map((item) => [item.programId, item]));
-    const universityMap = new Map(universities.map((item) => [item.id, item]));
+  const stepCompletion = buildStepCompletion(records);
+  const completedSteps = PROFILE_STEPS.filter((step) => stepCompletion[step.key]).length;
+  const completionPercent = Math.round((completedSteps / PROFILE_STEPS.length) * 100);
+  const nextStep = PROFILE_STEPS.find((step) => !stepCompletion[step.key]);
 
-    // Transform user profile data
-    const academics = mapAcademicsRow(academicsData);
-    const preferences = mapPreferencesRow(preferencesData);
-    const aspirations = mapAspirationsRow(aspirationsData);
+  // Derived Overview Data
+  const openTasks = checklist.filter((task) => task.status !== 'done').length;
+  const now = Date.now();
+  const dueSoonCount = checklist.filter((task) => {
+    if (!task.due_date) return false;
+    const dueTime = Date.parse(task.due_date);
+    return !Number.isNaN(dueTime) && dueTime >= now && dueTime <= now + 1000 * 60 * 60 * 24 * 7;
+  }).length;
 
-    const inputs = programs
-      .map((program) => {
-        const university = universityMap.get(program.universityId);
-        if (!university) return null;
+  const nextDeadline = deadlines[0] ?? null;
+  const averageMatchScore = matches.length
+    ? Math.round(matches.reduce((total, item) => total + item.score, 0) / matches.length)
+    : null;
 
-        return buildMatchInput({
-          academics,
-          preferences,
-          aspirations,
-          program,
-          university,
-          requirement: requirementMap.get(program.id)
-        });
-      })
-      .filter((item): item is MatchInput => item !== null);
+  const isSameToday = (value?: string | null) => {
+    if (!value) return false;
+    const timestamp = Date.parse(value);
+    return !Number.isNaN(timestamp) && new Date(timestamp).toDateString() === todayString;
+  };
 
-    matches = rankMatches(inputs)
-      .slice(0, 3)
-      .map((result) => {
-        const program = programs.find((item) => item.id === result.programId)!;
-        const university = universityMap.get(result.universityId)!;
-        return {
-          program,
-          university: { ...university, requiresTest: university.requiresTest },
-          score: result.score,
-          breakdown: result.breakdown,
-          blockingReasons: result.blockingReasons,
-          tier: result.tier
-        };
-      });
+  const todayFocus = {
+    tasks: checklist.filter((task) => isSameToday(task.due_date)).length,
+    deadlines: deadlines.filter((deadline) => isSameToday(deadline.deadline_date)).length,
+    interviews: checklist.filter((task) => isSameToday(task.due_date) && /interview/i.test(task.task_name ?? '')).length
+  };
+
+  const dueTodayTasks = checklist.filter((task) => task.status !== 'done' && isSameToday(task.due_date));
+  const dueTodayDeadlines = deadlines.filter((deadline) => isSameToday(deadline.deadline_date));
+  const trackedProgramsCount = applicationProgramIds.length;
+
+  const focusItems = [];
+  const urgentTask = dueTodayTasks[0];
+  if (urgentTask) {
+    focusItems.push({
+      id: urgentTask.id,
+      label: 'Due today',
+      title: urgentTask.task_name ?? 'Checklist task',
+      detail: 'Close this out to stay on track.'
+    });
+  }
+  const urgentDeadline = dueTodayDeadlines[0] ?? deadlines[0];
+  if (urgentDeadline) {
+    focusItems.push({
+      id: urgentDeadline.id,
+      label: 'Milestone',
+      title: urgentDeadline.name ?? 'Application milestone',
+      detail: urgentDeadline.deadline_date ? `Due ${formatShortDate(urgentDeadline.deadline_date)}` : 'Date TBC'
+    });
+  }
+  const nextTask = checklist.find((task) => task.status !== 'done');
+  if (nextTask) {
+    focusItems.push({
+      id: nextTask.id,
+      label: 'Checklist',
+      title: nextTask.task_name ?? 'Checklist task',
+      detail: nextTask.due_date ? `Due ${formatShortDate(nextTask.due_date)}` : 'No due date'
+    });
+  }
+  const blockerMatch = matches.find((match) => match.blockingReasons.length > 0);
+  if (blockerMatch) {
+    focusItems.push({
+      id: `blocker-${blockerMatch.program.id}`,
+      label: 'Eligibility flag',
+      title: blockerMatch.program.name,
+      detail: blockerMatch.blockingReasons[0]
+    });
+  }
+  if (nextStep) {
+    focusItems.push({
+      id: 'focus-profile',
+      label: 'Profile',
+      title: nextStep.title,
+      detail: 'Add these details to unlock richer recommendations.'
+    });
+  }
+  if (focusItems.length === 0) {
+    focusItems.push({
+      id: 'focus-clear',
+      label: 'Systems check',
+      title: 'You are on track',
+      detail: 'Keep logging progress or add programs to surface new actions.'
+    });
   }
 
-  const completedTasks = checklist.filter((task) => task.status === 'done').length;
-  const heroHighlight = matches.length ? 'Matches refreshed' : 'Complete your profile';
+  const primaryFocus = focusItems[0];
+
+  const priorityHref =
+    primaryFocus?.label === 'Profile'
+      ? '/profile'
+      : primaryFocus?.label === 'Milestone'
+        ? '/applications'
+        : primaryFocus?.label === 'Eligibility flag'
+          ? '/matches'
+          : '/applications';
+
+  const highlightCards: HighlightCard[] = [
+    {
+      id: 'priority',
+      label: 'Next priority',
+      value: primaryFocus ? primaryFocus.title : 'All clear',
+      detail: primaryFocus ? primaryFocus.detail : 'Log progress or add programs to surface new actions.',
+      href: priorityHref,
+      tone: primaryFocus && primaryFocus.label === 'Due today' ? 'warning' : !primaryFocus ? 'positive' : undefined
+    },
+    {
+      id: 'profile',
+      label: 'Profile readiness',
+      value: `${completedSteps}/${PROFILE_STEPS.length} sections`,
+      detail: nextStep
+        ? `${completionPercent}% complete \u00B7 Next: ${nextStep.title}`
+        : 'All sections complete \u2014 update anytime',
+      href: '/profile',
+      tone: completionPercent === 100 ? 'positive' : undefined
+    }
+  ];
+
+  const overviewPayload: OverviewPayload = {
+    highlightCards,
+    focusItems,
+    nextStepTitle: nextStep?.title ?? null
+  };
+
+  const heroHighlight = primaryFocus ? primaryFocus.label : 'Systems steady';
   const heroStats = [
-    { label: 'Profile', value: `${profileCompletionPercent}%`, detail: 'Ready for matches' },
-    { label: 'Checklist', value: checklist.length ? `${completedTasks}/${checklist.length}` : '0', detail: 'Tasks tracked' },
-    { label: 'Signals', value: matches.length ? `${matches[0].score}%` : '—', detail: matches.length ? 'Top fit' : 'Profile first' }
+    { label: 'Due today', value: todayFocus.tasks > 0 ? `${todayFocus.tasks}` : '0', detail: dueSoonCount > 0 ? `${dueSoonCount} due this week` : 'Nothing urgent' },
+    { label: 'Deadlines', value: deadlines.length > 0 ? `${deadlines.length}` : '0', detail: nextDeadline ? `Next: ${formatShortDate(nextDeadline.deadline_date)}` : 'Add a program to track milestones' },
+    { label: 'Match health', value: matchError ? '—' : averageMatchScore !== null ? `${averageMatchScore}%` : '-', detail: matchError ? 'Service unavailable' : matches.length ? `${matches[0].program.name}` : 'Finish profile to unlock' }
   ];
 
   return (
     <DashboardShell>
       <PageHero
         eyebrow="Mission control"
-        title="Welcome back"
-        description="Track every checklist, deadline, and match signal in one calm dashboard. Keep momentum rolling."
+        title="Command center"
+        description="Only the signals that matter: what needs you now, what's next on the roadmap, and where your profile can unlock better matches."
         highlight={heroHighlight}
         stats={heroStats}
         actions={
@@ -180,80 +261,120 @@ export default async function DashboardPage() {
         }
       />
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <StatsCard
-          label="Checklist"
-          value={checklist.length ? `${completedTasks}/${checklist.length}` : '0'}
-          detail="Tasks completed"
-          icon={<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></svg>}
-        />
-        <StatsCard
-          label="Deadlines"
-          value={`${deadlines.length}`}
-          detail="Upcoming on radar"
-          icon={<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>}
-        />
-        <StatsCard
-          label="Top Match"
-          value={matches.length ? `${matches[0].score}%` : '—'}
-          detail={matches.length ? 'Highest fit score' : 'Update profile'}
-          trend={matches.length ? 'up' : 'neutral'}
-          icon={<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 4 4 0 0 1-5-5" /><path d="M8.5 8.5v.01" /><path d="M16 16v.01" /><path d="M12 12v.01" /></svg>}
-        />
-      </div>
-
-      <DashboardOverview />
-
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="space-y-6 lg:col-span-2">
-          <TaskListPanel
-            title="Application checklist"
-            tasks={checklist.map((item) => ({
-              id: item.id,
-              name: item.task_name,
-              status: item.status,
-              dueDate: item.due_date ?? undefined
-            }))}
-          />
-        </div>
-        <aside className="space-y-6">
-          <div className="space-y-4 rounded-[28px] border border-border bg-card p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)] transition-colors">
-            <h2 className="text-2xl font-semibold text-foreground">Upcoming deadlines</h2>
-            {deadlines.length > 0 ? (
-              <DeadlineTimeline
-                items={deadlines.map((deadline) => ({
-                  id: deadline.id,
-                  name: deadline.name,
-                  date: deadline.deadline_date ?? 'TBD',
-                  context: deadline.intake ?? 'Application period'
-                }))}
-              />
-            ) : (
-              <p className="text-sm text-muted-foreground">No upcoming deadlines yet—track a program to surface milestones.</p>
-            )}
-          </div>
-        </aside>
-        <div className="lg:col-span-3">
-          <div className="space-y-4 rounded-[28px] border border-border bg-card p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)] transition-colors">
-            <h2 className="text-2xl font-semibold text-foreground">Recommended programs</h2>
-            {matches.length > 0 ? (
-              <MatchList matches={matches} />
-            ) : (
-              <div className="space-y-3 text-sm text-muted-foreground">
-                <p className="text-base font-semibold text-foreground">No recommendations yet</p>
-                <p>Complete your profile and add preferred destinations to see personalized matches.</p>
-                <div className="flex flex-wrap gap-2">
-                  <Button asChild size="sm">
-                    <Link href="/profile">Finish profile</Link>
-                  </Button>
-                  <Button asChild size="sm" variant="outline">
-                    <Link href="/matches">See all matches</Link>
-                  </Button>
+      <div className="space-y-6">
+        {profileIncomplete && (
+          <div className="relative overflow-hidden rounded-[28px] border border-primary/20 bg-primary/5 p-6 shadow-sm">
+            <div className="pointer-events-none absolute -top-10 -right-10 h-32 w-32 rounded-full bg-primary/10 blur-2xl" />
+            <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="space-y-2">
+                <p className="text-xs font-bold uppercase tracking-[0.3em] text-primary">Getting started</p>
+                <h3 className="text-lg font-semibold text-foreground">
+                  Profile {completionPercent}% complete
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  {nextStep
+                    ? `Next up: ${nextStep.title}. Finish in a few minutes to unlock personalized matches.`
+                    : 'Almost there — complete your profile to unlock better recommendations.'}
+                </p>
+                <div className="flex items-center gap-2 pt-1">
+                  {PROFILE_STEPS.map((step) => (
+                    <div
+                      key={step.key}
+                      className={cn(
+                        'h-2 flex-1 rounded-full transition-colors',
+                        stepCompletion[step.key] ? 'bg-primary' : 'bg-border'
+                      )}
+                      title={`${step.title}: ${stepCompletion[step.key] ? 'Complete' : 'Incomplete'}`}
+                    />
+                  ))}
                 </div>
               </div>
-            )}
+              <div className="flex gap-2 shrink-0">
+                <Button asChild size="sm">
+                  <Link href="/profile/wizard">Continue setup</Link>
+                </Button>
+                <Button asChild size="sm" variant="outline">
+                  <Link href="/profile">View profile</Link>
+                </Button>
+              </div>
+            </div>
           </div>
-        </div>
+        )}
+
+        <DashboardOverview data={overviewPayload} />
+
+        {deadlines.length > 0 ? (
+          <AnimatedSection delay={0.05}>
+            <div className="surface-card surface-card--static">
+              <div className="relative z-10 space-y-4">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Timeline</p>
+                  <p className="text-lg font-semibold text-foreground">Upcoming deadlines</p>
+                </div>
+                <DeadlineTimeline
+                  items={deadlines.map((deadline) => ({
+                    id: deadline.id,
+                    name: deadline.name,
+                    date: deadline.deadline_date ?? 'TBD',
+                    context: deadline.intake ?? 'Application period'
+                  }))}
+                />
+              </div>
+            </div>
+          </AnimatedSection>
+        ) : null}
+
+        <AnimatedSection delay={0.08}>
+          <div className="surface-card surface-card--static">
+            <div className="relative z-10 space-y-4">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Tasks</p>
+                <p className="text-lg font-semibold text-foreground">Application checklist</p>
+              </div>
+              <TaskListPanel
+                title=""
+                tasks={checklist.map((item) => ({
+                  id: item.id,
+                  name: item.task_name,
+                  status: item.status,
+                  dueDate: item.due_date ?? undefined
+                }))}
+              />
+            </div>
+          </div>
+        </AnimatedSection>
+
+        <AnimatedSection delay={0.1}>
+          <div className="surface-card surface-card--static">
+            <div className="relative z-10 space-y-4">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Matches</p>
+                <p className="text-lg font-semibold text-foreground">Recommended programs</p>
+              </div>
+              {matchError ? (
+                <div className="space-y-3 text-sm text-muted-foreground">
+                  <p className="text-base font-semibold text-foreground">Matches are temporarily unavailable</p>
+                  <p>We couldn&apos;t load recommendations. Please try again shortly.</p>
+                </div>
+              ) : matches.length > 0 ? (
+                <MatchList matches={matches} />
+              ) : (
+                <div className="space-y-3 text-sm text-muted-foreground">
+                  <p className="text-base font-semibold text-foreground">No recommendations yet</p>
+                  <p>Complete your profile and add preferred destinations to see personalized matches.</p>
+                  <div className="flex flex-wrap gap-2">
+                    <Button asChild size="sm">
+                      <Link href="/profile">Finish profile</Link>
+                    </Button>
+                    <Button asChild size="sm" variant="outline">
+                      <Link href="/matches">See all matches</Link>
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </AnimatedSection>
       </div>
     </DashboardShell>
   );

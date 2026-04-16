@@ -1,4 +1,8 @@
+'use client';
+
 import type { ReactNode } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { motion, useMotionValue, useSpring, useInView } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 interface HeroStat {
@@ -19,6 +23,52 @@ interface PageHeroProps {
   className?: string;
 }
 
+const containerVariants = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.08, delayChildren: 0.05 } }
+};
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 14 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.45, ease: [0.25, 0.46, 0.45, 0.94] as const } }
+};
+
+const statVariants = {
+  hidden: { opacity: 0, y: 10, scale: 0.97 },
+  show: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] as const } }
+};
+
+const statsContainerVariants = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.1, delayChildren: 0.25 } }
+};
+
+function AnimatedNumber({ value }: { value: string }) {
+  const numeric = parseFloat(value.replace(/[^0-9.]/g, ''));
+  const suffix = value.replace(/[0-9.]/g, '').trim();
+  const isNumeric = !isNaN(numeric) && numeric > 0;
+
+  const ref = useRef<HTMLSpanElement>(null);
+  const inView = useInView(ref, { once: true });
+  const motionVal = useMotionValue(0);
+  const spring = useSpring(motionVal, { stiffness: 80, damping: 18 });
+  const [display, setDisplay] = useState(isNumeric ? '0' : value);
+
+  useEffect(() => {
+    if (inView && isNumeric) motionVal.set(numeric);
+  }, [inView, isNumeric, numeric, motionVal]);
+
+  useEffect(() => {
+    if (!isNumeric) return;
+    return spring.on('change', (v) => {
+      const rounded = Number.isInteger(numeric) ? Math.round(v) : Math.round(v * 10) / 10;
+      setDisplay(`${rounded}${suffix}`);
+    });
+  }, [spring, isNumeric, numeric, suffix]);
+
+  return <span ref={ref}>{display}</span>;
+}
+
 export const PageHero = ({
   eyebrow,
   title,
@@ -31,56 +81,72 @@ export const PageHero = ({
   className
 }: PageHeroProps) => {
   return (
-    <section
+    <motion.section
       className={cn(
-        'rounded-[28px] border border-border bg-card p-6 text-foreground shadow-[0_15px_40px_rgba(15,23,42,0.06)] transition-colors',
+        'surface-card surface-card--static text-foreground overflow-hidden',
         className
       )}
+      variants={containerVariants}
+      initial="hidden"
+      animate="show"
     >
-      <div className="flex flex-col gap-4">
+      {/* Ambient gradient blob */}
+      <div className="pointer-events-none absolute -top-24 -right-24 h-64 w-64 rounded-full bg-primary/5 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-16 -left-16 h-48 w-48 rounded-full bg-primary/3 blur-2xl" />
+
+      <div className="relative flex flex-col gap-4">
         {breadcrumbs ? (
-          <div className="mb-2">
+          <motion.div className="mb-2" variants={fadeUp}>
             {breadcrumbs}
-          </div>
+          </motion.div>
         ) : null}
 
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div className="space-y-3">
+          <motion.div className="space-y-3" variants={containerVariants}>
             {eyebrow ? (
-              <p className="text-[11px] uppercase tracking-[0.5em] text-muted-foreground">{eyebrow}</p>
+              <motion.p className="text-[11px] uppercase tracking-[0.5em] text-muted-foreground" variants={fadeUp}>{eyebrow}</motion.p>
             ) : null}
-            <div className="space-y-2">
-              <div className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.4em] text-muted-foreground">
+            <motion.div className="space-y-2" variants={fadeUp}>
+              <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.4em] text-primary/70">
+                <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
                 <span>{accent}</span>
-                {highlight ? <span className="text-foreground">{highlight}</span> : null}
+                {highlight ? <span className="text-foreground font-bold">{highlight}</span> : null}
               </div>
               <h1 className="text-3xl font-semibold text-foreground md:text-4xl">{title}</h1>
               <p className="max-w-xl text-sm text-muted-foreground">{description}</p>
-            </div>
+            </motion.div>
             {actions ? (
-              <div className="flex flex-wrap gap-2">
+              <motion.div className="flex flex-wrap gap-2" variants={fadeUp}>
                 {actions}
-              </div>
+              </motion.div>
             ) : null}
-          </div>
+          </motion.div>
           {stats && stats.length > 0 ? (
             <div className="border-t border-border/70 pt-4 sm:border-l sm:border-t-0 sm:pl-4">
-              <div className="grid gap-3 sm:grid-cols-[repeat(auto-fit,minmax(180px,1fr))]">
+              <motion.div
+                className="grid gap-3 sm:grid-cols-[repeat(auto-fit,minmax(180px,1fr))]"
+                variants={statsContainerVariants}
+                initial="hidden"
+                animate="show"
+              >
                 {stats.map((stat) => (
-                  <div
+                  <motion.div
                     key={stat.label}
-                    className="min-w-[180px] rounded-2xl border border-border bg-background px-5 py-3 text-center shadow-sm transition-colors sm:text-left"
+                    className="min-w-[180px] rounded-2xl border border-border bg-background px-5 py-3 text-center shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md hover:border-primary/20 sm:text-left"
+                    variants={statVariants}
                   >
-                    <p className="text-2xl font-semibold text-foreground">{stat.value}</p>
+                    <p className="text-2xl font-semibold text-foreground">
+                      <AnimatedNumber value={stat.value} />
+                    </p>
                     <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">{stat.label}</p>
                     {stat.detail ? <p className="text-[11px] text-muted-foreground">{stat.detail}</p> : null}
-                  </div>
+                  </motion.div>
                 ))}
-              </div>
+              </motion.div>
             </div>
           ) : null}
         </div>
       </div>
-    </section>
+    </motion.section>
   );
 };

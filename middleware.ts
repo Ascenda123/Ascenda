@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
+import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import type { Database } from '@/lib/types/database';
 import { isProfileComplete } from '@/lib/profile/completion';
 
@@ -12,50 +12,110 @@ const PROTECTED_PREFIXES = [
   '/university-search',
   '/course',
   '/shortlist',
-  '/scholarships'
+  '/scholarships',
+  '/counsellor',
+  '/role-select'
 ];
 
 export async function middleware(req: NextRequest) {
   const res = NextResponse.next();
-  const supabase = createMiddlewareClient<Database>({ req, res });
+
+  const supabase = createServerClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return req.cookies.get(name)?.value;
+        },
+        set(name: string, value: string, options: CookieOptions) {
+          res.cookies.set({ name, value, ...options });
+        },
+        remove(name: string, options: CookieOptions) {
+          res.cookies.set({ name, value: '', ...options });
+        },
+      },
+    }
+  );
+
   const {
-    data: { session }
-  } = await supabase.auth.getSession();
+    data: { user }
+  } = await supabase.auth.getUser();
 
   const { pathname } = req.nextUrl;
   const isProtected = PROTECTED_PREFIXES.some((prefix) => pathname.startsWith(prefix));
   const isAuthRoute = pathname.startsWith('/login') || pathname.startsWith('/signup');
 
-  const getOnboardingStatus = async () => {
-    if (!session) {
+  // Helper to carry over cookies to redirects
+  const applyCookies = (source: NextResponse, target: NextResponse) => {
+    source.cookies.getAll().forEach((cookie) => {
+      target.cookies.set(cookie);
+    });
+  };
+
+  const getOnboardingStatus = async (response: NextResponse) => {
+    if (!user) {
       return false;
     }
 
     const cachedUserId = req.cookies.get('onboarding_complete')?.value;
-    if (cachedUserId === session.user.id) {
+    if (cachedUserId === user.id) {
       return false;
     }
 
-    const [profileResponse, academicsResponse, preferencesResponse, aspirationsResponse] = await Promise.all([
-      supabase.from('profiles').select('full_name,country,time_zone').eq('id', session.user.id).maybeSingle(),
-      supabase.from('student_academics').select('curriculum').eq('profile_id', session.user.id).maybeSingle(),
-      supabase.from('student_preferences').select('countries').eq('profile_id', session.user.id).maybeSingle(),
-      supabase.from('student_aspirations').select('target_fields').eq('profile_id', session.user.id).maybeSingle()
+    const statusCookie = req.cookies.get('onboarding_status')?.value;
+    if (statusCookie) {
+      const [userId, status, timestamp] = statusCookie.split(':');
+      const ageMinutes = timestamp ? (Date.now() - Number(timestamp)) / (1000 * 60) : Number.POSITIVE_INFINITY;
+      if (userId === user.id) {
+        if (status === 'complete') {
+          response.cookies.set('onboarding_complete', user.id, {
+            path: '/',
+            maxAge: 60 * 60 * 24 * 30,
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production'
+          });
+          return false;
+        }
+        if (status === 'pending' && ageMinutes < 60) {
+          return true;
+        }
+      }
+    }
+
+    const [personalResponse, academicResponse, lifestyleResponse, subjectsResponse] = await Promise.all([
+      supabase.from('student_personal_information').select('first_name,last_name,email,nationality,resident_country').eq('profile_id', user.id).maybeSingle(),
+      supabase.from('student_academic_input').select('programme_type,school_name,school_country,graduation_year,intended_clusters,english_required').eq('profile_id', user.id).maybeSingle(),
+      supabase.from('student_lifestyle_preference').select('extracurricular_interests').eq('profile_id', user.id).maybeSingle(),
+      supabase.from('student_subjects').select('id', { count: 'exact', head: true }).eq('profile_id', user.id)
     ]);
 
     const completionRecords = {
-      profile: profileResponse.data ?? null,
-      academics: academicsResponse.data ?? null,
-      preferences: preferencesResponse.data ?? null,
-      aspirations: aspirationsResponse.data ?? null
+      personal: personalResponse.data,
+      academicInput: academicResponse.data,
+      subjectCount: subjectsResponse.count ?? 0,
+      lifestyle: lifestyleResponse.data
     };
 
     const needsOnboarding = !isProfileComplete(completionRecords);
 
     if (!needsOnboarding) {
-      res.cookies.set('onboarding_complete', session.user.id, {
+      response.cookies.set('onboarding_complete', user.id, {
+        path: '/',
+        maxAge: 60 * 60 * 24 * 30,
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production'
+      });
+      response.cookies.set('onboarding_status', `${user.id}:complete:${Date.now()}`, {
         path: '/',
         maxAge: 60 * 60 * 24 * 7,
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production'
+      });
+    } else {
+      response.cookies.set('onboarding_status', `${user.id}:pending:${Date.now()}`, {
+        path: '/',
+        maxAge: 60 * 60 * 12,
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production'
       });
@@ -64,31 +124,33 @@ export async function middleware(req: NextRequest) {
     return needsOnboarding;
   };
 
-  if (!session && isProtected) {
+  if (!user && isProtected) {
     const redirectUrl = req.nextUrl.clone();
     redirectUrl.pathname = '/login';
     redirectUrl.searchParams.set('redirectedFrom', pathname);
-    return NextResponse.redirect(redirectUrl);
+    const redirectResponse = NextResponse.redirect(redirectUrl);
+    applyCookies(res, redirectResponse);
+    return redirectResponse;
   }
 
-  if (session && isAuthRoute) {
+  if (user && isAuthRoute) {
     const redirectUrl = req.nextUrl.clone();
-    const needsOnboarding = await getOnboardingStatus();
-    redirectUrl.pathname = needsOnboarding ? '/profile' : '/dashboard';
-    if (needsOnboarding) {
-      redirectUrl.searchParams.set('onboarding', 'true');
-    }
+    redirectUrl.pathname = '/role-select';
     redirectUrl.searchParams.delete('redirectedFrom');
-    return NextResponse.redirect(redirectUrl);
+    const redirectResponse = NextResponse.redirect(redirectUrl);
+    applyCookies(res, redirectResponse);
+    return redirectResponse;
   }
 
-  if (session && isProtected && !pathname.startsWith('/profile')) {
-    const needsOnboarding = await getOnboardingStatus();
+  if (user && isProtected && !pathname.startsWith('/profile') && !pathname.startsWith('/counsellor') && !pathname.startsWith('/role-select')) {
+    const needsOnboarding = await getOnboardingStatus(res);
     if (needsOnboarding) {
       const redirectUrl = req.nextUrl.clone();
-      redirectUrl.pathname = '/profile';
+      redirectUrl.pathname = '/profile/wizard';
       redirectUrl.searchParams.set('onboarding', 'true');
-      return NextResponse.redirect(redirectUrl);
+      const redirectResponse = NextResponse.redirect(redirectUrl);
+      applyCookies(res, redirectResponse);
+      return redirectResponse;
     }
   }
 
@@ -96,5 +158,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/(dashboard|profile|matches|applications|admin|university-search|course|shortlist|scholarships)(.*)', '/login', '/signup']
+  matcher: ['/(dashboard|profile|matches|applications|admin|university-search|course|shortlist|scholarships|counsellor|role-select)(.*)', '/login', '/signup']
 };

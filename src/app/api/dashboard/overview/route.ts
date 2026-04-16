@@ -1,38 +1,15 @@
 import { NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
-import { PROFILE_STEPS, type StepKey } from '@/lib/profile/steps';
+import { PROFILE_STEPS } from '@/lib/profile/steps';
 import { buildStepCompletion } from '@/lib/profile/completion';
-import { rankMatches, type MatchInput } from '@/lib/matching/engine';
-import {
-  buildMatchInput,
-  mapAcademicsRow,
-  mapAspirationsRow,
-  mapPreferencesRow,
-  mapProgramRow,
-  mapRequirementRow,
-  mapUniversityRow
-} from '@/lib/matching/transform';
-import type { EnrichedMatch } from '@/components/match/match-list';
+import { loadMatchesForProfile } from '@/lib/matching/service';
+import type { EnrichedMatch } from '@/lib/matching/types';
+import type { Database } from '@/lib/types/database';
 
-interface ChecklistRow {
-  id: string;
-  task_name: string;
-  status: 'todo' | 'doing' | 'done';
-  due_date?: string | null;
-}
-
-interface DeadlineRow {
-  id: string;
-  name: string;
-  deadline_date?: string | null;
-  intake?: string | null;
-}
-
-interface ProfileRow {
-  full_name?: string | null;
-  country?: string | null;
-  time_zone?: string | null;
-}
+type ApplicationRow = Database['public']['Tables']['applications']['Row'];
+type ChecklistRow = Database['public']['Tables']['application_checklist']['Row'];
+type DeadlineRow = Database['public']['Tables']['deadlines']['Row'];
+type SubjectRow = Database['public']['Tables']['student_subjects']['Row'];
 
 const shortDateFormatter = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' });
 
@@ -64,23 +41,20 @@ export async function GET() {
     .select('id, program_id')
     .eq('profile_id', user.id);
 
-  const applicationIds = (applications ?? []).map((app: any) => app.id);
-  const applicationProgramIds = (applications ?? []).map((app: any) => app.program_id);
+  const applicationIds = (applications ?? []).map((app) => app.id);
+  const applicationProgramIds = (applications ?? []).map((app) => app.program_id);
 
   const [
     checklistResponse,
     deadlinesResponse,
-    academicsResponse,
-    preferencesResponse,
-    aspirationsResponse,
-    profileResponse,
-    programsResponse,
-    universitiesResponse,
-    requirementsResponse
+    personalResponse,
+    academicResponse,
+    lifestyleResponse,
+    subjectsResponse
   ] = await Promise.all([
     applicationIds.length
       ? supabase.from('application_checklist').select('*').in('application_id', applicationIds).order('due_date', { ascending: true }).limit(5)
-      : Promise.resolve({ data: [] }),
+      : Promise.resolve({ data: [] as ChecklistRow[], error: null }),
     applicationProgramIds.length
       ? supabase
         .from('deadlines')
@@ -89,49 +63,33 @@ export async function GET() {
         .gte('deadline_date', today)
         .order('deadline_date', { ascending: true })
         .limit(5)
-      : Promise.resolve({ data: [] }),
-    supabase.from('student_academics').select('*').eq('profile_id', user.id).single(),
-    supabase.from('student_preferences').select('*').eq('profile_id', user.id).single(),
-    supabase.from('student_aspirations').select('*').eq('profile_id', user.id).single(),
-    supabase.from('profiles').select('full_name,country,time_zone').eq('id', user.id).single(),
-    supabase.from('programs').select('*').limit(10),
-    supabase.from('universities').select('*'),
-    supabase.from('program_requirements').select('*')
+      : Promise.resolve({ data: [] as DeadlineRow[], error: null }),
+    supabase.from('student_personal_information').select('*').eq('profile_id', user.id).maybeSingle(),
+    supabase.from('student_academic_input').select('*').eq('profile_id', user.id).maybeSingle(),
+    supabase.from('student_lifestyle_preference').select('*').eq('profile_id', user.id).maybeSingle(),
+    supabase.from('student_subjects').select('*').eq('profile_id', user.id)
   ]);
+
+  const queryErrors = [
+    checklistResponse.error,
+    deadlinesResponse.error,
+    personalResponse.error,
+    academicResponse.error,
+    lifestyleResponse.error,
+    subjectsResponse.error
+  ].filter(Boolean);
+
+  if (queryErrors.length > 0) {
+    return NextResponse.json({ error: 'Failed to load dashboard data' }, { status: 500 });
+  }
 
   const checklist = (checklistResponse.data ?? []) as ChecklistRow[];
   const deadlines = (deadlinesResponse.data ?? []) as DeadlineRow[];
-  const academics = academicsResponse.data ?? null;
-  const preferences = preferencesResponse.data ?? null;
-  const aspirations = aspirationsResponse.data ?? null;
-  const profileRecord = (profileResponse.data ?? null) as ProfileRow | null;
-  const programs = programsResponse.data ?? [];
-  const universities = universitiesResponse.data ?? [];
-  const requirements = requirementsResponse.data ?? [];
-
-  let matchResults = [] as Awaited<ReturnType<typeof rankMatches>>;
-  if (academics && preferences && aspirations && programs.length > 0 && universities.length > 0) {
-    const mappedAcademics = mapAcademicsRow(academics);
-    const mappedPreferences = mapPreferencesRow(preferences);
-    const mappedAspirations = mapAspirationsRow(aspirations);
-    const requirementMap = new Map<string, any>(requirements.map((item: any) => [item.program_id, mapRequirementRow(item)]));
-    const universityMap = new Map<string, any>(universities.map((item: any) => [item.id, mapUniversityRow(item)]));
-    const inputs = programs
-      .map((program: any) => {
-        const mappedProgram = mapProgramRow(program);
-        return buildMatchInput({
-          academics: mappedAcademics,
-          preferences: mappedPreferences,
-          aspirations: mappedAspirations,
-          program: mappedProgram,
-          university: universityMap.get(mappedProgram.universityId),
-          requirement: requirementMap.get(mappedProgram.id)
-        });
-      })
-      .filter((value: MatchInput | null): value is MatchInput => value !== null);
-
-    matchResults = rankMatches(inputs).slice(0, 3);
-  }
+  const personal = personalResponse.data ?? null;
+  const academicInput = academicResponse.data ?? null;
+  const lifestyle = lifestyleResponse.data ?? null;
+  const subjects = (subjectsResponse.data ?? []) as SubjectRow[];
+  const matchResult = await loadMatchesForProfile(supabase, user.id, { resultLimit: 3 });
 
   const openTasks = checklist.filter((task) => task.status !== 'done').length;
   const now = Date.now();
@@ -143,31 +101,18 @@ export async function GET() {
 
   const nextDeadline = deadlines[0] ?? null;
 
-  const enrichedMatches: EnrichedMatch[] = matchResults
-    .map((result) => {
-      const program = programs.find((item: any) => item.id === result.programId);
-      const university = universities.find((item: any) => item.id === result.universityId);
-      if (!program || !university) return null;
-      return {
-        program,
-        university,
-        score: result.score,
-        breakdown: result.breakdown,
-        blockingReasons: result.blockingReasons,
-        tier: result.tier
-      };
-    })
-    .filter((entry): entry is EnrichedMatch => entry !== null);
+  const enrichedMatches: EnrichedMatch[] =
+    matchResult.error || matchResult.missingSections.length > 0 ? [] : matchResult.matches.slice(0, 3);
 
   const averageMatchScore = enrichedMatches.length
     ? Math.round(enrichedMatches.reduce((total, item) => total + item.score, 0) / enrichedMatches.length)
     : null;
 
   const stepCompletion = buildStepCompletion({
-    profile: profileRecord,
-    academics,
-    preferences,
-    aspirations
+    personal,
+    academicInput,
+    subjectCount: subjects.length,
+    lifestyle
   });
   const completedSteps = PROFILE_STEPS.filter((step) => stepCompletion[step.key]).length;
   const completionPercent = Math.round((completedSteps / PROFILE_STEPS.length) * 100);

@@ -1,27 +1,47 @@
 import { type StepCompletionMap } from './steps';
 
-type ProfileRow = { full_name?: string | null; country?: string | null; time_zone?: string | null } | null;
-type AcademicsRow = { curriculum?: string | null } | null;
-type PreferencesRow = { countries?: string[] | null } | null;
-type AspirationsRow = { target_fields?: string[] | null } | null;
+type PersonalRow = {
+  first_name?: string | null;
+  last_name?: string | null;
+  email?: string | null;
+  nationality?: string | null;
+  resident_country?: string | null;
+} | null;
+type AcademicInputRow = {
+  programme_type?: string | null;
+  school_name?: string | null;
+  school_country?: string | null;
+  graduation_year?: number | null;
+  intended_clusters?: string[] | null;
+  english_required?: boolean | null;
+} | null;
+type LifestyleRow = { extracurricular_interests?: string[] | null } | null;
 
 export interface ProfileRecordGroup {
-  profile: ProfileRow;
-  academics: AcademicsRow;
-  preferences: PreferencesRow;
-  aspirations: AspirationsRow;
+  personal: PersonalRow;
+  academicInput: AcademicInputRow;
+  subjectCount: number;
+  lifestyle: LifestyleRow;
 }
 
 export const buildStepCompletion = ({
-  profile,
-  academics,
-  preferences,
-  aspirations
+  personal,
+  academicInput,
+  subjectCount,
+  lifestyle
 }: ProfileRecordGroup): StepCompletionMap => ({
-  personal: Boolean(profile?.full_name && profile?.country && profile?.time_zone),
-  academics: Boolean(academics?.curriculum),
-  preferences: Boolean((preferences?.countries ?? []).length),
-  aspirations: Boolean((aspirations?.target_fields ?? []).length)
+  personal_information: Boolean(
+    personal?.first_name && personal?.last_name && personal?.email && personal?.nationality && personal?.resident_country
+  ),
+  academic_input: Boolean(
+    academicInput?.programme_type &&
+      academicInput?.school_name &&
+      academicInput?.school_country &&
+      academicInput?.graduation_year &&
+      (academicInput?.intended_clusters ?? []).length > 0
+  ),
+  academic_details: Boolean(subjectCount > 0 && academicInput?.english_required !== null && academicInput?.english_required !== undefined),
+  lifestyle_preferences: Boolean(lifestyle)
 });
 
 export const isProfileComplete = (records: ProfileRecordGroup): boolean => {

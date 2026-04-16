@@ -19,7 +19,7 @@ const fallbackScholarships: Scholarship[] = [
     level: 'Undergraduate',
     amount: 40000,
     currency: 'USD',
-    deadline: '2024-10-01',
+    deadline: '2025-10-01',
     category: 'Merit',
     url: 'https://example.com/innovators'
   },
@@ -31,7 +31,7 @@ const fallbackScholarships: Scholarship[] = [
     level: 'Undergraduate',
     amount: 25000,
     currency: 'USD',
-    deadline: '2024-09-15',
+    deadline: '2025-09-15',
     category: 'Regional',
     url: 'https://example.com/asean'
   },
@@ -43,7 +43,7 @@ const fallbackScholarships: Scholarship[] = [
     level: 'Graduate',
     amount: 30000,
     currency: 'USD',
-    deadline: '2024-11-20',
+    deadline: '2025-11-20',
     category: 'STEM',
     url: 'https://example.com/stem'
   }
@@ -51,21 +51,21 @@ const fallbackScholarships: Scholarship[] = [
 
 export default async function ScholarshipsPage() {
   const supabase = createServerSupabaseClient();
-  const { data } = await supabase.from('scholarships').select('*').order('deadline', { ascending: true });
+  const { data } = await supabase.from('scholarships' as never).select('*').order('deadline', { ascending: true });
 
   const scholarships: Scholarship[] =
     data && data.length > 0
-      ? data.map((item: Record<string, any>, index: number) => ({
-        id: item.id ?? item.slug ?? `scholarship-${index}`,
-        name: item.name ?? 'Scholarship',
-        country: item.country ?? item.region ?? 'Global',
-        region: item.region,
-        level: item.level ?? item.eligibility_level ?? 'Any level',
-        category: item.category ?? item.type ?? 'General',
+      ? (data as Record<string, unknown>[]).map((item, index: number) => ({
+        id: (item.id as string) ?? (item.slug as string) ?? `scholarship-${index}`,
+        name: (item.name as string) ?? 'Scholarship',
+        country: (item.country as string) ?? (item.region as string) ?? 'Global',
+        region: (item.region as string) ?? null,
+        level: (item.level as string) ?? (item.eligibility_level as string) ?? 'Any level',
+        category: (item.category as string) ?? (item.type as string) ?? 'General',
         amount: typeof item.amount === 'number' ? item.amount : Number(item.amount) || null,
-        currency: item.currency ?? 'USD',
-        deadline: item.deadline ?? item.deadline_date ?? null,
-        url: item.url ?? item.website ?? null
+        currency: (item.currency as string) ?? 'USD',
+        deadline: (item.deadline as string) ?? (item.deadline_date as string) ?? null,
+        url: (item.url as string) ?? (item.website as string) ?? null
       }))
       : fallbackScholarships;
 

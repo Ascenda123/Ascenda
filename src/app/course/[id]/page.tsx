@@ -1,981 +1,982 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ElementType } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import {
-  BadgeCheck,
-  BarChart3,
-  BookOpen,
-  BookmarkPlus,
-  Brain,
-  CalendarDays,
-  Code,
-  FileText,
-  Globe2,
-  Layers,
-  Link2,
-  Search,
-  Laptop,
-  Pencil,
-  Plus,
-  Presentation,
-  ShieldCheck,
-  Workflow,
-  Users,
-  type LucideIcon
-} from 'lucide-react';
+import { ArrowLeft, BookOpen, CalendarDays, CheckCircle2, Dot, GraduationCap, Landmark, Layers, ListChecks, Loader2, MapPin, ShieldCheck, Wallet } from 'lucide-react';
 import { Navbar } from '@/components/layout/navbar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Breadcrumbs } from '@/components/ui/breadcrumbs';
+import { getBrowserSupabaseClient } from '@/lib/supabase/client';
+import { cn } from '@/lib/utils';
+import React from 'react';
 
-type IconType = LucideIcon;
+type Requirement = { label: string; value: string };
+type QuickFact = { label: string; value: string; icon: ElementType };
+type Outcomes = {
+  satisfaction?: string | null;
+  employment?: string | null;
+  outcomes?: string | null;
+  salary?: string | null;
+};
+type OpenDayEvent = { label: string; url?: string | null };
 
-type EntryRequirement = { label: string; value: string; icon: IconType };
-type CohortFact = { label: string; value: string };
-type ModuleGroup = { title: string; items: string[]; icon: IconType };
-type QuickFact = { label: string; value: string };
-type ApplicationCard = { title: string; body: string; linkLabel: string; href: string };
-type ApplicationStep = { label: string; status: 'not_started' | 'in_progress' | 'done'; due?: string; href?: string };
-
-type CourseData = {
+type CourseView = {
   id: string;
   title: string;
   university: string;
   location: string;
-  acceptanceRate: string;
-  guardianRank: string;
-  qsRank: string;
-  timesRank: string;
-  satisfaction: number;
-  employment: number;
-  startingSalary: string;
-  studyAbroad: boolean;
-  topIndustries: string;
-  placementYear: boolean;
-  entryRequirements: EntryRequirement[];
-  cohort: CohortFact[];
-  modules: ModuleGroup[];
+  logoUrl?: string | null;
+  level?: string | null;
+  duration?: string | null;
+  intake?: string | null;
+  campus?: string | null;
+  tuition?: string | null;
+  ucasCode?: string | null;
+  startDate?: string | null;
+  summary?: string | null;
+  modules?: string | null;
+  assessment?: string | null;
+  requirements: Requirement[];
   quickFacts: QuickFact[];
-  applicationCards: ApplicationCard[];
-  applicationChecklist: ApplicationStep[];
-  courseUrl?: string;
-  applyUrl?: string;
+  courseUrl?: string | null;
+  applyUrl?: string | null;
+  outcomes?: Outcomes | null;
+  openDays?: OpenDayEvent[] | null;
 };
 
-const courseDataset: CourseData[] = [
-  {
-    id: 'harvard-computational-design',
-    title: 'Computational Design',
-    university: 'Harvard University',
-    location: 'Cambridge, USA',
-    acceptanceRate: '8%',
-    guardianRank: '10',
-    qsRank: '4',
-    timesRank: '3',
-    satisfaction: 92,
-    employment: 94,
-    startingSalary: '$95,000',
-    studyAbroad: true,
-    topIndustries: 'Tech, Research, Design',
-    placementYear: true,
-    entryRequirements: [
-      { label: 'IB Score Requirement', value: '40', icon: FileText },
-      { label: 'A-Level Requirement', value: 'A*AA', icon: Pencil },
-      { label: 'Preferred Subjects', value: 'Math, Physics, CompSci', icon: BookOpen },
-      { label: 'English Requirement', value: 'IELTS 7.5', icon: Globe2 },
-      { label: 'Admission Tests', value: 'ESAT', icon: Search },
-      { label: 'Interview Required?', value: 'Yes', icon: Users },
-      { label: 'UCAS Code', value: 'HCD123', icon: BadgeCheck },
-      { label: 'UCAS Deadline', value: 'January 15', icon: CalendarDays }
-    ],
-    cohort: [
-      { label: 'Intake Size (24/25)', value: '180' },
-      { label: 'Class Size Per Year', value: '60' },
-      { label: 'Domestic vs International', value: '60:40' },
-      { label: 'Students in Department', value: '1,200' }
-    ],
-    modules: [
-      { title: 'Year 1 Modules', items: ['Intro to Programming', 'Geometry & Graphics'], icon: Laptop },
-      { title: 'Year 2 Modules', items: ['Algorithms', 'Generative Design'], icon: Workflow },
-      { title: 'Year 3 Modules', items: ['ML for Design', 'Systems Studio'], icon: Brain },
-      { title: 'Optional Modules', items: ['Data Science', 'Cybersecurity'], icon: ShieldCheck }
-    ],
-    quickFacts: [
-      { label: 'Mode', value: 'On campus' },
-      { label: 'Duration', value: '4 years' },
-      { label: 'Placement year', value: 'Available' },
-      { label: 'Start', value: 'September' }
-    ],
-    applicationChecklist: [
-      { label: 'Review course webpage', status: 'done', href: '#', due: 'Ongoing' },
-      { label: 'Prepare ESAT + portfolio', status: 'in_progress', due: 'Dec 15' },
-      { label: 'Submit UCAS application', status: 'not_started', due: 'Jan 15' },
-      { label: 'Book interview slot', status: 'not_started', due: 'Jan 30' }
-    ],
-    applyUrl: '#',
-    courseUrl: '#',
-    applicationCards: [
-      {
-        title: 'Official Course Webpage',
-        body: 'Visit our official site for detailed information about this course.',
-        linkLabel: 'Program',
-        href: '#'
-      },
-      {
-        title: 'Direct Apply Option',
-        body: 'You can apply directly through our portal.',
-        linkLabel: 'Apply',
-        href: '#'
-      },
-      {
-        title: 'Additional Requirements',
-        body: 'A portfolio is required for design-related modules.',
-        linkLabel: 'Portfolio',
-        href: '#'
-      },
-      {
-        title: 'Internal Deadlines',
-        body: 'Ensure that your personal statement and references are ready ahead of submission.',
-        linkLabel: 'Deadlines',
-        href: '#'
+const normalizeLocation = (city?: string | null, region?: string | null, country?: string | null) =>
+  [city, region, country].filter(Boolean).join(', ') || 'Location unavailable';
+
+const buildRequirements = (raw: Record<string, any>): Requirement[] => {
+  if (!raw) return [];
+  const reqs: Requirement[] = [];
+  if (raw.min_ib) reqs.push({ label: 'IB minimum', value: `${raw.min_ib}` });
+  if (raw.min_alevel) reqs.push({ label: 'A-Levels', value: raw.min_alevel });
+  if (raw.ucas_points) reqs.push({ label: 'UCAS points', value: raw.ucas_points });
+  if (raw.subject_requirements) reqs.push({ label: 'Subjects', value: raw.subject_requirements });
+  if (raw.entry_requirements_overview) reqs.push({ label: 'Overview', value: raw.entry_requirements_overview });
+  if (raw.additional_entry_requirements) reqs.push({ label: 'Additional', value: raw.additional_entry_requirements });
+  if (raw.english_requirements) reqs.push({ label: 'English', value: raw.english_requirements });
+  if (raw.contextual_admissions) reqs.push({ label: 'Contextual admissions', value: raw.contextual_admissions });
+  return reqs;
+};
+
+const buildOutcomes = (raw: Record<string, any>): Outcomes | null => {
+  const satisfaction = raw.student_satisfaction ?? null;
+  const employment = raw.employment_after_course ?? null;
+  const outcomes = raw.student_outcomes ?? null;
+  const salary = raw.average_salary_after_15m ?? null;
+
+  if (!satisfaction && !employment && !outcomes && !salary) return null;
+
+  return { satisfaction, employment, outcomes, salary };
+};
+
+const parseOpenDays = (raw?: string | null): OpenDayEvent[] => {
+  if (!raw) return [];
+  return raw
+    .split(';')
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .map((entry) => {
+      // Example: "25 Nov - Title [url]"
+      const match = entry.match(/^(.*?)\s*-\s*(.*?)(?:\s*\[(https?:[^\]]+)\])?$/);
+      if (match) {
+        const [, datePart, titlePart, url] = match;
+        return { label: `${datePart.trim()} — ${titlePart.trim()}`, url: url ?? null };
       }
-    ]
-  },
-  {
-    id: 'stanford-engineering-society',
-    title: 'Engineering & Society',
-    university: 'Stanford University',
-    location: 'Palo Alto, USA',
-    acceptanceRate: '9%',
-    guardianRank: '12',
-    qsRank: '5',
-    timesRank: '2',
-    satisfaction: 90,
-    employment: 93,
-    startingSalary: '$105,000',
-    studyAbroad: true,
-    topIndustries: 'Tech, Consulting, Impact',
-    placementYear: true,
-    entryRequirements: [
-      { label: 'IB Score Requirement', value: '38', icon: FileText },
-      { label: 'A-Level Requirement', value: 'AAA', icon: Pencil },
-      { label: 'Preferred Subjects', value: 'Math, Physics', icon: BookOpen },
-      { label: 'English Requirement', value: 'IELTS 7.0', icon: Globe2 },
-      { label: 'Admission Tests', value: 'ESAT', icon: Search },
-      { label: 'Interview Required?', value: 'Yes', icon: Users },
-      { label: 'UCAS Code', value: 'SES200', icon: BadgeCheck },
-      { label: 'UCAS Deadline', value: 'January 15', icon: CalendarDays }
-    ],
-    cohort: [
-      { label: 'Intake Size (24/25)', value: '220' },
-      { label: 'Class Size Per Year', value: '70' },
-      { label: 'Domestic vs International', value: '65:35' },
-      { label: 'Students in Department', value: '1,050' }
-    ],
-    modules: [
-      { title: 'Year 1 Modules', items: ['Foundations of Engineering', 'Programming Basics'], icon: Laptop },
-      { title: 'Year 2 Modules', items: ['Algorithms', 'Systems Design'], icon: Workflow },
-      { title: 'Year 3 Modules', items: ['Ethics & Tech', 'Product Studio'], icon: Presentation },
-      { title: 'Optional Modules', items: ['Data Science', 'Cybersecurity'], icon: ShieldCheck }
-    ],
-    quickFacts: [
-      { label: 'Mode', value: 'On campus' },
-      { label: 'Duration', value: '4 years' },
-      { label: 'Placement year', value: 'Available' },
-      { label: 'Start', value: 'September' }
-    ],
-    applicationChecklist: [
-      { label: 'Check program guidance', status: 'done', href: '#', due: 'Ongoing' },
-      { label: 'Draft personal statement', status: 'in_progress', due: 'Dec 10' },
-      { label: 'Upload ESAT results', status: 'not_started', due: 'Dec 22' },
-      { label: 'Submit UCAS application', status: 'not_started', due: 'Jan 15' }
-    ],
-    applyUrl: '#',
-    courseUrl: '#',
-    applicationCards: [
-      {
-        title: 'Official Course Webpage',
-        body: 'Visit our official site for detailed information about this course.',
-        linkLabel: 'Program',
-        href: '#'
-      },
-      {
-        title: 'Direct Apply Option',
-        body: 'You can apply directly through our portal.',
-        linkLabel: 'Apply',
-        href: '#'
-      },
-      {
-        title: 'Additional Requirements',
-        body: 'Statement on social impact is highly recommended.',
-        linkLabel: 'Guidance',
-        href: '#'
-      },
-      {
-        title: 'Internal Deadlines',
-        body: 'Ensure that your personal statement and references are ready ahead of submission.',
-        linkLabel: 'Deadlines',
-        href: '#'
-      }
-    ]
-  },
-  {
-    id: 'oxford-phil-politics',
-    title: 'Philosophy, Politics & Economics',
-    university: 'University of Oxford',
-    location: 'Oxford, UK',
-    acceptanceRate: '15%',
-    guardianRank: '2',
-    qsRank: '3',
-    timesRank: '1',
-    satisfaction: 88,
-    employment: 92,
-    startingSalary: '$80,000',
-    studyAbroad: false,
-    topIndustries: 'Policy, Finance, Research',
-    placementYear: false,
-    entryRequirements: [
-      { label: 'IB Score Requirement', value: '39', icon: FileText },
-      { label: 'A-Level Requirement', value: 'AAA', icon: Pencil },
-      { label: 'Preferred Subjects', value: 'Math, Economics', icon: BookOpen },
-      { label: 'English Requirement', value: 'IELTS 7.5', icon: Globe2 },
-      { label: 'Admission Tests', value: 'ESAT', icon: Search },
-      { label: 'Interview Required?', value: 'Yes', icon: Users },
-      { label: 'UCAS Code', value: 'L0V0', icon: BadgeCheck },
-      { label: 'UCAS Deadline', value: 'January 15', icon: CalendarDays }
-    ],
-    cohort: [
-      { label: 'Intake Size (24/25)', value: '320' },
-      { label: 'Class Size Per Year', value: '80' },
-      { label: 'Domestic vs International', value: '70:30' },
-      { label: 'Students in Department', value: '900' }
-    ],
-    modules: [
-      { title: 'Year 1 Modules', items: ['Intro to PPE', 'Logic & Reasoning'], icon: Laptop },
-      { title: 'Year 2 Modules', items: ['Microeconomics', 'Political Theory'], icon: Presentation },
-      { title: 'Year 3 Modules', items: ['Philosophy of Ethics', 'International Relations'], icon: BookOpen },
-      { title: 'Optional Modules', items: ['Data Science', 'Cybersecurity'], icon: ShieldCheck }
-    ],
-    quickFacts: [
-      { label: 'Mode', value: 'On campus' },
-      { label: 'Duration', value: '3 years' },
-      { label: 'Placement year', value: 'No' },
-      { label: 'Start', value: 'October' }
-    ],
-    applicationChecklist: [
-      { label: 'Read course handbook', status: 'done', href: '#', due: 'Ongoing' },
-      { label: 'Collect written work samples', status: 'in_progress', due: 'Dec 5' },
-      { label: 'Schedule ESAT', status: 'not_started', due: 'Nov 28' },
-      { label: 'Submit UCAS application', status: 'not_started', due: 'Jan 15' }
-    ],
-    applyUrl: '#',
-    courseUrl: '#',
-    applicationCards: [
-      {
-        title: 'Official Course Webpage',
-        body: 'Visit our official site for detailed information about this course.',
-        linkLabel: 'Program',
-        href: '#'
-      },
-      {
-        title: 'Direct Apply Option',
-        body: 'You can apply directly through our portal.',
-        linkLabel: 'Apply',
-        href: '#'
-      },
-      {
-        title: 'Additional Requirements',
-        body: 'Written work samples are required.',
-        linkLabel: 'Guidance',
-        href: '#'
-      },
-      {
-        title: 'Internal Deadlines',
-        body: 'Ensure that your personal statement and references are ready ahead of submission.',
-        linkLabel: 'Deadlines',
-        href: '#'
-      }
-    ]
+      return { label: entry };
+    });
+};
+
+const buildQuickFacts = (course: CourseView): QuickFact[] => {
+  const facts: QuickFact[] = [];
+  if (course.level) facts.push({ label: 'Level', value: course.level, icon: GraduationCap });
+  if (course.duration) facts.push({ label: 'Duration', value: course.duration, icon: CalendarDays });
+  if (course.campus) facts.push({ label: 'Campus', value: course.campus, icon: Landmark });
+  const tuitionDisplay = course.tuition && course.tuition.trim().length > 0 ? course.tuition : 'Contact university';
+  const startRaw = course.startDate?.trim() ?? '';
+  const intakeRaw = course.intake?.trim() ?? '';
+  const intakeDisplay = intakeRaw.length > 0 ? intakeRaw : 'TBD';
+  const showStart = startRaw.length > 0 && startRaw.toLowerCase() !== intakeRaw.toLowerCase();
+  const startDisplay = showStart ? startRaw : '';
+  facts.push({ label: 'Tuition', value: tuitionDisplay, icon: Wallet });
+  facts.push({ label: 'Intake', value: intakeDisplay, icon: CalendarDays });
+  if (showStart) {
+    facts.push({ label: 'Start date', value: startDisplay, icon: CalendarDays });
   }
-];
+  if (course.ucasCode) facts.push({ label: 'UCAS code', value: course.ucasCode, icon: ShieldCheck });
+  return facts;
+};
+
+const emphasize = (text: string) =>
+  text.split(/(\*\*[^*]+\*\*)/g).map((chunk, idx) => {
+    if (chunk.startsWith('**') && chunk.endsWith('**')) {
+      return (
+        <strong key={`${chunk}-${idx}`}>
+          {chunk.slice(2, -2)}
+        </strong>
+      );
+    }
+    return <React.Fragment key={`${chunk}-${idx}`}>{chunk}</React.Fragment>;
+  });
+
+const parseTextBlocks = (text?: string | null) => {
+  if (!text) return { intro: [] as string[], bullets: [] as string[] };
+  const normalized = text.replace(/\r/g, '').trim();
+  if (!normalized) return { intro: [], bullets: [] };
+
+  const parts = normalized.split(/\s+-\s+/).map((p) => p.trim()).filter(Boolean);
+  if (parts.length <= 1) {
+    return { intro: [normalized], bullets: [] };
+  }
+  const [first, ...rest] = parts;
+  return { intro: [first], bullets: rest };
+};
+
+const splitSentences = (text: string) => {
+  // 1. Split by explicit delimiters first (bullets, numbered lists)
+  const lines = text
+    .split(/(?:^|\n)\s*(?:[•\-*]|\d+\.)\s+/m)
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  if (lines.length > 1) return lines;
+
+  // 2. If no bullets, try splitting by semicolons if there are multiple
+  if (text.includes(';')) {
+    const parts = text.split(';').map((s) => s.trim()).filter(Boolean);
+    if (parts.length > 1) return parts;
+  }
+
+  // 3. Fallback: Split by sentence endings, but keep them together if short
+  // This regex looks for [.!?] followed by space and a capital letter.
+  return text
+    .split(/(?<=[.!?])\s+(?=[A-Z])/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+};
+
+const renderRichText = (text?: string | null, options?: { forceBullets?: boolean }) => {
+  const { forceBullets = false } = options ?? {};
+  const { intro, bullets } = parseTextBlocks(text);
+  const fallbackSentences = forceBullets && text ? splitSentences(text.replace(/\r/g, '')) : [];
+  const hasContent = intro.length || bullets.length || fallbackSentences.length;
+
+  if (!hasContent) return <p className="text-muted-foreground">No information available.</p>;
+
+  const finalBullets = bullets.length ? bullets : fallbackSentences;
+
+  return (
+    <div className="space-y-3">
+      {intro.map((para, idx) => (
+        <p key={`intro-${idx}`} className="text-foreground/85 leading-relaxed">
+          {emphasize(para)}
+        </p>
+      ))}
+      {finalBullets.length ? (
+        <ul className="space-y-3 not-prose">
+          {finalBullets.map((item, idx) => (
+            <li key={`bullet-${idx}`} className="flex items-start gap-3">
+              <span className="mt-2.5 block h-1.5 w-1.5 shrink-0 rounded-full bg-primary/70" aria-hidden />
+              <span className="text-foreground/85 leading-relaxed">{emphasize(item)}</span>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </div>
+  );
+};
+
+const extractBulletItems = (text?: string | null) => {
+  const { intro, bullets } = parseTextBlocks(text);
+  if (bullets.length) return bullets;
+  if (intro.length > 1) return intro;
+  if (text) return splitSentences(text);
+  return [];
+};
+
+const extractYearSections = (modules?: string | null, durationText?: string | null) => {
+  if (!modules) return [];
+  const normalized = modules.replace(/\r/g, '\n').trim(); // Keep newlines for structure
+  if (!normalized) return [];
+
+  // Regex to find "Year X" or "Stage X" headers
+  // We look for "Year" followed by a number, optionally followed by a colon or newline
+  // Use word boundary \b to match "Year 1" even if inline without punctuation
+  const yearPattern = /\b(?:Year|Stage)\s*(\d+)(?:\s*[:\-])?/gi;
+
+  const sections: { title: string; items: string[] }[] = [];
+  let match: RegExpExecArray | null;
+  const indices: { title: string; start: number; endHeader: number }[] = [];
+
+  while ((match = yearPattern.exec(normalized)) !== null) {
+    indices.push({
+      title: `Year ${match[1]}`,
+      start: match.index,
+      endHeader: match.index + match[0].length
+    });
+  }
+
+  if (!indices.length) {
+    // No explicit years found, treat whole text as one block (or try to parse list)
+    const items = splitSentences(normalized);
+    return items.length ? [{ title: 'Modules', items, yearNum: null }] : [];
+  }
+
+  indices.forEach((entry, idx) => {
+    // Content starts after the header
+    const contentStart = entry.endHeader;
+    // Content ends at the start of the next header, or end of string
+    const contentEnd = idx + 1 < indices.length ? indices[idx + 1].start : normalized.length;
+
+    let content = normalized.slice(contentStart, contentEnd).trim();
+
+    // Clean up leading punctuation often left after "Year 1:"
+    content = content.replace(/^[:\-\s]+/, '');
+
+    if (!content) return;
+
+    const items = splitSentences(content);
+    if (items.length) {
+      sections.push({ title: entry.title, items });
+    }
+  });
+
+  // Merge duplicate years
+  const mergedByYear = new Map<number, string[]>();
+  const extras: { title: string; items: string[] }[] = [];
+
+  const getYearNum = (t: string) => parseInt(t.replace(/\D/g, ''), 10);
+
+  sections.forEach((section) => {
+    const yr = getYearNum(section.title);
+    if (!isNaN(yr)) {
+      const existing = mergedByYear.get(yr) ?? [];
+      mergedByYear.set(yr, [...existing, ...section.items]);
+    } else {
+      extras.push(section);
+    }
+  });
+
+  const mergedSections = [
+    ...Array.from(mergedByYear.entries())
+      .sort((a, b) => a[0] - b[0])
+      .map(([yearNum, items]) => ({
+        title: `Year ${yearNum}`,
+        yearNum,
+        items: Array.from(new Set(items)) // Dedupe items
+      })),
+    ...extras.map(s => ({ ...s, yearNum: null }))
+  ];
+
+  // Logic to filter out years beyond duration (same as before)
+  const parseDurationCount = (text?: string | null) => {
+    if (!text) return null;
+    const m = text.match(/(\d+(?:\.\d+)?)/);
+    return m ? Math.round(parseFloat(m[1])) : null;
+  };
+
+  const maxYears = parseDurationCount(durationText);
+  if (maxYears) {
+    return mergedSections
+      .filter((section) => section.yearNum === null || section.yearNum <= maxYears)
+      .sort((a, b) => {
+        if (a.yearNum === null || b.yearNum === null) return 0;
+        return a.yearNum - b.yearNum;
+      });
+  }
+
+  return mergedSections;
+};
+
+const RequirementRenderer = ({ value }: { value: string }) => {
+  // 1. Split Standard vs Contextual
+  // Some descriptions combine both. We try to split them.
+  const parts = value.split(/Typical Contextual Offer:|Contextual Offer:/i);
+  const standard = parts[0].trim();
+  const contextual = parts.length > 1 ? parts[1].trim() : null;
+
+  const renderList = (text: string, title?: string) => {
+    if (!text) return null;
+
+    // Remove any leading "Typical Offer:" or similar prefixes if they exist redundantly
+    const cleanText = text.replace(/^(Typical Offer:|Entry Requirements:)/i, '').trim();
+
+    // Heuristic for splitting into a list:
+    // 1. Semicolons are strong separators.
+    // 2. If no semicolons, maybe split by sentences if it's long?
+    // 3. Or if it contains bullet-like chars.
+
+    let items: string[] = [];
+
+    if (cleanText.includes(';')) {
+      items = cleanText.split(';').map(s => s.trim()).filter(Boolean);
+    } else if (cleanText.includes('•') || cleanText.includes('- ')) {
+      items = cleanText.split(/[•-]/).map(s => s.trim()).filter(Boolean);
+    } else {
+      // Fallback: If it's a long paragraph (> 150 chars) with multiple sentences,
+      // split by period to make it digestible.
+      // But preserve "A.B." acronyms: Look for period followed by space and capital letter.
+      if (cleanText.length > 150) {
+        items = cleanText.split(/(?<=\.)\s+(?=[A-Z])/).map(s => s.trim()).filter(Boolean);
+      } else {
+        items = [cleanText];
+      }
+    }
+
+    // Clean up items (remove trailing periods inside list items usually looks cleaner, or keep them)
+    // We'll keep them to be safe.
+
+    return (
+      <div className="space-y-3">
+        {title && (
+          <h4 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary/80">
+            <span className="h-px w-4 bg-primary/40"></span>
+            {title}
+          </h4>
+        )}
+
+        {items.length === 1 ? (
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            {emphasize(items[0])}
+          </p>
+        ) : (
+          <ul className="grid gap-3 sm:grid-cols-1">
+            {items.map((item, i) => (
+              <li key={i} className="flex items-start gap-3 rounded-lg border border-border/40 bg-muted/20 p-3 text-sm transition-colors hover:bg-muted/40">
+                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary/70" />
+                <span className="text-foreground/90 leading-relaxed">{emphasize(item)}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <div className="space-y-6">
+      {renderList(standard)}
+      {contextual && (
+        <>
+          {renderList(contextual, 'Contextual Offer')}
+        </>
+      )}
+    </div>
+  );
+};
 
 export default function CoursePage({ params }: { params: { id: string } }) {
   const searchParams = useSearchParams();
-  const [shortlisted, setShortlisted] = useState(false);
-  const [activeSection, setActiveSection] = useState('overview');
-  const [showActionBar, setShowActionBar] = useState(false);
+  const [course, setCourse] = useState<CourseView | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [showAllFlatModules, setShowAllFlatModules] = useState(false);
+  const [expandedYears, setExpandedYears] = useState<Record<string, boolean>>({});
+  type ActionButton = {
+    key: string;
+    href: string;
+    label: string;
+    variant: 'outline' | 'default';
+    className: string;
+    priority: number;
+  };
 
-  const contextSource = searchParams.get('from') === 'search' ? 'search' : searchParams.get('from') === 'university' ? 'university' : 'direct';
-  const course = useMemo(() => {
-    return courseDataset.find((item) => item.id === params.id);
+  const backHref = useMemo(() => {
+    const from = searchParams.get('from');
+    if (from === 'search') return '/university-search/results';
+    if (from === 'university') return '/university-search/search';
+    return '/dashboard';
+  }, [searchParams]);
+
+  const moduleItems = useMemo(() => extractBulletItems(course?.modules), [course?.modules]);
+  const moduleYearSections = useMemo(
+    () => extractYearSections(course?.modules, course?.duration),
+    [course?.modules, course?.duration]
+  );
+  const visibleModules = showAllFlatModules ? moduleItems : moduleItems.slice(0, 8);
+  const hasOutcomes = Boolean(course?.outcomes && (
+    course.outcomes.satisfaction ||
+    course.outcomes.employment ||
+    course.outcomes.outcomes ||
+    course.outcomes.salary
+  ));
+  const actionButtons = useMemo(() => {
+    if (!course) return [];
+
+    const buttons: ActionButton[] = [];
+
+    if (course.applyUrl) {
+      buttons.push({
+        key: 'apply',
+        href: course.applyUrl.trim(),
+        label: 'Apply Now',
+        variant: 'default',
+        className: 'h-12 px-8 shadow-lg shadow-primary/20',
+        priority: 3
+      });
+    }
+
+    if (course.courseUrl) {
+      buttons.push({
+        key: 'visit',
+        href: course.courseUrl.trim(),
+        label: 'Visit Website',
+        variant: 'outline',
+        className: 'h-12 px-6',
+        priority: 2
+      });
+
+      buttons.push({
+        key: 'course',
+        href: course.courseUrl.trim(),
+        label: 'Course Site',
+        variant: 'outline',
+        className: 'h-12 px-8',
+        priority: 1
+      });
+    }
+
+    // Remove duplicate hrefs while keeping the highest priority label (Apply > Visit > Course)
+    const seen = new Map<string, ActionButton>();
+    buttons.forEach((btn) => {
+      const existing = seen.get(btn.href);
+      if (!existing || btn.priority > existing.priority) {
+        seen.set(btn.href, btn);
+      }
+    });
+
+    return Array.from(seen.values());
+  }, [course]);
+
+  useEffect(() => {
+    const fetchCourse = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const supabase = getBrowserSupabaseClient();
+        const { data, error: supabaseError } = await supabase
+          .from('programs')
+          .select(
+            `
+            *,
+            universities (
+              name,
+              city,
+              region,
+              country,
+              metadata
+            )
+          `
+          )
+          .eq('id', params.id)
+          .maybeSingle();
+
+        if (supabaseError) throw supabaseError;
+        if (!data) {
+          setError('Course not found.');
+          return;
+        }
+
+        const uni = (data as Record<string, any>).universities ?? {};
+        const uniMeta = uni && typeof uni.metadata === 'object' && uni.metadata !== null ? (uni.metadata as Record<string, unknown>) : {};
+        const logoUrl =
+          typeof uniMeta.logo_url === 'string'
+            ? (uniMeta.logo_url as string)
+            : typeof uniMeta.logoUrl === 'string'
+              ? (uniMeta.logoUrl as string)
+              : undefined;
+        const location = normalizeLocation(uni.city, uni.region, uni.country);
+        const duration = data.duration || null;
+        const intake = data.start_date || null;
+        const tuition = data.tuition_fees_international || data.tuition_fees_home || null;
+
+        const mapped: CourseView = {
+          id: data.id,
+          title: (data as Record<string, any>).course_name,
+          university: uni.name ?? 'University',
+          logoUrl: logoUrl ?? null,
+          location,
+          level: data.study_level ?? null,
+          duration,
+          intake,
+          campus: data.campus ?? null,
+          tuition,
+          ucasCode: data.ucas_code ?? null,
+          startDate: data.start_date ?? null,
+          summary: data.course_summary ?? null,
+          modules: data.modules ?? null,
+          assessment: data.assessment_methods ?? null,
+          requirements: buildRequirements(data),
+          quickFacts: [],
+          courseUrl: data.provider_course_url ?? null,
+          applyUrl: data.provider_apply_url ?? null,
+          outcomes: buildOutcomes(data),
+          openDays: parseOpenDays((data as Record<string, any>).open_days)
+        };
+
+        mapped.quickFacts = buildQuickFacts(mapped);
+        setCourse(mapped);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Unable to load this course.';
+        setError(message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCourse();
   }, [params.id]);
 
-  const universityHref = course ? `/university-search/university/${course.id}${contextSource === 'search' ? '?from=search' : ''}` : '/university-search/search';
-  const backHref =
-    contextSource === 'search'
-      ? '/university-search/search'
-      : contextSource === 'university'
-        ? universityHref
-        : '/dashboard';
-  const backLabel =
-    contextSource === 'search' ? 'Back to search results' : contextSource === 'university' ? 'Back to university page' : 'Back to dashboard';
+  const [activeTab, setActiveTab] = useState('overview');
 
-  const sectionNav = useMemo(
-    () => [
-      { id: 'overview', label: 'Overview' },
-      { id: 'metrics', label: 'Metrics' },
-      { id: 'requirements', label: 'Requirements' },
-      { id: 'cohort', label: 'Cohort' },
-      { id: 'modules', label: 'Modules' },
-      { id: 'apply', label: 'Apply' }
-    ],
-    []
-  );
-
-  useEffect(() => {
-    if (!course) return;
-    const observedSections = sectionNav.map((item) => document.getElementById(item.id)).filter(Boolean);
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setActiveSection(entry.target.id);
-          }
-        });
-      },
-      { threshold: 0.35, rootMargin: '-80px 0px -40% 0px' }
-    );
-    observedSections.forEach((section) => observer.observe(section!));
-    return () => observer.disconnect();
-  }, [sectionNav, course]);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setShowActionBar(window.scrollY > 320);
-    };
-    handleScroll();
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  if (!course) {
-    return <MissingCourse backHref={backHref} backLabel={backLabel} />;
-  }
-
-  const heroMeta = {
-    title: course.title,
-    university: course.university,
-    location: course.location
-  };
-
-  const metricCards = [
-    { label: 'Acceptance Rate', value: course.acceptanceRate, hint: 'Estimated admissions rate for this cohort.' },
-    { label: 'Guardian Rank', value: course.guardianRank, hint: 'Guardian University Guide rank.' },
-    { label: 'QS Rank', value: course.qsRank, hint: 'QS World University ranking.' },
-    { label: 'Times Rank', value: course.timesRank, hint: 'Times Higher Education ranking.' },
-    { label: 'Student Satisfaction (NSS)', value: `${course.satisfaction}%`, hint: 'National Student Survey satisfaction.' },
-    { label: 'Graduate Employment Rate', value: `${course.employment}%`, hint: 'Employment within 6 months of graduation.' },
-    { label: 'Average Starting Salary', value: course.startingSalary, hint: 'Median starting salary for recent graduates.' },
-    { label: 'Study Abroad Option', value: course.studyAbroad ? 'Yes' : 'No', hint: 'Whether a study abroad term is available.' },
-    { label: 'Top Industries Graduates Enter', value: course.topIndustries, hint: 'Most common industries for alumni.' },
-    { label: 'Placement Year Available?', value: course.placementYear ? 'Yes' : 'No', hint: 'Optional placement/sandwich year.' }
+  const TABS = [
+    { id: 'overview', label: 'Overview', icon: BookOpen },
+    { id: 'curriculum', label: 'Curriculum', icon: Layers },
+    { id: 'requirements', label: 'Requirements', icon: ListChecks },
+    { id: 'assessment', label: 'Assessment', icon: ShieldCheck },
   ];
-
-  const handleNavigate = (id: string) => {
-    const el = document.getElementById(id);
-    if (el) {
-      const offset = 88;
-      const top = el.getBoundingClientRect().top + window.scrollY - offset;
-      window.scrollTo({ top, behavior: 'smooth' });
-    }
-  };
 
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Navbar />
-      <div className="mx-auto max-w-screen-2xl space-y-10 px-4 pb-16 pt-28 md:px-8 lg:px-12">
-        <Breadcrumbs
-          items={[
-            { label: 'Dashboard', href: '/dashboard' },
-            { label: 'Explore', href: '/university-search/search' },
-            { label: course.title }
-          ]}
-          className="text-xs text-muted-foreground"
-        />
-        <ContextChip contextSource={contextSource} />
-        <div id="overview" className="scroll-mt-24">
-          <Hero
-            shortlisted={shortlisted}
-            onShortlist={() => setShortlisted(!shortlisted)}
-            meta={heroMeta}
-            universityHref={universityHref}
-            backHref={backHref}
-            backLabel={backLabel}
-          />
-        </div>
+      <main className="pb-24">
+        {/* Hero Section */}
+        <div className="relative border-b border-border/40 bg-muted/10">
+          <div className="absolute inset-0 bg-gradient-to-b from-background/5 to-background/60" />
+          <div className="relative z-10 w-full px-4 py-12 sm:px-6 lg:px-10">
+            <Breadcrumbs className="mb-8" />
 
-        <InPageNav items={sectionNav} activeId={activeSection} onNavigate={handleNavigate} />
+            <div className="mb-8 flex items-center gap-3">
+              <Button asChild variant="ghost" size="sm" className="-ml-2 text-muted-foreground hover:text-foreground">
+                <Link href={backHref}>
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Back to results
+                </Link>
+              </Button>
+            </div>
 
-        <div className="space-y-8">
-          <div className="grid gap-4 md:grid-cols-2">
-            <QuickActions shortlisted={shortlisted} applyUrl={course.applyUrl} courseUrl={course.courseUrl} onShortlist={() => setShortlisted(!shortlisted)} />
-            <Card className="border-border bg-card shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
-              <CardContent className="space-y-3 p-5">
-                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground">Key facts</p>
-                <div className="space-y-3">
+            {loading ? (
+              <div className="flex items-center gap-3 rounded-2xl border border-border bg-muted/20 px-4 py-3 text-sm text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Loading course…
+              </div>
+            ) : error ? (
+              <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {error}
+              </div>
+            ) : course ? (
+              <div className="space-y-8">
+                <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3">
+                      {course.logoUrl ? (
+                        <div className="relative h-14 w-14 overflow-hidden rounded-xl border border-border bg-black shadow-sm">
+                          <Image
+                            src={course.logoUrl}
+                            alt={`${course.university} logo`}
+                            fill
+                            className="object-contain"
+                            sizes="56px"
+                            unoptimized
+                          />
+                        </div>
+                      ) : (
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                          <GraduationCap className="h-6 w-6" />
+                        </div>
+                      )}
+                      <p className="text-sm font-bold uppercase tracking-widest text-primary">
+                        {course.university}
+                      </p>
+                    </div>
+                    <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
+                      {course.title}
+                    </h1>
+                    <div className="flex flex-wrap items-center gap-6 text-muted-foreground">
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4" />
+                        <span>{course.location}</span>
+                      </div>
+                      {course.ucasCode && (
+                        <div className="flex items-center gap-2">
+                          <ShieldCheck className="h-4 w-4" />
+                          <span>UCAS: {course.ucasCode}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-3 md:justify-end">
+                    {actionButtons.map((action) => (
+                      <Button
+                        key={action.key}
+                        asChild
+                        size="lg"
+                        variant={action.variant}
+                        className={action.className}
+                      >
+                        <Link href={action.href} target="_blank" rel="noreferrer">
+                          {action.label}
+                        </Link>
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Highlights Bar */}
+                <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
                   {course.quickFacts.map((fact) => (
-                    <div key={fact.label} className="flex items-center justify-between text-sm text-muted-foreground">
-                      <span className="text-muted-foreground">{fact.label}</span>
-                      <span className="font-semibold text-foreground">{fact.value}</span>
+                    <div key={fact.label} className="flex flex-col gap-1 rounded-2xl border border-border/60 bg-card/50 p-4 transition-colors hover:bg-card">
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <fact.icon className="h-4 w-4" />
+                        <span className="text-xs font-semibold uppercase tracking-wider">{fact.label}</span>
+                      </div>
+                      <p className="font-semibold text-foreground">{fact.value}</p>
                     </div>
                   ))}
                 </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <Section id="metrics" title="Course key metrics" description="A quick snapshot of outcomes and rankings.">
-            <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-4">
-              {metricCards.map((metric) => (
-                <Card
-                  key={metric.label}
-                  className="border-border bg-card text-foreground shadow-[0_18px_35px_rgba(15,23,42,0.08)] transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_24px_55px_rgba(15,23,42,0.12)]"
-                >
-                  <CardContent className="space-y-2 p-4">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground" title={metric.hint}>
-                      {metric.label}
-                    </p>
-                    <p className="text-lg font-semibold text-foreground">{metric.value}</p>
-                    {metric.label === 'Student Satisfaction (NSS)' ? (
-                      <ProgressBar value={course.satisfaction} />
-                    ) : metric.label === 'Graduate Employment Rate' ? (
-                      <ProgressBar value={course.employment} />
-                    ) : metric.label === 'Study Abroad Option' ? (
-                      <Pill label={course.studyAbroad ? 'Available' : 'No'} />
-                    ) : metric.label === 'Placement Year Available?' ? (
-                      <Pill label={course.placementYear ? 'Yes' : 'No'} />
-                    ) : null}
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </Section>
-
-          <Section id="requirements" title="Entry requirements" description="Understand what you need to apply.">
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {course.entryRequirements.map((item) => (
-                <Card
-                  key={item.label}
-                  className="border-border bg-card text-foreground shadow-[0_18px_35px_rgba(15,23,42,0.06)] transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_22px_48px_rgba(15,23,42,0.1)]"
-                >
-                  <CardContent className="flex items-start gap-4 p-5">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-muted text-foreground shadow-[0_10px_22px_rgba(15,23,42,0.06)]">
-                      <item.icon size={18} />
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-muted-foreground">{item.label}</p>
-                      <p className="text-sm font-semibold text-foreground">{item.value}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </Section>
-
-          <Section id="cohort" title="Cohort information" description="Who you will study with.">
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              {course.cohort.map((item) => (
-                <Card
-                  key={item.label}
-                  className="border-border bg-card text-foreground shadow-[0_18px_35px_rgba(15,23,42,0.08)] transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_24px_55px_rgba(15,23,42,0.12)]"
-                >
-                  <CardContent className="space-y-1 p-4">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">{item.label}</p>
-                    <p className="text-lg font-semibold text-foreground">{item.value}</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </Section>
-
-          <Section id="modules" title="Modules" description="View the curriculum across all years.">
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              {course.modules.map((module, index) => (
-                <Card
-                  key={module.title}
-                  className="border-border bg-card text-foreground shadow-[0_18px_35px_rgba(15,23,42,0.08)] transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_24px_55px_rgba(15,23,42,0.12)]"
-                >
-                  <CardContent className="space-y-3 p-4">
-                    <div className="flex items-center gap-2">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted text-foreground shadow-[0_10px_24px_rgba(15,23,42,0.06)]">
-                        <module.icon size={18} />
-                      </div>
-                      <p className="text-sm font-semibold text-foreground">{module.title}</p>
-                    </div>
-                    <ul className="space-y-2 text-sm text-muted-foreground">
-                      {module.items.map((item) => (
-                        <li key={item} className="flex items-center gap-2">
-                          <ModuleIcon label={item} />
-                          <span>{item}</span>
-                        </li>
-                      ))}
-                    </ul>
-                    {index === course.modules.length - 1 ? <Pill label="Choose 2+" /> : null}
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </Section>
-
-          <Section id="apply" title="Application information" description="Find out how to apply to this program.">
-            <div className="grid gap-6 lg:grid-cols-[1.15fr,1fr]">
-              <Card className="border-border bg-muted/60 text-foreground shadow-[0_20px_55px_rgba(15,23,42,0.1)]">
-                <CardHeader className="border-b border-border/70">
-                  <CardTitle className="text-2xl text-foreground">Application Information</CardTitle>
-                  <p className="text-sm text-muted-foreground">Find out how to apply to this program.</p>
-                </CardHeader>
-                <CardContent className="flex flex-col gap-3 p-6">
-                  <Button
-                    asChild
-                    variant="outline"
-                    className="w-full"
-                  >
-                    <Link
-                      href={course.applyUrl ?? '#'}
-                      aria-disabled={!course.applyUrl}
-                      tabIndex={course.applyUrl ? 0 : -1}
-                      className={!course.applyUrl ? 'pointer-events-none opacity-70' : undefined}
-                    >
-                      Apply Now
-                    </Link>
-                  </Button>
-                  <Button
-                    asChild
-                    className="w-full"
-                  >
-                    <Link
-                      href={course.courseUrl ?? '#'}
-                      aria-disabled={!course.courseUrl}
-                      tabIndex={course.courseUrl ? 0 : -1}
-                      className={!course.courseUrl ? 'pointer-events-none opacity-70' : undefined}
-                    >
-                      Visit Course Page
-                    </Link>
-                  </Button>
-                </CardContent>
-              </Card>
-
-              <div className="space-y-4">
-                {course.applicationCards.map((card) => (
-                  <Card
-                    key={card.title}
-                    className="border-border bg-card text-foreground shadow-[0_16px_35px_rgba(15,23,42,0.08)] transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_22px_48px_rgba(15,23,42,0.1)]"
-                  >
-                    <CardContent className="flex items-start justify-between gap-3 p-5">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <span className="h-2.5 w-2.5 rounded-full bg-primary" />
-                          <p className="text-sm font-semibold text-foreground">{card.title}</p>
-                        </div>
-                        <p className="text-sm text-muted-foreground">{card.body}</p>
-                      <Link
-                        href={card.href}
-                        className="text-xs font-semibold uppercase tracking-[0.28em] text-foreground underline-offset-4 hover:underline"
-                      >
-                        {card.linkLabel}
-                      </Link>
-                    </div>
-                    </CardContent>
-                  </Card>
-                ))}
               </div>
-              <ApplicationChecklist steps={course.applicationChecklist} />
-            </div>
-          </Section>
+            ) : null}
+          </div>
         </div>
-      </div>
-      <StickyActionBar
-        show={showActionBar}
-        shortlisted={shortlisted}
-        onShortlist={() => setShortlisted(!shortlisted)}
-        applyUrl={course.applyUrl}
-        courseUrl={course.courseUrl}
-      />
+
+        {course && !loading && !error && (
+          <>
+            {/* Sticky Tabs Navigation */}
+            <div className="sticky top-0 z-20 border-b border-border/40 bg-background/80 backdrop-blur-md">
+              <div className="w-full px-4 sm:px-6 lg:px-10">
+                <div className="flex gap-1 overflow-x-auto py-2 no-scrollbar">
+                  {TABS.map((tab) => {
+                    const isActive = activeTab === tab.id;
+                    const Icon = tab.icon;
+                    return (
+                      <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                        className={cn(
+                          'flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium transition-all',
+                          isActive
+                            ? 'bg-primary text-primary-foreground shadow-md'
+                            : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                        )}
+                      >
+                        <Icon className="h-4 w-4" />
+                        {tab.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Tab Content */}
+            <div className="w-full px-4 py-12 sm:px-6 lg:px-10 min-h-[500px]">
+
+              {/* Overview Tab */}
+              {activeTab === 'overview' && (
+                <div className="w-full space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+
+                  {/* Summary Text */}
+                  <div className="rounded-3xl border border-border/60 bg-card p-8 shadow-sm">
+                    <h2 className="text-2xl font-bold mb-6">Course Overview</h2>
+                    <div className="prose prose-lg prose-neutral dark:prose-invert max-w-none text-muted-foreground">
+                      {renderRichText(course.summary)}
+                    </div>
+                  </div>
+
+                  {/* Outcomes */}
+                  {hasOutcomes && course.outcomes && (
+                    <div className="rounded-3xl border border-border/60 bg-card p-8 shadow-sm">
+                      <div className="flex items-center justify-between mb-6">
+                        <h2 className="text-2xl font-bold flex items-center gap-2">
+                          <CheckCircle2 className="h-5 w-5 text-primary" />
+                          Outcomes & Satisfaction
+                        </h2>
+                      </div>
+                      <div className="grid gap-4 sm:grid-cols-2">
+                        {course.outcomes.satisfaction && (
+                          <Card className="border-border/60 bg-primary/5 border-primary/20">
+                            <CardHeader className="pb-2">
+                              <CardTitle className="text-xs font-bold text-primary uppercase tracking-wider">Student Satisfaction</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                              <p className="text-lg font-semibold text-foreground">{course.outcomes.satisfaction}</p>
+                            </CardContent>
+                          </Card>
+                        )}
+                        {course.outcomes.employment && (
+                          <Card className="border-border/60">
+                            <CardHeader className="pb-2">
+                              <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Employment</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                              <p className="text-lg font-semibold text-foreground">{course.outcomes.employment}</p>
+                            </CardContent>
+                          </Card>
+                        )}
+                        {course.outcomes.outcomes && (
+                          <Card className="border-border/60">
+                            <CardHeader className="pb-2">
+                              <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Outcomes</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                              <p className="text-lg font-semibold text-foreground">{course.outcomes.outcomes}</p>
+                            </CardContent>
+                          </Card>
+                        )}
+                        {course.outcomes.salary && (
+                          <Card className="border-border/60">
+                            <CardHeader className="pb-2">
+                              <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Average Salary (15m)</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                              <p className="text-lg font-semibold text-foreground">{course.outcomes.salary}</p>
+                            </CardContent>
+                          </Card>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Open Days / Events */}
+                  {course.openDays && course.openDays.length > 0 && (
+                    <div className="rounded-3xl border border-border/60 bg-card p-8 shadow-sm">
+                      <h2 className="text-2xl font-bold mb-4">Upcoming Events</h2>
+                      <div className="space-y-3">
+                        {course.openDays.map((event, idx) => (
+                          <div key={idx} className="flex items-start gap-3 rounded-2xl border border-border/40 bg-muted/20 p-4">
+                            <div className="mt-1 h-2 w-2 rounded-full bg-primary" aria-hidden />
+                            <div className="flex flex-col">
+                              <span className="text-sm font-semibold text-foreground">{event.label}</span>
+                              {event.url ? (
+                                <Link
+                                  href={event.url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="text-xs font-semibold text-primary hover:underline"
+                                >
+                                  View details
+                                </Link>
+                              ) : null}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* At a Glance Dashboard */}
+                  <div className="grid gap-6 md:grid-cols-2">
+
+                    {/* Requirements Preview */}
+                    <div
+                      className="group relative cursor-pointer overflow-hidden rounded-3xl border border-border/60 bg-card p-6 transition-all hover:border-primary/50 hover:shadow-lg"
+                      onClick={() => setActiveTab('requirements')}
+                    >
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-bold flex items-center gap-2">
+                          <ListChecks className="h-5 w-5 text-primary" />
+                          Entry Requirements
+                        </h3>
+                        <ArrowLeft className="h-4 w-4 rotate-180 opacity-0 transition-all group-hover:opacity-100 group-hover:translate-x-1" />
+                      </div>
+                      <div className="space-y-3">
+                        {/* Show top 3 short requirements */}
+                        {course.requirements.slice(0, 3).map((r, i) => (
+                          <div key={i} className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">{r.label}</span>
+                            <span className="font-medium text-foreground truncate max-w-[120px]">{r.value}</span>
+                          </div>
+                        ))}
+                        {course.requirements.length === 0 && <p className="text-sm text-muted-foreground italic">View requirements details...</p>}
+                      </div>
+                      <div className="mt-4 text-xs font-bold text-primary uppercase tracking-wider">View Full Details</div>
+                    </div>
+
+                    {/* Curriculum Preview */}
+                    <div
+                      className="group relative cursor-pointer overflow-hidden rounded-3xl border border-border/60 bg-card p-6 transition-all hover:border-primary/50 hover:shadow-lg"
+                      onClick={() => setActiveTab('curriculum')}
+                    >
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-bold flex items-center gap-2">
+                          <Layers className="h-5 w-5 text-primary" />
+                          Curriculum
+                        </h3>
+                        <ArrowLeft className="h-4 w-4 rotate-180 opacity-0 transition-all group-hover:opacity-100 group-hover:translate-x-1" />
+                      </div>
+                      <div className="space-y-2">
+                        <p className="text-sm text-muted-foreground line-clamp-3">
+                          {course.modules ? course.modules.slice(0, 150) + "..." : "Explore the modules and subjects you will study."}
+                        </p>
+                      </div>
+                      <div className="mt-4 text-xs font-bold text-primary uppercase tracking-wider">View Modules</div>
+                    </div>
+
+                  </div>
+                </div>
+              )}
+
+              {/* Curriculum Tab */}
+              {activeTab === 'curriculum' && (
+                <div className="w-full space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-2xl font-bold">Course Curriculum</h2>
+                    {moduleItems.length > 8 && !moduleYearSections.length && (
+                      <Button
+                        variant="outline"
+                        onClick={() => setShowAllFlatModules(!showAllFlatModules)}
+                      >
+                        {showAllFlatModules ? 'Show Less' : 'Show All'}
+                      </Button>
+                    )}
+                  </div>
+
+                  {moduleYearSections.length ? (
+                    <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+                      {moduleYearSections.map((section, idx) => (
+                        <Card key={idx} className="overflow-hidden border-border/60 bg-card hover:shadow-md transition-all">
+                          <CardHeader className="bg-muted/30 pb-4 border-b border-border/40">
+                            <CardTitle className="flex items-center gap-3 text-lg">
+                              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary text-sm font-bold">
+                                {section.yearNum ?? idx + 1}
+                              </div>
+                              {section.title}
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent className="p-0">
+                            <ul className="divide-y divide-border/40">
+                              {section.items.map((item, i) => (
+                                <li key={i} className="flex items-start gap-3 p-4 hover:bg-muted/20 transition-colors">
+                                  <div className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary/60" />
+                                  <span className="text-sm text-foreground/80 leading-relaxed">{emphasize(item)}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  ) : moduleItems.length ? (
+                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                      {(showAllFlatModules ? moduleItems : moduleItems.slice(0, 9)).map((item, idx) => (
+                        <div key={idx} className="flex items-start gap-3 rounded-2xl border border-border/60 bg-card p-5 hover:border-primary/40 transition-colors">
+                          <div className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+                          <span className="text-sm font-medium text-foreground/90 leading-relaxed">{emphasize(item)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="rounded-3xl border border-border/60 bg-card p-8">
+                      <p className="text-muted-foreground italic">No specific curriculum modules available for this course.</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Requirements Tab */}
+              {activeTab === 'requirements' && (
+                <div className="w-full space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <h2 className="text-2xl font-bold">Entry Requirements</h2>
+
+                  {/* 1. Key Metrics Row (Grades, Points - things that are short) */}
+                  {course.requirements.some(r => ['IB minimum', 'A-Levels', 'UCAS points'].includes(r.label)) && (
+                    <div className="grid gap-4 sm:grid-cols-3">
+                      {course.requirements
+                        .filter(req => ['IB minimum', 'A-Levels', 'UCAS points'].includes(req.label))
+                        .map((req, idx) => {
+                          const separator = req.value.match(/[,;]/);
+                          const splitIndex = separator ? separator.index : -1;
+
+                          const headline = splitIndex !== -1 ? req.value.substring(0, splitIndex) : req.value;
+                          const rawSubtext = splitIndex !== -1 ? req.value.substring(splitIndex! + 1).trim() : null;
+
+                          // Parse subtext into list items
+                          // Split by semicolon or comma to create a clean list
+                          const subtextItems = rawSubtext
+                            ? rawSubtext.split(/;|(?<=\w), /)
+                              .map(s => s.trim())
+                              .filter(s => s.length > 0)
+                            : [];
+
+                          return (
+                            <Card key={idx} className="border-border/60 bg-primary/5 border-primary/20">
+                              <CardHeader className="pb-2">
+                                <CardTitle className="text-xs font-bold text-primary uppercase tracking-wider">
+                                  {req.label}
+                                </CardTitle>
+                              </CardHeader>
+                              <CardContent className="space-y-2">
+                                <div className="text-2xl font-bold text-foreground">
+                                  {headline}
+                                </div>
+                                {subtextItems.length > 0 && (
+                                  <ul className="space-y-1">
+                                    {subtextItems.map((item, i) => (
+                                      <li key={i} className="flex items-start gap-2 text-xs font-medium text-muted-foreground leading-snug">
+                                        <div className="mt-1 h-1 w-1 shrink-0 rounded-full bg-primary/60" />
+                                        <span>{item}</span>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                )}
+                              </CardContent>
+                            </Card>
+                          );
+                        })}
+                    </div>
+                  )}
+
+                  {/* 2. Detailed Requirements (Subjects, Overview, English, etc.) */}
+                  <div className="space-y-4">
+                    {course.requirements
+                      .filter(req => !['IB minimum', 'A-Levels', 'UCAS points'].includes(req.label))
+                      .map((req, idx) => (
+                        <div key={idx} className="rounded-2xl border border-border/60 bg-card overflow-hidden">
+                          <div className="border-b border-border/40 bg-muted/30 px-6 py-4">
+                            <h3 className="font-semibold text-foreground">{req.label}</h3>
+                          </div>
+                          <div className="p-6">
+                            <RequirementRenderer value={req.value} />
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+
+                  {/* Fallback */}
+                  {course.requirements.length === 0 && (
+                    <div className="rounded-3xl border border-border/60 bg-card p-8">
+                      <p className="text-muted-foreground italic">No specific entry requirements listed.</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Assessment Tab */}
+              {activeTab === 'assessment' && (
+                <div className="w-full space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <div className="rounded-3xl border border-border/60 bg-card p-8 shadow-sm">
+                    <h2 className="text-2xl font-bold mb-6">Assessment Methods</h2>
+                    {course.assessment ? (
+                      <div className="prose prose-lg prose-neutral dark:prose-invert max-w-none text-muted-foreground">
+                        {renderRichText(course.assessment)}
+                      </div>
+                    ) : (
+                      <p className="text-muted-foreground italic">No assessment information available.</p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+            </div>
+          </>
+        )}
+      </main>
     </div>
   );
 }
-
-const QuickActions = ({
-  shortlisted,
-  applyUrl,
-  courseUrl,
-  onShortlist
-}: {
-  shortlisted: boolean;
-  applyUrl?: string;
-  courseUrl?: string;
-  onShortlist: () => void;
-}) => {
-  return (
-    <Card className="border-border bg-card text-foreground shadow-[0_22px_50px_rgba(15,23,42,0.12)]">
-      <CardContent className="space-y-4 p-5">
-        <div className="space-y-1">
-          <p className="text-xs font-semibold uppercase tracking-[0.35em] text-muted-foreground">Quick actions</p>
-          <p className="text-sm text-muted-foreground">Keep key links and actions in reach while you scan details.</p>
-        </div>
-        <div className="space-y-3">
-          <Button asChild className="w-full">
-            <Link
-              href={applyUrl ?? '#'}
-              aria-disabled={!applyUrl}
-              tabIndex={applyUrl ? 0 : -1}
-              className={!applyUrl ? 'pointer-events-none opacity-70' : undefined}
-            >
-              Apply now
-            </Link>
-          </Button>
-          <Button asChild variant="outline" className="w-full">
-            <Link
-              href={courseUrl ?? '#'}
-              aria-disabled={!courseUrl}
-              tabIndex={courseUrl ? 0 : -1}
-              className={!courseUrl ? 'pointer-events-none opacity-70' : undefined}
-            >
-              Visit course page
-            </Link>
-          </Button>
-          <Button
-            variant="secondary"
-            className="w-full hover:-translate-y-0.5"
-            onClick={onShortlist}
-            aria-pressed={shortlisted}
-          >
-            {shortlisted ? 'Shortlisted' : 'Add to shortlist'}
-          </Button>
-          <Button variant="soft" className="w-full hover:-translate-y-0.5" asChild>
-            <Link href="#" className="flex items-center justify-center gap-2">
-              <Link2 size={16} />
-              Share course
-            </Link>
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
-  );
-};
-
-const ApplicationChecklist = ({ steps }: { steps: ApplicationStep[] }) => {
-  return (
-    <Card className="border-border bg-card text-foreground shadow-[0_18px_35px_rgba(15,23,42,0.08)]">
-      <CardHeader className="border-b border-border/70">
-        <CardTitle className="text-xl text-foreground">Application checklist</CardTitle>
-        <p className="text-sm text-muted-foreground">Track progress and key deadlines.</p>
-      </CardHeader>
-      <CardContent className="space-y-3 p-5">
-        {steps.map((step) => (
-          <div key={step.label} className="flex items-start justify-between gap-3 rounded-lg border border-border/70 bg-muted/50 p-3">
-            <div className="space-y-1">
-              <p className="text-sm font-semibold text-foreground">{step.label}</p>
-              {step.due ? <p className="text-xs text-muted-foreground">Due: {step.due}</p> : null}
-              {step.href ? (
-                <Link href={step.href} className="text-xs font-semibold uppercase tracking-[0.25em] text-foreground underline-offset-4 hover:underline">
-                  View guidance
-                </Link>
-              ) : null}
-            </div>
-            <StatusPill status={step.status} />
-          </div>
-        ))}
-      </CardContent>
-    </Card>
-  );
-};
-
-const StatusPill = ({ status }: { status: ApplicationStep['status'] }) => {
-  const labelMap: Record<ApplicationStep['status'], string> = {
-    done: 'Done',
-    in_progress: 'In progress',
-    not_started: 'Not started'
-  };
-  const colorMap: Record<ApplicationStep['status'], string> = {
-    done: 'bg-green-100 text-green-800 border-green-200',
-    in_progress: 'bg-amber-100 text-amber-800 border-amber-200',
-    not_started: 'bg-muted text-foreground border-border'
-  };
-  return (
-    <span className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-semibold ${colorMap[status]}`}>
-      {labelMap[status]}
-    </span>
-  );
-};
-
-const InPageNav = ({ items, activeId, onNavigate }: { items: { id: string; label: string }[]; activeId: string; onNavigate: (id: string) => void }) => {
-  return (
-    <nav className="sticky top-20 z-20 -mb-4 overflow-hidden rounded-xl border border-border bg-background/80 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/70">
-      <div className="flex flex-wrap items-center gap-2 px-3 py-2">
-        {items.map((item) => {
-          const isActive = item.id === activeId;
-          return (
-            <button
-              key={item.id}
-              onClick={() => onNavigate(item.id)}
-              className={`rounded-full px-3 py-1 text-sm font-semibold transition ${
-                isActive ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:bg-muted'
-              }`}
-              aria-current={isActive ? 'true' : 'false'}
-            >
-              {item.label}
-            </button>
-          );
-        })}
-      </div>
-    </nav>
-  );
-};
-
-const StickyActionBar = ({
-  show,
-  shortlisted,
-  onShortlist,
-  applyUrl,
-  courseUrl
-}: {
-  show: boolean;
-  shortlisted: boolean;
-  onShortlist: () => void;
-  applyUrl?: string;
-  courseUrl?: string;
-}) => {
-  if (!show) return null;
-  return (
-    <div className="fixed bottom-5 left-1/2 z-30 w-[min(960px,calc(100%-2rem))] -translate-x-1/2 rounded-2xl border border-border bg-background/95 p-3 shadow-[0_20px_60px_rgba(15,23,42,0.2)] backdrop-blur supports-[backdrop-filter]:bg-background/85">
-      <div className="flex flex-wrap items-center gap-3">
-        <Button asChild className="min-w-[160px] flex-1">
-          <Link
-            href={applyUrl ?? '#'}
-            aria-disabled={!applyUrl}
-            tabIndex={applyUrl ? 0 : -1}
-            className={!applyUrl ? 'pointer-events-none opacity-70' : undefined}
-          >
-            Apply now
-          </Link>
-        </Button>
-        <Button asChild variant="outline" className="min-w-[160px] flex-1">
-          <Link
-            href={courseUrl ?? '#'}
-            aria-disabled={!courseUrl}
-            tabIndex={courseUrl ? 0 : -1}
-            className={!courseUrl ? 'pointer-events-none opacity-70' : undefined}
-          >
-            Visit course page
-          </Link>
-        </Button>
-        <Button
-          aria-pressed={shortlisted}
-          onClick={onShortlist}
-          className={`min-w-[130px] ${shortlisted ? 'opacity-90' : ''}`}
-        >
-          {shortlisted ? 'Shortlisted' : 'Add to shortlist'}
-        </Button>
-      </div>
-    </div>
-  );
-};
-
-const ContextChip = ({ contextSource }: { contextSource: string }) => {
-  if (contextSource === 'direct') return null;
-  const label =
-    contextSource === 'search'
-      ? 'Back to search — your filters are saved'
-      : 'Back to university page — your context is saved';
-  return (
-    <div className="inline-flex items-center gap-2 rounded-full border border-border bg-muted px-3 py-1 text-xs font-semibold uppercase tracking-[0.28em] text-muted-foreground">
-      <Globe2 size={14} className="text-muted-foreground" />
-      <span>{label}</span>
-    </div>
-  );
-};
-
-const MissingCourse = ({ backHref, backLabel }: { backHref: string; backLabel: string }) => {
-  return (
-    <div className="min-h-screen bg-background text-foreground">
-      <Navbar />
-      <div className="mx-auto max-w-screen-md space-y-6 px-4 pb-16 pt-28 md:px-8">
-        <Breadcrumbs
-          items={[
-            { label: 'Dashboard', href: '/dashboard' },
-            { label: 'Explore', href: '/university-search/search' },
-            { label: 'Course not found' }
-          ]}
-          className="text-xs text-muted-foreground"
-        />
-        <Card className="border-border bg-card text-foreground shadow-[0_22px_55px_rgba(15,23,42,0.12)]">
-          <CardContent className="space-y-4 p-8 text-center">
-            <div className="inline-flex items-center justify-center rounded-full bg-muted px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">
-              Missing course
-            </div>
-            <h1 className="text-3xl font-semibold text-foreground">We couldn&apos;t find that course</h1>
-            <p className="text-sm text-muted-foreground">
-              The program link may be outdated. Head back to explore other universities or return to your dashboard.
-            </p>
-            <div className="flex flex-wrap justify-center gap-3">
-              <Button asChild size="sm">
-                <Link href={backHref}>{backLabel}</Link>
-              </Button>
-              <Button asChild size="sm" variant="outline">
-                <Link href="/university-search/search">Browse universities</Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
-  );
-};
-
-const ProgressBar = ({ value }: { value: number }) => (
-  <div className="space-y-1">
-    <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-      <span>Score</span>
-      <span className="font-semibold text-foreground">{value}%</span>
-    </div>
-    <div className="h-2 w-full rounded-full bg-muted">
-      <div className="h-full rounded-full bg-primary transition-all duration-300" style={{ width: `${value}%` }} />
-    </div>
-  </div>
-);
-
-const Pill = ({ label }: { label: string }) => (
-  <span className="inline-flex items-center gap-2 rounded-full bg-primary px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.3em] text-primary-foreground">
-    {label}
-  </span>
-);
-
-const ModuleIcon = ({ label }: { label: string }) => {
-  const normalized = label.toLowerCase();
-  if (normalized.includes('programming') || normalized.includes('web')) {
-    return <Laptop size={14} className="text-muted-foreground" />;
-  }
-  if (normalized.includes('data structure') || normalized.includes('data ')) {
-    return <Layers size={14} className="text-muted-foreground" />;
-  }
-  if (normalized.includes('algorithm')) {
-    return <Workflow size={14} className="text-muted-foreground" />;
-  }
-  if (normalized.includes('ml') || normalized.includes('machine learning')) {
-    return <Brain size={14} className="text-muted-foreground" />;
-  }
-  if (normalized.includes('security')) {
-    return <ShieldCheck size={14} className="text-muted-foreground" />;
-  }
-  if (normalized.includes('system')) {
-    return <Code size={14} className="text-muted-foreground" />;
-  }
-  if (normalized.includes('design')) {
-    return <Presentation size={14} className="text-muted-foreground" />;
-  }
-  if (normalized.includes('econom') || normalized.includes('ethics')) {
-    return <BookOpen size={14} className="text-muted-foreground" />;
-  }
-  if (normalized.includes('science')) {
-    return <BarChart3 size={14} className="text-muted-foreground" />;
-  }
-  return <BookOpen size={14} className="text-muted-foreground" />;
-};
-
-const Hero = ({
-  shortlisted,
-  onShortlist,
-  meta,
-  backHref,
-  backLabel,
-  universityHref
-}: {
-  shortlisted: boolean;
-  onShortlist: () => void;
-  meta: { title: string; university: string; location: string };
-  backHref: string;
-  backLabel: string;
-  universityHref: string;
-}) => {
-  return (
-    <Card className="border-border bg-card text-foreground shadow-[0_28px_70px_rgba(15,23,42,0.08)]">
-      <CardContent className="space-y-5 p-6 md:p-8">
-        <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-          <Link
-            href={backHref}
-            className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1 text-xs uppercase tracking-[0.28em] text-muted-foreground transition hover:border-primary/60 hover:bg-muted hover:text-foreground"
-          >
-            <Globe2 size={14} />
-            {backLabel}
-          </Link>
-        </div>
-        <div className="space-y-3">
-          <div className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.35em] text-muted-foreground">
-            <span>Course</span>
-            <span className="text-foreground">Overview</span>
-          </div>
-          <h1 className="text-4xl font-semibold text-foreground md:text-5xl">{meta.title}</h1>
-          <p className="text-lg text-muted-foreground">{meta.university}</p>
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="inline-flex items-center gap-2 rounded-full border border-border bg-muted px-4 py-2 text-sm font-semibold text-foreground shadow-sm">
-              <Globe2 size={16} className="text-muted-foreground" />
-              <span>{meta.location}</span>
-            </div>
-            <div className="flex flex-wrap gap-3">
-              <Button
-                onClick={onShortlist}
-                className={`bg-primary text-primary-foreground shadow-[0_20px_55px_rgba(99,102,241,0.16)] hover:bg-primary/90 ${
-                  shortlisted ? 'opacity-90' : ''
-                }`}
-                aria-pressed={shortlisted}
-                aria-label={shortlisted ? 'Remove from shortlist' : 'Add to shortlist'}
-              >
-                <BookmarkPlus size={16} className="mr-2" />
-                {shortlisted ? 'Shortlisted' : 'Add to Shortlist'}
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap gap-2">
-            <span className="rounded-full border border-border bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">Course</span>
-            <Link
-              href={universityHref}
-              className="rounded-full border border-border bg-background px-4 py-2 text-sm font-semibold text-foreground transition hover:border-primary/60 hover:bg-muted hover:text-foreground"
-            >
-              University
-            </Link>
-          </div>
-          <span className="inline-flex items-center gap-2 rounded-full border border-border bg-muted px-3 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-muted-foreground">
-            <span>Fall 2025</span>
-            <span className="text-foreground">Open</span>
-          </span>
-        </div>
-        <div className="h-[3px] w-full rounded-full bg-gradient-to-r from-primary via-primary/80 to-primary opacity-80" />
-        <p className="text-sm text-muted-foreground">
-          Scan every key signal for this course: rankings, requirements, cohort makeup, modules, and how to apply.
-        </p>
-      </CardContent>
-    </Card>
-  );
-};
-
-const Section = ({ id, title, description, children }: { id?: string; title: string; description: string; children: React.ReactNode }) => (
-  <section id={id} className="scroll-mt-24 space-y-6">
-    <div className="space-y-2">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.35em] text-muted-foreground">{title}</p>
-      <div className="space-y-1">
-        <h2 className="text-3xl font-semibold text-foreground md:text-[34px]">{title}</h2>
-        <p className="text-base text-muted-foreground md:text-lg">{description}</p>
-      </div>
-    </div>
-    <Card className="overflow-hidden rounded-xl border border-border bg-card text-foreground shadow-[0_24px_60px_rgba(15,23,42,0.08)] transition-all duration-300 hover:-translate-y-[2px] hover:shadow-[0_30px_80px_rgba(15,23,42,0.1)]">
-      <div className="h-1 w-full bg-gradient-to-r from-muted via-background to-muted" />
-      <CardContent className="space-y-8 p-6 lg:p-8">{children}</CardContent>
-    </Card>
-  </section>
-);

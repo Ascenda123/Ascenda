@@ -1,25 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createRouteHandlerSupabaseClient } from '@/lib/supabase/server';
-import {
-  rankMatches,
-  type MatchInput,
-  type Program,
-  type University,
-  type ProgramRequirement,
-  type StudentAcademics,
-  type StudentPreferences,
-  type StudentAspirations
-} from '@/lib/matching/engine';
 import { defaultWeights } from '@/lib/matching/config';
-import {
-  buildMatchInput,
-  mapAcademicsRow,
-  mapAspirationsRow,
-  mapPreferencesRow,
-  mapProgramRow,
-  mapRequirementRow,
-  mapUniversityRow
-} from '@/lib/matching/transform';
+import { loadMatchesForProfile } from '@/lib/matching/service';
 
 export async function GET(request: NextRequest) {
   const supabase = createRouteHandlerSupabaseClient();
@@ -49,84 +31,30 @@ export async function GET(request: NextRequest) {
   const weightTotal = weights.eligibility + weights.academicFit + weights.preferenceFit + weights.outcomes;
   const safeWeights = weightTotal > 0 ? weights : defaultWeights;
 
-  const [
-    { data: academicsData, error: academicsError },
-    { data: preferencesData, error: preferencesError },
-    { data: aspirationsData, error: aspirationsError }
-  ] = await Promise.all([
-    supabase.from('student_academics').select('*').eq('profile_id', user.id).single(),
-    supabase.from('student_preferences').select('*').eq('profile_id', user.id).single(),
-    supabase.from('student_aspirations').select('*').eq('profile_id', user.id).single()
-  ]);
+  const matchResult = await loadMatchesForProfile(supabase, user.id, {
+    resultLimit: 20,
+    weights: safeWeights
+  });
 
-  if (academicsError || preferencesError || aspirationsError) {
-    const message = academicsError?.message ?? preferencesError?.message ?? aspirationsError?.message ?? 'Failed to load profile data';
-    return NextResponse.json({ error: message }, { status: 500 });
+  if (matchResult.error) {
+    return NextResponse.json(
+      { error: matchResult.error.message, stage: matchResult.error.stage },
+      { status: 500 }
+    );
   }
 
-  if (!academicsData || !preferencesData || !aspirationsData) {
-    return NextResponse.json({ matches: [] });
+  if (matchResult.missingSections.length > 0) {
+    return NextResponse.json({ matches: [], missingSections: matchResult.missingSections });
   }
 
-  // Transform snake_case DB data to camelCase types
-  const academics: StudentAcademics = mapAcademicsRow(academicsData);
-  const preferences: StudentPreferences = mapPreferencesRow(preferencesData);
-  const aspirations: StudentAspirations = mapAspirationsRow(aspirationsData);
+  const matches = matchResult.matches.map((match) => ({
+    program_id: match.program.id,
+    university_id: match.university.id,
+    score: match.score,
+    breakdown: match.breakdown,
+    blockingReasons: match.blockingReasons,
+    tier: match.tier
+  }));
 
-  const [
-    { data: programsData, error: programsError },
-    { data: universitiesData, error: universitiesError },
-    { data: requirementsData, error: requirementsError }
-  ] = await Promise.all([
-    supabase
-      .from('programs')
-      .select(
-        'id,name,field,level,duration_years,language,mode,intake_months,tuition,currency,url,university_id'
-      ),
-    supabase
-      .from('universities')
-      .select('id,name,country,region,rank_overall,rank_source,acceptance_rate,requires_test'),
-    supabase
-      .from('program_requirements')
-      .select(
-        'program_id,curriculum,min_gpa,min_ib_total,min_sat,min_act,required_subjects,language_tests,other_requirements'
-      )
-  ]);
-
-  if (programsError || universitiesError || requirementsError) {
-    const message = programsError?.message ?? universitiesError?.message ?? requirementsError?.message ?? 'Failed to load catalog data';
-    return NextResponse.json({ error: message }, { status: 500 });
-  }
-
-  if (!programsData || !universitiesData) {
-    return NextResponse.json({ matches: [] });
-  }
-
-  const requirements = (requirementsData || []).map(mapRequirementRow);
-
-  const requirementMap = new Map<string, any>(requirements.map((item: ProgramRequirement) => [item.programId, item]));
-
-  const universityMap = new Map<string, any>(universitiesData.map((u: any): [string, University] => [u.id, mapUniversityRow(u)]));
-
-  const inputs: MatchInput[] = programsData
-    .map((p: any) => {
-      const program = mapProgramRow(p);
-      const university = universityMap.get(program.universityId);
-      return buildMatchInput({
-        academics,
-        preferences,
-        aspirations,
-        program,
-        university,
-        requirement: requirementMap.get(program.id)
-      });
-    })
-    .filter((value: MatchInput | null): value is MatchInput => value !== null)
-    .map((input: MatchInput) => ({
-      ...input,
-      weights: safeWeights
-    }));
-
-  const results = rankMatches(inputs, safeWeights).slice(0, 20);
-  return NextResponse.json({ matches: results });
+  return NextResponse.json({ matches });
 }

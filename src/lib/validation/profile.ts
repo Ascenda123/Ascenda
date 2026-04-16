@@ -41,9 +41,19 @@ export const profileAcademicsSchema = z.object({
   )
 });
 
+const optionalMoney = z.preprocess(
+  (value) => {
+    if (value === '' || value === null || value === undefined) return undefined;
+    if (typeof value === 'number' && Number.isNaN(value)) return undefined;
+    if (typeof value === 'string' && value.trim() === '') return undefined;
+    return value;
+  },
+  z.coerce.number().nonnegative().optional()
+);
+
 export const profilePreferencesSchema = z.object({
-  budgetMin: z.number().min(0),
-  budgetMax: z.number().min(0),
+  budgetMin: optionalMoney,
+  budgetMax: optionalMoney,
   aidNeeded: z.boolean().default(false),
   countries: z.array(z.enum(DESTINATION_COUNTRIES)).min(1, 'Select at least one destination'),
   campusType: z.enum(CAMPUS_TYPE_OPTIONS).optional(),
@@ -51,6 +61,13 @@ export const profilePreferencesSchema = z.object({
   size: z.enum(SIZE_OPTIONS).optional(),
   programLevels: z.array(z.enum(PROGRAM_LEVEL_OPTIONS)).min(1, 'Choose at least one level'),
   delivery: z.enum(DELIVERY_OPTIONS).optional()
+}).refine((data) => {
+  if (data.budgetMin === undefined && data.budgetMax === undefined) return true;
+  if (typeof data.budgetMin !== 'number' || typeof data.budgetMax !== 'number') return false;
+  return data.budgetMax >= data.budgetMin && data.budgetMax > 0;
+}, {
+  path: ['budgetMax'],
+  message: 'Enter a maximum budget that is at least the minimum and greater than zero.'
 });
 
 export const profileAspirationsSchema = z.object({

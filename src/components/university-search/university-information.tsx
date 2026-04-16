@@ -139,7 +139,7 @@ export const UniversityInformation = ({
       name: universityData.university?.name ?? 'University',
       program: universityData.program?.title ?? 'Program',
       stage: 'Researching',
-      fitScore: typeof universityData.statistics?.employmentRate === 'number' ? Math.round(universityData.statistics.employmentRate) : 0,
+      fitScore: typeof universityData.statistics?.employmentRate === 'number' ? Math.round(universityData.statistics.employmentRate) : null,
       nextAction: 'Review university fit and decide next steps.',
       due: 'TBD',
       location: universityData.university?.location ?? undefined
@@ -151,7 +151,7 @@ export const UniversityInformation = ({
     <div
       className={cn(
         'min-h-screen w-full space-y-10 bg-background px-4 pb-12 pt-28 text-foreground md:px-8 lg:px-12',
-        'mx-auto max-w-screen-2xl',
+        'mx-auto w-full max-w-none',
         className
       )}
     >

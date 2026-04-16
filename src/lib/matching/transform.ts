@@ -8,20 +8,45 @@ import type {
   StudentPreferences,
   University
 } from './engine';
+import type { Database } from '../types/database';
+
+type ProgramRowInput = Database['public']['Tables']['programs']['Row'] & {
+  name?: string | null;
+  level?: string | null;
+  duration_years?: number | null;
+  intake_months?: string[] | null;
+  tuition?: number | null;
+  currency?: string | null;
+  url?: string | null;
+  metadata?: Record<string, unknown> | null;
+};
+
+type UniversityRowInput = Database['public']['Tables']['universities']['Row'];
+type RequirementRowInput = Database['public']['Tables']['program_requirements']['Row'];
+type AcademicInputRow = Database['public']['Tables']['student_academic_input']['Row'];
+type LifestyleRow = Database['public']['Tables']['student_lifestyle_preference']['Row'];
+type SubjectRow = Database['public']['Tables']['student_subjects']['Row'];
 
 const ProgramRowSchema = z.object({
   id: z.string(),
-  name: z.string(),
-  field: z.string().nullable().optional(),
+  // Legacy and current naming support
+  course_name: z.string().nullable().optional(),
+  name: z.string().nullable().optional(),
+  study_level: z.string().nullable().optional(),
   level: z.string().nullable().optional(),
-  duration_years: z.number().nullable().optional(),
-  language: z.string().nullable().optional(),
-  mode: z.string().nullable().optional(),
+  duration: z.string().nullable().optional(),
+  duration_years: z.coerce.number().nullable().optional(),
+  start_date: z.string().nullable().optional(),
   intake_months: z.array(z.string()).nullable().optional(),
-  tuition: z.number().nullable().optional(),
+  campus: z.string().nullable().optional(),
+  tuition_fees_international: z.coerce.number().nullable().optional(),
+  tuition_fees_home: z.coerce.number().nullable().optional(),
+  tuition: z.coerce.number().nullable().optional(),
   currency: z.string().nullable().optional(),
+  provider_course_url: z.string().nullable().optional(),
   url: z.string().nullable().optional(),
-  university_id: z.string()
+  university_id: z.string(),
+  metadata: z.record(z.unknown()).nullable().optional()
 });
 
 const UniversityRowSchema = z.object({
@@ -31,69 +56,76 @@ const UniversityRowSchema = z.object({
   region: z.string().nullable().optional(),
   rank_overall: z.number().nullable().optional(),
   rank_source: z.string().nullable().optional(),
-  acceptance_rate: z.number().nullable().optional(),
-  requires_test: z.boolean().nullable().optional()
+  acceptance_rate: z.coerce.number().nullable().optional(),
+  requires_test: z.boolean().nullable().optional(),
+  metadata: z.record(z.unknown()).nullable().optional()
 });
 
 const RequirementRowSchema = z.object({
   program_id: z.string(),
   curriculum: z.string().nullable().optional(),
-  min_gpa: z.number().nullable().optional(),
-  min_ib_total: z.number().nullable().optional(),
-  min_sat: z.number().nullable().optional(),
-  min_act: z.number().nullable().optional(),
+  min_gpa: z.coerce.number().nullable().optional(),
+  min_ib_total: z.coerce.number().nullable().optional(),
+  min_sat: z.coerce.number().nullable().optional(),
+  min_act: z.coerce.number().nullable().optional(),
   required_subjects: z.array(z.string()).nullable().optional(),
   language_tests: z.record(z.string(), z.number()).nullable().optional(),
   other_requirements: z.string().nullable().optional()
 });
 
-const AcademicsRowSchema = z.object({
-  curriculum: z.string().nullable().optional(),
-  gpa: z.number().nullable().optional(),
-  ib_total: z.number().nullable().optional(),
-  sat: z.number().nullable().optional(),
-  act: z.number().nullable().optional(),
-  toefl: z.number().nullable().optional(),
-  ielts: z.number().nullable().optional(),
-  subject_grades: z.array(z.object({
-    subject: z.string(),
-    level: z.string(),
-    score: z.string()
-  })).nullable().optional()
+const AcademicInputSchema = z.object({
+  programme_type: z.string().nullable().optional(),
+  ib_total_points: z.coerce.number().nullable().optional(),
+  english_test_type: z.string().nullable().optional(),
+  english_score_overall: z.coerce.number().nullable().optional(),
+  intended_clusters: z.array(z.string()).nullable().optional()
 });
 
-const PreferencesRowSchema = z.object({
-  budget_min: z.number().nullable().optional(),
-  budget_max: z.number().nullable().optional(),
-  aid_needed: z.boolean().nullable().optional(),
-  countries: z.array(z.string()).nullable().optional(),
-  languages: z.array(z.string()).nullable().optional(),
-  campus_type: z.string().nullable().optional(),
-  setting: z.string().nullable().optional(),
-  size: z.string().nullable().optional(),
-  program_levels: z.array(z.string()).nullable().optional(),
-  delivery: z.string().nullable().optional()
+const LifestyleSchema = z.object({
+  desired_location_type: z.string().nullable().optional(),
+  campus_size: z.string().nullable().optional()
 });
 
-const AspirationsRowSchema = z.object({
-  target_fields: z.array(z.string()).nullable().optional(),
-  job_titles: z.array(z.string()).nullable().optional()
+const SubjectSchema = z.object({
+  subject_name: z.string().nullable().optional(),
+  level: z.string().nullable().optional(),
+  grade_value: z.string().nullable().optional()
 });
 
-export const mapProgramRow = (input: unknown): Program => {
+const CLUSTER_LABELS: Record<string, string> = {
+  computer_science: 'Computer Science',
+  maths: 'Mathematics',
+  engineering: 'Engineering',
+  life_sciences_biochem: 'Life Sciences',
+  medicine_dentistry: 'Medicine',
+  economics_quant: 'Economics',
+  business_non_quant: 'Business',
+  law: 'Law',
+  humanities: 'Humanities',
+  creative: 'Creative Arts'
+};
+
+export const mapProgramRow = (input: ProgramRowInput): Program => {
   const row = ProgramRowSchema.parse(input);
+  const programName = row.course_name ?? row.name ?? 'Program';
+  const level = row.study_level ?? row.level ?? null;
+  const tuition = row.tuition ?? row.tuition_fees_international ?? null;
+  const currency = row.currency ?? null;
+  const intakeMonths = row.intake_months ?? (row.start_date ? [row.start_date] : null);
+  const durationYears = row.duration_years ?? null;
+
   return {
     id: row.id,
-    name: row.name,
-    field: row.field,
-    level: row.level,
-    durationYears: row.duration_years,
-    language: row.language,
-    mode: row.mode,
-    intakeMonths: row.intake_months,
-    tuition: row.tuition,
-    currency: row.currency,
-    url: row.url,
+    name: programName,
+    field: null,
+    level,
+    durationYears,
+    language: null,
+    mode: null,
+    intakeMonths,
+    tuition,
+    currency,
+    url: row.provider_course_url ?? row.url ?? null,
     universityId: row.university_id
   };
 };
@@ -127,41 +159,46 @@ export const mapRequirementRow = (input: unknown): ProgramRequirement => {
   };
 };
 
-export const mapAcademicsRow = (input: unknown): StudentAcademics => {
-  const row = AcademicsRowSchema.parse(input);
+export const mapAcademicsRow = (input: AcademicInputRow, subjects: SubjectRow[] = []): StudentAcademics => {
+  const row = AcademicInputSchema.parse(input);
+  const subjectRows = subjects
+    .map((subject) => SubjectSchema.parse(subject))
+    .filter((subject) => Boolean(subject.subject_name));
+  const englishScore = row.english_score_overall ?? null;
+  const englishType = row.english_test_type?.toUpperCase() ?? null;
+
   return {
-    curriculum: row.curriculum,
-    gpa: row.gpa,
-    ibTotal: row.ib_total,
-    sat: row.sat,
-    act: row.act,
-    toefl: row.toefl,
-    ielts: row.ielts,
-    subjectGrades: row.subject_grades
+    curriculum: row.programme_type ?? null,
+    ibTotal: row.ib_total_points ?? null,
+    toefl: englishType === 'TOEFL' ? englishScore : null,
+    ielts: englishType === 'IELTS' ? englishScore : null,
+    subjectGrades: subjectRows.length
+      ? subjectRows.map((subject) => ({
+        subject: subject.subject_name ?? '',
+        level: subject.level ?? '',
+        score: subject.grade_value ?? ''
+      }))
+      : null
   };
 };
 
-export const mapPreferencesRow = (input: unknown): StudentPreferences => {
-  const row = PreferencesRowSchema.parse(input);
+export const mapPreferencesRow = (input: LifestyleRow | null): StudentPreferences => {
+  if (!input) {
+    return {};
+  }
+  const row = LifestyleSchema.parse(input);
   return {
-    budgetMin: row.budget_min,
-    budgetMax: row.budget_max,
-    aidNeeded: row.aid_needed,
-    countries: row.countries,
-    languages: row.languages,
-    campusType: row.campus_type,
-    setting: row.setting,
-    size: row.size,
-    programLevels: row.program_levels,
-    delivery: row.delivery
+    campusType: row.desired_location_type ?? null,
+    size: row.campus_size ?? null
   };
 };
 
-export const mapAspirationsRow = (input: unknown): StudentAspirations => {
-  const row = AspirationsRowSchema.parse(input);
+export const mapAspirationsRow = (input: AcademicInputRow | null): StudentAspirations => {
+  if (!input) return {};
+  const row = AcademicInputSchema.parse(input);
+  const targets = (row.intended_clusters ?? []).map((cluster) => CLUSTER_LABELS[cluster] ?? cluster);
   return {
-    targetFields: row.target_fields,
-    jobTitles: row.job_titles
+    targetFields: targets
   };
 };
 

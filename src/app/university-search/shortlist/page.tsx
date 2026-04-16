@@ -1,12 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import { useMemo } from 'react';
-import { ArrowUpRight, Clock, MapPin, Sparkles, Target, Trash2 } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { ArrowUpRight, Clock, MapPin, Sparkles, Target, Trash2, GitCompareArrows } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import { useShortlist } from '@/components/university-search/shortlist-store';
+import { ComparisonModal } from '@/components/university-search/ComparisonModal';
+import type { ProgramSearchResult } from '@/components/university-search/types';
 import { cn } from '@/lib/utils';
 
 const stageTone = {
@@ -17,10 +19,28 @@ const stageTone = {
 
 export default function UniversitySearchShortlistPage() {
   const { items, removeItem, ready } = useShortlist();
+  const [isComparisonOpen, setIsComparisonOpen] = useState(false);
+
+  const comparisonItems: ProgramSearchResult[] = useMemo(
+    () =>
+      items.map((item) => ({
+        id: item.id,
+        universityId: item.id,
+        universityName: item.name,
+        programName: item.program ?? 'Program',
+        location: item.location ?? '',
+        fitScore: item.fitScore ?? null,
+        tier: null,
+        highlights: [],
+        requiresTest: null,
+      })),
+    [items]
+  );
 
   const metrics = useMemo(() => {
     const count = items.length;
-    const avgFit = count ? Math.round(items.reduce((sum, item) => sum + item.fitScore, 0) / count) : 0;
+    const scored = items.filter((item) => typeof item.fitScore === 'number') as { fitScore: number }[];
+    const avgFit = scored.length ? Math.round(scored.reduce((sum, item) => sum + item.fitScore, 0) / scored.length) : null;
     return { count, avgFit };
   }, [items]);
 
@@ -45,6 +65,12 @@ export default function UniversitySearchShortlistPage() {
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
+            {items.length >= 2 && (
+              <Button size="sm" onClick={() => setIsComparisonOpen(true)} className="gap-2">
+                <GitCompareArrows className="h-4 w-4" />
+                Compare {items.length} programs
+              </Button>
+            )}
             <Button asChild size="sm" variant="secondary">
               <Link href="/university-search/results">Add more courses</Link>
             </Button>
@@ -71,7 +97,7 @@ export default function UniversitySearchShortlistPage() {
               <Target className="h-5 w-5 text-emerald-500" aria-hidden />
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-semibold text-foreground">{metrics.avgFit}%</p>
+              <p className="text-3xl font-semibold text-foreground">{metrics.avgFit !== null ? `${metrics.avgFit}%` : 'N/A'}</p>
               <p className="text-xs text-muted-foreground">Across shortlisted programs</p>
             </CardContent>
           </Card>
@@ -82,7 +108,11 @@ export default function UniversitySearchShortlistPage() {
             </CardHeader>
             <CardContent>
               <p className="text-3xl font-semibold text-foreground">
-                {items[0]?.due ? items[0].due : 'Set due dates'}
+                {items.reduce<string | null>((earliest, item) => {
+                  if (!item.due) return earliest;
+                  if (!earliest) return item.due;
+                  return item.due < earliest ? item.due : earliest;
+                }, null) ?? 'Set due dates'}
               </p>
               <p className="text-xs text-muted-foreground">Use next actions to keep momentum</p>
             </CardContent>
@@ -131,25 +161,23 @@ export default function UniversitySearchShortlistPage() {
                       <p className="text-sm text-muted-foreground">{item.program}</p>
                     </div>
                     <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-900">
-                      {item.fitScore}% fit
+                      {typeof item.fitScore === 'number' ? `${Math.round(item.fitScore)}% fit` : 'Fit TBD'}
                     </span>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
                     <span
                       className={cn(
-                        'rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:ring-offset-2',
+                        'rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em]',
                         stageTone[item.stage as keyof typeof stageTone] ?? 'bg-muted text-foreground border-border'
                       )}
-                      role="switch"
-                      aria-checked
-                      tabIndex={0}
-                      aria-label={`Stage ${item.stage}`}
+                      role="status"
+                      aria-label={`Stage: ${item.stage ?? 'Researching'}`}
                     >
-                      {item.stage}
+                      {item.stage ?? 'Researching'}
                     </span>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <Clock className="h-4 w-4 text-muted-foreground" aria-hidden />
-                      <span>{item.due}</span>
+                      <span>{item.due ?? 'Set a date'}</span>
                     </div>
                   </div>
                 </CardHeader>
@@ -157,7 +185,7 @@ export default function UniversitySearchShortlistPage() {
                 <CardContent className="space-y-3 pt-0">
                   <div className="rounded-2xl bg-muted/60 p-4">
                     <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Next action</p>
-                    <p className="mt-1 text-sm text-foreground">{item.nextAction}</p>
+                    <p className="mt-1 text-sm text-foreground">{item.nextAction ?? 'Add a next action to keep momentum.'}</p>
                   </div>
                 </CardContent>
 
@@ -189,6 +217,14 @@ export default function UniversitySearchShortlistPage() {
           </div>
         )}
       </section>
+
+      <ComparisonModal
+        isOpen={isComparisonOpen}
+        onClose={() => setIsComparisonOpen(false)}
+        universities={comparisonItems}
+        onRemove={(id) => removeItem(id)}
+        maxItems={5}
+      />
     </div>
   );
 }

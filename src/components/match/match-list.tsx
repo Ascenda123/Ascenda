@@ -1,79 +1,68 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { UniversityCard } from '@/components/university-card';
-import { FilterBar } from '@/components/university-search/FilterBar';
-import type { MatchTier } from '@/lib/matching/engine';
+import type { MatchTier } from '@/lib/matching/match-tier';
 import { cn } from '@/lib/utils';
-import { useShortlist } from '@/components/university-search/shortlist-store';
-
-export interface EnrichedMatch {
-  program: {
-    id: string;
-    name: string;
-    field?: string | null;
-    level?: string | null;
-    language?: string | null;
-    mode?: string | null;
-    tuition?: number | null;
-    currency?: string | null;
-    url?: string | null;
-  };
-  university: {
-    id: string;
-    name: string;
-    country: string;
-    rank_overall?: number | null;
-    rank_source?: string | null;
-    requiresTest?: boolean | null;
-  };
-  score: number;
-  breakdown: {
-    eligibility: number;
-    academicFit: number;
-    preferenceFit: number;
-    outcomes: number;
-  };
-  blockingReasons: string[];
-  tier: MatchTier;
-}
+import { Grid, LayoutList, ChevronDown, Info } from 'lucide-react';
+import type { EnrichedMatch } from '@/lib/matching/types';
+import { MATCHES_TEXT } from '@/lib/constants/text';
+import { CompareBar } from '@/components/university-search/CompareBar';
+import { ComparisonModal } from '@/components/university-search/ComparisonModal';
+import type { ProgramSearchResult } from '@/components/university-search/types';
 
 interface MatchListProps {
   matches: EnrichedMatch[];
 }
 
 const TIER_ORDER: MatchTier[] = ['Reach', 'Match', 'Safe'];
-const TIER_DESCRIPTIONS: Record<MatchTier, string> = {
-  Reach: 'Highly selective universities that stretch your profile.',
-  Match: 'Programs that align closely with your academic and preference fit.',
-  Safe: 'Comfortable options where you exceed the entry expectations.'
+const TIER_DESCRIPTIONS: Record<MatchTier, string> = MATCHES_TEXT.tierDescriptions;
+
+const INITIAL_PER_TIER = 6;
+const EXPAND_STEP = 12;
+const MAX_PER_UNIVERSITY = 3;
+const MAX_COMPARE_ITEMS = 5;
+
+const tierCardVariants = {
+  hidden: { opacity: 0, y: 16 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: 'easeOut' as any } }
+};
+
+const cardVariants = {
+  hidden: { opacity: 0, y: 12 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.3, ease: 'easeOut' as any } }
+};
+
+/** Deduplicate per-university, preserving sort order. */
+const dedupeByUniversity = (items: EnrichedMatch[], maxPerUni: number): EnrichedMatch[] => {
+  const uniCounts = new Map<string, number>();
+  const out: EnrichedMatch[] = [];
+  for (const item of items) {
+    const key = item.university.id || item.university.name;
+    const count = uniCounts.get(key) ?? 0;
+    if (count >= maxPerUni) continue;
+    uniCounts.set(key, count + 1);
+    out.push(item);
+  }
+  return out;
 };
 
 export const MatchList = ({ matches }: MatchListProps) => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedTiers, setSelectedTiers] = useState<MatchTier[]>(['Reach', 'Match', 'Safe']);
+  const [selectedTier, setSelectedTier] = useState<MatchTier | 'All'>('All');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [quickFilters, setQuickFilters] = useState({
-    budgetFriendly: false,
-    englishOnly: false,
-    testOptional: false
+  const [selectedForComparison, setSelectedForComparison] = useState<ProgramSearchResult[]>([]);
+  const [isComparisonOpen, setIsComparisonOpen] = useState(false);
+  const [tierLimits, setTierLimits] = useState<Record<MatchTier, number>>({
+    Reach: INITIAL_PER_TIER,
+    Match: INITIAL_PER_TIER,
+    Safe: INITIAL_PER_TIER
   });
 
-  const { items: shortlist, addItem, removeItem } = useShortlist();
-
-  const filtered = useMemo(() => {
-    const normalizedQuery = searchQuery.toLowerCase();
-    return matches.filter((match) => {
-      const matchesSearch =
-        !normalizedQuery ||
-        `${match.program.name} ${match.university.name} ${match.university.country}`.toLowerCase().includes(normalizedQuery);
-      const matchesTier = selectedTiers.includes(match.tier);
-      const meetsBudget = !quickFilters.budgetFriendly || (match.program.tuition ?? Infinity) <= 40000;
-      const meetsLanguage = !quickFilters.englishOnly || (match.program.language ?? '').toLowerCase().includes('english');
-      const meetsTesting = !quickFilters.testOptional || match.university.requiresTest === false;
-      return matchesSearch && matchesTier && meetsBudget && meetsLanguage && meetsTesting;
-    });
-  }, [matches, searchQuery, selectedTiers, quickFilters]);
+  const filteredMatches = useMemo(() => {
+    if (selectedTier === 'All') return matches;
+    return matches.filter((m) => m.tier === selectedTier);
+  }, [matches, selectedTier]);
 
   const tierGroups = useMemo(() => {
     const accumulator: Record<MatchTier, EnrichedMatch[]> = {
@@ -81,110 +70,242 @@ export const MatchList = ({ matches }: MatchListProps) => {
       Match: [],
       Safe: []
     };
-    filtered.forEach((match) => {
+    filteredMatches.forEach((match) => {
       accumulator[match.tier].push(match);
     });
-    return TIER_ORDER.map((tier) => ({ tier, matches: accumulator[tier] }));
-  }, [filtered]);
+    return TIER_ORDER.map((tier) => {
+      const all = dedupeByUniversity(accumulator[tier], MAX_PER_UNIVERSITY);
+      const visible = all.slice(0, tierLimits[tier]);
+      return {
+        tier,
+        visible,
+        totalDeduped: all.length,
+        totalRaw: accumulator[tier].length,
+        hasMore: all.length > tierLimits[tier]
+      };
+    });
+  }, [filteredMatches, tierLimits]);
 
-  const handleToggleShortlist = (match: EnrichedMatch) => {
-    const isShortlisted = shortlist.some((item) => item.id === match.program.id);
-    if (isShortlisted) {
-      removeItem(match.program.id);
-    } else {
-      addItem({
+  const handleShowMore = useCallback((tier: MatchTier) => {
+    setTierLimits((prev) => ({
+      ...prev,
+      [tier]: prev[tier] + EXPAND_STEP
+    }));
+  }, []);
+
+  const handleToggleSelect = useCallback((match: EnrichedMatch) => {
+    setSelectedForComparison((prev) => {
+      const isSelected = prev.some((item) => item.id === match.program.id);
+      if (isSelected) {
+        return prev.filter((item) => item.id !== match.program.id);
+      }
+      if (prev.length >= MAX_COMPARE_ITEMS) {
+        return prev;
+      }
+
+      const nextItem: ProgramSearchResult = {
         id: match.program.id,
-        name: match.university.name,
-        program: match.program.name,
-        stage: 'Researching',
+        universityId: match.university.id,
+        universityName: match.university.name,
+        programName: match.program.name,
+        location: match.university.country,
         fitScore: match.score,
-        nextAction: 'Review program details',
-        due: 'TBD',
-        location: match.university.country
-      });
-    }
-  };
+        tier: match.tier,
+        highlights: [match.program.level ?? 'Program', match.program.language ?? 'English'].filter(Boolean),
+        requiresTest: match.university.requiresTest ?? null
+      };
+
+      return [...prev, nextItem];
+    });
+  }, []);
+
+  const totalShown = tierGroups.reduce((sum, g) => sum + g.visible.length, 0);
 
   return (
-    <div className="space-y-8">
-      <FilterBar
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        selectedTiers={selectedTiers}
-        onTierChange={(tier) => {
-          setSelectedTiers((prev) =>
-            prev.includes(tier) ? prev.filter((t) => t !== tier) : [...prev, tier]
-          );
-        }}
-        viewMode={viewMode}
-        onViewModeChange={setViewMode}
-        resultCount={filtered.length}
-        quickFilters={quickFilters}
-        onQuickFilterChange={(key) =>
-          setQuickFilters((prev) => ({
-            ...prev,
-            [key]: !prev[key]
-          }))
-        }
-      />
+    <div className="space-y-8 pb-24">
+      <div className="surface-toolbar flex flex-wrap items-center justify-between gap-3">
+        <div className="relative z-10 flex flex-col gap-1">
+          <p className="text-[11px] uppercase tracking-[0.35em] text-muted-foreground">
+            {MATCHES_TEXT.list.headerEyebrow}
+          </p>
+          <p className="text-sm text-muted-foreground">
+            {totalShown} of {matches.length} program{matches.length === 1 ? '' : 's'} ranked by admission probability
+          </p>
+          <div className="flex items-center gap-1.5 mt-1">
+            <Info className="h-3 w-3 text-muted-foreground/60 shrink-0" />
+            <p className="text-[11px] text-muted-foreground/80">
+              <span className="font-semibold text-rose-500">Reach</span>{' '}{'<'}30% admission
+              {' \u00B7 '}
+              <span className="font-semibold text-amber-500">Match</span> 30-60%
+              {' \u00B7 '}
+              <span className="font-semibold text-emerald-500">Safe</span>{' '}{'>'} 60%
+            </p>
+          </div>
+        </div>
+        <div className="relative z-10 flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-1 rounded-2xl border border-border/70 bg-background/80 p-1.5 shadow-sm">
+            {(['All', ...TIER_ORDER] as const).map((tier) => (
+              <button
+                key={tier}
+                onClick={() => setSelectedTier(tier)}
+                aria-pressed={selectedTier === tier}
+                className={cn(
+                  'rounded-xl px-3 py-1.5 text-xs font-medium capitalize transition-all',
+                  selectedTier === tier
+                    ? 'bg-primary text-primary-foreground shadow-[0_12px_24px_-14px_rgba(79,70,229,0.8)]'
+                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                )}
+              >
+                {tier}
+              </button>
+            ))}
+          </div>
+          <div className="flex items-center gap-1 rounded-2xl border border-border/70 bg-background/80 p-1.5 shadow-sm">
+            <button
+              onClick={() => setViewMode('grid')}
+              aria-pressed={viewMode === 'grid'}
+              className={cn(
+                'flex h-8 w-8 items-center justify-center rounded-xl transition-all',
+                viewMode === 'grid'
+                  ? 'bg-primary/10 text-primary shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+              aria-label="Grid view"
+            >
+              <Grid className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              aria-pressed={viewMode === 'list'}
+              className={cn(
+                'flex h-8 w-8 items-center justify-center rounded-xl transition-all',
+                viewMode === 'list'
+                  ? 'bg-primary/10 text-primary shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+              aria-label="List view"
+            >
+              <LayoutList className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      </div>
 
       <section className="space-y-6">
-        {filtered.length === 0 ? (
+        {matches.length === 0 ? (
           <div className="rounded-[28px] border border-dashed border-border bg-muted/60 p-10 text-center text-muted-foreground">
-            No matches found. Try adjusting your filters.
+            {MATCHES_TEXT.list.noResults}
           </div>
         ) : (
-          tierGroups.map(({ tier, matches }) =>
-            matches.length ? (
-              <div
+          tierGroups.map(({ tier, visible, totalDeduped, hasMore }) =>
+            (selectedTier !== 'All' || totalDeduped > 0) ? (
+              <motion.div
                 key={tier}
-                className="space-y-5 rounded-[32px] border border-border bg-card p-6 shadow-[0_24px_50px_rgba(15,23,42,0.08)] transition-colors"
+                className="surface-stage space-y-5"
+                variants={tierCardVariants}
+                initial="hidden"
+                whileInView="show"
+                viewport={{ once: true, margin: '-80px' }}
               >
                 <div className="flex flex-col gap-2 border-b border-border pb-3">
                   <div className="flex items-center justify-between gap-4">
                     <p className="text-xs uppercase tracking-[0.35em] text-muted-foreground">Tier</p>
-                    <span className="rounded-full border border-border bg-muted px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-foreground">
+                    <span className="surface-chip uppercase tracking-[0.3em]">
                       {tier}
                     </span>
                   </div>
                   <div className="flex flex-col gap-1">
-                    <h3 className="text-2xl font-semibold text-foreground">{tier} programs</h3>
+                    <h3 className="text-2xl font-semibold text-foreground">
+                      {tier} programs
+                      <span className="ml-2 text-base font-normal text-muted-foreground">
+                        ({totalDeduped})
+                      </span>
+                    </h3>
                     <p className="text-sm text-muted-foreground">{TIER_DESCRIPTIONS[tier]}</p>
                   </div>
                 </div>
 
-                <div
-                  className={cn(
-                    'grid gap-6',
-                    viewMode === 'grid'
-                      ? 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3'
-                      : 'grid-cols-1'
-                  )}
-                >
-                  {matches.map((match) => (
-                    <UniversityCard
-                      key={match.program.id}
-                      id={match.program.id}
-                      name={match.university.name}
-                      program={match.program.name}
-                      location={match.university.country}
-                      fitScore={match.score}
-                      tier={match.tier}
-                      highlights={[
-                        match.program.level ?? 'Program',
-                        match.program.language ?? 'English'
-                      ].filter(Boolean)}
-                      variant={viewMode === 'list' ? 'compact' : 'default'}
-                      isShortlisted={shortlist.some((item) => item.id === match.program.id)}
-                      onToggleShortlist={() => handleToggleShortlist(match)}
-                    />
-                  ))}
-                </div>
-              </div>
+                {visible.length ? (
+                  <>
+                    <div
+                      className={cn(
+                        'grid gap-6',
+                        viewMode === 'grid'
+                          ? 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-3'
+                          : 'grid-cols-1'
+                      )}
+                    >
+                      <AnimatePresence initial={false}>
+                      {visible.map((match) => (
+                        <motion.div
+                          key={match.program.id}
+                          variants={cardVariants}
+                          initial="hidden"
+                          animate="show"
+                          layout
+                        >
+                          <UniversityCard
+                            id={match.program.id}
+                            name={match.university.name}
+                            program={match.program.name}
+                            location={match.university.country}
+                            fitScore={match.score}
+                            tier={match.tier}
+                            reasons={match.blockingReasons}
+                            highlights={[
+                              match.program.field ?? match.program.level ?? 'Program',
+                              match.program.tuition != null
+                                ? `${match.program.currency ?? 'GBP'} ${Math.round(match.program.tuition).toLocaleString()}/yr`
+                                : null,
+                              match.program.language && match.program.language !== 'English' ? match.program.language : null
+                            ].filter((h): h is string => h != null)}
+                            variant={viewMode === 'list' ? 'compact' : 'default'}
+                            trackingLabelVariant="planner"
+                            isSelected={selectedForComparison.some((item) => item.id === match.program.id)}
+                            onToggleSelect={() => handleToggleSelect(match)}
+                          />
+                        </motion.div>
+                      ))}
+                      </AnimatePresence>
+                    </div>
+                    {hasMore && (
+                      <div className="flex justify-center pt-4">
+                        <button
+                          onClick={() => handleShowMore(tier)}
+                          className="group flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-md transition-all hover:-translate-y-0.5 hover:shadow-lg"
+                        >
+                          Show {Math.min(EXPAND_STEP, totalDeduped - tierLimits[tier])} more {tier.toLowerCase()} programs
+                          <ChevronDown className="h-4 w-4 transition-transform group-hover:translate-y-0.5" />
+                        </button>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="rounded-2xl border border-dashed border-border bg-muted/40 px-4 py-6 text-sm text-muted-foreground">
+                    No programs in this tier yet.
+                  </div>
+                )}
+              </motion.div>
             ) : null
           )
         )}
       </section>
+
+      <CompareBar
+        selectedItems={selectedForComparison}
+        onClear={() => setSelectedForComparison([])}
+        onRemove={(id) => setSelectedForComparison((prev) => prev.filter((item) => item.id !== id))}
+        onCompare={() => setIsComparisonOpen(true)}
+        maxItems={MAX_COMPARE_ITEMS}
+      />
+
+      <ComparisonModal
+        isOpen={isComparisonOpen}
+        onClose={() => setIsComparisonOpen(false)}
+        universities={selectedForComparison}
+        onRemove={(id) => setSelectedForComparison((prev) => prev.filter((item) => item.id !== id))}
+        maxItems={MAX_COMPARE_ITEMS}
+      />
     </div>
   );
 };

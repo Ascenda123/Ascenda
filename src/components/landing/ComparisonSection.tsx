@@ -1,7 +1,9 @@
 'use client';
 
-import { motion, type Variants } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
+import { fadeIn } from '@/lib/motion';
 import { cn } from '@/lib/utils';
+import { X, Check } from 'lucide-react';
 
 const comparisons = [
     {
@@ -40,121 +42,111 @@ const comparisonPairs = comparisons[0].bullets.map((bullet, index) => {
     };
 });
 
-const fadeIn: Variants = {
-    hidden: { opacity: 0, y: 16 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: 'easeOut' } }
-};
-
 export function ComparisonSection() {
+    const shouldReduceMotion = useReducedMotion();
 
     return (
-        <motion.section
-            className="mt-16"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.3 }}
-            variants={fadeIn}
-        >
-            <div
-                className={cn(
-                    'relative overflow-hidden rounded-[30px] text-foreground transition-colors',
-                    'border border-border bg-card shadow-[0_18px_45px_rgba(15,23,42,0.08)]',
-                    'dark:bg-card/80 dark:shadow-2xl'
-                )}
+        <section className="section-fade w-full bg-secondary/40 py-24 sm:py-32">
+            <motion.div
+                className="max-w-7xl mx-auto px-6"
+                initial={shouldReduceMotion ? false : 'hidden'}
+                whileInView={shouldReduceMotion ? undefined : 'visible'}
+                viewport={{ once: true, amount: 0.2 }}
+                variants={fadeIn}
             >
-                <div className="pointer-events-none absolute inset-0 opacity-20">
-                    <div
-                        className={cn(
-                            'h-full w-full',
-                            'bg-[radial-gradient(circle_at_top,_rgba(99,102,241,0.15),_transparent_55%)]',
-                            'dark:bg-[radial-gradient(circle_at_top,_var(--accent),_transparent_60%)]'
-                        )}
-                    />
-                </div>
-                <div className="relative p-6 sm:p-10">
-                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                        <div>
-                            <p className="text-xs uppercase tracking-[0.4em] text-accent">With & without Ascenda</p>
-                            <h2 className="text-3xl font-heading font-semibold text-foreground">Same student. Different outcome.</h2>
-                            <p className="mt-2 text-sm text-muted-foreground">
-                                Feel the delta between chaos and clarity, each row pairs the old grind with the Ascenda way.
-                            </p>
-                        </div>
-                        <div className="flex flex-wrap gap-4 text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground">
-                            <span className="flex items-center gap-2">
-                                <span className="h-2 w-2 rounded-full bg-destructive" />
-                                {comparisons[0].title}
-                            </span>
-                            <span className="flex items-center gap-2">
-                                <span className="h-2 w-2 rounded-full bg-emerald-400" />
-                                {comparisons[1].title}
-                            </span>
-                        </div>
+                <div
+                    className={cn(
+                        'relative overflow-hidden rounded-3xl text-foreground',
+                        'border border-border bg-card shadow-xl',
+                        'dark:bg-card dark:shadow-lg'
+                    )}
+                >
+                    {/* Background gradient */}
+                    <div className="pointer-events-none absolute inset-0 opacity-30">
+                        <div className="h-full w-full bg-[radial-gradient(ellipse_at_top,_rgba(99,102,241,0.12),_transparent_55%)] dark:bg-[radial-gradient(ellipse_at_top,_rgba(99,102,241,0.08),_transparent_60%)]" />
                     </div>
-                    <div className="mt-10 space-y-6">
-                        {comparisonPairs.map((pair, index) => (
-                            <div
-                                key={`${pair.without.headline}-${pair.with.headline}-${index}`}
-                                className="grid items-center gap-4 md:grid-cols-[1fr_auto_1fr]"
-                            >
-                                <div
-                                    className={cn(
-                                        'rounded-[24px] p-5 transition-colors',
-                                        'border border-border bg-muted/50 shadow-sm',
-                                        'dark:bg-card/70'
-                                    )}
-                                >
-                                    <p className="text-xs font-semibold uppercase tracking-[0.4em] text-destructive">
-                                        {comparisons[0].title}
-                                    </p>
-                                    <h3 className="mt-3 text-lg font-semibold text-foreground">{pair.without.headline}</h3>
-                                    {pair.without.detail && <p className="mt-1 text-sm text-muted-foreground">{pair.without.detail}</p>}
-                                </div>
-                                <div className="relative flex flex-col items-center gap-2">
-                                    {index !== 0 && (
-                                        <span
-                                            className={cn(
-                                                'hidden h-8 w-px md:block',
-                                                'bg-border/80 dark:bg-muted/60'
-                                            )}
-                                        />
-                                    )}
-                                    <span
-                                        className={cn(
-                                            'flex h-12 w-12 items-center justify-center rounded-full text-[0.65rem] font-semibold uppercase tracking-[0.3em] text-muted-foreground transition-colors',
-                                            'border border-border bg-card',
-                                            'dark:bg-card/70'
-                                        )}
-                                    >
-                                        vs
-                                    </span>
-                                    {index !== comparisonPairs.length - 1 && (
-                                        <span
-                                            className={cn(
-                                                'hidden h-8 w-px md:block',
-                                                'bg-border/80 dark:bg-muted/60'
-                                            )}
-                                        />
-                                    )}
-                                </div>
-                                <div
-                                    className={cn(
-                                        'rounded-[24px] p-5 text-foreground transition-colors',
-                                        'border border-emerald-500/25 bg-emerald-50/80 shadow-[0_12px_30px_rgba(16,185,129,0.2)]',
-                                        'dark:border-emerald-500/20 dark:bg-emerald-500/5 dark:shadow-lg'
-                                    )}
-                                >
-                                    <p className="text-xs font-semibold uppercase tracking-[0.4em] text-emerald-400">
-                                        {comparisons[1].title}
-                                    </p>
-                                    <h3 className="mt-3 text-lg font-semibold">{pair.with.headline}</h3>
-                                    {pair.with.detail && <p className="mt-1 text-sm text-muted-foreground">{pair.with.detail}</p>}
-                                </div>
+
+                    <div className="relative p-6 sm:p-10">
+                        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-10">
+                            <div className="space-y-2">
+                                <p className="text-xs uppercase tracking-[0.4em] text-primary font-semibold">With & without Ascenda</p>
+                                <h2 className="text-3xl font-heading font-bold text-foreground">Same student. Different outcome.</h2>
+                                <p className="text-sm text-muted-foreground max-w-lg">
+                                    Feel the delta between chaos and clarity. Each row pairs the old grind with the Ascenda way.
+                                </p>
                             </div>
-                        ))}
+                            <div className="flex flex-wrap gap-4 text-xs font-semibold uppercase tracking-[0.25em] text-muted-foreground">
+                                <span className="flex items-center gap-2">
+                                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-rose-500/10">
+                                        <X className="h-3 w-3 text-rose-500" />
+                                    </span>
+                                    {comparisons[0].title}
+                                </span>
+                                <span className="flex items-center gap-2">
+                                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500/10">
+                                        <Check className="h-3 w-3 text-emerald-500" />
+                                    </span>
+                                    {comparisons[1].title}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className="space-y-5">
+                            {comparisonPairs.map((pair, index) => (
+                                <motion.div
+                                    key={`${pair.without.headline}-${pair.with.headline}-${index}`}
+                                    className="grid items-stretch gap-4 md:grid-cols-[1fr_auto_1fr]"
+                                    initial={shouldReduceMotion ? false : { opacity: 0, y: 12 }}
+                                    whileInView={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
+                                    viewport={{ once: true, amount: 0.2 }}
+                                    transition={{ duration: 0.4, delay: index * 0.08 }}
+                                >
+                                    {/* Without card */}
+                                    <div className="group rounded-2xl p-5 border border-border/60 bg-muted/30 transition-all duration-300 hover:bg-muted/50 dark:bg-muted/10">
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-rose-500/10">
+                                                <X className="h-3 w-3 text-rose-500" />
+                                            </span>
+                                            <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-rose-500">
+                                                {comparisons[0].title}
+                                            </p>
+                                        </div>
+                                        <h3 className="text-[15px] font-semibold text-foreground">{pair.without.headline}</h3>
+                                        {pair.without.detail && <p className="mt-1 text-sm text-muted-foreground">{pair.without.detail}</p>}
+                                    </div>
+
+                                    {/* VS divider */}
+                                    <div className="relative flex flex-col items-center justify-center gap-1">
+                                        {index !== 0 && (
+                                            <span className="hidden h-4 w-px md:block bg-border/60" />
+                                        )}
+                                        <span className="flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground shadow-sm">
+                                            vs
+                                        </span>
+                                        {index !== comparisonPairs.length - 1 && (
+                                            <span className="hidden h-4 w-px md:block bg-border/60" />
+                                        )}
+                                    </div>
+
+                                    {/* With card */}
+                                    <div className="group rounded-2xl p-5 border border-emerald-500/20 bg-emerald-50/60 transition-all duration-300 hover:bg-emerald-50/80 hover:shadow-md dark:border-emerald-500/15 dark:bg-emerald-500/[0.04] dark:hover:bg-emerald-500/[0.07]">
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500/10">
+                                                <Check className="h-3 w-3 text-emerald-500" />
+                                            </span>
+                                            <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-emerald-600 dark:text-emerald-400">
+                                                {comparisons[1].title}
+                                            </p>
+                                        </div>
+                                        <h3 className="text-[15px] font-semibold text-foreground">{pair.with.headline}</h3>
+                                        {pair.with.detail && <p className="mt-1 text-sm text-muted-foreground">{pair.with.detail}</p>}
+                                    </div>
+                                </motion.div>
+                            ))}
+                        </div>
                     </div>
                 </div>
-            </div>
-        </motion.section>
+            </motion.div>
+        </section>
     );
 }

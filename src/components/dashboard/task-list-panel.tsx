@@ -53,5 +53,9 @@ export const TaskListPanel = ({ title, tasks }: TaskListPanelProps) => {
     });
   };
 
-  return <TaskList title={title} tasks={items} onToggle={handleToggle} disabled={isPending} />;
+  return (
+    <div className="surface-card surface-card--static">
+      <TaskList title={title} tasks={items} onToggle={handleToggle} disabled={isPending} />
+    </div>
+  );
 };

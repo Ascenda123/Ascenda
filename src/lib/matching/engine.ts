@@ -1,4 +1,5 @@
 import { defaultWeights, type MatchingWeights, OUTCOME_RANKING_BENCHMARK } from './config';
+import type { MatchTier } from './match-tier';
 
 export type StudentAcademics = {
   curriculum?: string | null;
@@ -84,8 +85,6 @@ export type MatchBreakdown = {
   outcomes: number;
 };
 
-export type MatchTier = 'Reach' | 'Match' | 'Safe';
-
 export type MatchResult = {
   programId: string;
   universityId: string;
@@ -96,6 +95,15 @@ export type MatchResult = {
 };
 
 const clampScore = (value: number) => Math.max(0, Math.min(100, value));
+
+const normalizeAcceptanceRate = (value?: number | string | null) => {
+  if (value === null || value === undefined) return null;
+  const parsed = typeof value === 'string' ? Number.parseFloat(value) : value;
+  if (!Number.isFinite(parsed)) return null;
+  const ratio = parsed > 1 ? parsed / 100 : parsed;
+  if (ratio < 0) return null;
+  return Math.min(1, ratio);
+};
 
 const calculateEligibility = (input: MatchInput) => {
   const reasons: string[] = [];
@@ -125,7 +133,7 @@ const calculateEligibility = (input: MatchInput) => {
     reasons.push(`Minimum ACT ${requirement.minAct}`);
   }
 
-  if (requirement.requiredSubjects && requirement.requiredSubjects.length > 0) {
+  if (requirement.requiredSubjects && requirement.requiredSubjects.length > 0 && (academics.subjectGrades?.length ?? 0) > 0) {
     const subjects = (academics.subjectGrades ?? []).map((entry) => entry.subject.toLowerCase());
     const missing = requirement.requiredSubjects.filter((subject) => !subjects.includes(subject.toLowerCase()));
     if (missing.length > 0) {
@@ -206,9 +214,9 @@ const calculatePreferenceFit = (input: MatchInput) => {
     scores.push(program.mode.toLowerCase() === preferences.delivery.toLowerCase() ? 1 : 0.5);
   }
 
-  if (typeof preferences.budgetMax === 'number' && program.tuition) {
+  if (typeof preferences.budgetMax === 'number' && preferences.budgetMax > 0 && program.tuition) {
     const withinBudget = program.tuition <= preferences.budgetMax;
-    const penalty = withinBudget ? 1 : Math.max(0, 1 - (program.tuition - preferences.budgetMax) / (preferences.budgetMax || 1));
+    const penalty = withinBudget ? 1 : Math.max(0, 1 - (program.tuition - preferences.budgetMax) / preferences.budgetMax);
     scores.push(penalty);
   }
 
@@ -226,10 +234,10 @@ const calculateOutcomeSignal = (input: MatchInput) => {
     scores.push(rankScore);
   }
 
-  if (typeof university.acceptanceRate === 'number') {
-    const acceptance = university.acceptanceRate;
-    const acceptanceScore = acceptance > 0 ? clampScore((1 - acceptance) * 100) / 100 : 0.5;
-    scores.push(acceptanceScore);
+  const acceptanceRate = normalizeAcceptanceRate(university.acceptanceRate);
+  if (acceptanceRate !== null) {
+    const acceptanceScore = 1 - acceptanceRate;
+    scores.push(Math.max(0, Math.min(1, acceptanceScore)));
   }
 
   if (program.field && aspirations.targetFields && aspirations.targetFields.length > 0) {
@@ -294,8 +302,8 @@ const describePrestige = (university: University) => {
   const rank =
     typeof university.rankOverall === 'number' && university.rankOverall > 0 ? university.rankOverall : undefined;
   const rankScore = rank ? Math.max(0, 1 - (rank - 1) / 500) : 0.4;
-  const acceptanceScore =
-    typeof university.acceptanceRate === 'number' ? Math.max(0, Math.min(1, 1 - university.acceptanceRate)) : 0.4;
+  const acceptanceRate = normalizeAcceptanceRate(university.acceptanceRate);
+  const acceptanceScore = acceptanceRate !== null ? Math.max(0, Math.min(1, 1 - acceptanceRate)) : 0.4;
   return (rankScore + acceptanceScore) / 2;
 };
 
@@ -303,7 +311,7 @@ const determineMatchTier = (input: MatchInput, score: number): MatchTier => {
   const prestige = describePrestige(input.university);
   const combinedScore = Math.max(0, Math.min(1, (score / 100) * 0.6 + prestige * 0.4));
 
-  if (combinedScore >= 0.75) return 'Reach';
+  if (combinedScore >= 0.75) return 'Safe';
   if (combinedScore >= 0.5) return 'Match';
-  return 'Safe';
+  return 'Reach';
 };

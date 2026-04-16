@@ -1,49 +1,66 @@
 import { type ReactNode, useMemo, useState } from 'react';
+import Image from 'next/image';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
-import { PlaceholderResult } from './placeholder-results';
-import { CheckCircle2, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { ProgramSearchResult } from './types';
+import { cn } from '@/lib/utils';
 
 type MetricRow = {
     id: string;
     label: string;
     hint?: string;
-    valueForCompare: (uni: PlaceholderResult) => string | number;
-    render: (uni: PlaceholderResult) => ReactNode;
-    numeric?: (uni: PlaceholderResult) => number;
+    valueForCompare: (uni: ProgramSearchResult) => string | number | null | undefined;
+    render: (uni: ProgramSearchResult) => ReactNode;
+    numeric?: (uni: ProgramSearchResult) => number | null | undefined;
     direction?: 'higher' | 'lower';
 };
 
 interface ComparisonModalProps {
     isOpen: boolean;
     onClose: () => void;
-    universities: PlaceholderResult[];
+    universities: ProgramSearchResult[];
     onRemove: (id: string) => void;
     maxItems?: number;
 }
 
-export function ComparisonModal({ isOpen, onClose, universities, onRemove, maxItems = 3 }: ComparisonModalProps) {
+const formatScore = (score?: number | null) => (typeof score === 'number' ? `${Math.round(score)}%` : 'N/A');
+const formatPercentage = (value?: number | null) => {
+    if (value === null || value === undefined) return 'N/A';
+    const normalized = value > 1 ? value : value * 100;
+    return `${Math.round(normalized)}%`;
+};
+const formatCurrencyRange = (value?: { low?: number | null; high?: number | null; fallback?: number | null; currency?: string | null }) => {
+    if (!value) return 'N/A';
+    const formatter = new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: value.currency ?? 'USD',
+        maximumFractionDigits: 0
+    });
+    if (value.low !== null && value.low !== undefined && value.high !== null && value.high !== undefined) {
+        return `${formatter.format(value.low)} - ${formatter.format(value.high)}`;
+    }
+    if (value.fallback !== null && value.fallback !== undefined) {
+        return formatter.format(value.fallback);
+    }
+    return 'N/A';
+};
+
+export function ComparisonModal({ isOpen, onClose, universities, onRemove, maxItems = 5 }: ComparisonModalProps) {
     const [highlightDiffs, setHighlightDiffs] = useState(true);
     const [hideMatches, setHideMatches] = useState(false);
-
-    const columnsStyle = useMemo(
-        () => ({
-            gridTemplateColumns: `240px repeat(${Math.max(1, universities.length)}, minmax(240px, 1fr))`
-        }),
-        [universities.length]
-    );
 
     const metricRows: MetricRow[] = [
         {
             id: 'fitScore',
             label: 'Fit Score',
             hint: 'How well this program maps to your signals.',
-            valueForCompare: (uni) => `${uni.fitScore}%`,
+            valueForCompare: (uni) => formatScore(uni.fitScore),
             render: (uni) => (
                 <div className="flex flex-col items-center gap-1 text-center">
-                    <span className="text-lg font-semibold">{uni.fitScore}%</span>
-                    <span className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">{uni.tier}</span>
+                    <span className="text-base font-semibold">{formatScore(uni.fitScore)}</span>
+                    <span className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">{uni.tier ?? 'N/A'}</span>
                 </div>
             ),
             numeric: (uni) => uni.fitScore,
@@ -53,56 +70,44 @@ export function ComparisonModal({ isOpen, onClose, universities, onRemove, maxIt
             id: 'acceptanceRate',
             label: 'Acceptance Rate',
             hint: 'Lower means more competitive.',
-            valueForCompare: (uni) => `${uni.acceptanceRate}%`,
-            render: (uni) => <span className="text-sm font-semibold text-foreground">{uni.acceptanceRate}%</span>,
+            valueForCompare: (uni) => formatPercentage(uni.acceptanceRate),
+            render: (uni) => <span className="text-[13px] font-semibold text-foreground">{formatPercentage(uni.acceptanceRate)}</span>,
             numeric: (uni) => uni.acceptanceRate,
             direction: 'lower'
         },
         {
             id: 'duration',
             label: 'Duration',
-            valueForCompare: (uni) => `${uni.durationYears} years`,
-            render: (uni) => <span className="text-sm text-foreground">{uni.durationYears} years</span>,
-            numeric: (uni) => uni.durationYears,
+            valueForCompare: (uni) => uni.duration ?? (uni.durationYears ? `${uni.durationYears} years` : 'N/A'),
+            render: (uni) => <span className="text-[13px] text-foreground">{uni.duration ?? (uni.durationYears ? `${uni.durationYears} years` : 'N/A')}</span>,
+            numeric: (uni) => uni.durationYears ?? null,
             direction: 'lower'
         },
         {
             id: 'tuition',
             label: 'Tuition (annual)',
             hint: 'Rounded annual tuition; housing not included.',
-            valueForCompare: (uni) => `${uni.domesticTuition} | ${uni.internationalTuition}`,
+            valueForCompare: (uni) =>
+                formatCurrencyRange({
+                    low: uni.intlTuitionLow,
+                    high: uni.intlTuitionHigh,
+                    fallback: uni.tuition,
+                    currency: uni.currency
+                }),
             render: (uni) => (
                 <div className="flex flex-col gap-1 text-xs font-semibold text-foreground">
-                    <span className="rounded-full bg-muted px-3 py-1">Intl: {uni.internationalTuition}</span>
-                    <span className="rounded-full bg-muted px-3 py-1">Domestic: {uni.domesticTuition}</span>
+                    <span className="rounded-full bg-muted px-3 py-1">
+                        {formatCurrencyRange({
+                            low: uni.intlTuitionLow,
+                            high: uni.intlTuitionHigh,
+                            fallback: uni.tuition,
+                            currency: uni.currency
+                        })}
+                    </span>
                 </div>
-            )
-        },
-        {
-            id: 'placementYear',
-            label: 'Placement Year',
-            valueForCompare: (uni) => (uni.placementYear ? 'Yes' : 'No'),
-            render: (uni) => (
-                <span
-                    className={`rounded-full px-3 py-1 text-xs font-semibold ${uni.placementYear ? 'bg-emerald-100 text-emerald-800' : 'bg-muted text-muted-foreground'
-                        }`}
-                >
-                    {uni.placementYear ? 'Available' : 'No'}
-                </span>
-            )
-        },
-        {
-            id: 'studyAbroad',
-            label: 'Study Abroad',
-            valueForCompare: (uni) => (uni.studyAbroad ? 'Yes' : 'No'),
-            render: (uni) => (
-                <span
-                    className={`rounded-full px-3 py-1 text-xs font-semibold ${uni.studyAbroad ? 'bg-blue-100 text-blue-800' : 'bg-muted text-muted-foreground'
-                        }`}
-                >
-                    {uni.studyAbroad ? 'Yes' : 'No'}
-                </span>
-            )
+            ),
+            numeric: (uni) => uni.intlTuitionLow ?? uni.tuition ?? null,
+            direction: 'lower'
         },
         {
             id: 'location',
@@ -113,8 +118,8 @@ export function ComparisonModal({ isOpen, onClose, universities, onRemove, maxIt
         {
             id: 'program',
             label: 'Program',
-            valueForCompare: (uni) => uni.program,
-            render: (uni) => <span className="text-sm font-medium text-foreground">{uni.program}</span>
+            valueForCompare: (uni) => uni.programName,
+            render: (uni) => <span className="text-sm font-medium text-foreground">{uni.programName}</span>
         },
         {
             id: 'highlights',
@@ -132,29 +137,6 @@ export function ComparisonModal({ isOpen, onClose, universities, onRemove, maxIt
                     ))}
                 </div>
             )
-        },
-        {
-            id: 'nextAction',
-            label: 'Next Action',
-            valueForCompare: (uni) => uni.nextAction,
-            render: (uni) => <p className="text-xs text-muted-foreground">{uni.nextAction}</p>
-        },
-        {
-            id: 'due',
-            label: 'Due Date',
-            valueForCompare: (uni) => uni.due,
-            render: (uni) => <span className="text-sm font-medium text-foreground">{uni.due}</span>
-        },
-        {
-            id: 'applicationStatus',
-            label: 'Status',
-            valueForCompare: (uni) => uni.applicationStatus,
-            render: (uni) => (
-                <span className="inline-flex items-center gap-2 rounded-full bg-card px-3 py-1 text-xs font-semibold text-foreground ring-1 ring-border">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
-                    {uni.applicationStatus}
-                </span>
-            )
         }
     ];
 
@@ -166,10 +148,6 @@ export function ComparisonModal({ isOpen, onClose, universities, onRemove, maxIt
 
     const visibleRows = metricRows.filter((row) => !shouldHideRow(row));
 
-    const rowTemplate = useMemo(
-        () => `220px repeat(${visibleRows.length}, minmax(0, 1fr))`,
-        [visibleRows.length]
-    );
     const isEmpty = universities.length === 0;
 
     const metricStats = useMemo(() => {
@@ -182,27 +160,39 @@ export function ComparisonModal({ isOpen, onClose, universities, onRemove, maxIt
         }, {});
     }, [visibleRows, universities]);
 
-    const getDiffBadge = (row: MetricRow, uni: PlaceholderResult) => {
+    const getDiffBadge = (row: MetricRow, uni: ProgramSearchResult) => {
         if (!highlightDiffs || !row.numeric) return null;
         const stats = metricStats[row.id];
-        if (!stats) return null;
+        if (!stats || stats.min === stats.max) return null;
+
         const value = row.numeric(uni);
         const isBest = row.direction === 'lower' ? value === stats.min : value === stats.max;
         const isBottom = row.direction === 'lower' ? value === stats.max : value === stats.min;
         if (!isBest && !isBottom) return null;
+
         const label = isBest ? 'Best' : 'Weakest';
-        const color = isBest ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800';
-        return <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${color}`}>{label}</span>;
+        const color = isBest
+            ? 'bg-success/10 text-success border-success/30'
+            : 'bg-destructive/10 text-destructive border-destructive/30';
+
+        return (
+            <span className={cn(
+                "rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider shadow-sm",
+                color
+            )}>
+                {label}
+            </span>
+        );
     };
 
     if (!isOpen) return null;
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="max-w-5xl overflow-hidden p-0 sm:rounded-[32px]">
+            <DialogContent className="max-w-5xl overflow-hidden p-0 sm:rounded-[28px]">
                 <div className="flex h-[80vh] flex-col">
                     {/* Header */}
-                    <div className="flex flex-col gap-4 border-b border-border bg-card px-8 py-6">
+                    <div className="flex flex-col gap-3 border-b border-border bg-card px-6 py-4">
                         <div className="flex items-center justify-between gap-3">
                             <div>
                                 <DialogTitle className="text-2xl font-bold">Compare Universities</DialogTitle>
@@ -216,7 +206,32 @@ export function ComparisonModal({ isOpen, onClose, universities, onRemove, maxIt
                                                 : `Comparing ${universities.length} program${universities.length > 1 ? 's' : ''} side-by-side${universities.length >= maxItems ? ' · remove one to add another' : ''}`}
                                 </p>
                             </div>
-                            <div className="flex gap-2">
+                            <div className="flex flex-wrap items-center gap-2">
+                                {!isEmpty && (
+                                    <button
+                                        onClick={() => setHighlightDiffs((v) => !v)}
+                                        className="flex items-center gap-3 rounded-full border border-border bg-background px-4 py-1.5 transition-all hover:border-primary/50 hover:bg-muted/30"
+                                        role="switch"
+                                        aria-checked={highlightDiffs}
+                                    >
+                                        <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                                            Highlight differences
+                                        </span>
+                                        <div
+                                            className={cn(
+                                                'relative h-5 w-9 shrink-0 rounded-full transition-colors duration-200 ease-in-out',
+                                                highlightDiffs ? 'bg-primary' : 'bg-muted'
+                                            )}
+                                        >
+                                            <div
+                                                className={cn(
+                                                    'absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-200 ease-in-out',
+                                                    highlightDiffs ? 'translate-x-4' : 'translate-x-0'
+                                                )}
+                                            />
+                                        </div>
+                                    </button>
+                                )}
                                 <Button variant="outline" onClick={onClose}>
                                     Close
                                 </Button>
@@ -232,14 +247,13 @@ export function ComparisonModal({ isOpen, onClose, universities, onRemove, maxIt
                                 </div>
                                 <div className="flex flex-wrap items-center gap-2 text-sm font-medium">
                                     <button
-                                        onClick={() => setHighlightDiffs((v) => !v)}
-                                        className={`rounded-full px-3 py-1 transition ${highlightDiffs ? 'bg-foreground text-background' : 'bg-background text-foreground ring-1 ring-border'}`}
-                                    >
-                                        {highlightDiffs ? 'Diffs on' : 'Highlight differences'}
-                                    </button>
-                                    <button
                                         onClick={() => setHideMatches((v) => !v)}
-                                        className={`rounded-full px-3 py-1 transition ${hideMatches ? 'bg-foreground text-background' : 'bg-background text-foreground ring-1 ring-border'}`}
+                                        className={cn(
+                                            'rounded-full px-3 py-1 transition',
+                                            hideMatches ? 'bg-foreground text-background shadow-sm' : 'bg-background text-foreground ring-1 ring-border'
+                                        )}
+                                        role="switch"
+                                        aria-checked={hideMatches}
                                     >
                                         {hideMatches ? 'Showing only differences' : 'Hide matching rows'}
                                     </button>
@@ -249,7 +263,7 @@ export function ComparisonModal({ isOpen, onClose, universities, onRemove, maxIt
                     </div>
 
                     {/* Body */}
-                    <div className="flex-1 overflow-auto bg-muted/30 p-8">
+                    <div className="flex-1 overflow-auto bg-muted/30 p-4">
                         {isEmpty ? (
                             <div className="flex h-full flex-col items-center justify-center rounded-3xl border border-dashed border-border bg-muted/50 p-10 text-center">
                                 <div className="mb-4 h-12 w-12 rounded-full bg-card text-2xl">🔍</div>
@@ -260,9 +274,9 @@ export function ComparisonModal({ isOpen, onClose, universities, onRemove, maxIt
                             </div>
                         ) : (
                             <div
-                                className="grid gap-x-6 gap-y-0"
+                                className="grid gap-x-4 gap-y-0"
                                 style={{
-                                    gridTemplateColumns: `240px repeat(${universities.length}, minmax(240px, 1fr))`
+                                    gridTemplateColumns: `200px repeat(${universities.length}, minmax(200px, 1fr))`
                                 }}
                             >
                                 {/* University Background Cards */}
@@ -279,7 +293,7 @@ export function ComparisonModal({ isOpen, onClose, universities, onRemove, maxIt
                                 ))}
 
                                 {/* Header Row */}
-                                <div className="flex items-center bg-muted/30 px-2 py-4 font-semibold text-muted-foreground backdrop-blur-sm">
+                                <div className="flex items-center bg-muted/30 px-2 py-2 text-xs font-semibold text-muted-foreground backdrop-blur-sm">
                                     Comparison focus
                                 </div>
                                 {universities.map((uni, index) => (
@@ -291,14 +305,29 @@ export function ComparisonModal({ isOpen, onClose, universities, onRemove, maxIt
                                         <div className="flex flex-col items-center gap-2 text-center">
                                             <button
                                                 onClick={() => onRemove(uni.id)}
-                                                className="absolute -right-2 -top-2 flex items-center gap-1 rounded-full bg-background px-3 py-1 text-xs font-semibold text-muted-foreground shadow-sm ring-1 ring-border transition hover:bg-destructive hover:text-destructive-foreground"
+                                                className="absolute -right-2 -top-2 flex items-center gap-1 rounded-full bg-background px-2 py-0.5 text-xs font-semibold text-muted-foreground shadow-sm ring-1 ring-border transition hover:bg-destructive hover:text-destructive-foreground"
                                             >
-                                                <X className="h-3 w-3" />
+                                                <X className="h-2 w-2" />
                                                 Remove
                                             </button>
-                                            <div className="h-16 w-16 rounded-2xl bg-muted ring-1 ring-border" />
-                                            <h3 className="text-lg font-bold text-foreground">{uni.name}</h3>
-                                            <p className="text-sm text-muted-foreground">{uni.program}</p>
+                                            {uni.logoUrl ? (
+                                                <div className="relative h-10 w-10 overflow-hidden rounded-xl bg-black ring-1 ring-border">
+                                                    <Image
+                                                        src={uni.logoUrl}
+                                                        alt={`${uni.universityName} logo`}
+                                                        fill
+                                                        className="object-contain"
+                                                        sizes="40px"
+                                                        unoptimized
+                                                    />
+                                                </div>
+                                            ) : (
+                                                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted text-lg font-bold text-muted-foreground ring-1 ring-border">
+                                                    {uni.universityName.charAt(0)}
+                                                </div>
+                                            )}
+                                            <h3 className="text-lg font-bold text-foreground line-clamp-2">{uni.universityName}</h3>
+                                            <p className="text-sm text-muted-foreground line-clamp-2">{uni.programName}</p>
                                             <Button asChild size="sm" className="mt-1 w-full rounded-lg" variant="secondary">
                                                 <Link href={`/course/${uni.id}`}>Open course page</Link>
                                             </Button>
@@ -311,11 +340,11 @@ export function ComparisonModal({ isOpen, onClose, universities, onRemove, maxIt
                                     <div key={`row-${row.id}`} style={{ display: 'contents' }}>
                                         {/* Label */}
                                         <div
-                                            className="flex flex-col justify-center bg-muted/30 px-2 py-4"
+                                            className="flex flex-col justify-center bg-muted/30 px-2 py-2"
                                             style={{ gridColumn: 1, gridRow: rowIndex + 2 }}
                                         >
-                                            <span className="text-sm font-semibold text-muted-foreground">{row.label}</span>
-                                            {row.hint && <span className="text-xs font-normal text-muted-foreground/70">{row.hint}</span>}
+                                            <span className="text-[13px] font-semibold text-muted-foreground">{row.label}</span>
+                                            {row.hint && <span className="text-[11px] font-normal text-muted-foreground/70">{row.hint}</span>}
                                         </div>
 
                                         {/* Data Cells */}
@@ -347,7 +376,7 @@ export function ComparisonModal({ isOpen, onClose, universities, onRemove, maxIt
                                 </div>
                                 <div className="flex flex-wrap items-center gap-2">
                                     <Button variant="outline" asChild size="sm">
-                                        <Link href={`/course/${universities[0].id}`}>Open best fit</Link>
+                                        <Link href={`/course/${universities[0]?.id}`}>Open best fit</Link>
                                     </Button>
                                     <Button size="sm" onClick={onClose}>
                                         Close & continue browsing

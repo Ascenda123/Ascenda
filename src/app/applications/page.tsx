@@ -30,27 +30,35 @@ export default async function ApplicationsPage() {
     redirect('/login');
   }
 
-  const [{ data: applications }] = await Promise.all([
-    supabase
-      .from('applications')
-      .select('*, program:programs(*, universities(*))')
-      .eq('profile_id', user.id)
-  ]);
-
-  const appIds = (applications ?? []).map((app: any) => app.id);
-  const programIds = (applications ?? []).map((app: any) => app.program_id);
-
-  const { data: checklists } = appIds.length
-    ? await supabase.from('application_checklist').select('*').in('application_id', appIds)
-    : { data: [] };
-
-  const { data: deadlines } = programIds.length
-    ? await supabase
-      .from('deadlines')
-      .select('*')
-      .in('program_id', programIds)
-      .order('deadline_date', { ascending: true })
-    : { data: [] };
+  const { data: applications } = await supabase
+    .from('applications')
+    .select(`
+      id,
+      status,
+      notes,
+      program_id,
+      program:programs(
+        id,
+        name:course_name,
+        level:study_level,
+        universities(name,country),
+        deadlines(
+          id,
+          name,
+          deadline_date,
+          intake,
+          program_id
+        )
+      ),
+      application_checklist(
+        id,
+        task_name,
+        status,
+        due_date,
+        application_id
+      )
+    `)
+    .eq('profile_id', user.id);
 
   type ApplicationRecord = {
     id: string;
@@ -58,7 +66,14 @@ export default async function ApplicationsPage() {
     notes?: string | null;
     priority_score?: number | null;
     program_id: string;
-    program?: { name?: string | null; discipline?: string | null; universities?: { name?: string | null } | null } | null;
+    program?: {
+      id: string;
+      name?: string | null;
+      level?: string | null;
+      universities?: { name?: string | null; country?: string | null } | null;
+      deadlines?: DeadlineRecord[] | null;
+    } | null;
+    application_checklist?: ChecklistRecord[] | null;
   };
 
   type ChecklistRecord = {
@@ -66,8 +81,6 @@ export default async function ApplicationsPage() {
     task_name: string;
     status: 'todo' | 'doing' | 'done';
     due_date?: string | null;
-    category?: string | null;
-    owner?: string | null;
     application_id?: string | null;
   };
 
@@ -77,12 +90,32 @@ export default async function ApplicationsPage() {
     deadline_date?: string | null;
     intake?: string | null;
     program_id: string;
-    type?: string | null;
   };
 
   const appRecords = ((applications ?? []) as ApplicationRecord[]) ?? [];
-  const checklistRecords = ((checklists ?? []) as ChecklistRecord[]) ?? [];
-  const deadlineRecords = ((deadlines ?? []) as DeadlineRecord[]) ?? [];
+  const checklistRecords = appRecords.flatMap((app) => app.application_checklist ?? []);
+  const deadlineRecords = appRecords.flatMap((app) => app.program?.deadlines ?? []);
+  deadlineRecords.sort((a, b) => {
+    const first = a.deadline_date ? new Date(a.deadline_date).getTime() : Number.POSITIVE_INFINITY;
+    const second = b.deadline_date ? new Date(b.deadline_date).getTime() : Number.POSITIVE_INFINITY;
+    return first - second;
+  });
+
+  const parsePriorityScore = (score?: number | string | null) => {
+    if (typeof score === 'number') return score;
+    if (typeof score === 'string') {
+      const parsed = Number.parseFloat(score);
+      return Number.isNaN(parsed) ? null : parsed;
+    }
+    return null;
+  };
+
+  const derivePriority = (score: number | null): PriorityItem['priority'] => {
+    if (score === null) return 'watch';
+    if (score >= 80) return 'high';
+    if (score >= 60) return 'medium';
+    return 'watch';
+  };
 
   if (appRecords.length === 0) {
     return (
@@ -128,70 +161,24 @@ export default async function ApplicationsPage() {
     );
   }
 
-  const fallbackPriorities: PriorityItem[] = [
-    {
-      id: 'demo-oxford',
-      program: 'PPE (Hons)',
-      university: 'University of Oxford',
-      priority: 'high',
-      fitScore: 91,
-      status: 'Essay polishing',
-      nextDeadline: 'Oct 15',
-      tasksRemaining: 3,
-      scholarshipFocus: 'Rhodes shortlist'
-    },
-    {
-      id: 'demo-stanford',
-      program: 'Symbolic Systems BS',
-      university: 'Stanford University',
-      priority: 'medium',
-      fitScore: 87,
-      status: 'Testing plan',
-      nextDeadline: 'Nov 1',
-      tasksRemaining: 5,
-      scholarshipFocus: 'Need-based aid'
-    },
-    {
-      id: 'demo-nus',
-      program: 'Engineering & Design BEng',
-      university: 'NUS',
-      priority: 'watch',
-      fitScore: 80,
-      status: 'Portfolio draft',
-      nextDeadline: 'Dec 1',
-      tasksRemaining: 2
-    },
-    {
-      id: 'demo-utoronto',
-      program: 'Rotman Commerce',
-      university: 'University of Toronto',
-      priority: 'medium',
-      fitScore: 83,
-      status: 'Reference waiting',
-      nextDeadline: 'Jan 15',
-      tasksRemaining: 4,
-      scholarshipFocus: 'Lester B. Pearson'
-    }
-  ];
-
   const priorityItems: PriorityItem[] =
     appRecords.length > 0
-      ? appRecords.map((app, index) => {
+      ? appRecords.map((app) => {
+        const score = parsePriorityScore(app.priority_score);
         const firstDeadline = deadlineRecords.find((deadline) => deadline.program_id === app.program_id);
-        const fallbackPriority: PriorityItem['priority'][] = ['high', 'medium', 'watch'];
         return {
           id: app.id,
           program: app.program?.name ?? 'Program',
           university: app.program?.universities?.name ?? 'University partner',
-          priority: fallbackPriority[index % fallbackPriority.length],
-          fitScore: Math.round(app.priority_score ?? 75),
+          priority: derivePriority(score),
+          fitScore: score,
           status: app.status ?? 'In progress',
           nextDeadline: firstDeadline?.deadline_date ?? undefined,
-          tasksRemaining: checklistRecords.filter((task) => task.status !== 'done' && task.application_id === app.id).length || 1,
+          tasksRemaining: checklistRecords.filter((task) => task.status !== 'done' && task.application_id === app.id).length,
           scholarshipFocus: app.notes ?? undefined
         };
       })
-      : fallbackPriorities;
+      : [];
 
   const requirementItems: RequirementItem[] =
     checklistRecords.length > 0
@@ -203,52 +190,24 @@ export default async function ApplicationsPage() {
           requirement: task.task_name,
           application: appRecords.find((app) => app.id === task.application_id)?.program?.name ?? 'General',
           dueDate: task.due_date ?? undefined,
-          owner: task.owner ?? (status === 'requested' ? 'Recommender' : 'You'),
+          owner: status === 'requested' ? 'Recommender' : 'You',
           status
         };
       })
-      : [
-        {
-          id: 'req-1',
-          requirement: 'Common App essay',
-          application: 'US Common App',
-          dueDate: 'Sept 15',
-          owner: 'You',
-          status: 'pending'
-        },
-        {
-          id: 'req-2',
-          requirement: 'Counselor reference',
-          application: 'LSE Law LLB',
-          dueDate: 'Oct 1',
-          owner: 'Ms. Kapur',
-          status: 'requested'
-        },
-        {
-          id: 'req-3',
-          requirement: 'Portfolio PDF',
-          application: 'Parsons Design BFA',
-          dueDate: 'Nov 5',
-          owner: 'You',
-          status: 'submitted'
-        }
-      ];
+      : [];
 
   const plannerEvents: PlannerEvent[] =
     deadlineRecords.length > 0
-      ? deadlineRecords.map((deadline) => ({
-        id: deadline.id,
-        title: deadline.name,
-        date: deadline.deadline_date ?? 'TBD',
-        category: 'deadline',
-        detail: deadline.intake ?? 'Application'
-      }))
-      : [
-        { id: 'event-1', title: 'Oxford UCAS deadline', date: '2024-10-15', category: 'deadline', detail: 'Submit UCAS + tests' },
-        { id: 'event-2', title: 'Recommender reminder', date: '2024-09-01', category: 'reference', detail: 'Nudge Mr. Tan' },
-        { id: 'event-3', title: 'Portfolio review', date: '2024-09-10', category: 'task', detail: 'Upload for Parsons' },
-        { id: 'event-4', title: 'Wharton interview prep', date: '2024-11-02', category: 'interview', detail: 'Mock interview' }
-      ];
+      ? deadlineRecords
+        .map((deadline) => ({
+          id: deadline.id,
+          title: deadline.name,
+          date: deadline.deadline_date ?? '',
+          category: 'deadline' as const,
+          detail: deadline.intake ?? 'Application'
+        }))
+        .filter((event) => event.date && !Number.isNaN(new Date(event.date).getTime()))
+      : [];
 
   const today = new Date();
   const isSameDay = (value?: string | null) => {
@@ -263,7 +222,7 @@ export default async function ApplicationsPage() {
     interviews: plannerEvents.filter((event) => event.category === 'interview' && isSameDay(event.date)).length
   };
 
-  const disciplineFocus = appRecords[0]?.program?.discipline ?? 'university';
+  const disciplineFocus = appRecords[0]?.program?.name ?? 'university';
   const resourceHighlights = [
     {
       id: 'essay-template',
@@ -301,41 +260,14 @@ export default async function ApplicationsPage() {
         .filter((task) => task.task_name.toLowerCase().includes('reference'))
         .map((task, index) => ({
           id: task.id,
-          name: task.owner ?? `Recommender ${index + 1}`,
-          relationship: task.category ?? 'Teacher',
+          name: `Recommender ${index + 1}`,
+          relationship: 'Teacher',
           school: appRecords.find((app) => app.id === task.application_id)?.program?.universities?.name ?? 'Multiple schools',
           dueDate: task.due_date ?? undefined,
           status: task.status === 'done' ? 'received' : 'sent',
-          lastNudged: task.status === 'done' ? undefined : '3d ago'
+          lastNudged: undefined
         }))
-      : [
-        {
-          id: 'ref-1',
-          name: 'Mrs. Kapoor',
-          relationship: 'IB Coordinator',
-          school: 'Oxford + LSE',
-          dueDate: 'Sep 30',
-          status: 'sent',
-          lastNudged: '2d ago'
-        },
-        {
-          id: 'ref-2',
-          name: 'Coach Alvarez',
-          relationship: 'Extracurricular mentor',
-          school: 'Stanford',
-          dueDate: 'Oct 5',
-          status: 'drafted'
-        },
-        {
-          id: 'ref-3',
-          name: 'Mr. Tan',
-          relationship: 'Physics teacher',
-          school: 'NUS',
-          dueDate: 'Oct 12',
-          status: 'received',
-          lastNudged: '5d ago'
-        }
-      ];
+      : [];
 
   const signalItems: SignalItem[] =
     deadlineRecords.length > 0
@@ -346,29 +278,7 @@ export default async function ApplicationsPage() {
         timeAgo: 'Just now',
         type: 'deadline'
       }))
-      : [
-        {
-          id: 'signal-1',
-          title: 'MIT advanced action window opens next week',
-          detail: 'Portal invites released Aug 28. Prep your interview availability.',
-          timeAgo: '1h ago',
-          type: 'portal'
-        },
-        {
-          id: 'signal-2',
-          title: 'New Singapore Global Citizen scholarship',
-          detail: 'S$80k total award for STEM majors—deadline Oct 1.',
-          timeAgo: '4h ago',
-          type: 'scholarship'
-        },
-        {
-          id: 'signal-3',
-          title: 'Parsons portfolio requirement clarified',
-          detail: 'Add 2 fabrications or motion studies before submitting.',
-          timeAgo: '1d ago',
-          type: 'task'
-        }
-      ];
+      : [];
 
   const timelineItems = deadlineRecords.map((deadline) => ({
     id: deadline.id,
@@ -378,8 +288,8 @@ export default async function ApplicationsPage() {
   }));
 
   const heroStats = [
-    { label: 'Applications', value: `${appRecords.length || fallbackPriorities.length}`, detail: 'Tracked' },
-    { label: 'Deadlines', value: `${deadlineRecords.length || plannerEvents.length}`, detail: 'Synced' },
+    { label: 'Applications', value: `${appRecords.length}`, detail: 'Tracked' },
+    { label: 'Deadlines', value: `${deadlineRecords.length}`, detail: 'Synced' },
     { label: 'Signals', value: `${signalItems.length}`, detail: 'Latest updates' }
   ];
 
@@ -409,13 +319,47 @@ export default async function ApplicationsPage() {
 
       <div className="space-y-8">
         <ApplicationPriorityBoard items={priorityItems} />
+
+        {/* Quick links to documents & sandbox */}
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Link
+            href="/applications/documents"
+            className="surface-card group flex items-center gap-4 rounded-[28px] p-5 transition hover:-translate-y-0.5"
+          >
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-violet-500/10 text-violet-600 ring-1 ring-violet-500/20 dark:text-violet-400">
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-foreground">Document centre</p>
+              <p className="text-xs text-muted-foreground">Rec letters, transcripts, and uploads</p>
+            </div>
+          </Link>
+          <Link
+            href="/applications/sandbox"
+            className="surface-card group flex items-center gap-4 rounded-[28px] p-5 transition hover:-translate-y-0.5"
+          >
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600 ring-1 ring-emerald-500/20 dark:text-emerald-400">
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.59 14.37a6 6 0 01-5.84 7.38v-4.8m5.84-2.58a14.98 14.98 0 006.16-12.12A14.98 14.98 0 009.631 8.41m5.96 5.96a14.926 14.926 0 01-5.841 2.58m-.119-8.54a6 6 0 00-7.381 5.84h4.8m2.581-5.84a14.927 14.927 0 00-2.58 5.841m2.699 2.7c-.103.021-.207.041-.311.06a15.09 15.09 0 01-2.448-2.448 14.9 14.9 0 01.06-.312m-2.24 2.39a4.493 4.493 0 00-1.757 4.306 4.493 4.493 0 004.306-1.758M16.5 9a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-foreground">Application sandbox</p>
+              <p className="text-xs text-muted-foreground">Preview unified submission</p>
+            </div>
+          </Link>
+        </div>
+
         <PlannerCalendar events={plannerEvents} />
         <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
           <RequirementTracker items={requirementItems} />
-          <div className="space-y-4 rounded-[32px] border border-border bg-card p-6 shadow-[0_15px_40px_rgba(15,23,42,0.08)] transition-colors">
+          <div className="surface-stage space-y-4">
             <div>
-              <p className="text-sm font-semibold text-foreground">Today’s focus</p>
-              <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Daily brief</p>
+              <p className="text-lg font-semibold text-foreground">Today&apos;s focus</p>
+              <p className="mt-1 text-sm text-muted-foreground leading-relaxed">
                 {dailySummary.tasks} {dailySummary.tasks === 1 ? 'task' : 'tasks'} • {dailySummary.deadlines}{' '}
                 {dailySummary.deadlines === 1 ? 'deadline' : 'deadlines'} • {dailySummary.interviews}{' '}
                 {dailySummary.interviews === 1 ? 'interview' : 'interviews'}
@@ -426,65 +370,23 @@ export default async function ApplicationsPage() {
         </div>
 
         <div className="grid gap-6 lg:grid-cols-3">
-          <div className="space-y-4 rounded-[28px] border border-border bg-card p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)] transition-colors">
-            <h2 className="text-2xl font-semibold text-foreground">Upload documents</h2>
+          <div className="surface-stage space-y-4 rounded-[28px]">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Files</p>
+              <p className="text-lg font-semibold text-foreground">Upload documents</p>
+            </div>
             <DocumentUploader applicationId={appRecords[0]?.id ?? null} />
           </div>
           <SignalCenter signals={signalItems} />
-          <div className="space-y-4 rounded-[28px] border border-border bg-card p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)] transition-colors">
-            <h2 className="text-2xl font-semibold text-foreground">Upcoming deadlines</h2>
+          <div className="surface-stage space-y-4 rounded-[28px]">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Timeline</p>
+              <p className="text-lg font-semibold text-foreground">Upcoming deadlines</p>
+            </div>
             <DeadlineTimeline items={timelineItems} />
           </div>
         </div>
 
-        <section className="space-y-4 rounded-[28px] border border-border bg-card p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)] transition-colors">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <p className="text-[11px] uppercase tracking-[0.4em] text-muted-foreground">Just in case</p>
-              <h2 className="text-2xl font-semibold text-foreground">Resources you can grab</h2>
-            </div>
-            <p className="text-xs uppercase tracking-[0.4em] text-muted-foreground">Updated weekly</p>
-          </div>
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {resourceHighlights.map((resource) => (
-              <article
-                key={resource.id}
-                className="flex min-h-[180px] flex-col justify-between gap-3 rounded-2xl border border-border bg-muted/60 p-4 transition-colors"
-              >
-                <div>
-                  <p className="text-[11px] uppercase tracking-[0.4em] text-muted-foreground">{resource.tag}</p>
-                  <h3 className="text-base font-semibold text-foreground">{resource.title}</h3>
-                  <p className="text-sm text-muted-foreground">{resource.description}</p>
-                </div>
-                <Link
-                  href={resource.href}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-[11px] font-semibold uppercase tracking-[0.4em] text-muted-foreground underline-offset-4 hover:text-foreground"
-                >
-                  Open resource →
-                </Link>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        <div className="rounded-[28px] border border-border bg-card p-6 text-sm text-muted-foreground shadow-[0_18px_50px_rgba(15,23,42,0.08)] transition-colors">
-          {appRecords.length > 0 ? (
-            <ul className="space-y-2">
-              {appRecords.map((app) => (
-                <li key={app.id}>
-                  <p className="font-semibold text-foreground">Application status</p>
-                  <p>
-                    {app.status} • {app.notes ?? 'No notes yet'}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p>No applications yet. Save programs from the matches page to begin planning.</p>
-          )}
-        </div>
       </div>
     </DashboardShell>
   );

@@ -1,46 +1,74 @@
+'use client';
+
 import { cn } from '@/lib/utils';
-import { ReactNode } from 'react';
+import { ArrowUpRight, Minus, ArrowDownRight } from 'lucide-react';
+import { motion } from 'framer-motion';
+import type React from 'react';
 
 interface StatsCardProps {
     label: string;
     value: string;
     detail: string;
-    icon?: ReactNode;
+    icon?: React.ReactNode;
     trend?: 'up' | 'down' | 'neutral';
     className?: string;
 }
 
 export function StatsCard({ label, value, detail, icon, trend, className }: StatsCardProps) {
     return (
-        <div
+        <motion.div
             className={cn(
-                'group relative overflow-hidden rounded-[24px] border border-border bg-card p-6 transition-all duration-200 hover:-translate-y-1 hover:shadow-floating',
+                'group relative overflow-hidden rounded-2xl border border-border/50 bg-card/80 backdrop-blur-xl p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:border-border/80 dark:border-white/10 dark:hover:border-primary/30',
                 className
             )}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            whileHover={{ scale: 1.01 }}
         >
-            <div className="flex items-start justify-between">
+            {/* Hover gradient */}
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.03] to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100 pointer-events-none" />
+
+            <div className="relative z-10 flex items-start justify-between">
                 <div className="space-y-1">
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">
                         {label}
                     </p>
-                    <h3 className="text-3xl font-heading font-semibold text-foreground tracking-tight">
+                    <motion.h3
+                        className="text-3xl font-bold tracking-tight text-foreground"
+                        key={value}
+                        initial={{ scale: 1.05, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ duration: 0.3 }}
+                    >
                         {value}
-                    </h3>
+                    </motion.h3>
                 </div>
                 {icon && (
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted/50 text-muted-foreground transition-colors group-hover:bg-primary/10 group-hover:text-primary">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/5 text-primary ring-1 ring-primary/10 transition-all duration-300 group-hover:scale-110 group-hover:bg-primary/10">
                         {icon}
                     </div>
                 )}
             </div>
-            <div className="mt-4 flex items-center gap-2">
+
+            <div className="relative z-10 mt-4 flex items-center gap-2">
                 {trend === 'up' && (
-                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6" /></svg>
-                    </span>
+                    <div className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500/10">
+                        <ArrowUpRight className="h-3 w-3 text-emerald-500" />
+                    </div>
+                )}
+                {trend === 'down' && (
+                    <div className="flex h-5 w-5 items-center justify-center rounded-full bg-rose-500/10">
+                        <ArrowDownRight className="h-3 w-3 text-rose-500" />
+                    </div>
+                )}
+                {trend === 'neutral' && (
+                    <div className="flex h-5 w-5 items-center justify-center rounded-full bg-muted/50">
+                        <Minus className="h-3 w-3 text-muted-foreground" />
+                    </div>
                 )}
                 <p className="text-sm text-muted-foreground">{detail}</p>
             </div>
-        </div>
+        </motion.div>
     );
 }

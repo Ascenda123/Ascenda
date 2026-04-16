@@ -22,7 +22,7 @@ export const Providers = ({ children, messages }: ProvidersProps) => {
         <ToastProvider>
           {children}
           <AnalyticsBridge />
-          <ReactQueryDevtools initialIsOpen={false} />
+          {process.env.NODE_ENV === 'development' ? <ReactQueryDevtools initialIsOpen={false} /> : null}
         </ToastProvider>
       </QueryClientProvider>
     </NextIntlClientProvider>

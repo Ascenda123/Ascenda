@@ -2,49 +2,82 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from '../theme/theme-toggle';
-import { useThemeMode } from '../theme/theme-provider';
 import { filterNavByRole, NAV_ITEMS } from './navigation';
 import { useUserRole } from '@/hooks/use-user-role';
 import { NavLink } from './nav-link';
 
+import { LogOut } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { useSupabase } from '@/hooks/useSupabase';
+import { Button } from '../ui/button';
+
 export const Navbar = () => {
-  const { mode } = useThemeMode();
   const role = useUserRole();
-  const navItems = filterNavByRole(NAV_ITEMS, role);
+  const pathname = usePathname();
+  const router = useRouter();
+  const supabase = useSupabase();
+  const navItems = filterNavByRole(NAV_ITEMS, role, pathname);
   const logoSrc = '/Ascenda_Logo-removebg-.png';
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    router.refresh();
+    router.push('/login');
+  };
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50 flex justify-center px-4 py-3">
-      <div className="mx-auto flex w-full max-w-6xl items-center justify-between rounded-[999px] border border-border bg-card px-4 py-2 text-foreground shadow-nav transition-colors">
-        <Link href="/dashboard" className="flex items-center gap-3 text-lg font-semibold text-foreground">
-          <div className="relative h-12 w-12 shrink-0 scale-125">
-            <Image
-              src={logoSrc}
-              alt="Ascenda logo"
-              fill
-              className={cn('rounded-full object-contain transition')}
-            />
+    <header className="fixed inset-x-0 top-0 z-50">
+      <div className="container mx-auto px-4 pb-3 pt-3 md:px-6">
+        <div
+          className={cn(
+            'flex w-full items-center justify-between rounded-2xl border border-border bg-card/95 px-4 py-2 text-foreground backdrop-blur-lg transition-all dark:border-white/10 dark:bg-card/90',
+            scrolled ? 'shadow-md' : 'shadow-sm'
+          )}
+        >
+          <Link href="/dashboard" className="flex items-center gap-3 text-lg font-semibold text-foreground">
+            <div className="relative h-12 w-12 shrink-0 scale-125">
+              <Image
+                src={logoSrc}
+                alt="Ascenda logo"
+                fill
+                className={cn('rounded-full object-contain transition')}
+              />
+            </div>
+            <div className="flex flex-col leading-tight">
+              <span className="navbar-brand transition-colors">Ascenda</span>
+              <span className="navbar-subtitle text-[11px] font-medium uppercase tracking-[0.4em] transition-colors">
+                workspace
+              </span>
+            </div>
+          </Link>
+          <nav className="hidden items-center gap-5 text-xs font-medium text-muted-foreground md:flex">
+            {navItems.map((link) => (
+              <NavLink key={link.href} item={link} />
+            ))}
+          </nav>
+          <div className="flex items-center gap-2">
+            <ThemeToggle compact />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleSignOut}
+              className="rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+              title="Sign out"
+            >
+              <LogOut className="h-4 w-4" />
+            </Button>
           </div>
-          <div className="flex flex-col leading-tight">
-            <span className="dark:text-white">Ascenda</span>
-            <span className="text-[11px] font-medium uppercase tracking-[0.4em] text-muted-foreground dark:text-gray-300">workspace</span>
-          </div>
-        </Link>
-        <nav className="hidden items-center gap-5 text-xs font-medium text-muted-foreground md:flex">
-          {navItems.map((link) => (
-            <NavLink key={link.href} item={link} />
-          ))}
-        </nav>
-        <nav className="flex items-center gap-2 overflow-x-auto text-xs font-medium text-muted-foreground md:hidden">
-          {navItems.map((link) => (
-            <NavLink key={link.href} item={link} mobile />
-          ))}
-        </nav>
-        <div className="flex items-center gap-2">
-          <ThemeToggle compact />
         </div>
       </div>
     </header>

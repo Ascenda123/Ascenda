@@ -1,19 +1,27 @@
 import type { LucideIcon } from 'lucide-react';
 import {
   Award,
+  BarChart2,
+  CalendarClock,
   ClipboardCheck,
+  FileText,
   LayoutDashboard,
   Search,
   Settings,
-  UserCircle
+  Sparkles,
+  UserCircle,
+  Users,
+  Target,
+  MessageSquare
 } from 'lucide-react';
 
 export type NavItem = {
   label: string;
   href: string;
   icon: LucideIcon;
+  exact?: boolean;
   matchers?: Array<(pathname: string) => boolean>;
-  segment: 'home' | 'explore' | 'planner' | 'scholarships' | 'profile' | 'admin';
+  segment: 'home' | 'explore' | 'planner' | 'scholarships' | 'profile' | 'toolbox' | 'admin' | 'counsellor';
 };
 
 export type SectionNavItem = {
@@ -24,6 +32,7 @@ export type SectionNavItem = {
 };
 
 export const NAV_ITEMS: NavItem[] = [
+  // Student items
   {
     label: 'Home',
     href: '/dashboard',
@@ -62,10 +71,68 @@ export const NAV_ITEMS: NavItem[] = [
     segment: 'profile'
   },
   {
+    label: 'Toolbox',
+    href: '/toolbox',
+    icon: Sparkles,
+    segment: 'toolbox',
+    matchers: [(pathname) => pathname.startsWith('/toolbox')]
+  },
+  {
     label: 'Admin',
     href: '/admin',
     icon: Settings,
     segment: 'admin'
+  },
+  // Counsellor items (only shown when session role is 'counsellor')
+  {
+    label: 'Overview',
+    href: '/counsellor',
+    icon: LayoutDashboard,
+    segment: 'counsellor',
+    exact: true
+  },
+  {
+    label: 'Students',
+    href: '/counsellor/students',
+    icon: Users,
+    segment: 'counsellor',
+    matchers: [(pathname) => pathname.startsWith('/counsellor/students')]
+  },
+  {
+    label: 'Analytics',
+    href: '/counsellor/analytics',
+    icon: BarChart2,
+    segment: 'counsellor'
+  },
+  {
+    label: 'Deadlines',
+    href: '/counsellor/deadlines',
+    icon: CalendarClock,
+    segment: 'counsellor'
+  },
+  {
+    label: 'Documents',
+    href: '/counsellor/documents',
+    icon: FileText,
+    segment: 'counsellor'
+  },
+  {
+    label: 'Outcomes',
+    href: '/counsellor/outcomes',
+    icon: Target,
+    segment: 'counsellor'
+  },
+  {
+    label: 'Applications',
+    href: '/counsellor/applications',
+    icon: ClipboardCheck,
+    segment: 'counsellor'
+  },
+  {
+    label: 'Parents',
+    href: '/counsellor/parents',
+    icon: MessageSquare,
+    segment: 'counsellor'
   }
 ];
 
@@ -78,7 +145,9 @@ export const EXPLORE_SECTION_ITEMS: SectionNavItem[] = [
 
 export const PLANNER_SECTION_ITEMS: SectionNavItem[] = [
   { label: 'Applications', href: '/applications', exact: true },
-  { label: 'Tasks', href: '/applications/tasks' }
+  { label: 'Tasks', href: '/applications/tasks' },
+  { label: 'Documents', href: '/applications/documents' },
+  { label: 'Sandbox', href: '/applications/sandbox' }
 ];
 
 export const PROFILE_SECTION_ITEMS: SectionNavItem[] = [
@@ -88,12 +157,43 @@ export const PROFILE_SECTION_ITEMS: SectionNavItem[] = [
   { label: 'Aspirations', href: '/profile?step=aspirations', matchParam: { key: 'step', value: 'aspirations' } }
 ];
 
+export const TOOLBOX_SECTION_ITEMS: SectionNavItem[] = [
+  { label: 'Hub', href: '/toolbox', exact: true },
+  { label: 'Essay Workshop', href: '/toolbox/essay-workshop' },
+  { label: 'Chances', href: '/toolbox/chances' },
+  { label: 'Requirements', href: '/toolbox/requirements' },
+  { label: 'Timeline', href: '/toolbox/timeline' },
+];
+
+export const COUNSELLOR_SECTION_ITEMS: SectionNavItem[] = [
+  { label: 'Overview', href: '/counsellor', exact: true },
+  { label: 'Students', href: '/counsellor/students' },
+  { label: 'Analytics', href: '/counsellor/analytics' },
+  { label: 'Deadlines', href: '/counsellor/deadlines' },
+  { label: 'Documents', href: '/counsellor/documents' },
+  { label: 'Outcomes', href: '/counsellor/outcomes' },
+  { label: 'Applications', href: '/counsellor/applications' },
+  { label: 'Parents', href: '/counsellor/parents' },
+];
+
 export const isNavActive = (item: NavItem, pathname: string) => {
   if (!pathname) return false;
+  if (item.exact) return pathname === item.href;
   if (pathname === item.href) return true;
   if (pathname.startsWith(`${item.href}/`)) return true;
   return item.matchers?.some((matcher) => matcher(pathname)) ?? false;
 };
 
-export const filterNavByRole = (items: NavItem[], role: string | null | undefined) =>
-  items.filter((item) => item.segment !== 'admin' || role === 'admin');
+export const filterNavByRole = (items: NavItem[], role: string | null | undefined, pathname?: string) => {
+  // Demo mode: determine active section from the current route so that
+  // a single profile can navigate both student and counsellor views.
+  const inCounsellor = pathname?.startsWith('/counsellor');
+
+  if (inCounsellor) {
+    return items.filter((item) => item.segment === 'counsellor');
+  }
+
+  return items.filter(
+    (item) => item.segment !== 'counsellor' && (item.segment !== 'admin' || role === 'admin')
+  );
+};
