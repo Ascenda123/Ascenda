@@ -115,7 +115,7 @@ export default async function ToolboxPage() {
 
       {/* Next action + overall progress */}
       <AnimatedSection>
-        <div className="grid gap-4 md:grid-cols-[1fr,auto]">
+        <div className="grid gap-4 sm:grid-cols-[1fr,auto]">
           {/* Next action card */}
           {nextDeadline && (
             <Link href="/toolbox/timeline" className="block surface-card border-l-4 border-l-primary hover:border-l-primary hover:shadow-xl transition-all hover:-translate-y-0.5 group overflow-hidden">
@@ -141,7 +141,7 @@ export default async function ToolboxPage() {
           )}
 
           {/* Requirements progress ring */}
-          <div className="surface-card flex items-center gap-4 min-w-[200px]">
+          <div className="surface-card flex items-center gap-4 sm:min-w-[200px]">
             <div className="relative z-10 flex items-center gap-4 w-full">
               <ToolboxProgressRing value={avgProgress} />
               <div>

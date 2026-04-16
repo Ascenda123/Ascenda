@@ -137,7 +137,7 @@ export const ScholarshipExplorer = ({ scholarships }: ScholarshipExplorerProps) 
               transition={{ duration: 0.2 }}
               className="overflow-hidden"
             >
-              <div className="grid gap-4 sm:grid-cols-3 pt-2 border-t border-border/50">
+              <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-3 pt-2 border-t border-border/50">
                 <div className="space-y-1.5">
                   <label className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-1.5">
                     <Globe className="h-3 w-3" /> Country
@@ -228,7 +228,7 @@ export const ScholarshipExplorer = ({ scholarships }: ScholarshipExplorerProps) 
                   key={scholarship.id}
                   variants={cardVariants}
                   layout
-                  className="group rounded-2xl border border-border bg-card p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md hover:border-primary/10 overflow-hidden relative"
+                  className="group rounded-2xl border border-border bg-card p-4 sm:p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md hover:border-primary/10 overflow-hidden relative"
                 >
                   {/* Ambient blob */}
                   <div className="pointer-events-none absolute -top-8 -right-8 h-24 w-24 rounded-full bg-primary/3 blur-2xl opacity-0 group-hover:opacity-100 transition-opacity" />

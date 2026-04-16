@@ -60,7 +60,7 @@ export const DashboardOverview = ({ data }: { data: OverviewPayload }) => {
       <motion.div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between" variants={cardFade}>
         <div className="space-y-1">
           <p className="text-[11px] uppercase tracking-[0.35em] text-muted-foreground font-semibold">Overview</p>
-          <h2 className="text-2xl font-semibold text-foreground">Calm control center</h2>
+          <h2 className="text-xl sm:text-2xl font-semibold text-foreground">Calm control center</h2>
           <p className="text-sm text-muted-foreground">
             {data.nextStepTitle ? `${data.nextStepTitle} is the smartest next move.` : 'Everything is aligned. Keep momentum steady.'}
           </p>
@@ -88,8 +88,8 @@ export const DashboardOverview = ({ data }: { data: OverviewPayload }) => {
                     <span className={cn('h-2 w-2 rounded-full shrink-0', toneDot(card.tone))} />
                     <p className="text-[11px] uppercase tracking-[0.3em] text-muted-foreground font-semibold">{card.label}</p>
                   </div>
-                  <p className="mt-3 text-3xl font-bold text-foreground leading-tight tracking-tight">{card.value}</p>
-                  <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed">{card.detail}</p>
+                  <p className="mt-2 text-xl sm:text-3xl font-bold text-foreground leading-tight tracking-tight">{card.value}</p>
+                  <p className="mt-1 sm:mt-1.5 text-xs sm:text-sm text-muted-foreground leading-relaxed">{card.detail}</p>
                   {card.href && (
                     <div className="mt-3 flex items-center gap-1 text-xs font-medium text-primary opacity-0 group-hover:opacity-100 transition-opacity translate-x-0 group-hover:translate-x-0.5 duration-200">
                       View details <ArrowRight className="h-3 w-3" />

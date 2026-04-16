@@ -112,8 +112,8 @@ export const PageHero = ({
                 <span>{accent}</span>
                 {highlight ? <span className="text-foreground font-bold">{highlight}</span> : null}
               </div>
-              <h1 className="text-3xl font-semibold text-foreground md:text-4xl">{title}</h1>
-              <p className="max-w-xl text-sm text-muted-foreground">{description}</p>
+              <h1 className="text-2xl font-semibold text-foreground sm:text-3xl md:text-4xl">{title}</h1>
+              <p className="max-w-xl text-xs sm:text-sm text-muted-foreground">{description}</p>
             </motion.div>
             {actions ? (
               <motion.div className="flex flex-wrap gap-2" variants={fadeUp}>
@@ -122,9 +122,9 @@ export const PageHero = ({
             ) : null}
           </motion.div>
           {stats && stats.length > 0 ? (
-            <div className="border-t border-border/70 pt-4 sm:border-l sm:border-t-0 sm:pl-4">
+            <div className="border-t border-border/70 pt-3 sm:pt-4 md:border-l md:border-t-0 md:pl-4">
               <motion.div
-                className="grid gap-3 sm:grid-cols-[repeat(auto-fit,minmax(180px,1fr))]"
+                className="grid grid-cols-3 gap-2 sm:gap-3 md:grid-cols-[repeat(auto-fit,minmax(160px,1fr))]"
                 variants={statsContainerVariants}
                 initial="hidden"
                 animate="show"
@@ -132,14 +132,14 @@ export const PageHero = ({
                 {stats.map((stat) => (
                   <motion.div
                     key={stat.label}
-                    className="min-w-[180px] rounded-2xl border border-border bg-background px-5 py-3 text-center shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md hover:border-primary/20 sm:text-left"
+                    className="rounded-xl sm:rounded-2xl border border-border bg-background px-3 py-2 sm:px-5 sm:py-3 text-center shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md hover:border-primary/20 sm:text-left"
                     variants={statVariants}
                   >
-                    <p className="text-2xl font-semibold text-foreground">
+                    <p className="text-lg sm:text-2xl font-semibold text-foreground">
                       <AnimatedNumber value={stat.value} />
                     </p>
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">{stat.label}</p>
-                    {stat.detail ? <p className="text-[11px] text-muted-foreground">{stat.detail}</p> : null}
+                    <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-[0.15em] sm:tracking-[0.2em] text-muted-foreground">{stat.label}</p>
+                    {stat.detail ? <p className="hidden sm:block text-[11px] text-muted-foreground">{stat.detail}</p> : null}
                   </motion.div>
                 ))}
               </motion.div>

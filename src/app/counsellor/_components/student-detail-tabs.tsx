@@ -91,13 +91,13 @@ export const StudentDetailTabs = ({ student }: StudentDetailTabsProps) => {
   return (
     <div className="space-y-6">
       {/* Tab nav */}
-      <nav className="flex flex-wrap items-center gap-2 rounded-[28px] border border-border bg-card px-4 py-3 shadow-[0_20px_45px_rgba(15,23,42,0.08)]">
+      <nav className="flex items-center gap-2 overflow-x-auto scrollbar-none rounded-[28px] border border-border bg-card px-3 sm:px-4 py-2.5 sm:py-3 shadow-[0_20px_45px_rgba(15,23,42,0.08)]">
         {TABS.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActive(tab.id)}
             className={cn(
-              'rounded-full border px-4 py-2 text-sm font-semibold transition hover:bg-muted/80',
+              'shrink-0 rounded-full border px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold transition hover:bg-muted/80',
               active === tab.id
                 ? 'border-primary bg-primary text-primary-foreground shadow-[0_10px_30px_rgba(15,23,42,0.25)]'
                 : 'border-transparent text-muted-foreground hover:text-foreground'

@@ -38,15 +38,15 @@ export const Navbar = () => {
 
   return (
     <header className="fixed inset-x-0 top-0 z-50">
-      <div className="container mx-auto px-4 pb-3 pt-3 md:px-6">
+      <div className="container mx-auto px-2 pb-2 pt-2 sm:px-4 sm:pb-3 sm:pt-3 md:px-6">
         <div
           className={cn(
-            'flex w-full items-center justify-between rounded-2xl border border-border bg-card/95 px-4 py-2 text-foreground backdrop-blur-lg transition-all dark:border-white/10 dark:bg-card/90',
+            'flex w-full items-center justify-between rounded-2xl border border-border bg-card/95 px-3 py-1.5 sm:px-4 sm:py-2 text-foreground backdrop-blur-lg transition-all dark:border-white/10 dark:bg-card/90',
             scrolled ? 'shadow-md' : 'shadow-sm'
           )}
         >
-          <Link href="/dashboard" className="flex items-center gap-3 text-lg font-semibold text-foreground">
-            <div className="relative h-12 w-12 shrink-0 scale-125">
+          <Link href="/dashboard" className="flex items-center gap-2 sm:gap-3 text-lg font-semibold text-foreground">
+            <div className="relative h-9 w-9 shrink-0 sm:h-12 sm:w-12 sm:scale-125">
               <Image
                 src={logoSrc}
                 alt="Ascenda logo"
@@ -55,8 +55,8 @@ export const Navbar = () => {
               />
             </div>
             <div className="flex flex-col leading-tight">
-              <span className="navbar-brand transition-colors">Ascenda</span>
-              <span className="navbar-subtitle text-[11px] font-medium uppercase tracking-[0.4em] transition-colors">
+              <span className="navbar-brand text-base sm:text-lg transition-colors">Ascenda</span>
+              <span className="navbar-subtitle hidden sm:block text-[11px] font-medium uppercase tracking-[0.4em] transition-colors">
                 workspace
               </span>
             </div>

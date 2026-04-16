@@ -67,7 +67,7 @@ export const StatsBar = ({ stats }: StatsBarProps) => {
   };
 
   return (
-    <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+    <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-4">
       {STAT_CONFIG.map(({ key, label, icon: Icon, color, bg, border, suffix }, idx) => (
         <motion.div
           key={key}
@@ -80,7 +80,7 @@ export const StatsBar = ({ stats }: StatsBarProps) => {
             <Icon className={`h-5 w-5 ${color}`} />
           </div>
           <div className="min-w-0">
-            <p className="text-2xl font-bold text-foreground tabular-nums">
+            <p className="text-xl sm:text-2xl font-bold text-foreground tabular-nums">
               <CountUp value={values[key]} />{suffix ?? ''}
             </p>
             <p className="truncate text-xs text-muted-foreground">{label}</p>

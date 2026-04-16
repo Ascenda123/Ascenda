@@ -32,7 +32,7 @@ export function CompareBar({ selectedItems, onClear, onRemove, onCompare, maxIte
             : `Add ${maxItems - selectedItems.length} more to max out diff mode.`;
 
     return createPortal(
-        <div role="region" aria-label="Comparison tray" className="fixed bottom-6 left-1/2 z-[100] w-full max-w-5xl -translate-x-1/2 px-4 transition-all duration-300 ease-in-out">
+        <div role="region" aria-label="Comparison tray" className="fixed bottom-20 sm:bottom-6 left-1/2 z-[100] w-full max-w-5xl -translate-x-1/2 px-3 sm:px-4 transition-all duration-300 ease-in-out">
             {/* Mobile Toggle Handle - Visible only on small screens when collapsed */}
             {!isExpanded && (
                 <div className="flex justify-center sm:hidden">

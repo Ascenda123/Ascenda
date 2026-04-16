@@ -13,9 +13,9 @@ interface SectionNavProps {
 
 export const SectionNav = (props: SectionNavProps) => (
   <Suspense fallback={
-    <nav className="surface-toolbar flex flex-wrap items-center gap-3 rounded-[28px]">
+    <nav className="surface-toolbar flex items-center gap-2 sm:gap-3 rounded-[28px] overflow-x-auto scrollbar-none -mx-1 px-1">
       {props.items.map((item) => (
-        <span key={item.href} className="nav-pill">{item.label}</span>
+        <span key={item.href} className="nav-pill shrink-0">{item.label}</span>
       ))}
     </nav>
   }>
@@ -28,7 +28,7 @@ const SectionNavInner = ({ items, getIsActive }: SectionNavProps) => {
   const searchParams = useSearchParams();
 
   return (
-    <nav className="surface-toolbar flex flex-wrap items-center gap-3 rounded-[28px]">
+    <nav className="surface-toolbar flex items-center gap-2 sm:gap-3 rounded-[28px] overflow-x-auto scrollbar-none -mx-1 px-1">
       {items.map((item) => {
         const active = getIsActive
           ? getIsActive(item, pathname, searchParams)
@@ -49,7 +49,7 @@ const SectionNavInner = ({ items, getIsActive }: SectionNavProps) => {
             key={item.href}
             href={item.href}
             className={cn(
-              'nav-pill',
+              'nav-pill shrink-0',
               active
                 ? 'nav-pill-active'
                 : ''

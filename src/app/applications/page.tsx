@@ -317,7 +317,7 @@ export default async function ApplicationsPage() {
         }
       />
 
-      <div className="space-y-8">
+      <div className="space-y-5 sm:space-y-8">
         <ApplicationPriorityBoard items={priorityItems} />
 
         {/* Quick links to documents & sandbox */}
@@ -353,7 +353,7 @@ export default async function ApplicationsPage() {
         </div>
 
         <PlannerCalendar events={plannerEvents} />
-        <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
+        <div className="grid gap-4 sm:gap-6 lg:grid-cols-[2fr,1fr]">
           <RequirementTracker items={requirementItems} />
           <div className="surface-stage space-y-4">
             <div>
@@ -369,7 +369,7 @@ export default async function ApplicationsPage() {
           </div>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-3">
+        <div className="grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
           <div className="surface-stage space-y-4 rounded-[28px]">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Files</p>

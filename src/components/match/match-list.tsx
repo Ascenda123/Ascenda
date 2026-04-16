@@ -123,15 +123,15 @@ export const MatchList = ({ matches }: MatchListProps) => {
 
   return (
     <div className="space-y-8 pb-24">
-      <div className="surface-toolbar flex flex-wrap items-center justify-between gap-3">
+      <div className="surface-toolbar flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <div className="relative z-10 flex flex-col gap-1">
           <p className="text-[11px] uppercase tracking-[0.35em] text-muted-foreground">
             {MATCHES_TEXT.list.headerEyebrow}
           </p>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-xs sm:text-sm text-muted-foreground">
             {totalShown} of {matches.length} program{matches.length === 1 ? '' : 's'} ranked by admission probability
           </p>
-          <div className="flex items-center gap-1.5 mt-1">
+          <div className="hidden sm:flex items-center gap-1.5 mt-1">
             <Info className="h-3 w-3 text-muted-foreground/60 shrink-0" />
             <p className="text-[11px] text-muted-foreground/80">
               <span className="font-semibold text-rose-500">Reach</span>{' '}{'<'}30% admission
@@ -142,7 +142,7 @@ export const MatchList = ({ matches }: MatchListProps) => {
             </p>
           </div>
         </div>
-        <div className="relative z-10 flex flex-wrap items-center gap-2">
+        <div className="relative z-10 flex items-center gap-2 overflow-x-auto scrollbar-none">
           <div className="flex items-center gap-1 rounded-2xl border border-border/70 bg-background/80 p-1.5 shadow-sm">
             {(['All', ...TIER_ORDER] as const).map((tier) => (
               <button

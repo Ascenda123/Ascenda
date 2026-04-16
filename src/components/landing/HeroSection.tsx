@@ -223,7 +223,7 @@ export function HeroSection() {
                                     transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
                                 >
                                     <motion.h1
-                                        className="text-5xl font-heading font-semibold leading-tight tracking-tight text-foreground sm:text-[3.6rem]"
+                                        className="text-3xl font-heading font-semibold leading-tight tracking-tight text-foreground sm:text-5xl lg:text-[3.6rem]"
                                         aria-label={heroHeadline}
                                         initial={shouldReduceMotion ? false : 'hidden'}
                                         animate="visible"
@@ -240,7 +240,7 @@ export function HeroSection() {
                                         </span>
                                     </motion.h1>
                                     <motion.p
-                                        className="mt-4 text-lg text-muted-foreground sm:text-xl"
+                                        className="mt-3 text-sm text-muted-foreground sm:mt-4 sm:text-lg lg:text-xl"
                                         variants={blurIn}
                                         initial={shouldReduceMotion ? false : 'hidden'}
                                         animate={isTypingDone ? 'visible' : 'hidden'}
@@ -294,7 +294,7 @@ export function HeroSection() {
                                 </motion.ul>
                             </div>
                             <motion.div
-                                className="relative rounded-2xl border border-border/60 bg-card/70 p-5 text-card-foreground shadow-xl backdrop-blur-xl overflow-hidden"
+                                className="relative rounded-2xl border border-border/60 bg-card/70 p-3 sm:p-5 text-card-foreground shadow-xl backdrop-blur-xl overflow-hidden"
                                 initial={shouldReduceMotion ? false : 'hidden'}
                                 animate={isTypingDone ? 'visible' : 'hidden'}
                                 variants={dashboardContainerVariants}
@@ -324,19 +324,19 @@ export function HeroSection() {
                                 </motion.div>
 
                                 {/* Stat strip — hero fit score + secondary stats */}
-                                <motion.div className="relative mt-5 grid grid-cols-[1.3fr_1fr_1fr] gap-3" variants={dashboardItemVariants}>
+                                <motion.div className="relative mt-4 sm:mt-5 grid grid-cols-3 gap-2 sm:gap-3" variants={dashboardItemVariants}>
                                     {/* Fit score — hero stat with extra weight */}
                                     <div className="relative overflow-hidden rounded-2xl border border-emerald-500/20 bg-background px-4 py-4 text-center shadow-sm">
                                         <div className="pointer-events-none absolute -top-8 -right-8 h-28 w-28 rounded-full bg-emerald-400 blur-2xl opacity-30" aria-hidden />
                                         <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Fit score</p>
-                                        <p className="mt-1 text-4xl font-bold text-foreground leading-none tracking-tight">{fitScore}<span className="text-xl text-emerald-500">%</span></p>
+                                        <p className="mt-1 text-2xl sm:text-4xl font-bold text-foreground leading-none tracking-tight">{fitScore}<span className="text-base sm:text-xl text-emerald-500">%</span></p>
                                         <p className="mt-1 text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">Top match</p>
                                     </div>
                                     {/* Due soon */}
                                     <div className="relative overflow-hidden rounded-2xl border border-border bg-background px-4 py-4 text-center shadow-sm">
                                         <div className="pointer-events-none absolute -top-6 -right-6 h-24 w-24 rounded-full bg-amber-400 blur-2xl opacity-40" aria-hidden />
                                         <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Due soon</p>
-                                        <p className="mt-1 text-2xl font-semibold text-foreground leading-tight tracking-tight">3</p>
+                                        <p className="mt-1 text-xl sm:text-2xl font-semibold text-foreground leading-tight tracking-tight">3</p>
                                         <p className="mt-0.5 text-[10px] text-muted-foreground">This week</p>
                                     </div>
                                     {/* Profile — with animated circular progress */}

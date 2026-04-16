@@ -67,7 +67,7 @@ export function CounsellorDocumentBoard({ documents }: CounsellorDocumentBoardPr
     <div className="space-y-6">
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
-        <div className="relative flex-1 min-w-[200px] max-w-sm">
+        <div className="relative flex-1 min-w-0 sm:min-w-[200px] max-w-sm">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/60" />
           <input
             type="text"
