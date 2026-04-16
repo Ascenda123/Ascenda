@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { Navbar } from './navbar';
 import { Sidebar } from './sidebar';
 import { MobileNav } from './mobile-nav';
+import { ChatbotWidget } from '@/components/chat/chatbot-widget';
 
 export const DashboardShell = ({ children }: { children: ReactNode }) => {
   return (
@@ -21,6 +22,7 @@ export const DashboardShell = ({ children }: { children: ReactNode }) => {
         </main>
       </div>
       <MobileNav />
+      <ChatbotWidget />
     </div>
   );
 };
