@@ -322,16 +322,6 @@ export default function CoursePage({ params }: { params: { id: string } }) {
   const backLabel =
     contextSource === 'search' ? 'Back to search results' : contextSource === 'university' ? 'Back to university page' : 'Back to dashboard';
 
-  if (!course) {
-    return <MissingCourse backHref={backHref} backLabel={backLabel} />;
-  }
-
-  const heroMeta = {
-    title: course.title,
-    university: course.university,
-    location: course.location
-  };
-
   const sectionNav = useMemo(
     () => [
       { id: 'overview', label: 'Overview' },
@@ -344,20 +334,8 @@ export default function CoursePage({ params }: { params: { id: string } }) {
     []
   );
 
-  const metricCards = [
-    { label: 'Acceptance Rate', value: course.acceptanceRate, hint: 'Estimated admissions rate for this cohort.' },
-    { label: 'Guardian Rank', value: course.guardianRank, hint: 'Guardian University Guide rank.' },
-    { label: 'QS Rank', value: course.qsRank, hint: 'QS World University ranking.' },
-    { label: 'Times Rank', value: course.timesRank, hint: 'Times Higher Education ranking.' },
-    { label: 'Student Satisfaction (NSS)', value: `${course.satisfaction}%`, hint: 'National Student Survey satisfaction.' },
-    { label: 'Graduate Employment Rate', value: `${course.employment}%`, hint: 'Employment within 6 months of graduation.' },
-    { label: 'Average Starting Salary', value: course.startingSalary, hint: 'Median starting salary for recent graduates.' },
-    { label: 'Study Abroad Option', value: course.studyAbroad ? 'Yes' : 'No', hint: 'Whether a study abroad term is available.' },
-    { label: 'Top Industries Graduates Enter', value: course.topIndustries, hint: 'Most common industries for alumni.' },
-    { label: 'Placement Year Available?', value: course.placementYear ? 'Yes' : 'No', hint: 'Optional placement/sandwich year.' }
-  ];
-
   useEffect(() => {
+    if (!course) return;
     const observedSections = sectionNav.map((item) => document.getElementById(item.id)).filter(Boolean);
     const observer = new IntersectionObserver(
       (entries) => {
@@ -371,7 +349,7 @@ export default function CoursePage({ params }: { params: { id: string } }) {
     );
     observedSections.forEach((section) => observer.observe(section!));
     return () => observer.disconnect();
-  }, [sectionNav]);
+  }, [sectionNav, course]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -381,6 +359,29 @@ export default function CoursePage({ params }: { params: { id: string } }) {
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  if (!course) {
+    return <MissingCourse backHref={backHref} backLabel={backLabel} />;
+  }
+
+  const heroMeta = {
+    title: course.title,
+    university: course.university,
+    location: course.location
+  };
+
+  const metricCards = [
+    { label: 'Acceptance Rate', value: course.acceptanceRate, hint: 'Estimated admissions rate for this cohort.' },
+    { label: 'Guardian Rank', value: course.guardianRank, hint: 'Guardian University Guide rank.' },
+    { label: 'QS Rank', value: course.qsRank, hint: 'QS World University ranking.' },
+    { label: 'Times Rank', value: course.timesRank, hint: 'Times Higher Education ranking.' },
+    { label: 'Student Satisfaction (NSS)', value: `${course.satisfaction}%`, hint: 'National Student Survey satisfaction.' },
+    { label: 'Graduate Employment Rate', value: `${course.employment}%`, hint: 'Employment within 6 months of graduation.' },
+    { label: 'Average Starting Salary', value: course.startingSalary, hint: 'Median starting salary for recent graduates.' },
+    { label: 'Study Abroad Option', value: course.studyAbroad ? 'Yes' : 'No', hint: 'Whether a study abroad term is available.' },
+    { label: 'Top Industries Graduates Enter', value: course.topIndustries, hint: 'Most common industries for alumni.' },
+    { label: 'Placement Year Available?', value: course.placementYear ? 'Yes' : 'No', hint: 'Optional placement/sandwich year.' }
+  ];
 
   const handleNavigate = (id: string) => {
     const el = document.getElementById(id);
@@ -815,7 +816,7 @@ const MissingCourse = ({ backHref, backLabel }: { backHref: string; backLabel: s
             <div className="inline-flex items-center justify-center rounded-full bg-muted px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">
               Missing course
             </div>
-            <h1 className="text-3xl font-semibold text-foreground">We couldn't find that course</h1>
+            <h1 className="text-3xl font-semibold text-foreground">We couldn&apos;t find that course</h1>
             <p className="text-sm text-muted-foreground">
               The program link may be outdated. Head back to explore other universities or return to your dashboard.
             </p>

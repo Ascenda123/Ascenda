@@ -24,8 +24,6 @@ interface ComparisonModalProps {
 }
 
 export function ComparisonModal({ isOpen, onClose, universities, onRemove, maxItems = 3 }: ComparisonModalProps) {
-    if (!isOpen) return null;
-
     const [highlightDiffs, setHighlightDiffs] = useState(true);
     const [hideMatches, setHideMatches] = useState(false);
 
@@ -196,6 +194,8 @@ export function ComparisonModal({ isOpen, onClose, universities, onRemove, maxIt
         const color = isBest ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800';
         return <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${color}`}>{label}</span>;
     };
+
+    if (!isOpen) return null;
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
