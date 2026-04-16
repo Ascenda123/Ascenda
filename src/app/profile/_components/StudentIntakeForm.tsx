@@ -48,48 +48,44 @@ const CLUSTER_OPTIONS: { value: IntendedCluster; label: string }[] = [
   { value: 'creative', label: 'Creative' }
 ];
 
-const COUNTRY_OPTIONS = [
-  'United Kingdom',
-  'United States',
-  'Canada',
-  'Australia',
-  'Ireland',
-  'India',
-  'China',
-  'Singapore',
-  'Hong Kong',
-  'United Arab Emirates',
-  'Saudi Arabia',
-  'Qatar',
-  'Kuwait',
-  'Nigeria',
-  'Ghana',
-  'Kenya',
-  'South Africa',
-  'Germany',
-  'France',
-  'Spain',
-  'Italy',
-  'Netherlands',
-  'Sweden',
-  'Norway',
-  'Denmark',
-  'Poland',
-  'Pakistan',
-  'Bangladesh',
-  'Malaysia',
-  'Indonesia',
-  'Vietnam',
-  'Philippines',
-  'Japan',
-  'South Korea',
-  'Turkey',
-  'Brazil',
-  'Mexico',
-  'Chile',
-  'Argentina',
-  'Other'
-];
+const COUNTRY_OPTIONS: string[] = (() => {
+  const fallback = [
+    'Afghanistan', 'Albania', 'Algeria', 'Andorra', 'Angola', 'Antigua and Barbuda', 'Argentina', 'Armenia', 'Australia', 'Austria',
+    'Azerbaijan', 'Bahamas', 'Bahrain', 'Bangladesh', 'Barbados', 'Belarus', 'Belgium', 'Belize', 'Benin', 'Bhutan',
+    'Bolivia', 'Bosnia and Herzegovina', 'Botswana', 'Brazil', 'Brunei', 'Bulgaria', 'Burkina Faso', 'Burundi', 'Cabo Verde', 'Cambodia',
+    'Cameroon', 'Canada', 'Central African Republic', 'Chad', 'Chile', 'China', 'Colombia', 'Comoros', 'Congo', 'Costa Rica',
+    'Croatia', 'Cuba', 'Cyprus', 'Czech Republic', 'Denmark', 'Djibouti', 'Dominica', 'Dominican Republic', 'East Timor', 'Ecuador',
+    'Egypt', 'El Salvador', 'Equatorial Guinea', 'Eritrea', 'Estonia', 'Eswatini', 'Ethiopia', 'Fiji', 'Finland', 'France',
+    'Gabon', 'Gambia', 'Georgia', 'Germany', 'Ghana', 'Greece', 'Grenada', 'Guatemala', 'Guinea', 'Guinea-Bissau',
+    'Guyana', 'Haiti', 'Honduras', 'Hong Kong', 'Hungary', 'Iceland', 'India', 'Indonesia', 'Iran', 'Iraq',
+    'Ireland', 'Israel', 'Italy', 'Ivory Coast', 'Jamaica', 'Japan', 'Jordan', 'Kazakhstan', 'Kenya', 'Kiribati',
+    'Kosovo', 'Kuwait', 'Kyrgyzstan', 'Laos', 'Latvia', 'Lebanon', 'Lesotho', 'Liberia', 'Libya', 'Liechtenstein',
+    'Lithuania', 'Luxembourg', 'Macau', 'Madagascar', 'Malawi', 'Malaysia', 'Maldives', 'Mali', 'Malta', 'Marshall Islands',
+    'Mauritania', 'Mauritius', 'Mexico', 'Micronesia', 'Moldova', 'Monaco', 'Mongolia', 'Montenegro', 'Morocco', 'Mozambique',
+    'Myanmar', 'Namibia', 'Nauru', 'Nepal', 'Netherlands', 'New Zealand', 'Nicaragua', 'Niger', 'Nigeria', 'North Korea',
+    'North Macedonia', 'Norway', 'Oman', 'Pakistan', 'Palau', 'Palestine', 'Panama', 'Papua New Guinea', 'Paraguay', 'Peru',
+    'Philippines', 'Poland', 'Portugal', 'Qatar', 'Romania', 'Russia', 'Rwanda', 'Saint Kitts and Nevis', 'Saint Lucia', 'Saint Vincent and the Grenadines',
+    'Samoa', 'San Marino', 'Sao Tome and Principe', 'Saudi Arabia', 'Senegal', 'Serbia', 'Seychelles', 'Sierra Leone', 'Singapore', 'Slovakia',
+    'Slovenia', 'Solomon Islands', 'Somalia', 'South Africa', 'South Korea', 'South Sudan', 'Spain', 'Sri Lanka', 'Sudan', 'Suriname',
+    'Sweden', 'Switzerland', 'Syria', 'Taiwan', 'Tajikistan', 'Tanzania', 'Thailand', 'Togo', 'Tonga', 'Trinidad and Tobago',
+    'Tunisia', 'Turkey', 'Turkmenistan', 'Tuvalu', 'Uganda', 'Ukraine', 'United Arab Emirates', 'United Kingdom', 'United States', 'Uruguay',
+    'Uzbekistan', 'Vanuatu', 'Vatican City', 'Venezuela', 'Vietnam', 'Yemen', 'Zambia', 'Zimbabwe'
+  ];
+  if (typeof Intl?.supportedValuesOf === 'function' && typeof Intl.DisplayNames === 'function') {
+    try {
+      const displayNames = new Intl.DisplayNames(['en'], { type: 'region' });
+      const codes = (Intl as any).supportedValuesOf('region').filter((code: string) => /^[A-Z]{2}$/.test(code));
+      const names = codes
+        .map((code: string) => displayNames.of(code) ?? '')
+        .filter(Boolean)
+        .sort((a: string, b: string) => a.localeCompare(b));
+      if (names.length > 100) return names;
+    } catch {
+      // fall through to fallback
+    }
+  }
+  return fallback;
+})();
 
 const SCHOOL_TYPE_OPTIONS = [
   { value: 'international_school', label: 'International school' },
@@ -1015,6 +1011,7 @@ export const StudentIntakeForm = ({
                       <span>First name</span>
                       <input
                         type="text"
+                        className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
                         value={personalInfo.first_name}
                         onChange={(event) => updatePersonalInfo('first_name', event.target.value)}
                       />
@@ -1178,6 +1175,7 @@ export const StudentIntakeForm = ({
                       <span>School name</span>
                       <input
                         type="text"
+                        className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
                         value={academicInput.school_name}
                         onChange={(event) => updateAcademicInput('school_name', event.target.value)}
                       />
@@ -1187,6 +1185,7 @@ export const StudentIntakeForm = ({
                       <span>School country</span>
                       <input
                         list="country-options"
+                        className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
                         value={academicInput.school_country}
                         onChange={(event) => updateAcademicInput('school_country', event.target.value)}
                       />
@@ -1196,6 +1195,7 @@ export const StudentIntakeForm = ({
                       <span>School city (optional)</span>
                       <input
                         type="text"
+                        className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
                         value={academicInput.school_city}
                         onChange={(event) => updateAcademicInput('school_city', event.target.value)}
                       />
@@ -1238,6 +1238,7 @@ export const StudentIntakeForm = ({
                       <span>Desired UK start date (optional)</span>
                       <input
                         type="date"
+                        className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
                         value={academicInput.desired_start_date}
                         onChange={(event) => updateAcademicInput('desired_start_date', event.target.value)}
                       />
