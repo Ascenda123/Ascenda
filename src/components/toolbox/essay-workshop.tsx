@@ -10,25 +10,16 @@ import CharacterCount from '@tiptap/extension-character-count';
 import {
   ChevronDown, Bold, Italic, List, ListOrdered, Undo, Redo,
   GripVertical, RotateCcw, Copy, Check, PenTool, ArrowLeft,
-  Globe, Star, Heart, Trophy, User, MessageSquare, Users, ChevronRight,
+  Users, ChevronRight,
   FileText, Sparkles, PanelRightOpen, PanelRightClose, Download,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { stagger, childFade } from '@/lib/motion';
 import type { EssayBuildingBlock, EssayPrompt, BlockCategory, ActivityEntry } from '@/lib/data/student-demo-data';
 import { EssayAIPanel } from './essay-ai-panel';
+import { CATEGORY_CONFIG, CATEGORY_ORDER } from '@/lib/config/toolbox';
 
 /* ─── Config ─────────────────────────────────────────────────────────────── */
-
-const CATEGORY_CONFIG: Record<BlockCategory, { icon: typeof Globe; label: string; color: string; bg: string }> = {
-  identity: { icon: User, label: 'Identity', color: 'text-violet-600', bg: 'bg-violet-500/10' },
-  experience: { icon: Globe, label: 'Experience', color: 'text-sky-600', bg: 'bg-sky-500/10' },
-  strength: { icon: Star, label: 'Strengths', color: 'text-amber-600', bg: 'bg-amber-500/10' },
-  interest: { icon: Heart, label: 'Interests', color: 'text-rose-600', bg: 'bg-rose-500/10' },
-  achievement: { icon: Trophy, label: 'Achievements', color: 'text-emerald-600', bg: 'bg-emerald-500/10' },
-  counsellor_insight: { icon: MessageSquare, label: 'Counsellor', color: 'text-violet-600', bg: 'bg-violet-500/10' },
-};
-const CATEGORY_ORDER: BlockCategory[] = ['identity', 'experience', 'strength', 'interest', 'achievement', 'counsellor_insight'];
 
 const PLATFORMS = ['UCAS', 'Common App', 'UC PIQs', 'Custom'] as const;
 type Platform = (typeof PLATFORMS)[number];
@@ -75,7 +66,15 @@ export function EssayWorkshop({ blocks, prompts, activities = [] }: EssayWorksho
       },
     },
     onUpdate: ({ editor }) => {
-      setDrafts((prev) => ({ ...prev, [platform]: editor.getText() }));
+      const text = editor.getText();
+      if (limit.unit === 'words') {
+        const words = text.trim().split(/\s+/).filter(Boolean).length;
+        if (words > limit.max) {
+          editor.commands.undo();
+          return;
+        }
+      }
+      setDrafts((prev) => ({ ...prev, [platform]: text }));
     },
   });
 
@@ -93,7 +92,17 @@ export function EssayWorkshop({ blocks, prompts, activities = [] }: EssayWorksho
   // Persist drafts
   useEffect(() => { try { const s = localStorage.getItem('ascenda-essay-drafts'); if (s) setDrafts(JSON.parse(s)); } catch {} }, []);
   useEffect(() => { if (Object.keys(drafts).length > 0) localStorage.setItem('ascenda-essay-drafts', JSON.stringify(drafts)); }, [drafts]);
-  useEffect(() => { if (editor) { const t = drafts[platform] ?? ''; if (t !== editor.getText()) editor.commands.setContent(t ? `<p>${t.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>')}</p>` : ''); } }, [platform, editor, drafts]);
+  useEffect(() => {
+    if (!editor) return;
+    const t = drafts[platform] ?? '';
+    if (t !== editor.getText()) {
+      const paragraphs = t.split(/\n\n+/).filter(Boolean);
+      const html = paragraphs.length > 0
+        ? paragraphs.map((p) => `<p>${p.replace(/\n/g, '<br>')}</p>`).join('')
+        : '';
+      editor.commands.setContent(html);
+    }
+  }, [platform, editor, drafts]);
 
   const toggleBlock = (id: string) => { setSelectedBlocks((prev) => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; }); };
   const insertBlock = useCallback((block: EssayBuildingBlock) => { if (!editor) return; editor.chain().focus().insertContent(`<p><em>[${block.label}]</em> ${block.detail || block.label}</p>`).run(); setSelectedBlocks((prev) => new Set(prev).add(block.id)); }, [editor]);
@@ -411,7 +420,10 @@ export function EssayWorkshop({ blocks, prompts, activities = [] }: EssayWorksho
                   selectedBlocks={blocks.filter((b) => selectedBlocks.has(b.id))}
                   allBlocks={blocks}
                   onInsertText={(text) => {
-                    if (editor) editor.chain().focus().insertContent(`<p>${text.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>')}</p>`).run();
+                    if (!editor) return;
+                    const paragraphs = text.split(/\n\n+/).filter(Boolean);
+                    const html = paragraphs.map((p) => `<p>${p.replace(/\n/g, '<br>')}</p>`).join('');
+                    editor.chain().focus().insertContent(html).run();
                   }}
                 />
               </div>

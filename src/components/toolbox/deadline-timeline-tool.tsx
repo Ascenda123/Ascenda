@@ -52,6 +52,7 @@ export function DeadlineTimelineTool({ deadlines }: DeadlineTimelineToolProps) {
   const [filterUniversity, setFilterUniversity] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'timeline' | 'calendar'>('timeline');
   const [selectedDeadline, setSelectedDeadline] = useState<string | null>(null);
+  const [selectedCalendarDate, setSelectedCalendarDate] = useState<string | null>(null);
 
   // Calendar state
   const now = new Date();
@@ -67,19 +68,25 @@ export function DeadlineTimelineTool({ deadlines }: DeadlineTimelineToolProps) {
     return result;
   }, [deadlines, filterType, filterUniversity]);
 
-  const focusDeadlines = filtered.filter((d) => daysUntil(d.date) <= 14 && daysUntil(d.date) >= 0);
-  const overdueDeadlines = filtered.filter((d) => daysUntil(d.date) < 0);
+  const daysUntilMap = useMemo(() => {
+    const map = new Map<string, number>();
+    filtered.forEach((d) => { if (!map.has(d.id)) map.set(d.id, daysUntil(d.date)); });
+    return map;
+  }, [filtered]);
+
+  const focusDeadlines = filtered.filter((d) => { const days = daysUntilMap.get(d.id) ?? daysUntil(d.date); return days <= 14 && days >= 0; });
+  const overdueDeadlines = filtered.filter((d) => (daysUntilMap.get(d.id) ?? daysUntil(d.date)) < 0);
 
   // Group by month for timeline
   const grouped = useMemo(() => {
     const map = new Map<string, TimelineDeadline[]>();
-    filtered.filter((d) => daysUntil(d.date) >= 0).forEach((d) => {
+    filtered.filter((d) => (daysUntilMap.get(d.id) ?? daysUntil(d.date)) >= 0).forEach((d) => {
       const key = monthFormatter.format(new Date(d.date));
       if (!map.has(key)) map.set(key, []);
       map.get(key)!.push(d);
     });
     return [...map.entries()];
-  }, [filtered]);
+  }, [filtered, daysUntilMap]);
 
   // Calendar data
   const calendarDays = useMemo(() => getCalendarDays(calYear, calMonth), [calYear, calMonth]);
@@ -113,7 +120,7 @@ export function DeadlineTimelineTool({ deadlines }: DeadlineTimelineToolProps) {
             <p className="text-sm font-semibold text-rose-600">{overdueDeadlines.length} overdue deadline{overdueDeadlines.length !== 1 ? 's' : ''}</p>
             <div className="flex flex-wrap gap-2 mt-1.5">
               {overdueDeadlines.map((d) => (
-                <span key={d.id} className="text-xs text-rose-600/80">{d.title} ({Math.abs(daysUntil(d.date))}d ago)</span>
+                <span key={d.id} className="text-xs text-rose-600/80">{d.title} ({Math.abs(daysUntilMap.get(d.id) ?? daysUntil(d.date))}d ago)</span>
               ))}
             </div>
           </div>
@@ -127,7 +134,7 @@ export function DeadlineTimelineTool({ deadlines }: DeadlineTimelineToolProps) {
           <motion.div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" variants={stagger} initial="hidden" animate="show">
             {focusDeadlines.map((d) => {
               const cfg = TYPE_CONFIG[d.type];
-              const days = daysUntil(d.date);
+              const days = daysUntilMap.get(d.id) ?? daysUntil(d.date);
               return (
                 <motion.div
                   key={d.id}
@@ -252,13 +259,16 @@ export function DeadlineTimelineTool({ deadlines }: DeadlineTimelineToolProps) {
               const isPast = date < now && !isToday;
 
               return (
-                <div
+                <button
                   key={dateStr}
+                  type="button"
+                  onClick={() => dayDeadlines.length > 0 && setSelectedCalendarDate(selectedCalendarDate === dateStr ? null : dateStr)}
                   className={cn(
-                    'h-20 rounded-xl border p-1.5 transition-colors overflow-hidden',
+                    'h-20 rounded-xl border p-1.5 transition-colors overflow-hidden text-left',
                     isToday ? 'border-primary/40 bg-primary/5' : 'border-border/50 hover:bg-muted/20',
                     isPast && 'opacity-50',
-                    dayDeadlines.length > 0 && 'ring-1 ring-primary/10'
+                    dayDeadlines.length > 0 && 'ring-1 ring-primary/10 cursor-pointer',
+                    selectedCalendarDate === dateStr && 'ring-2 ring-primary/40 bg-primary/5'
                   )}
                 >
                   <p className={cn(
@@ -284,10 +294,46 @@ export function DeadlineTimelineTool({ deadlines }: DeadlineTimelineToolProps) {
                       <p className="text-[9px] text-muted-foreground pl-1">+{dayDeadlines.length - 2} more</p>
                     )}
                   </div>
-                </div>
+                </button>
               );
             })}
           </div>
+
+          {/* Selected day detail panel */}
+          <AnimatePresence>
+            {selectedCalendarDate && (deadlinesByDate.get(selectedCalendarDate) ?? []).length > 0 && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                className="overflow-hidden"
+              >
+                <div className="rounded-2xl border border-border p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-semibold text-foreground">
+                      {new Date(selectedCalendarDate).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
+                    </p>
+                    <button onClick={() => setSelectedCalendarDate(null)} className="text-muted-foreground hover:text-foreground text-xs">
+                      Close
+                    </button>
+                  </div>
+                  {(deadlinesByDate.get(selectedCalendarDate) ?? []).map((d) => {
+                    const cfg = TYPE_CONFIG[d.type];
+                    return (
+                      <div key={d.id} className={cn('rounded-xl border p-3 space-y-1', cfg.bg)}>
+                        <div className="flex items-center gap-2">
+                          <span className={cn('rounded-full px-2 py-0.5 text-[10px] font-semibold', cfg.bg, cfg.color)}>{cfg.label}</span>
+                          <span className="text-sm font-semibold text-foreground">{d.title}</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">{d.university}</p>
+                        {d.detail && <p className="text-xs text-muted-foreground/80">{d.detail}</p>}
+                      </div>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       )}
 
@@ -304,7 +350,7 @@ export function DeadlineTimelineTool({ deadlines }: DeadlineTimelineToolProps) {
               <div className="relative border-l-2 border-border pl-6 space-y-4">
                 {items.map((d) => {
                   const cfg = TYPE_CONFIG[d.type];
-                  const days = daysUntil(d.date);
+                  const days = daysUntilMap.get(d.id) ?? daysUntil(d.date);
                   return (
                     <motion.div
                       key={d.id}

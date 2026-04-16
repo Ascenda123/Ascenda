@@ -40,13 +40,11 @@ export function ChancesCalculator({ grades, universities }: ChancesCalculatorPro
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<'classification' | 'chance' | 'deadline'>('classification');
 
-  const predicted = sliderScore;
-
   const sorted = useMemo(() => {
     const withData = universities.map((u) => ({
       ...u,
-      classification: classify(predicted, u.minimumScore),
-      chance: chancePercent(predicted, u.minimumScore),
+      classification: classify(sliderScore, u.minimumScore),
+      chance: chancePercent(sliderScore, u.minimumScore),
     }));
 
     if (sortBy === 'classification') {
@@ -57,7 +55,7 @@ export function ChancesCalculator({ grades, universities }: ChancesCalculatorPro
       return withData.sort((a, b) => b.chance - a.chance);
     }
     return withData.sort((a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime());
-  }, [universities, predicted, sortBy]);
+  }, [universities, sliderScore, sortBy]);
 
   const counts = { reach: 0, match: 0, safety: 0 };
   sorted.forEach((u) => counts[u.classification]++);
@@ -71,12 +69,12 @@ export function ChancesCalculator({ grades, universities }: ChancesCalculatorPro
             <p className="text-[11px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">{grades.system} Predicted Score</p>
             <div className="flex items-baseline gap-2 mt-1">
               <motion.span
-                key={predicted}
+                key={sliderScore}
                 initial={{ scale: 1.3, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 className="text-4xl font-bold text-foreground tabular-nums"
               >
-                {predicted}
+                {sliderScore}
               </motion.span>
               <span className="text-lg text-muted-foreground">/ 45</span>
             </div>
@@ -105,6 +103,11 @@ export function ChancesCalculator({ grades, universities }: ChancesCalculatorPro
               max={45}
               value={sliderScore}
               onChange={(e) => setSliderScore(Number(e.target.value))}
+              aria-label={`${grades.system} predicted score`}
+              aria-valuemin={24}
+              aria-valuemax={45}
+              aria-valuenow={sliderScore}
+              aria-valuetext={`${sliderScore} out of 45 points`}
               className="w-full h-2 rounded-full appearance-none cursor-pointer bg-muted/50 accent-primary
                 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:w-5
                 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:shadow-md
@@ -181,6 +184,11 @@ export function ChancesCalculator({ grades, universities }: ChancesCalculatorPro
         ))}
       </div>
 
+      {/* Disclaimer */}
+      <p className="text-[11px] text-muted-foreground/60 italic">
+        Chance percentages are illustrative estimates based on score thresholds, not real admissions probabilities. Actual outcomes depend on many factors beyond grades.
+      </p>
+
       {/* University cards */}
       <motion.div className="space-y-3" variants={stagger} initial="hidden" animate="show">
         {sorted.map((uni) => {
@@ -245,11 +253,11 @@ export function ChancesCalculator({ grades, universities }: ChancesCalculatorPro
                     <motion.div
                       className={cn('h-full rounded-full', cfg.barColor)}
                       initial={{ width: 0 }}
-                      animate={{ width: `${(predicted / 45) * 100}%` }}
+                      animate={{ width: `${(sliderScore / 45) * 100}%` }}
                       transition={{ duration: 0.6, ease: 'easeOut' }}
                     />
                   </div>
-                  <span className="text-[10px] font-semibold text-foreground w-12 text-right shrink-0">You: {predicted}</span>
+                  <span className="text-[10px] font-semibold text-foreground w-12 text-right shrink-0">You: {sliderScore}</span>
                 </div>
 
                 <AnimatePresence>

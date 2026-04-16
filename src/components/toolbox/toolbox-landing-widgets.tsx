@@ -7,7 +7,8 @@ export function ToolboxProgressRing({ value }: { value: number }) {
   const circumference = 2 * Math.PI * 28;
   return (
     <div className="relative h-16 w-16 shrink-0">
-      <svg className="h-16 w-16 -rotate-90" viewBox="0 0 64 64">
+      <svg className="h-16 w-16 -rotate-90" viewBox="0 0 64 64" role="img" aria-label={`${value}% progress`}>
+        <title>{value}% progress</title>
         <circle cx="32" cy="32" r="28" fill="none" stroke="currentColor" strokeWidth="4" className="text-muted/20" />
         <motion.circle
           cx="32" cy="32" r="28" fill="none" strokeWidth="4" strokeLinecap="round"

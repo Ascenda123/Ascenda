@@ -1,27 +1,22 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { redirect } from 'next/navigation';
-import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { DashboardShell } from '@/components/layout/shell';
 import { PageHero } from '@/components/layout/page-hero';
 import { SectionNav } from '@/components/layout/section-nav';
 import { TOOLBOX_SECTION_ITEMS } from '@/components/layout/navigation';
 import { AnimatedSection, AnimatedGrid, AnimatedGridItem } from '@/components/layout/animated-section';
-import { PenTool, BarChart3, Users, ClipboardCheck, CalendarClock, ArrowRight, Sparkles } from 'lucide-react';
+import { PenTool, BarChart3, ClipboardCheck, CalendarClock, ArrowRight } from 'lucide-react';
 import {
   DEMO_BUILDING_BLOCKS,
   DEMO_ESSAY_PROMPTS,
-  DEMO_ACTIVITIES,
   DEMO_UNIVERSITY_CHANCES,
   DEMO_REQUIREMENTS,
   DEMO_TIMELINE_DEADLINES,
 } from '@/lib/data/student-demo-data';
 import { ToolboxProgressRing, ToolboxCountdown } from '@/components/toolbox/toolbox-landing-widgets';
 
-export const dynamic = 'force-dynamic';
 export const metadata: Metadata = { title: 'Toolbox | Ascenda' };
 
-const totalHours = DEMO_ACTIVITIES.reduce((sum, a) => sum + a.hoursPerWeek * a.weeksPerYear, 0);
 const avgProgress = DEMO_REQUIREMENTS.length ? Math.round(DEMO_REQUIREMENTS.reduce((sum, r) => sum + r.progress, 0) / DEMO_REQUIREMENTS.length) : 0;
 const upcoming14 = DEMO_TIMELINE_DEADLINES.filter((d) => {
   const diff = (new Date(d.date).getTime() - Date.now()) / (1000 * 60 * 60 * 24);
@@ -65,27 +60,13 @@ const TOOL_CARDS = [
     ],
   },
   {
-    title: 'Activity Portfolio',
-    href: '/toolbox/activities',
-    icon: Users,
-    iconBg: 'bg-sky-500/10 text-sky-600',
-    gradient: 'from-sky-500/5 to-transparent',
-    description: 'Drag-to-reorder activities with impact visualization and format previews.',
-    step: 3,
-    stats: [
-      { label: 'Activities', value: DEMO_ACTIVITIES.length },
-      { label: 'Hours', value: totalHours },
-      { label: 'Tier 1', value: DEMO_ACTIVITIES.filter((a) => a.tier === 1).length },
-    ],
-  },
-  {
     title: 'Essay Workshop',
     href: '/toolbox/essay-workshop',
     icon: PenTool,
     iconBg: 'bg-violet-500/10 text-violet-600',
     gradient: 'from-violet-500/5 to-transparent',
     description: 'Rich text editor with building blocks, platform-specific limits, and AI writing tips.',
-    step: 4,
+    step: 3,
     stats: [
       { label: 'Blocks', value: DEMO_BUILDING_BLOCKS.length },
       { label: 'Prompts', value: DEMO_ESSAY_PROMPTS.length },
@@ -99,7 +80,7 @@ const TOOL_CARDS = [
     iconBg: 'bg-rose-500/10 text-rose-600',
     gradient: 'from-rose-500/5 to-transparent',
     description: 'Calendar and timeline views with urgency indicators and filtering.',
-    step: 5,
+    step: 4,
     stats: [
       { label: 'Next 14d', value: upcoming14 },
       { label: 'Next 30d', value: upcoming30 },
@@ -109,10 +90,6 @@ const TOOL_CARDS = [
 ];
 
 export default async function ToolboxPage() {
-  const supabase = createServerSupabaseClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
-
   // Next action: nearest deadline
   const nextDeadline = DEMO_TIMELINE_DEADLINES
     .filter((d) => new Date(d.date) > new Date())
@@ -128,9 +105,9 @@ export default async function ToolboxPage() {
       <PageHero
         eyebrow="Toolbox"
         title="Your toolkit"
-        description="Five purpose-built tools to plan, write, and track every part of your applications."
+        description="Four purpose-built tools to plan, write, and track every part of your applications."
         stats={[
-          { label: 'Tools', value: '5', detail: 'Available' },
+          { label: 'Tools', value: '4', detail: 'Available' },
           { label: 'Readiness', value: `${avgProgress}%`, detail: 'Overall' },
           { label: 'Upcoming', value: String(upcoming14), detail: 'Next 14 days' },
         ]}

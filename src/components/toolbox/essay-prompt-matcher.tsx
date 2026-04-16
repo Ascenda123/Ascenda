@@ -31,6 +31,7 @@ export function EssayPromptMatcher({ prompts, blocks }: EssayPromptMatcherProps)
           >
             <button
               onClick={() => setExpandedId(isExpanded ? null : prompt.id)}
+              aria-expanded={isExpanded}
               className="flex w-full items-start gap-3 p-4 text-left transition hover:bg-muted/30"
             >
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">

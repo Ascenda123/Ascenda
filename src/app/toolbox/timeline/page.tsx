@@ -1,6 +1,4 @@
 import type { Metadata } from 'next';
-import { redirect } from 'next/navigation';
-import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { DashboardShell } from '@/components/layout/shell';
 import { PageHero } from '@/components/layout/page-hero';
 import { SectionNav } from '@/components/layout/section-nav';
@@ -11,9 +9,6 @@ import { DEMO_TIMELINE_DEADLINES } from '@/lib/data/student-demo-data';
 export const metadata: Metadata = { title: 'Deadline Timeline | Ascenda' };
 
 export default async function TimelinePage() {
-  const supabase = createServerSupabaseClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
 
   const now = new Date();
   const upcoming = DEMO_TIMELINE_DEADLINES.filter((d) => new Date(d.date) >= now).length;

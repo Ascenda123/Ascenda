@@ -24,6 +24,8 @@ import { ThemeToggle } from '../theme/theme-toggle';
 
 const heroHeadline = 'The #1 University Application Companion.';
 const FIT_SCORE_TARGET = 92;
+const PROFILE_SEGMENTS = 5;
+const PROFILE_FILLED = 4;
 
 const topBarVariants: Variants = {
     hidden: { opacity: 0, y: -18, scale: 0.96, filter: 'blur(4px)' },
@@ -330,38 +332,91 @@ export function HeroSection() {
                                         <p className="mt-1 text-4xl font-bold text-foreground leading-none tracking-tight">{fitScore}<span className="text-xl text-emerald-500">%</span></p>
                                         <p className="mt-1 text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">Top match</p>
                                     </div>
-                                    {[
-                                        { label: 'Due soon', value: '3', detail: 'This week', tone: 'amber' },
-                                        { label: 'Profile', value: '4/5', detail: '80% complete', tone: 'primary' },
-                                    ].map((stat) => (
-                                        <div
-                                            key={stat.label}
-                                            className="relative overflow-hidden rounded-2xl border border-border bg-background px-4 py-4 text-center shadow-sm"
-                                        >
-                                            <div className={cn(
-                                                'pointer-events-none absolute -top-6 -right-6 h-24 w-24 rounded-full blur-2xl opacity-40',
-                                                stat.tone === 'amber' ? 'bg-amber-400' : 'bg-primary'
-                                            )} aria-hidden />
-                                            <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">{stat.label}</p>
-                                            <p className="mt-1 text-2xl font-semibold text-foreground leading-tight tracking-tight">{stat.value}</p>
-                                            <p className="mt-0.5 text-[10px] text-muted-foreground">{stat.detail}</p>
+                                    {/* Due soon */}
+                                    <div className="relative overflow-hidden rounded-2xl border border-border bg-background px-4 py-4 text-center shadow-sm">
+                                        <div className="pointer-events-none absolute -top-6 -right-6 h-24 w-24 rounded-full bg-amber-400 blur-2xl opacity-40" aria-hidden />
+                                        <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Due soon</p>
+                                        <p className="mt-1 text-2xl font-semibold text-foreground leading-tight tracking-tight">3</p>
+                                        <p className="mt-0.5 text-[10px] text-muted-foreground">This week</p>
+                                    </div>
+                                    {/* Profile — with animated circular progress */}
+                                    <div className="relative overflow-hidden rounded-2xl border border-border bg-background px-4 py-4 text-center shadow-sm">
+                                        <div className="pointer-events-none absolute -top-6 -right-6 h-24 w-24 rounded-full bg-primary blur-2xl opacity-40" aria-hidden />
+                                        <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Profile</p>
+                                        <div className="mt-1 flex items-center justify-center gap-2">
+                                            {/* Mini circular progress ring */}
+                                            <svg width="28" height="28" viewBox="0 0 28 28" className="shrink-0 -rotate-90">
+                                                <circle
+                                                    cx="14" cy="14" r="11"
+                                                    fill="none"
+                                                    className="stroke-border"
+                                                    strokeWidth="3"
+                                                />
+                                                <motion.circle
+                                                    cx="14" cy="14" r="11"
+                                                    fill="none"
+                                                    className="stroke-primary"
+                                                    strokeWidth="3"
+                                                    strokeLinecap="round"
+                                                    strokeDasharray={2 * Math.PI * 11}
+                                                    initial={shouldReduceMotion ? false : { strokeDashoffset: 2 * Math.PI * 11 }}
+                                                    animate={isTypingDone
+                                                        ? { strokeDashoffset: 2 * Math.PI * 11 * (1 - PROFILE_FILLED / PROFILE_SEGMENTS) }
+                                                        : { strokeDashoffset: 2 * Math.PI * 11 }
+                                                    }
+                                                    transition={{
+                                                        delay: shouldReduceMotion ? 0 : 0.9,
+                                                        duration: shouldReduceMotion ? 0 : 1.2,
+                                                        ease: [0.22, 1, 0.36, 1],
+                                                    }}
+                                                />
+                                            </svg>
+                                            <p className="text-2xl font-semibold text-foreground leading-tight tracking-tight">4/5</p>
                                         </div>
-                                    ))}
+                                        <p className="mt-0.5 text-[10px] text-muted-foreground">80% complete</p>
+                                    </div>
                                 </motion.div>
 
-                                {/* Profile completion bar — mirrors segmented profile bar */}
-                                <motion.div className="relative mt-4" variants={dashboardItemVariants}>
+                                {/* Profile completion bar — animated loading */}
+                                <motion.div
+                                    className="relative mt-4"
+                                    variants={dashboardItemVariants}
+                                >
                                     <div className="flex items-center justify-between mb-2">
                                         <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Profile progress</p>
-                                        <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-primary/70">80% ready</p>
+                                        <motion.p
+                                            className="text-[10px] font-semibold uppercase tracking-[0.3em] text-primary/70"
+                                            initial={shouldReduceMotion ? false : { opacity: 0 }}
+                                            animate={isTypingDone ? { opacity: 1 } : { opacity: 0 }}
+                                            transition={{ delay: shouldReduceMotion ? 0 : 1.6, duration: 0.4 }}
+                                        >
+                                            80% ready
+                                        </motion.p>
                                     </div>
                                     <div className="flex gap-1.5">
-                                        {[true, true, true, true, false].map((done, i) => (
-                                            <div
-                                                key={i}
-                                                className={cn('h-2 flex-1 rounded-full transition-colors', done ? 'bg-primary' : 'bg-border')}
-                                            />
-                                        ))}
+                                        {Array.from({ length: PROFILE_SEGMENTS }).map((_, i) => {
+                                            const isFilled = i < PROFILE_FILLED;
+                                            return (
+                                                <motion.div
+                                                    key={i}
+                                                    className={cn(
+                                                        'h-2 flex-1 rounded-full',
+                                                        isFilled ? 'bg-primary' : 'bg-border'
+                                                    )}
+                                                    initial={shouldReduceMotion ? false : { scaleX: 0, opacity: 0 }}
+                                                    animate={isTypingDone
+                                                        ? { scaleX: 1, opacity: 1 }
+                                                        : { scaleX: 0, opacity: 0 }
+                                                    }
+                                                    transition={{
+                                                        delay: shouldReduceMotion ? 0 : 0.8 + i * 0.18,
+                                                        duration: shouldReduceMotion ? 0 : 0.45,
+                                                        ease: [0.22, 1, 0.36, 1],
+                                                    }}
+                                                    style={{ originX: 0 }}
+                                                />
+                                            );
+                                        })}
                                     </div>
                                 </motion.div>
 

@@ -3,28 +3,14 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Globe,
-  Heart,
-  MessageSquare,
   Sparkles,
-  Star,
-  Trophy,
-  User
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { stagger, blockFade } from '@/lib/motion';
 import type { BlockCategory, BlockSource, EssayBuildingBlock } from '@/lib/data/student-demo-data';
+import { CATEGORY_CONFIG } from '@/lib/config/toolbox';
 
 // ─── Config ──────────────────────────────────────────────────────────────────
-
-const CATEGORY_CONFIG: Record<BlockCategory, { icon: typeof Globe; label: string; color: string; bg: string }> = {
-  experience: { icon: Globe, label: 'Experience', color: 'text-sky-600 dark:text-sky-400', bg: 'bg-sky-500/10 border-sky-200/60 dark:border-sky-500/20' },
-  strength: { icon: Star, label: 'Strength', color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-500/10 border-amber-200/60 dark:border-amber-500/20' },
-  interest: { icon: Heart, label: 'Interest', color: 'text-rose-600 dark:text-rose-400', bg: 'bg-rose-500/10 border-rose-200/60 dark:border-rose-500/20' },
-  achievement: { icon: Trophy, label: 'Achievement', color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-200/60 dark:border-emerald-500/20' },
-  identity: { icon: User, label: 'Identity', color: 'text-violet-600 dark:text-violet-400', bg: 'bg-violet-500/10 border-violet-200/60 dark:border-violet-500/20' },
-  counsellor_insight: { icon: MessageSquare, label: 'Counsellor Insight', color: 'text-violet-600 dark:text-violet-400', bg: 'bg-violet-500/10 border-violet-200/60 dark:border-violet-500/20' }
-};
 
 const SOURCE_CONFIG: Record<BlockSource, { label: string; className: string }> = {
   profile: { label: 'Profile', className: 'bg-primary/10 text-primary' },
@@ -60,6 +46,7 @@ export function BuildingBlocksBoard({ blocks }: BuildingBlocksBoardProps) {
           <span className="text-[11px] font-semibold uppercase tracking-[0.15em] text-muted-foreground mr-1">Category</span>
           <button
             onClick={() => setActiveCategory(null)}
+            aria-pressed={!activeCategory}
             className={cn(
               'rounded-full border px-3 py-1.5 text-xs font-semibold transition',
               !activeCategory
@@ -75,6 +62,7 @@ export function BuildingBlocksBoard({ blocks }: BuildingBlocksBoardProps) {
               <button
                 key={cat}
                 onClick={() => setActiveCategory(activeCategory === cat ? null : cat)}
+                aria-pressed={activeCategory === cat}
                 className={cn(
                   'rounded-full border px-3 py-1.5 text-xs font-semibold transition',
                   activeCategory === cat
@@ -91,6 +79,7 @@ export function BuildingBlocksBoard({ blocks }: BuildingBlocksBoardProps) {
           <span className="text-[11px] font-semibold uppercase tracking-[0.15em] text-muted-foreground mr-1">Source</span>
           <button
             onClick={() => setActiveSource(null)}
+            aria-pressed={!activeSource}
             className={cn(
               'rounded-full border px-3 py-1.5 text-xs font-semibold transition',
               !activeSource
@@ -106,6 +95,7 @@ export function BuildingBlocksBoard({ blocks }: BuildingBlocksBoardProps) {
               <button
                 key={src}
                 onClick={() => setActiveSource(activeSource === src ? null : src)}
+                aria-pressed={activeSource === src}
                 className={cn(
                   'rounded-full border px-3 py-1.5 text-xs font-semibold transition',
                   activeSource === src
@@ -135,6 +125,18 @@ export function BuildingBlocksBoard({ blocks }: BuildingBlocksBoardProps) {
         initial="hidden"
         animate="show"
       >
+        {filtered.length === 0 && (
+          <div className="rounded-2xl border border-dashed border-border p-12 text-center space-y-2">
+            <Sparkles className="h-6 w-6 mx-auto text-muted-foreground/40" />
+            <p className="text-sm text-muted-foreground">No building blocks match your filters.</p>
+            <button
+              onClick={() => { setActiveCategory(null); setActiveSource(null); }}
+              className="text-xs text-primary hover:underline"
+            >
+              Clear filters
+            </button>
+          </div>
+        )}
         <AnimatePresence mode="popLayout">
           {filtered.map((block) => {
             const cfg = CATEGORY_CONFIG[block.category];

@@ -1,6 +1,4 @@
 import type { Metadata } from 'next';
-import { redirect } from 'next/navigation';
-import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { DashboardShell } from '@/components/layout/shell';
 import { PageHero } from '@/components/layout/page-hero';
 import { SectionNav } from '@/components/layout/section-nav';
@@ -11,9 +9,6 @@ import { DEMO_REQUIREMENTS } from '@/lib/data/student-demo-data';
 export const metadata: Metadata = { title: 'Requirements Checker | Ascenda' };
 
 export default async function RequirementsPage() {
-  const supabase = createServerSupabaseClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
 
   const avgProgress = Math.round(DEMO_REQUIREMENTS.reduce((sum, r) => sum + r.progress, 0) / DEMO_REQUIREMENTS.length);
   const complete = DEMO_REQUIREMENTS.filter((r) => r.progress === 100).length;

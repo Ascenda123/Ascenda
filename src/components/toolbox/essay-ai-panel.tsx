@@ -91,7 +91,13 @@ export function EssayAIPanel({ essay, platform, selectedBlocks, allBlocks, onIns
     }
   }, [result, loading]);
 
+  const lastRunRef = useRef<number>(0);
+
   const runAction = useCallback(async (action: Action, block?: EssayBuildingBlock) => {
+    const now = Date.now();
+    if (now - lastRunRef.current < 1500) return;
+    lastRunRef.current = now;
+
     setLoading(true);
     setDone(false);
     setResult('');
@@ -106,11 +112,8 @@ export function EssayAIPanel({ essay, platform, selectedBlocks, allBlocks, onIns
         .join('\n');
 
       const studentContext = [
-        'IB Diploma student, predicted 39 points.',
-        'Applying to Mechanical Engineering programmes.',
-        'Subjects: Physics HL (7), Maths AA HL (6), Chemistry HL (6).',
-        selectedBlocks.length > 0 ? `\nSelected building blocks:\n${selectedDetails}` : '',
-        essay && essay.trim().length > 20 ? `\nCurrent essay draft (${essay.trim().split(/\s+/).length} words) is included separately.` : '',
+        selectedBlocks.length > 0 ? `Selected building blocks:\n${selectedDetails}` : '',
+        essay && essay.trim().length > 20 ? `Current essay draft (${essay.trim().split(/\s+/).length} words) is included separately.` : '',
       ].filter(Boolean).join('\n');
 
       const body: Record<string, unknown> = {
@@ -201,7 +204,7 @@ export function EssayAIPanel({ essay, platform, selectedBlocks, allBlocks, onIns
     } finally {
       setLoading(false);
     }
-  }, [essay, platform, selectedBlocks, allBlocks]);
+  }, [essay, platform, selectedBlocks]);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(result);
@@ -344,9 +347,17 @@ export function EssayAIPanel({ essay, platform, selectedBlocks, allBlocks, onIns
                 <motion.div
                   initial={{ opacity: 0, y: -4 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="rounded-xl border border-rose-200/50 bg-rose-500/5 p-3"
+                  className="rounded-xl border border-rose-200/50 bg-rose-500/5 p-3 space-y-2"
                 >
                   <p className="text-xs text-rose-600">{error}</p>
+                  {activeAction && (
+                    <button
+                      onClick={() => runAction(activeAction)}
+                      className="flex items-center gap-1 text-[11px] font-medium text-rose-600 hover:text-rose-700 transition-colors"
+                    >
+                      <RefreshCw className="h-3 w-3" /> Retry
+                    </button>
+                  )}
                 </motion.div>
               )}
 
