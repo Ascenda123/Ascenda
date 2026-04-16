@@ -5,7 +5,10 @@ import { MobileNav } from './mobile-nav';
 
 export const DashboardShell = ({ children }: { children: ReactNode }) => {
   return (
-    <div className="relative min-h-screen bg-background pb-16 text-foreground transition-colors">
+    <div className="relative min-h-screen bg-background pb-28 md:pb-16 text-foreground transition-colors">
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:bg-primary focus:text-primary-foreground focus:px-4 focus:py-2 focus:rounded-md focus:m-2">
+        Skip to main content
+      </a>
       <Navbar />
       <div className="flex w-full gap-6 px-4 pt-28 sm:px-6 lg:px-10">
         <Sidebar />

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { fadeIn } from '@/lib/motion';
 import { Plus, Minus } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -40,14 +40,15 @@ const faqs = [
 
 export function FAQSection() {
     const [openFaq, setOpenFaq] = useState<string | null>(faqs[0].question);
+    const shouldReduceMotion = useReducedMotion();
 
     return (
         <section className="w-full py-24 bg-background">
             <div className="max-w-7xl mx-auto px-6 grid gap-12 lg:grid-cols-[0.4fr_0.6fr]">
                 <motion.div
                     className="space-y-4"
-                    initial="hidden"
-                    whileInView="visible"
+                    initial={shouldReduceMotion ? false : 'hidden'}
+                    whileInView={shouldReduceMotion ? undefined : 'visible'}
                     viewport={{ once: true, amount: 0.3 }}
                     variants={fadeIn}
                 >
@@ -79,8 +80,8 @@ export function FAQSection() {
                                         ? 'border-primary/20 bg-primary/[0.03] shadow-sm'
                                         : 'border-border/50 bg-card hover:bg-muted/20'
                                 )}
-                                initial="hidden"
-                                whileInView="visible"
+                                initial={shouldReduceMotion ? false : 'hidden'}
+                                whileInView={shouldReduceMotion ? undefined : 'visible'}
                                 viewport={{ once: true, amount: 0.3 }}
                                 variants={{
                                     hidden: { opacity: 0, y: 12 },
@@ -89,9 +90,11 @@ export function FAQSection() {
                             >
                                 <button
                                     type="button"
+                                    id={`faq-btn-${index}`}
                                     className="flex w-full items-center justify-between p-5 text-left group"
                                     onClick={() => setOpenFaq((prev) => (prev === faq.question ? null : faq.question))}
                                     aria-expanded={isOpen}
+                                    aria-controls={`faq-panel-${index}`}
                                 >
                                     <span className="text-[15px] font-semibold text-foreground pr-4 leading-snug">{faq.question}</span>
                                     <span className={cn(
@@ -106,6 +109,9 @@ export function FAQSection() {
                                 <AnimatePresence initial={false}>
                                     {isOpen && (
                                         <motion.div
+                                            id={`faq-panel-${index}`}
+                                            role="region"
+                                            aria-labelledby={`faq-btn-${index}`}
                                             initial={{ height: 0, opacity: 0 }}
                                             animate={{ height: 'auto', opacity: 1 }}
                                             exit={{ height: 0, opacity: 0 }}

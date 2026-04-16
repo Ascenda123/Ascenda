@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { ProgramSearchResult } from './types';
 import { X, ArrowRight, ChevronUp, ChevronDown } from 'lucide-react';
@@ -31,7 +32,7 @@ export function CompareBar({ selectedItems, onClear, onRemove, onCompare, maxIte
             : `Add ${maxItems - selectedItems.length} more to max out diff mode.`;
 
     return createPortal(
-        <div className="fixed bottom-6 left-1/2 z-[100] w-full max-w-5xl -translate-x-1/2 px-4 transition-all duration-300 ease-in-out">
+        <div role="region" aria-label="Comparison tray" className="fixed bottom-6 left-1/2 z-[100] w-full max-w-5xl -translate-x-1/2 px-4 transition-all duration-300 ease-in-out">
             {/* Mobile Toggle Handle - Visible only on small screens when collapsed */}
             {!isExpanded && (
                 <div className="flex justify-center sm:hidden">
@@ -64,8 +65,9 @@ export function CompareBar({ selectedItems, onClear, onRemove, onCompare, maxIte
                                 <button
                                     onClick={() => setIsExpanded(false)}
                                     className="rounded-full bg-muted/50 p-0.5 sm:hidden"
+                                    aria-label="Collapse comparison tray"
                                 >
-                                    <ChevronDown className="h-3 w-3" />
+                                    <ChevronDown className="h-3 w-3" aria-hidden />
                                 </button>
                             </div>
                             <p className="line-clamp-1 text-muted-foreground/70 sm:line-clamp-none">
@@ -103,14 +105,14 @@ export function CompareBar({ selectedItems, onClear, onRemove, onCompare, maxIte
                                 className="group flex w-full items-center gap-2 rounded-xl border border-border/30 bg-background/50 px-2.5 py-1 text-foreground transition hover:border-foreground/40"
                             >
                                 {item.logoUrl ? (
-                                    <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border/50 bg-black">
-                                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                                        <img
+                                    <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-lg border border-border/50 bg-black">
+                                        <Image
                                             src={item.logoUrl}
                                             alt={`${item.universityName} logo`}
-                                            className="h-full w-full object-contain"
-                                            loading="lazy"
-                                            decoding="async"
+                                            fill
+                                            className="object-contain"
+                                            sizes="32px"
+                                            unoptimized
                                         />
                                     </div>
                                 ) : (

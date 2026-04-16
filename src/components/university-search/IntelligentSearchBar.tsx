@@ -57,6 +57,7 @@ export function IntelligentSearchBar({
 
     useEffect(() => {
         if (typeof window === 'undefined') return;
+        const controller = new AbortController();
 
         const validateAndLoadRecents = async () => {
             try {
@@ -70,29 +71,43 @@ export function IntelligentSearchBar({
                     type: item.type ?? (item.university ? 'program' : 'university')
                 })) as Suggestion[];
 
-                const validated: Suggestion[] = [];
-                for (const entry of normalized) {
-                    const response = await fetch(`/api/search/suggestions?q=${encodeURIComponent(entry.name)}`);
-                    if (!response.ok) continue;
-                    const payload = (await response.json()) as { programs: any[]; universities: any[] };
-                    const exists =
-                        entry.type === 'program'
-                            ? (payload.programs || []).some((p) => p.id === entry.id)
-                            : (payload.universities || []).some((u) => u.id === entry.id);
+                const results = await Promise.all(
+                    normalized.map(async (entry) => {
+                        if (controller.signal.aborted) return null;
+                        try {
+                            const response = await fetch(`/api/search/suggestions?q=${encodeURIComponent(entry.name)}`, {
+                                signal: controller.signal
+                            });
+                            if (!response.ok) return null;
+                            const payload = (await response.json()) as { programs: any[]; universities: any[] };
+                            const exists =
+                                entry.type === 'program'
+                                    ? (payload.programs || []).some((p) => p.id === entry.id)
+                                    : (payload.universities || []).some((u) => u.id === entry.id);
+                            return exists ? entry : null;
+                        } catch {
+                            return null;
+                        }
+                    })
+                );
+                const validated = results.filter((r): r is Suggestion => r !== null);
 
-                    if (exists) {
-                        validated.push(entry);
-                    }
+                if (!controller.signal.aborted) {
+                    setRecentSearches(validated);
+                    window.localStorage.setItem('ascenda-recent-searches', JSON.stringify(validated));
                 }
-
-                setRecentSearches(validated);
-                window.localStorage.setItem('ascenda-recent-searches', JSON.stringify(validated));
             } catch (err) {
+                if (err instanceof DOMException && err.name === 'AbortError') return;
                 console.warn('Unable to load recent searches', err);
             }
         };
 
         void validateAndLoadRecents();
+
+        return () => {
+            controller.abort();
+            if (blurTimeoutRef.current) window.clearTimeout(blurTimeoutRef.current);
+        };
     }, []);
 
     useEffect(() => {
@@ -190,8 +205,6 @@ export function IntelligentSearchBar({
             if (debounceRef.current) {
                 window.clearTimeout(debounceRef.current);
             }
-            activeRequests.current.forEach((controller) => controller.abort());
-            activeRequests.current = [];
         };
     }, [value]);
 
@@ -319,12 +332,13 @@ export function IntelligentSearchBar({
                     <button
                         type="button"
                         onClick={() => onChange('')}
+                        aria-label="Clear search"
                         className={cn(
                             "text-muted-foreground hover:text-foreground",
                             variant === 'default' ? "" : "absolute right-3 top-1/2 -translate-y-1/2"
                         )}
                     >
-                        <X className={cn(variant === 'default' ? "h-5 w-5" : "h-3 w-3")} />
+                        <X className={cn(variant === 'default' ? "h-5 w-5" : "h-3 w-3")} aria-hidden />
                     </button>
                 )}
             </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState, type ElementType } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { ArrowLeft, BookOpen, CalendarDays, CheckCircle2, Dot, GraduationCap, Landmark, Layers, ListChecks, Loader2, MapPin, ShieldCheck, Wallet } from 'lucide-react';
@@ -167,7 +168,6 @@ const renderRichText = (text?: string | null, options?: { forceBullets?: boolean
 
   if (!hasContent) return <p className="text-muted-foreground">No information available.</p>;
 
-  const finalIntro = intro;
   const finalBullets = bullets.length ? bullets : fallbackSentences;
 
   return (
@@ -373,7 +373,7 @@ const RequirementRenderer = ({ value }: { value: string }) => {
 export default function CoursePage({ params }: { params: { id: string } }) {
   const searchParams = useSearchParams();
   const [course, setCourse] = useState<CourseView | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showAllFlatModules, setShowAllFlatModules] = useState(false);
   const [expandedYears, setExpandedYears] = useState<Record<string, boolean>>({});
@@ -575,14 +575,14 @@ export default function CoursePage({ params }: { params: { id: string } }) {
                   <div className="space-y-4">
                     <div className="flex items-center gap-3">
                       {course.logoUrl ? (
-                        <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-xl border border-border bg-black shadow-sm">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
+                        <div className="relative h-14 w-14 overflow-hidden rounded-xl border border-border bg-black shadow-sm">
+                          <Image
                             src={course.logoUrl}
                             alt={`${course.university} logo`}
-                            className="h-full w-full object-contain"
-                            loading="lazy"
-                            decoding="async"
+                            fill
+                            className="object-contain"
+                            sizes="56px"
+                            unoptimized
                           />
                         </div>
                       ) : (

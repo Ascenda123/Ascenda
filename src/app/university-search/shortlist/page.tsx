@@ -1,12 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import { useMemo } from 'react';
-import { ArrowUpRight, Clock, MapPin, Sparkles, Target, Trash2 } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { ArrowUpRight, Clock, MapPin, Sparkles, Target, Trash2, GitCompareArrows } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import { useShortlist } from '@/components/university-search/shortlist-store';
+import { ComparisonModal } from '@/components/university-search/ComparisonModal';
+import type { ProgramSearchResult } from '@/components/university-search/types';
 import { cn } from '@/lib/utils';
 
 const stageTone = {
@@ -17,6 +19,23 @@ const stageTone = {
 
 export default function UniversitySearchShortlistPage() {
   const { items, removeItem, ready } = useShortlist();
+  const [isComparisonOpen, setIsComparisonOpen] = useState(false);
+
+  const comparisonItems: ProgramSearchResult[] = useMemo(
+    () =>
+      items.map((item) => ({
+        id: item.id,
+        universityId: item.id,
+        universityName: item.name,
+        programName: item.program ?? 'Program',
+        location: item.location ?? '',
+        fitScore: item.fitScore ?? null,
+        tier: null,
+        highlights: [],
+        requiresTest: null,
+      })),
+    [items]
+  );
 
   const metrics = useMemo(() => {
     const count = items.length;
@@ -46,6 +65,12 @@ export default function UniversitySearchShortlistPage() {
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
+            {items.length >= 2 && (
+              <Button size="sm" onClick={() => setIsComparisonOpen(true)} className="gap-2">
+                <GitCompareArrows className="h-4 w-4" />
+                Compare {items.length} programs
+              </Button>
+            )}
             <Button asChild size="sm" variant="secondary">
               <Link href="/university-search/results">Add more courses</Link>
             </Button>
@@ -83,7 +108,11 @@ export default function UniversitySearchShortlistPage() {
             </CardHeader>
             <CardContent>
               <p className="text-3xl font-semibold text-foreground">
-                {items[0]?.due ? items[0].due : 'Set due dates'}
+                {items.reduce<string | null>((earliest, item) => {
+                  if (!item.due) return earliest;
+                  if (!earliest) return item.due;
+                  return item.due < earliest ? item.due : earliest;
+                }, null) ?? 'Set due dates'}
               </p>
               <p className="text-xs text-muted-foreground">Use next actions to keep momentum</p>
             </CardContent>
@@ -138,13 +167,11 @@ export default function UniversitySearchShortlistPage() {
                   <div className="flex flex-wrap items-center gap-2">
                     <span
                       className={cn(
-                        'rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:ring-offset-2',
+                        'rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em]',
                         stageTone[item.stage as keyof typeof stageTone] ?? 'bg-muted text-foreground border-border'
                       )}
-                      role="switch"
-                      aria-checked
-                      tabIndex={0}
-                      aria-label={`Stage ${item.stage}`}
+                      role="status"
+                      aria-label={`Stage: ${item.stage ?? 'Researching'}`}
                     >
                       {item.stage ?? 'Researching'}
                     </span>
@@ -190,6 +217,14 @@ export default function UniversitySearchShortlistPage() {
           </div>
         )}
       </section>
+
+      <ComparisonModal
+        isOpen={isComparisonOpen}
+        onClose={() => setIsComparisonOpen(false)}
+        universities={comparisonItems}
+        onRemove={(id) => removeItem(id)}
+        maxItems={5}
+      />
     </div>
   );
 }

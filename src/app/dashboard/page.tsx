@@ -12,9 +12,12 @@ import { PageHero } from '@/components/layout/page-hero';
 import { Button } from '@/components/ui/button';
 import { TaskListPanel } from '@/components/dashboard/task-list-panel';
 import type { Database } from '@/lib/types/database';
+
+export const dynamic = 'force-dynamic';
 import { buildStepCompletion, isProfileComplete, ProfileRecordGroup } from '@/lib/profile/completion';
 import { PROFILE_STEPS } from '@/lib/profile/steps';
 import { AnimatedSection } from '@/components/layout/animated-section';
+import { cn } from '@/lib/utils';
 
 type ChecklistRow = Database['public']['Tables']['application_checklist']['Row'];
 type DeadlineRow = Database['public']['Tables']['deadlines']['Row'];
@@ -99,9 +102,7 @@ export default async function DashboardPage() {
     lifestyle: lifestyle ?? null
   };
 
-  if (!isProfileComplete(records)) {
-    redirect('/profile/wizard');
-  }
+  const profileIncomplete = !isProfileComplete(records);
 
   const stepCompletion = buildStepCompletion(records);
   const completedSteps = PROFILE_STEPS.filter((step) => stepCompletion[step.key]).length;
@@ -215,8 +216,10 @@ export default async function DashboardPage() {
     {
       id: 'profile',
       label: 'Profile readiness',
-      value: `${completionPercent}%`,
-      detail: nextStep ? `${nextStep.title} needs attention` : 'All sections complete',
+      value: `${completedSteps}/${PROFILE_STEPS.length} sections`,
+      detail: nextStep
+        ? `${completionPercent}% complete \u00B7 Next: ${nextStep.title}`
+        : 'All sections complete \u2014 update anytime',
       href: '/profile',
       tone: completionPercent === 100 ? 'positive' : undefined
     }
@@ -259,6 +262,45 @@ export default async function DashboardPage() {
       />
 
       <div className="space-y-6">
+        {profileIncomplete && (
+          <div className="relative overflow-hidden rounded-[28px] border border-primary/20 bg-primary/5 p-6 shadow-sm">
+            <div className="pointer-events-none absolute -top-10 -right-10 h-32 w-32 rounded-full bg-primary/10 blur-2xl" />
+            <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="space-y-2">
+                <p className="text-xs font-bold uppercase tracking-[0.3em] text-primary">Getting started</p>
+                <h3 className="text-lg font-semibold text-foreground">
+                  Profile {completionPercent}% complete
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  {nextStep
+                    ? `Next up: ${nextStep.title}. Finish in a few minutes to unlock personalized matches.`
+                    : 'Almost there — complete your profile to unlock better recommendations.'}
+                </p>
+                <div className="flex items-center gap-2 pt-1">
+                  {PROFILE_STEPS.map((step) => (
+                    <div
+                      key={step.key}
+                      className={cn(
+                        'h-2 flex-1 rounded-full transition-colors',
+                        stepCompletion[step.key] ? 'bg-primary' : 'bg-border'
+                      )}
+                      title={`${step.title}: ${stepCompletion[step.key] ? 'Complete' : 'Incomplete'}`}
+                    />
+                  ))}
+                </div>
+              </div>
+              <div className="flex gap-2 shrink-0">
+                <Button asChild size="sm">
+                  <Link href="/profile/wizard">Continue setup</Link>
+                </Button>
+                <Button asChild size="sm" variant="outline">
+                  <Link href="/profile">View profile</Link>
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
         <DashboardOverview data={overviewPayload} />
 
         {deadlines.length > 0 ? (

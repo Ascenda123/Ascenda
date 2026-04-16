@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -72,7 +73,7 @@ export function UniversityCard({
                         'absolute right-4 top-4 z-10 flex h-8 w-8 items-center justify-center rounded-full border transition-all',
                         isSelected
                             ? 'border-primary bg-primary text-primary-foreground'
-                            : 'border-border/60 bg-background/60 text-transparent opacity-0 backdrop-blur-[2px] group-hover:opacity-100 hover:border-primary/50'
+                            : 'border-border/60 bg-background/60 text-transparent opacity-0 backdrop-blur-[2px] group-hover:opacity-100 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-primary hover:border-primary/50'
                     )}
                     aria-label={isSelected ? 'Deselect' : 'Select for comparison'}
                 >
@@ -99,14 +100,14 @@ export function UniversityCard({
             <div className="relative z-10 mt-4 flex-1">
                 <div className="flex items-center gap-3">
                     {logoUrl ? (
-                        <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-border bg-black shadow-sm">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
+                        <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-2xl border border-border bg-black shadow-sm">
+                            <Image
                                 src={logoUrl}
                                 alt={`${name} logo`}
-                                className="h-full w-full object-contain"
-                                loading="lazy"
-                                decoding="async"
+                                fill
+                                className="object-contain"
+                                sizes="48px"
+                                unoptimized
                             />
                         </div>
                     ) : null}

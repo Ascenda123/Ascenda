@@ -98,7 +98,7 @@ export function ComparisonSection() {
                                     className="grid items-stretch gap-4 md:grid-cols-[1fr_auto_1fr]"
                                     initial={shouldReduceMotion ? false : { opacity: 0, y: 12 }}
                                     whileInView={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
-                                    viewport={{ once: true, amount: 0.5 }}
+                                    viewport={{ once: true, amount: 0.2 }}
                                     transition={{ duration: 0.4, delay: index * 0.08 }}
                                 >
                                     {/* Without card */}

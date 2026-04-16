@@ -68,11 +68,12 @@ export const ScholarshipExplorer = ({ scholarships }: ScholarshipExplorerProps) 
       country,
       level: level === 'Any level' ? undefined : level,
       query,
-      maxAmount: maxAmount ? Number(maxAmount) : null,
+      maxAmount: maxAmount && isFinite(Number(maxAmount)) ? Number(maxAmount) : null,
     }),
     [scholarships, country, level, query, maxAmount]
   );
 
+  const activeFilterCount = [country, level, maxAmount].filter(Boolean).length;
   const hasFilters = query || country || level || maxAmount;
 
   const resetFilters = () => { setQuery(''); setCountry(''); setLevel(''); setMaxAmount(''); };
@@ -103,8 +104,8 @@ export const ScholarshipExplorer = ({ scholarships }: ScholarshipExplorerProps) 
               className="w-full rounded-xl border border-border bg-background pl-9 pr-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-ring"
             />
             {query && (
-              <button onClick={() => setQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                <X className="h-3.5 w-3.5" />
+              <button onClick={() => setQuery('')} aria-label="Clear search" className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                <X className="h-3.5 w-3.5" aria-hidden />
               </button>
             )}
           </div>
@@ -118,8 +119,12 @@ export const ScholarshipExplorer = ({ scholarships }: ScholarshipExplorerProps) 
             )}
           >
             <Filter className="h-4 w-4" />
-            Filters
-            {hasFilters && <span className="h-2 w-2 rounded-full bg-primary" />}
+            {showFilters ? 'Hide filters' : 'Filters'}
+            {activeFilterCount > 0 && (
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+                {activeFilterCount}
+              </span>
+            )}
           </button>
         </div>
 
@@ -236,7 +241,7 @@ export const ScholarshipExplorer = ({ scholarships }: ScholarshipExplorerProps) 
                           {scholarship.category ?? 'General'}
                         </span>
                         {urgent && (
-                          <span className="rounded-full bg-rose-500/10 border border-rose-200/50 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.15em] text-rose-600 animate-pulse">
+                          <span className="rounded-full bg-rose-500/10 border border-rose-200/50 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.15em] text-rose-600 motion-safe:animate-pulse">
                             Closing soon
                           </span>
                         )}

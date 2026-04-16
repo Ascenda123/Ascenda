@@ -1,4 +1,5 @@
 import { type ReactNode, useMemo, useState } from 'react';
+import Image from 'next/image';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -147,10 +148,6 @@ export function ComparisonModal({ isOpen, onClose, universities, onRemove, maxIt
 
     const visibleRows = metricRows.filter((row) => !shouldHideRow(row));
 
-    const rowTemplate = useMemo(
-        () => `180px repeat(${visibleRows.length}, minmax(0, 1fr))`,
-        [visibleRows.length]
-    );
     const isEmpty = universities.length === 0;
 
     const metricStats = useMemo(() => {
@@ -314,12 +311,14 @@ export function ComparisonModal({ isOpen, onClose, universities, onRemove, maxIt
                                                 Remove
                                             </button>
                                             {uni.logoUrl ? (
-                                                <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl bg-black ring-1 ring-border">
-                                                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                    <img
+                                                <div className="relative h-10 w-10 overflow-hidden rounded-xl bg-black ring-1 ring-border">
+                                                    <Image
                                                         src={uni.logoUrl}
                                                         alt={`${uni.universityName} logo`}
-                                                        className="h-full w-full object-contain"
+                                                        fill
+                                                        className="object-contain"
+                                                        sizes="40px"
+                                                        unoptimized
                                                     />
                                                 </div>
                                             ) : (
@@ -377,7 +376,7 @@ export function ComparisonModal({ isOpen, onClose, universities, onRemove, maxIt
                                 </div>
                                 <div className="flex flex-wrap items-center gap-2">
                                     <Button variant="outline" asChild size="sm">
-                                        <Link href={`/course/${universities[0].id}`}>Open best fit</Link>
+                                        <Link href={`/course/${universities[0]?.id}`}>Open best fit</Link>
                                     </Button>
                                     <Button size="sm" onClick={onClose}>
                                         Close & continue browsing

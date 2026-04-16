@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { UniversityCard } from '@/components/university-card';
 import type { MatchTier } from '@/lib/matching/match-tier';
 import { cn } from '@/lib/utils';
-import { Grid, LayoutList, ChevronDown } from 'lucide-react';
+import { Grid, LayoutList, ChevronDown, Info } from 'lucide-react';
 import type { EnrichedMatch } from '@/lib/matching/types';
 import { MATCHES_TEXT } from '@/lib/constants/text';
 import { CompareBar } from '@/components/university-search/CompareBar';
@@ -22,6 +22,7 @@ const TIER_DESCRIPTIONS: Record<MatchTier, string> = MATCHES_TEXT.tierDescriptio
 const INITIAL_PER_TIER = 6;
 const EXPAND_STEP = 12;
 const MAX_PER_UNIVERSITY = 3;
+const MAX_COMPARE_ITEMS = 5;
 
 const tierCardVariants = {
   hidden: { opacity: 0, y: 16 },
@@ -48,7 +49,6 @@ const dedupeByUniversity = (items: EnrichedMatch[], maxPerUni: number): Enriched
 };
 
 export const MatchList = ({ matches }: MatchListProps) => {
-  const MAX_COMPARE_ITEMS = 5;
   const [selectedTier, setSelectedTier] = useState<MatchTier | 'All'>('All');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [selectedForComparison, setSelectedForComparison] = useState<ProgramSearchResult[]>([]);
@@ -93,7 +93,7 @@ export const MatchList = ({ matches }: MatchListProps) => {
     }));
   }, []);
 
-  const handleToggleSelect = (match: EnrichedMatch) => {
+  const handleToggleSelect = useCallback((match: EnrichedMatch) => {
     setSelectedForComparison((prev) => {
       const isSelected = prev.some((item) => item.id === match.program.id);
       if (isSelected) {
@@ -117,7 +117,7 @@ export const MatchList = ({ matches }: MatchListProps) => {
 
       return [...prev, nextItem];
     });
-  };
+  }, []);
 
   const totalShown = tierGroups.reduce((sum, g) => sum + g.visible.length, 0);
 
@@ -131,6 +131,16 @@ export const MatchList = ({ matches }: MatchListProps) => {
           <p className="text-sm text-muted-foreground">
             {totalShown} of {matches.length} program{matches.length === 1 ? '' : 's'} ranked by admission probability
           </p>
+          <div className="flex items-center gap-1.5 mt-1">
+            <Info className="h-3 w-3 text-muted-foreground/60 shrink-0" />
+            <p className="text-[11px] text-muted-foreground/80">
+              <span className="font-semibold text-rose-500">Reach</span>{' '}{'<'}30% admission
+              {' \u00B7 '}
+              <span className="font-semibold text-amber-500">Match</span> 30-60%
+              {' \u00B7 '}
+              <span className="font-semibold text-emerald-500">Safe</span>{' '}{'>'} 60%
+            </p>
+          </div>
         </div>
         <div className="relative z-10 flex flex-wrap items-center gap-2">
           <div className="flex items-center gap-1 rounded-2xl border border-border/70 bg-background/80 p-1.5 shadow-sm">
@@ -138,6 +148,7 @@ export const MatchList = ({ matches }: MatchListProps) => {
               <button
                 key={tier}
                 onClick={() => setSelectedTier(tier)}
+                aria-pressed={selectedTier === tier}
                 className={cn(
                   'rounded-xl px-3 py-1.5 text-xs font-medium capitalize transition-all',
                   selectedTier === tier
@@ -152,6 +163,7 @@ export const MatchList = ({ matches }: MatchListProps) => {
           <div className="flex items-center gap-1 rounded-2xl border border-border/70 bg-background/80 p-1.5 shadow-sm">
             <button
               onClick={() => setViewMode('grid')}
+              aria-pressed={viewMode === 'grid'}
               className={cn(
                 'flex h-8 w-8 items-center justify-center rounded-xl transition-all',
                 viewMode === 'grid'
@@ -164,6 +176,7 @@ export const MatchList = ({ matches }: MatchListProps) => {
             </button>
             <button
               onClick={() => setViewMode('list')}
+              aria-pressed={viewMode === 'list'}
               className={cn(
                 'flex h-8 w-8 items-center justify-center rounded-xl transition-all',
                 viewMode === 'list'
@@ -185,7 +198,7 @@ export const MatchList = ({ matches }: MatchListProps) => {
           </div>
         ) : (
           tierGroups.map(({ tier, visible, totalDeduped, hasMore }) =>
-            selectedTier === 'All' || visible.length ? (
+            (selectedTier !== 'All' || totalDeduped > 0) ? (
               <motion.div
                 key={tier}
                 className="surface-stage space-y-5"
@@ -256,12 +269,12 @@ export const MatchList = ({ matches }: MatchListProps) => {
                       </AnimatePresence>
                     </div>
                     {hasMore && (
-                      <div className="flex justify-center pt-2">
+                      <div className="flex justify-center pt-4">
                         <button
                           onClick={() => handleShowMore(tier)}
-                          className="group flex items-center gap-2 rounded-2xl border border-border/70 bg-background/80 px-5 py-2.5 text-sm font-medium text-muted-foreground shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:text-foreground hover:shadow-md"
+                          className="group flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-md transition-all hover:-translate-y-0.5 hover:shadow-lg"
                         >
-                          Show more {tier.toLowerCase()} programs
+                          Show {Math.min(EXPAND_STEP, totalDeduped - tierLimits[tier])} more {tier.toLowerCase()} programs
                           <ChevronDown className="h-4 w-4 transition-transform group-hover:translate-y-0.5" />
                         </button>
                       </div>

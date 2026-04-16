@@ -1,5 +1,3 @@
-'use client';
-
 import { HeroSection } from '@/components/landing/HeroSection';
 import { FeaturesSection } from '@/components/landing/FeaturesSection';
 import { ShortlistSection } from '@/components/landing/ShortlistSection';

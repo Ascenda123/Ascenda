@@ -48,21 +48,21 @@ export function DemoSection() {
 
                     <div className="flex flex-wrap gap-4 pt-4">
                         <Button asChild size="lg" className="rounded-full shadow-lg hover:shadow-xl transition-all group">
-                            <Link href="/demo" className="flex items-center gap-2">
+                            <Link href="/signup" className="flex items-center gap-2">
                                 <Play className="h-4 w-4" />
-                                Watch 45s demo
+                                Try it free
                                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                             </Link>
                         </Button>
                         <Button asChild size="lg" variant="outline" className="rounded-full border-border hover:bg-background/80">
-                            <Link href="/stories">See student reels</Link>
+                            <Link href="#features">Explore features</Link>
                         </Button>
                     </div>
                 </div>
 
                 <motion.div
                     className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-xl group"
-                    whileHover={{ scale: 1.01 }}
+                    whileHover={shouldReduceMotion ? undefined : { scale: 1.01 }}
                     transition={{ type: 'spring', stiffness: 300 }}
                 >
                     {/* Glow effect */}
@@ -91,6 +91,7 @@ export function DemoSection() {
                             sizes="(max-width: 768px) 100vw, 50vw"
                             className="relative h-auto w-full rounded-xl"
                             loading="lazy"
+                            unoptimized
                         />
                     </div>
                 </motion.div>

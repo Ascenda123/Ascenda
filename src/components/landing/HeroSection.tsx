@@ -3,29 +3,27 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import type React from 'react';
-import { motion, type Variants } from 'framer-motion';
+import { motion, useReducedMotion, type Variants } from 'framer-motion';
 import {
-    Activity,
+    ArrowRight,
+    CalendarClock,
     ChevronDown,
-    ClipboardList,
+    CheckCircle2,
     Laptop,
-    LayoutDashboard,
-    NotebookPen,
+    Zap,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useSupabase } from '@/hooks/useSupabase';
+import { useTypingEffect } from '@/hooks/use-typing-effect';
+import { useAnimatedNumber } from '@/hooks/use-animated-number';
 import { RETURNING_USER_STORAGE_KEY } from '@/lib/constants';
+import { fadeIn, blurIn } from '@/lib/motion';
 import { useThemeMode } from '../theme/theme-provider';
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from '../theme/theme-toggle';
 
 const heroHeadline = 'The #1 University Application Companion.';
-
-const fadeIn: Variants = {
-    hidden: { opacity: 0, y: 16 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.45, ease: 'easeOut' } }
-};
+const FIT_SCORE_TARGET = 92;
 
 const topBarVariants: Variants = {
     hidden: { opacity: 0, y: -18, scale: 0.96, filter: 'blur(4px)' },
@@ -53,82 +51,33 @@ const dashboardItemVariants: Variants = {
     visible: { opacity: 1, y: 0, transition: { duration: 0.38, ease: 'easeOut' } }
 };
 
-const storyPartVariants: Variants = {
-    hidden: { opacity: 0, y: 24, filter: 'blur(6px)' },
-    visible: {
-        opacity: 1,
-        y: 0,
-        filter: 'blur(0px)',
-        transition: { duration: 0.55, ease: [0.16, 1, 0.3, 1], staggerChildren: 0.1, delayChildren: 0.14 }
-    }
-};
-
-const FIT_SCORE_TARGET = 92;
-
 export function HeroSection() {
-    const [typedHeadline, setTypedHeadline] = useState('');
-    const [isTypingDone, setIsTypingDone] = useState(false);
     const [storyReady, setStoryReady] = useState(false);
-    const [fitScore, setFitScore] = useState(0);
     const [launchHref, setLaunchHref] = useState('/signup');
     const supabase = useSupabase();
     const { mode } = useThemeMode();
+    const shouldReduceMotion = useReducedMotion();
+
+    const { typed: typedHeadline, isDone: isTypingDone } = useTypingEffect(
+        heroHeadline,
+        shouldReduceMotion ? true : storyReady,
+        shouldReduceMotion ? 0 : 20,
+    );
+
+    const fitScore = useAnimatedNumber(
+        FIT_SCORE_TARGET,
+        shouldReduceMotion ? true : isTypingDone,
+        shouldReduceMotion ? 0 : 1600,
+    );
 
     useEffect(() => {
-        if (!storyReady) return;
-        setTypedHeadline('');
-        setIsTypingDone(false);
-
-        let index = 0;
-        const timer = window.setInterval(() => {
-            index += 1;
-            setTypedHeadline(heroHeadline.slice(0, index));
-            if (index >= heroHeadline.length) {
-                setIsTypingDone(true);
-                window.clearInterval(timer);
-            }
-        }, 20);
-
-        return () => window.clearInterval(timer);
-    }, [storyReady]);
-
-    useEffect(() => {
-        const timer = window.setTimeout(() => setStoryReady(true), 320);
-        return () => window.clearTimeout(timer);
-    }, []);
-
-    useEffect(() => {
-        let frameId: number;
-        let timeoutId: number;
-        const duration = 1600;
-        const easeInOutCubic = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
-
-        if (!isTypingDone) {
-            setFitScore(0);
+        if (shouldReduceMotion) {
+            setStoryReady(true);
             return;
         }
-
-        const animateCount = (startTime: number) => {
-            frameId = window.requestAnimationFrame((timestamp) => {
-                const progress = Math.min(1, (timestamp - startTime) / duration);
-                const eased = easeInOutCubic(progress);
-                setFitScore(eased * FIT_SCORE_TARGET);
-                if (progress < 1) {
-                    animateCount(startTime);
-                }
-            });
-        };
-
-        timeoutId = window.setTimeout(() => {
-            const start = performance.now();
-            animateCount(start);
-        }, 80);
-
-        return () => {
-            if (timeoutId) window.clearTimeout(timeoutId);
-            if (frameId) window.cancelAnimationFrame(frameId);
-        };
-    }, [isTypingDone]);
+        const timer = window.setTimeout(() => setStoryReady(true), 320);
+        return () => window.clearTimeout(timer);
+    }, [shouldReduceMotion]);
 
     useEffect(() => {
         let isActive = true;
@@ -139,9 +88,7 @@ export function HeroSection() {
                 window.localStorage.getItem(RETURNING_USER_STORAGE_KEY) === 'true';
 
             if (hasVisitedBefore) {
-                if (isActive) {
-                    setLaunchHref('/dashboard');
-                }
+                if (isActive) setLaunchHref('/dashboard');
                 return;
             }
 
@@ -152,24 +99,46 @@ export function HeroSection() {
         };
 
         void determineDestination();
-
-        return () => {
-            isActive = false;
-        };
+        return () => { isActive = false; };
     }, [supabase]);
+
+    const storyVariants: Variants = shouldReduceMotion
+        ? { hidden: {}, visible: {} }
+        : {
+            hidden: { opacity: 0, y: 24, filter: 'blur(6px)' },
+            visible: {
+                opacity: 1,
+                y: 0,
+                filter: 'blur(0px)',
+                transition: { duration: 0.55, ease: [0.16, 1, 0.3, 1], staggerChildren: 0.1, delayChildren: 0.14 }
+            }
+        };
 
     return (
         <section className="relative min-h-[75vh] overflow-hidden">
             <div className="absolute inset-0">
+                {/* Background gradient orbs — only animate when in view */}
                 <motion.div
                     className="absolute -left-24 top-[-15%] h-[55vw] w-[55vw] rounded-full bg-indigo-500/25 blur-3xl"
-                    animate={{ x: [0, 50, -40, 0], y: [0, 30, 10, 0], opacity: [0.22, 0.32, 0.22] }}
-                    transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }}
+                    {...(shouldReduceMotion
+                        ? { style: { opacity: 0.27 } }
+                        : {
+                            whileInView: { x: [0, 50, -40, 0], y: [0, 30, 10, 0], opacity: [0.22, 0.32, 0.22] },
+                            viewport: { once: false },
+                            transition: { duration: 14, repeat: Infinity, ease: 'easeInOut' },
+                        }
+                    )}
                 />
                 <motion.div
                     className="absolute -right-24 bottom-[-20%] h-[45vw] w-[45vw] rounded-full bg-emerald-400/20 blur-3xl"
-                    animate={{ x: [0, -60, 40, 0], y: [0, -20, 30, 0], rotate: [0, 5, -5, 0], opacity: [0.18, 0.28, 0.18] }}
-                    transition={{ duration: 16, repeat: Infinity, ease: 'easeInOut' }}
+                    {...(shouldReduceMotion
+                        ? { style: { opacity: 0.23 } }
+                        : {
+                            whileInView: { x: [0, -60, 40, 0], y: [0, -20, 30, 0], rotate: [0, 5, -5, 0], opacity: [0.18, 0.28, 0.18] },
+                            viewport: { once: false },
+                            transition: { duration: 16, repeat: Infinity, ease: 'easeInOut' },
+                        }
+                    )}
                 />
                 <Image
                     src="/ascenda-banner.png"
@@ -194,14 +163,14 @@ export function HeroSection() {
             <div className="relative z-10">
                 <motion.header
                     className="sticky top-0 z-30 w-full mb-8 bg-transparent px-4 py-4 sm:px-6"
-                    initial="hidden"
+                    initial={shouldReduceMotion ? false : 'hidden'}
                     animate="visible"
                     variants={topBarVariants}
                 >
                     <div className="flex w-full items-center justify-between gap-4 text-foreground">
                         <Link href="/" className="flex items-center gap-3 text-lg font-semibold tracking-tight text-foreground">
                             <Image
-                                src="/Gemini_Generated_Image_t7l91wt7l91wt7l9-removebg-preview.png"
+                                src="/ascenda-logo.png"
                                 alt="Ascenda logo"
                                 width={160}
                                 height={160}
@@ -230,38 +199,38 @@ export function HeroSection() {
                     <section className="space-y-12 pb-16 pt-4">
                         <motion.div
                             className="grid items-center gap-10 lg:grid-cols-[0.9fr,1.1fr]"
-                            initial="hidden"
+                            initial={shouldReduceMotion ? false : 'hidden'}
                             animate={storyReady ? 'visible' : 'hidden'}
-                            variants={storyPartVariants}
+                            variants={storyVariants}
                         >
                             <div className="space-y-6">
                                 <motion.div
-                                    initial={{ opacity: 0.7, scale: 0.98, y: 10 }}
-                                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                                    initial={shouldReduceMotion ? false : { opacity: 0.7, scale: 0.98, y: 10 }}
+                                    animate={shouldReduceMotion ? undefined : { opacity: 1, scale: 1, y: 0 }}
                                     transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
                                 >
                                     <motion.h1
                                         className="text-5xl font-heading font-semibold leading-tight tracking-tight text-foreground sm:text-[3.6rem]"
                                         aria-label={heroHeadline}
-                                        initial="hidden"
+                                        initial={shouldReduceMotion ? false : 'hidden'}
                                         animate="visible"
                                         variants={fadeIn}
                                     >
                                         <span className="inline-block">
                                             {typedHeadline || ' '}
-                                            <span
-                                                aria-hidden
-                                                className={`ml-1 inline-block h-[1.1em] w-px bg-accent align-middle ${isTypingDone ? 'opacity-0 transition-opacity duration-700' : 'animate-pulse'
-                                                    }`}
-                                            />
+                                            {!shouldReduceMotion && (
+                                                <span
+                                                    aria-hidden
+                                                    className={`ml-1 inline-block h-[1.1em] w-px bg-accent align-middle ${isTypingDone ? 'opacity-0 transition-opacity duration-700' : 'animate-pulse'}`}
+                                                />
+                                            )}
                                         </span>
                                     </motion.h1>
                                     <motion.p
                                         className="mt-4 text-lg text-muted-foreground sm:text-xl"
-                                        variants={fadeIn}
-                                        initial="hidden"
+                                        variants={blurIn}
+                                        initial={shouldReduceMotion ? false : 'hidden'}
                                         animate={isTypingDone ? 'visible' : 'hidden'}
-                                        transition={{ delay: 0.55 }}
                                     >
                                         Get matched to the right universities and courses, unlock real campus insights, and receive a tailored application plan in one modern workspace.
                                     </motion.p>
@@ -269,9 +238,8 @@ export function HeroSection() {
                                 <motion.div
                                     className="flex flex-wrap gap-3"
                                     variants={fadeIn}
-                                    initial="hidden"
+                                    initial={shouldReduceMotion ? false : 'hidden'}
                                     animate={isTypingDone ? 'visible' : 'hidden'}
-                                    transition={{ delay: 0.95 }}
                                 >
                                     <Button
                                         asChild
@@ -292,9 +260,8 @@ export function HeroSection() {
                                 <motion.ul
                                     className="flex flex-wrap gap-4 text-sm text-muted-foreground"
                                     variants={fadeIn}
-                                    initial="hidden"
+                                    initial={shouldReduceMotion ? false : 'hidden'}
                                     animate={isTypingDone ? 'visible' : 'hidden'}
-                                    transition={{ delay: 0.85 }}
                                 >
                                     <li className="flex items-center gap-2">
                                         <span className="h-1.5 w-1.5 rounded-full bg-accent" />
@@ -311,167 +278,136 @@ export function HeroSection() {
                                 </motion.ul>
                             </div>
                             <motion.div
-                                className="rounded-2xl border border-border bg-card p-5 text-card-foreground shadow-md"
-                                initial="hidden"
+                                className="relative rounded-2xl border border-border bg-card p-5 text-card-foreground shadow-md overflow-hidden"
+                                initial={shouldReduceMotion ? false : 'hidden'}
                                 animate={isTypingDone ? 'visible' : 'hidden'}
                                 variants={dashboardContainerVariants}
-                                transition={{ delay: 1.15, staggerChildren: 0.11, delayChildren: 0.2 }}
                             >
+                                {/* Ambient blobs matching the real dashboard */}
+                                <div className="pointer-events-none absolute -top-24 -right-24 h-64 w-64 rounded-full bg-primary/5 blur-3xl" aria-hidden />
+                                <div className="pointer-events-none absolute -bottom-16 -left-16 h-48 w-48 rounded-full bg-primary/3 blur-2xl" aria-hidden />
+
+                                {/* Live focus badge — mirrors PageHero */}
                                 <motion.div
-                                    className="flex items-center justify-between gap-4 text-[0.7rem] uppercase tracking-[0.4em] text-muted-foreground"
+                                    className="relative flex items-center justify-between gap-4"
                                     variants={dashboardItemVariants}
                                 >
-                                    <span className="flex items-center gap-2 text-foreground">
-                                        <LayoutDashboard className="h-4 w-4 text-accent" />
-                                        Ascenda board
+                                    <div className="flex items-center gap-2.5">
+                                        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/5 ring-1 ring-primary/10">
+                                            <Zap className="h-4 w-4 text-primary" aria-hidden />
+                                        </span>
+                                        <div>
+                                            <p className="text-[11px] font-semibold uppercase tracking-[0.4em] text-muted-foreground">Command center</p>
+                                            <p className="text-sm font-semibold text-foreground">Application overview</p>
+                                        </div>
+                                    </div>
+                                    <span className="flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.3em] text-primary/70">
+                                        <span className="h-1.5 w-1.5 rounded-full bg-primary motion-safe:animate-pulse" />
+                                        Live
                                     </span>
-                                    <div className="flex gap-2">
-                                        <motion.span
-                                            className="flex items-center gap-1 rounded-full border border-border bg-card px-3 py-0.5 text-[0.55rem] text-foreground"
-                                            animate={isTypingDone ? { scale: [1, 1.06, 1], opacity: [0.8, 1, 0.8] } : undefined}
-                                            transition={{ duration: 1.2, delay: 1.4, repeat: 1 }}
+                                </motion.div>
+
+                                {/* Stat strip — mirrors hero stat tiles */}
+                                <motion.div className="relative mt-5 grid grid-cols-3 gap-3" variants={dashboardItemVariants}>
+                                    {[
+                                        { label: 'Fit score', value: `${fitScore}%`, detail: 'Top match', tone: 'emerald' },
+                                        { label: 'Due soon', value: '3', detail: 'This week', tone: 'amber' },
+                                        { label: 'Profile', value: '4/5', detail: '80% complete', tone: 'primary' },
+                                    ].map((stat) => (
+                                        <div
+                                            key={stat.label}
+                                            className="relative overflow-hidden rounded-2xl border border-border bg-background px-4 py-3 text-center shadow-sm"
                                         >
-                                            <ClipboardList className="h-3.5 w-3.5 text-blue-300" />
-                                            Plan
-                                        </motion.span>
-                                        <motion.span
-                                            className="flex items-center gap-1 rounded-full border border-border bg-card px-3 py-0.5 text-[0.55rem] text-foreground"
-                                            animate={isTypingDone ? { scale: [1, 1.06, 1], opacity: [0.8, 1, 0.8] } : undefined}
-                                            transition={{ duration: 1.2, delay: 1.6, repeat: 1 }}
-                                        >
-                                            <Activity className="h-3.5 w-3.5 text-emerald-300" />
-                                            Signals
-                                        </motion.span>
-                                        <motion.span
-                                            className="flex items-center gap-1 rounded-full border border-border bg-card px-3 py-0.5 text-[0.55rem] text-foreground"
-                                            animate={isTypingDone ? { scale: [1, 1.06, 1], opacity: [0.8, 1, 0.8] } : undefined}
-                                            transition={{ duration: 1.2, delay: 1.8, repeat: 1 }}
-                                        >
-                                            <NotebookPen className="h-3.5 w-3.5 text-amber-300" />
-                                            Notes
-                                        </motion.span>
+                                            <div className={cn(
+                                                'pointer-events-none absolute -top-6 -right-6 h-24 w-24 rounded-full blur-2xl opacity-40',
+                                                stat.tone === 'emerald' ? 'bg-emerald-400' : stat.tone === 'amber' ? 'bg-amber-400' : 'bg-primary'
+                                            )} aria-hidden />
+                                            <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">{stat.label}</p>
+                                            <p className="mt-1 text-2xl font-semibold text-foreground leading-tight tracking-tight">{stat.value}</p>
+                                            <p className="mt-0.5 text-[10px] text-muted-foreground">{stat.detail}</p>
+                                        </div>
+                                    ))}
+                                </motion.div>
+
+                                {/* Profile completion bar — mirrors segmented profile bar */}
+                                <motion.div className="relative mt-4" variants={dashboardItemVariants}>
+                                    <div className="flex items-center justify-between mb-2">
+                                        <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Profile progress</p>
+                                        <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-primary/70">80% ready</p>
+                                    </div>
+                                    <div className="flex gap-1.5">
+                                        {[true, true, true, true, false].map((done, i) => (
+                                            <div
+                                                key={i}
+                                                className={cn('h-2 flex-1 rounded-full transition-colors', done ? 'bg-primary' : 'bg-border')}
+                                            />
+                                        ))}
                                     </div>
                                 </motion.div>
-                                <div className="mt-6 space-y-4">
-                                    <motion.div
-                                        className="rounded-xl border border-border bg-card px-5 py-4"
-                                        variants={dashboardItemVariants}
-                                    >
-                                        <div className="flex items-center justify-between">
-                                            <p className="text-xs uppercase tracking-[0.35em] text-muted-foreground">Fit score</p>
-                                            <span className="text-xs uppercase tracking-[0.3em] text-emerald-400">On target</span>
-                                        </div>
-                                        <div className="mt-2 flex items-end justify-between">
-                                            <p className="text-4xl font-semibold text-foreground">{Math.round(fitScore)}%</p>
-                                            <p className="text-sm text-muted-foreground">Parsons Paris · Strategic Design</p>
-                                        </div>
-                                        <div className="relative mt-3 h-2 rounded-full bg-muted/60">
-                                            <div
-                                                className="h-full rounded-full bg-gradient-to-r from-blue-600 via-indigo-500 to-emerald-400 shadow-[0_0_15px_rgba(52,211,153,0.5)]"
-                                                style={{ width: `${isTypingDone ? fitScore : 0}%` }}
-                                            />
-                                            <motion.div
-                                                className="absolute inset-0 overflow-hidden rounded-full"
-                                                initial={false}
-                                                animate={isTypingDone ? { opacity: [0, 1, 0] } : { opacity: 0 }}
-                                                transition={{ delay: 2.7, duration: 1.1 }}
-                                            >
-                                                <motion.div
-                                                    className="h-full w-1/3 bg-white/50 blur-sm"
-                                                    initial={{ x: '-120%' }}
-                                                    animate={{ x: '160%' }}
-                                                    transition={{ duration: 1.1, ease: 'easeInOut', delay: 2.7 }}
-                                                />
-                                            </motion.div>
-                                        </div>
-                                    </motion.div>
-                                    <div className="grid gap-3 md:grid-cols-2">
-                                        <motion.div
-                                            className="rounded-xl border border-border bg-card px-5 py-4"
-                                            variants={dashboardItemVariants}
-                                        >
-                                            <p className="text-xs uppercase tracking-[0.35em] text-muted-foreground">Next actions</p>
-                                            <ul className="mt-3 space-y-2 text-sm text-foreground">
-                                                <li className="flex items-center justify-between">
-                                                    <div className="flex items-center gap-3">
-                                                        <span className="h-2.5 w-2.5 rounded-full bg-gradient-to-b from-emerald-400 to-cyan-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]" />
-                                                        <span className="font-medium">Scholarship essay</span>
-                                                    </div>
-                                                    <span className="rounded-full border border-border bg-card px-3 py-1 text-[0.6rem] uppercase tracking-[0.35em] text-muted-foreground">
-                                                        Due Fri
-                                                    </span>
-                                                </li>
-                                                <li className="flex items-center justify-between">
-                                                    <div className="flex items-center gap-3">
-                                                        <span className="h-2.5 w-2.5 rounded-full bg-gradient-to-b from-amber-300 to-rose-400 shadow-[0_0_8px_rgba(251,191,36,0.6)]" />
-                                                        <span className="font-medium">Portfolio upload</span>
-                                                    </div>
-                                                    <span className="rounded-full border border-border bg-card px-3 py-1 text-[0.6rem] uppercase tracking-[0.35em] text-muted-foreground">
-                                                        Review
-                                                    </span>
-                                                </li>
-                                            </ul>
-                                        </motion.div>
-                                        <motion.div
-                                            className="rounded-xl border border-border bg-card px-5 py-4"
-                                            variants={dashboardItemVariants}
-                                        >
-                                            <p className="text-xs uppercase tracking-[0.35em] text-muted-foreground">Notes sync</p>
-                                            <div className="mt-3 space-y-2 text-sm text-foreground">
-                                                <p className="text-base font-medium leading-relaxed">
-                                                    <span className="text-2xl text-amber-300">“</span>Greenlit for ESADE interview...&rdquo;
-                                                </p>
-                                                <div className="flex items-center gap-3 text-[0.65rem] uppercase tracking-[0.35em] text-muted-foreground">
-                                                    <span className="font-semibold text-foreground">Claire</span>
-                                                    <span className="h-0.5 w-8 bg-muted/60" />
-                                                    <span className="">2h ago</span>
-                                                </div>
-                                            </div>
-                                        </motion.div>
+
+                                {/* Focus radar — mirrors the real dashboard */}
+                                <motion.div className="relative mt-4 space-y-2" variants={dashboardItemVariants}>
+                                    <div className="flex items-center gap-2">
+                                        <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Focus radar</p>
                                     </div>
-                                    <motion.div
-                                        className="rounded-xl border border-border px-5 py-4 bg-card"
-                                        variants={dashboardItemVariants}
-                                    >
-                                        <p className="text-xs uppercase tracking-[0.35em] text-muted-foreground">Active signals</p>
-                                        <div className="mt-3 grid gap-3 text-sm text-muted-foreground md:grid-cols-3">
-                                            <div>
-                                                <p className="text-2xl font-semibold text-foreground">4</p>
-                                                <p className="text-xs uppercase tracking-[0.3em]">Programs</p>
+                                    {[
+                                        { num: 1, label: 'Due today', title: 'Scholarship essay — Parsons Paris', detail: 'Final draft due Friday', border: 'border-l-rose-500', badge: 'bg-rose-500/10 text-rose-600' },
+                                        { num: 2, label: 'Milestone', title: 'UCAS submission opens', detail: 'In 4 days · ESADE + Imperial', border: 'border-l-amber-400', badge: 'bg-amber-500/10 text-amber-600' },
+                                        { num: 3, label: 'Checklist', title: 'Upload reference letter', detail: '2 of 3 references submitted', border: 'border-l-primary', badge: 'bg-primary/10 text-primary' },
+                                    ].map((item) => (
+                                        <motion.div
+                                            key={item.num}
+                                            className={cn('flex items-start gap-3 rounded-xl border border-border bg-background/80 px-4 py-3 border-l-[3px]', item.border)}
+                                            variants={dashboardItemVariants}
+                                        >
+                                            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-primary/10 ring-1 ring-primary/10 text-[11px] font-bold text-primary">
+                                                {item.num}
+                                            </span>
+                                            <div className="min-w-0 flex-1">
+                                                <div className="flex items-center gap-2">
+                                                    <span className={cn('rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.2em]', item.badge)}>
+                                                        {item.label}
+                                                    </span>
+                                                </div>
+                                                <p className="mt-1 text-sm font-medium text-foreground leading-snug">{item.title}</p>
+                                                <p className="text-[11px] text-muted-foreground">{item.detail}</p>
                                             </div>
-                                            <div>
-                                                <p className="text-2xl font-semibold text-foreground">2</p>
-                                                <p className="text-xs uppercase tracking-[0.3em]">Deadlines</p>
-                                            </div>
-                                            <div>
-                                                <p className="text-2xl font-semibold text-foreground">1</p>
-                                                <p className="text-xs uppercase tracking-[0.3em]">Scholarship</p>
-                                            </div>
-                                        </div>
-                                    </motion.div>
-                                </div>
+                                        </motion.div>
+                                    ))}
+                                </motion.div>
+
+                                {/* Footer — task progress */}
                                 <motion.div
-                                    className="mt-4 flex flex-wrap items-center gap-3 text-xs text-muted-foreground"
+                                    className="relative mt-4 flex items-center justify-between text-xs text-muted-foreground"
                                     variants={dashboardItemVariants}
                                 >
-                                    <span>Updated 1 min ago</span>
-                                    <span className="h-px flex-1 bg-muted/60"></span>
-                                    <span>View timeline →</span>
+                                    <div className="flex items-center gap-2">
+                                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" aria-hidden />
+                                        <span>7 of 12 tasks done</span>
+                                    </div>
+                                    <span className="flex items-center gap-1.5 text-primary/70 font-medium">
+                                        <CalendarClock className="h-3.5 w-3.5" aria-hidden />
+                                        3 deadlines this week
+                                    </span>
                                 </motion.div>
                             </motion.div>
                         </motion.div>
                         <motion.div
                             className="flex justify-center pt-2 text-muted-foreground"
-                            initial={{ opacity: 0, y: -4 }}
+                            initial={shouldReduceMotion ? false : { opacity: 0, y: -4 }}
                             animate={isTypingDone ? { opacity: 0.9, y: 0 } : { opacity: 0, y: -4 }}
                             transition={{ delay: 1.55, duration: 0.6, ease: 'easeOut' }}
                         >
-                            <motion.div
-                                animate={{ y: [0, 6, 0], opacity: [0.9, 0.5, 0.9] }}
-                                transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-                            >
-                                <ChevronDown className="h-5 w-5" />
-                            </motion.div>
+                            {!shouldReduceMotion ? (
+                                <motion.div
+                                    animate={{ y: [0, 6, 0], opacity: [0.9, 0.5, 0.9] }}
+                                    transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                                >
+                                    <ChevronDown className="h-5 w-5" />
+                                </motion.div>
+                            ) : (
+                                <ChevronDown className="h-5 w-5 opacity-90" />
+                            )}
                         </motion.div>
                     </section>
                 </div>

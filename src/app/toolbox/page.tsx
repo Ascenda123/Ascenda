@@ -18,10 +18,11 @@ import {
 } from '@/lib/data/student-demo-data';
 import { ToolboxProgressRing, ToolboxCountdown } from '@/components/toolbox/toolbox-landing-widgets';
 
+export const dynamic = 'force-dynamic';
 export const metadata: Metadata = { title: 'Toolbox | Ascenda' };
 
 const totalHours = DEMO_ACTIVITIES.reduce((sum, a) => sum + a.hoursPerWeek * a.weeksPerYear, 0);
-const avgProgress = Math.round(DEMO_REQUIREMENTS.reduce((sum, r) => sum + r.progress, 0) / DEMO_REQUIREMENTS.length);
+const avgProgress = DEMO_REQUIREMENTS.length ? Math.round(DEMO_REQUIREMENTS.reduce((sum, r) => sum + r.progress, 0) / DEMO_REQUIREMENTS.length) : 0;
 const upcoming14 = DEMO_TIMELINE_DEADLINES.filter((d) => {
   const diff = (new Date(d.date).getTime() - Date.now()) / (1000 * 60 * 60 * 24);
   return diff >= 0 && diff <= 14;
@@ -36,16 +37,17 @@ const safetyCount = DEMO_UNIVERSITY_CHANCES.filter((u) => (39 - u.minimumScore) 
 
 const TOOL_CARDS = [
   {
-    title: 'Essay Workshop',
-    href: '/toolbox/essay-workshop',
-    icon: PenTool,
-    iconBg: 'bg-violet-500/10 text-violet-600',
-    gradient: 'from-violet-500/5 to-transparent',
-    description: 'Rich text editor with building blocks, platform-specific limits, and AI writing tips.',
+    title: 'Requirements Checker',
+    href: '/toolbox/requirements',
+    icon: ClipboardCheck,
+    iconBg: 'bg-amber-500/10 text-amber-600',
+    gradient: 'from-amber-500/5 to-transparent',
+    description: 'Interactive status toggles and progress rings for each university\'s requirements.',
+    step: 1,
     stats: [
-      { label: 'Blocks', value: DEMO_BUILDING_BLOCKS.length },
-      { label: 'Prompts', value: DEMO_ESSAY_PROMPTS.length },
-      { label: 'Platforms', value: 4 },
+      { label: 'Universities', value: DEMO_REQUIREMENTS.length },
+      { label: 'Readiness', value: `${avgProgress}%` },
+      { label: 'Complete', value: DEMO_REQUIREMENTS.filter((r) => r.progress === 100).length },
     ],
   },
   {
@@ -55,6 +57,7 @@ const TOOL_CARDS = [
     iconBg: 'bg-emerald-500/10 text-emerald-600',
     gradient: 'from-emerald-500/5 to-transparent',
     description: 'Visual probability gauges and what-if score slider for each university.',
+    step: 2,
     stats: [
       { label: 'Universities', value: DEMO_UNIVERSITY_CHANCES.length },
       { label: 'Reach', value: reachCount },
@@ -68,6 +71,7 @@ const TOOL_CARDS = [
     iconBg: 'bg-sky-500/10 text-sky-600',
     gradient: 'from-sky-500/5 to-transparent',
     description: 'Drag-to-reorder activities with impact visualization and format previews.',
+    step: 3,
     stats: [
       { label: 'Activities', value: DEMO_ACTIVITIES.length },
       { label: 'Hours', value: totalHours },
@@ -75,16 +79,17 @@ const TOOL_CARDS = [
     ],
   },
   {
-    title: 'Requirements Checker',
-    href: '/toolbox/requirements',
-    icon: ClipboardCheck,
-    iconBg: 'bg-amber-500/10 text-amber-600',
-    gradient: 'from-amber-500/5 to-transparent',
-    description: 'Interactive status toggles and progress rings for each university\'s requirements.',
+    title: 'Essay Workshop',
+    href: '/toolbox/essay-workshop',
+    icon: PenTool,
+    iconBg: 'bg-violet-500/10 text-violet-600',
+    gradient: 'from-violet-500/5 to-transparent',
+    description: 'Rich text editor with building blocks, platform-specific limits, and AI writing tips.',
+    step: 4,
     stats: [
-      { label: 'Universities', value: DEMO_REQUIREMENTS.length },
-      { label: 'Readiness', value: `${avgProgress}%` },
-      { label: 'Complete', value: DEMO_REQUIREMENTS.filter((r) => r.progress === 100).length },
+      { label: 'Blocks', value: DEMO_BUILDING_BLOCKS.length },
+      { label: 'Prompts', value: DEMO_ESSAY_PROMPTS.length },
+      { label: 'Platforms', value: 4 },
     ],
   },
   {
@@ -94,6 +99,7 @@ const TOOL_CARDS = [
     iconBg: 'bg-rose-500/10 text-rose-600',
     gradient: 'from-rose-500/5 to-transparent',
     description: 'Calendar and timeline views with urgency indicators and filtering.',
+    step: 5,
     stats: [
       { label: 'Next 14d', value: upcoming14 },
       { label: 'Next 30d', value: upcoming30 },
@@ -184,8 +190,13 @@ export default async function ToolboxPage() {
                 <div className="relative z-10 flex-1 flex flex-col gap-4">
                   {/* Icon + title row */}
                   <div className="flex items-start gap-3">
-                    <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${tool.iconBg} ring-1 ring-black/5 dark:ring-white/5 shadow-sm`}>
-                      <Icon className="h-5 w-5" />
+                    <div className="relative">
+                      <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${tool.iconBg} ring-1 ring-black/5 dark:ring-white/5 shadow-sm`}>
+                        <Icon className="h-5 w-5" />
+                      </div>
+                      <span className="absolute -top-1.5 -left-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-foreground text-[10px] font-bold text-background shadow-sm">
+                        {tool.step}
+                      </span>
                     </div>
                     <div className="flex-1 min-w-0 pt-0.5">
                       <div className="flex items-center gap-1.5">

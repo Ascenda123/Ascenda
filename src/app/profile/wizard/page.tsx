@@ -5,9 +5,11 @@ import { StudentIntakeForm } from '../_components/StudentIntakeForm';
 import { PROFILE_STEPS, type StepCompletionMap } from '@/lib/profile/steps';
 import { buildStepCompletion, isProfileComplete, type ProfileRecordGroup } from '@/lib/profile/completion';
 import { AnimatedBlobBanner } from '@/components/animated-blob-banner';
+import { StepRoadmap } from '../_components/StepRoadmap';
 import { Button } from '@/components/ui/button';
 import { buildStudentProfilePayload } from '@/lib/scoring/student_score_loader';
 import { PageHero } from '@/components/layout/page-hero';
+import Link from 'next/link';
 import { Download, Home, User } from 'lucide-react';
 
 export const metadata: Metadata = {
@@ -31,22 +33,22 @@ export default async function ProfileWizardPage({ searchParams }: ProfileWizardP
   const { data: personal } = await supabase
     .from('student_personal_information')
     .select('*')
-    .eq('profile_id', user?.id ?? '')
+    .eq('profile_id', user.id)
     .single();
   const { data: academicInput } = await supabase
     .from('student_academic_input')
     .select('*')
-    .eq('profile_id', user?.id ?? '')
+    .eq('profile_id', user.id)
     .single();
   const { data: lifestyle } = await supabase
     .from('student_lifestyle_preference')
     .select('*')
-    .eq('profile_id', user?.id ?? '')
+    .eq('profile_id', user.id)
     .single();
   const { data: subjects } = await supabase
     .from('student_subjects')
     .select('id')
-    .eq('profile_id', user?.id ?? '');
+    .eq('profile_id', user.id);
   let initialPayload = null;
   try {
     initialPayload = await buildStudentProfilePayload(supabase, user.id);
@@ -69,26 +71,29 @@ export default async function ProfileWizardPage({ searchParams }: ProfileWizardP
   const requestedStep = PROFILE_STEPS.find((step) => step.key === stepParam);
   const initialStep = requestedStep ? PROFILE_STEPS.indexOf(requestedStep) + 1 : nextStep ? PROFILE_STEPS.indexOf(nextStep) + 1 : 1;
 
+  const completedCount = Object.values(stepCompletion).filter(Boolean).length;
+  const currentStepDetail = requestedStep?.title ?? nextStep?.title ?? 'Review details';
+
   return (
     <div className="relative min-h-screen overflow-hidden bg-background text-foreground">
       <div className="relative z-10 mx-auto flex w-full max-w-none flex-col gap-6 px-4 pb-16 pt-20 sm:px-6 lg:px-10">
         <div className="flex flex-wrap items-center justify-between gap-4 relative z-[100] pointer-events-auto">
           <div className="flex items-center gap-2">
-            <a
+            <Link
               href="/dashboard"
               className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all duration-200 cursor-pointer"
             >
               <Home className="w-4 h-4" />
               Dashboard
-            </a>
+            </Link>
             <div className="w-px h-4 bg-border/50" />
-            <a
+            <Link
               href="/profile"
               className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all duration-200 cursor-pointer"
             >
               <User className="w-4 h-4" />
               Back to profile
-            </a>
+            </Link>
           </div>
           <Button asChild size="sm" variant="secondary" className="gap-2 rounded-xl shadow-sm">
             <a href="/api/profile/export" download>
@@ -99,16 +104,19 @@ export default async function ProfileWizardPage({ searchParams }: ProfileWizardP
         </div>
         <PageHero
           eyebrow="Profile wizard"
-          title="Let&apos;s build your profile"
-          description="We’ll use this information to personalize matches, recommendations, and counselor updates. You can always tweak the details later."
-          highlight={hasCompletedProfile ? 'Profile complete' : `Step ${initialStep} ready`}
+          title="Let's build your profile"
+          description="We'll use this information to personalize matches, recommendations, and counselor updates. You can always tweak the details later."
+          highlight={hasCompletedProfile ? 'Profile complete' : 'Step ' + initialStep + ' ready'}
           accent="Student setup"
           stats={[
-            { label: 'Completed', value: `${Object.values(stepCompletion).filter(Boolean).length}/${PROFILE_STEPS.length}`, detail: 'Sections finished' },
-            { label: 'Current step', value: String(initialStep), detail: requestedStep?.title ?? nextStep?.title ?? 'Review details' },
+            { label: 'Completed', value: completedCount + '/' + PROFILE_STEPS.length, detail: 'Sections finished' },
+            { label: 'Current step', value: String(initialStep), detail: currentStepDetail },
             { label: 'Status', value: hasCompletedProfile ? 'Ready' : 'In progress', detail: hasCompletedProfile ? 'Update anytime' : 'More detail improves matches' }
           ]}
         />
+
+        {/* Step roadmap */}
+        <StepRoadmap steps={PROFILE_STEPS} stepCompletion={stepCompletion} initialStep={initialStep} />
         <div className="surface-card surface-card--static rounded-[28px] p-6">
           <StudentIntakeForm initialStep={initialStep} initialPayload={initialPayload} />
         </div>

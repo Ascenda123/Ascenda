@@ -2,6 +2,7 @@
 
 import { motion, useReducedMotion } from 'framer-motion';
 import { UserPlus, Search, Rocket } from 'lucide-react';
+import { AnimatedSection } from '@/components/layout/animated-section';
 import { cn } from '@/lib/utils';
 
 const steps = [
@@ -32,16 +33,10 @@ export function ShortlistSection() {
         <section className="w-full py-24 bg-background">
             <div className="max-w-7xl mx-auto px-6">
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16">
-                    <motion.div
-                        className="max-w-2xl space-y-4"
-                        initial={shouldReduceMotion ? false : { opacity: 0, y: 16 }}
-                        whileInView={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
-                        viewport={{ once: true, amount: 0.3 }}
-                        transition={{ duration: 0.5 }}
-                    >
+                    <AnimatedSection className="max-w-2xl space-y-4">
                         <h2 className="text-4xl md:text-5xl font-heading font-bold text-foreground tracking-tight">Your shortlist in 3 steps</h2>
                         <p className="text-lg text-muted-foreground leading-relaxed max-w-xl">The easiest way to see what&apos;s next, why it matters, and how to act.</p>
-                    </motion.div>
+                    </AnimatedSection>
                 </div>
 
                 <div className="grid gap-6 md:grid-cols-3">
@@ -50,7 +45,7 @@ export function ShortlistSection() {
                         return (
                             <motion.div
                                 key={step.title}
-                                className="group relative flex flex-col justify-between rounded-3xl border border-border/40 bg-card p-8 hover:shadow-lg transition-all duration-500 hover:-translate-y-1 overflow-hidden"
+                                className="group relative flex flex-col justify-between rounded-3xl border border-border/40 bg-card p-8 hover:shadow-lg transition-all duration-500 hover:-translate-y-1"
                                 initial={shouldReduceMotion ? false : { opacity: 0, y: 24 }}
                                 whileInView={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
                                 viewport={{ once: true, amount: 0.3 }}

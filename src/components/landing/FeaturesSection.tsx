@@ -1,7 +1,8 @@
 'use client';
 
 import { motion, useReducedMotion } from 'framer-motion';
-import { Sparkles, Search, Mail, NotepadText } from 'lucide-react';
+import { Sparkles, Search, GraduationCap, NotepadText } from 'lucide-react';
+import { AnimatedSection } from '@/components/layout/animated-section';
 import { cn } from '@/lib/utils';
 
 const features = [
@@ -22,7 +23,7 @@ const features = [
     {
         title: 'Campus insights',
         description: 'Real stories from real students show what life actually feels like.',
-        icon: Mail,
+        icon: GraduationCap,
         gradient: 'from-emerald-500/10 to-green-500/5',
         iconBg: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
     },
@@ -41,19 +42,13 @@ export function FeaturesSection() {
     return (
         <section id="features" className="section-fade w-full py-24 bg-secondary/40 sm:py-32">
             <div className="max-w-7xl mx-auto px-6 space-y-12">
-                <motion.div
-                    className="max-w-3xl space-y-3"
-                    initial={shouldReduceMotion ? false : { opacity: 0, y: 16 }}
-                    whileInView={shouldReduceMotion ? undefined : { opacity: 1, y: 0 }}
-                    viewport={{ once: true, amount: 0.3 }}
-                    transition={{ duration: 0.5 }}
-                >
+                <AnimatedSection className="max-w-3xl space-y-3">
                     <p className="text-sm font-medium uppercase tracking-widest text-primary/80">Why Ascenda</p>
                     <h2 className="text-4xl md:text-5xl font-heading font-bold text-foreground tracking-tight">Four ways to make your application journey easier</h2>
                     <p className="text-lg text-muted-foreground leading-relaxed max-w-2xl">
                         Everything in Ascenda is tuned to blend calm clarity with clear actions — so you and your team can move through the cycle with confidence and zero guesswork.
                     </p>
-                </motion.div>
+                </AnimatedSection>
 
                 <div className="grid gap-6 md:grid-cols-2">
                     {features.map((feature, index) => {
