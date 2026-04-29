@@ -2,8 +2,6 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { DashboardShell } from '@/components/layout/shell';
 import { PageHero } from '@/components/layout/page-hero';
-import { SectionNav } from '@/components/layout/section-nav';
-import { TOOLBOX_SECTION_ITEMS } from '@/components/layout/navigation';
 import { AnimatedSection, AnimatedGrid, AnimatedGridItem } from '@/components/layout/animated-section';
 import { ArrowRight } from 'lucide-react';
 import {
@@ -104,7 +102,6 @@ export default async function ToolboxPage() {
 
   return (
     <DashboardShell>
-      <SectionNav items={TOOLBOX_SECTION_ITEMS} />
       <PageHero
         eyebrow="Toolbox"
         title="Your toolkit"

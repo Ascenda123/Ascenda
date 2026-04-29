@@ -14,7 +14,12 @@ import { getBrowserSupabaseClient } from '@/lib/supabase/client';
 import { ProgramSearchResult, tierFromScore } from '@/components/university-search/types';
 import { Suggestion } from '@/components/university-search/IntelligentSearchBar';
 import { filterVisiblePrograms } from '@/lib/catalog/visibility';
-import { buildSearchResultsUrl, buildSuggestionResultsUrl } from '@/lib/university-search/search-params';
+import {
+  buildSearchHubUrl,
+  buildSearchResultsUrl,
+  buildSuggestionResultsUrl,
+  readFiltersFromParams
+} from '@/lib/university-search/search-params';
 import type { Database } from '@/lib/types/database';
 
 import { Breadcrumbs } from '@/components/ui/breadcrumbs';
@@ -621,12 +626,22 @@ export default function UniversitySearchResultsPage() {
   return (
     <div className="min-h-screen space-y-8 pb-24" >
       <section className="space-y-6">
-        <div className="flex flex-col gap-2">
-          <Breadcrumbs className="mb-2" />
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">University Matches</h1>
-          <p className="text-muted-foreground">
-            Explore programs tailored to your profile and preferences.
-          </p>
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div className="flex flex-col gap-2">
+            <Breadcrumbs className="mb-2" />
+            <h1 className="text-3xl font-bold tracking-tight text-foreground">University Matches</h1>
+            <p className="text-muted-foreground">
+              Explore programs tailored to your profile and preferences.
+            </p>
+          </div>
+          <Button asChild size="sm" variant="outline">
+            <Link
+              href={buildSearchHubUrl(searchQuery, readFiltersFromParams(searchParams))}
+              className="gap-2"
+            >
+              ← Refine in search hub
+            </Link>
+          </Button>
         </div>
 
         <FilterBar

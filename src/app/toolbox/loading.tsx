@@ -1,13 +1,9 @@
 import { DashboardShell } from '@/components/layout/shell';
-import { SectionNav } from '@/components/layout/section-nav';
-import { TOOLBOX_SECTION_ITEMS } from '@/components/layout/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function ToolboxLoading() {
     return (
         <DashboardShell>
-            <SectionNav items={TOOLBOX_SECTION_ITEMS} />
-
             {/* Hero skeleton */}
             <div className="surface-card surface-card--static space-y-4 p-6">
                 <Skeleton className="h-3 w-20" />

@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState, type FormEvent, type MouseEvent } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useEffect, useMemo, useRef, useState, type FormEvent, type MouseEvent } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   BookOpen,
   Check,
@@ -18,7 +18,11 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { IntelligentSearchBar, Suggestion } from '@/components/university-search/IntelligentSearchBar';
 import { getBrowserSupabaseClient } from '@/lib/supabase/client';
-import { buildSearchResultsUrl, buildSuggestionResultsUrl } from '@/lib/university-search/search-params';
+import {
+  buildSearchResultsUrl,
+  buildSuggestionResultsUrl,
+  readFiltersFromParams
+} from '@/lib/university-search/search-params';
 
 type FilterGroupKey = 'country' | 'subject' | 'fitFocus' | 'lifestyle';
 type FilterGroup = {
@@ -221,11 +225,14 @@ function FilterDropdown({ group, selected, onToggle }: FilterDropdownProps) {
   );
 }
 
-export default function UniversitySearchPage() {
+function UniversitySearchPageInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const initialQuery = searchParams?.get('q') ?? '';
+  const initialFilters = readFiltersFromParams(searchParams);
   const [filterGroups, setFilterGroups] = useState<FilterGroup[]>(DEFAULT_FILTER_GROUPS);
-  const [selectedFilters, setSelectedFilters] = useState<Set<string>>(new Set());
-  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedFilters, setSelectedFilters] = useState<Set<string>>(() => new Set(initialFilters));
+  const [searchQuery, setSearchQuery] = useState(initialQuery);
 
   useEffect(() => {
     const uniqueSorted = (values: (string | null | undefined)[], limit = 60) =>
@@ -373,5 +380,13 @@ export default function UniversitySearchPage() {
         </div>
       </section>
     </div>
+  );
+}
+
+export default function UniversitySearchPage() {
+  return (
+    <Suspense fallback={<div className="surface-stage h-72 animate-pulse rounded-[28px]" aria-hidden />}>
+      <UniversitySearchPageInner />
+    </Suspense>
   );
 }

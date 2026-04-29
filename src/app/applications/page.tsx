@@ -323,44 +323,66 @@ export default async function ApplicationsPage() {
         }
       />
 
-      <div className="space-y-5 sm:space-y-8">
+      <div className="space-y-6 sm:space-y-8">
+        {/* Priority — what to focus on this week */}
         <ApplicationPriorityBoard items={priorityItems} />
 
-        <PlannerCalendar events={plannerEvents} />
-        <div className="grid gap-4 sm:gap-6 lg:grid-cols-[2fr,1fr]">
-          <RequirementTracker items={requirementItems} />
-          <div className="surface-stage space-y-4">
+        {/* Now — what's open right now (tasks, deadlines, updates) */}
+        <section className="space-y-4">
+          <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Daily brief</p>
-              <p className="text-lg font-semibold text-foreground">Today&apos;s focus</p>
-              <p className="mt-1 text-sm text-muted-foreground leading-relaxed">
-                {dailySummary.tasks} {dailySummary.tasks === 1 ? 'task' : 'tasks'} • {dailySummary.deadlines}{' '}
-                {dailySummary.deadlines === 1 ? 'deadline' : 'deadlines'} • {dailySummary.interviews}{' '}
-                {dailySummary.interviews === 1 ? 'interview' : 'interviews'}
+              <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Now</p>
+              <h2 className="text-2xl font-semibold text-foreground">Today&apos;s focus</h2>
+              <p className="text-sm text-muted-foreground">
+                {dailySummary.tasks} {dailySummary.tasks === 1 ? 'task' : 'tasks'} ·{' '}
+                {dailySummary.deadlines} {dailySummary.deadlines === 1 ? 'deadline' : 'deadlines'} ·{' '}
+                {dailySummary.interviews} {dailySummary.interviews === 1 ? 'interview' : 'interviews'}
               </p>
             </div>
-            <ReferenceTracker references={referenceItems} />
+            <Button asChild size="sm" variant="ghost">
+              <Link href="/applications/tasks">Open task board →</Link>
+            </Button>
           </div>
-        </div>
-
-        <div className="grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <div className="surface-stage space-y-4 rounded-[28px]">
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Files</p>
-              <p className="text-lg font-semibold text-foreground">Upload documents</p>
+          <div className="grid gap-4 md:grid-cols-2 sm:gap-6">
+            <RequirementTracker items={requirementItems} />
+            <div className="space-y-4">
+              <div className="surface-stage space-y-4 rounded-[28px]">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Timeline</p>
+                  <p className="text-lg font-semibold text-foreground">Upcoming deadlines</p>
+                </div>
+                <DeadlineTimeline items={timelineItems} />
+              </div>
+              <SignalCenter signals={signalItems} />
             </div>
-            <DocumentUploader applicationId={appRecords[0]?.id ?? null} />
           </div>
-          <SignalCenter signals={signalItems} />
-          <div className="surface-stage space-y-4 rounded-[28px]">
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Timeline</p>
-              <p className="text-lg font-semibold text-foreground">Upcoming deadlines</p>
-            </div>
-            <DeadlineTimeline items={timelineItems} />
-          </div>
-        </div>
+        </section>
 
+        {/* Resources — quieter row: calendar, files, references */}
+        <section className="space-y-4">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Resources</p>
+            <h2 className="text-2xl font-semibold text-foreground">Calendar, files, and references</h2>
+            <p className="text-sm text-muted-foreground">Drop in anything you want to keep handy across applications.</p>
+          </div>
+          <PlannerCalendar events={plannerEvents} />
+          <div className="grid gap-4 md:grid-cols-2 sm:gap-6">
+            <div className="surface-stage space-y-4 rounded-[28px]">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Files</p>
+                <p className="text-lg font-semibold text-foreground">Upload documents</p>
+              </div>
+              <DocumentUploader applicationId={appRecords[0]?.id ?? null} />
+            </div>
+            <div className="surface-stage space-y-4 rounded-[28px]">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">References</p>
+                <p className="text-lg font-semibold text-foreground">Recommenders</p>
+              </div>
+              <ReferenceTracker references={referenceItems} />
+            </div>
+          </div>
+        </section>
       </div>
     </DashboardShell>
   );

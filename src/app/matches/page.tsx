@@ -10,10 +10,7 @@ import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import { SectionNav } from '@/components/layout/section-nav';
 import { EXPLORE_SECTION_ITEMS } from '@/components/layout/navigation';
 import { loadMatchesForProfile } from '@/lib/matching/service';
-import { getFitScoreVisuals } from '@/lib/theme/fit-score';
-import { cn } from '@/lib/utils';
 import { TrackProgramButton } from '@/components/programs/track-program-button';
-import { ShareMatchButton } from '@/components/match/share-match-button';
 import { ACTION_TEXT, MATCHES_TEXT } from '@/lib/constants/text';
 
 export const metadata: Metadata = {
@@ -100,7 +97,6 @@ export default async function MatchesPage() {
     { label: 'Top fit', value: enriched[0] ? `${enriched[0].score}%` : '—', detail: 'Highest score' }
   ];
   const topMatch = enriched[0];
-  const topMatchVisuals = getFitScoreVisuals(topMatch?.score);
 
   return (
     <DashboardShell>
@@ -134,41 +130,6 @@ export default async function MatchesPage() {
           </>
         }
       />
-      {topMatch ? (
-        <div className="surface-toolbar sticky top-4 z-10 mb-4 rounded-2xl p-4">
-          <div className="relative z-10 flex flex-wrap items-center justify-between gap-3">
-            <div className="flex flex-col gap-1">
-              <p className="text-[11px] uppercase tracking-[0.35em] text-muted-foreground">
-                {MATCHES_TEXT.topSnapshot.eyebrow}
-              </p>
-              <p className="text-sm font-semibold text-foreground">
-                {topMatch.program.name} • {topMatch.university.name}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {MATCHES_TEXT.topSnapshot.scoreLabel}{' '}
-                <span className={cn('font-semibold', topMatchVisuals.textClass)}>
-                  {topMatchVisuals.value !== null ? `${topMatchVisuals.value}%` : 'N/A'}
-                </span>{' '}
-                — {topMatch.tier} tier
-              </p>
-            </div>
-            <div className="flex gap-2">
-              <TrackProgramButton
-                programId={topMatch.program.id}
-                programName={topMatch.program.name}
-                universityName={topMatch.university.name}
-                location={topMatch.university.country}
-                fitScore={topMatch.score}
-                labelVariant="planner"
-              />
-              <ShareMatchButton
-                programName={topMatch.program.name}
-                universityName={topMatch.university.name}
-              />
-            </div>
-          </div>
-        </div>
-      ) : null}
       {enriched.length ? (
         <MatchList matches={enriched} />
       ) : (

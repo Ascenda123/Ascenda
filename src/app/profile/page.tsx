@@ -170,6 +170,15 @@ export default async function ProfilePage() {
           </>
         }
       />
+      <AnimatedSection className="mt-6">
+        <ProfileProgressCard
+          completionPercent={completionPercent}
+          completedCount={completedCount}
+          totalSteps={PROFILE_STEPS.length}
+          nextStepTitle={nextStep?.title}
+          stepCompletion={stepCompletion}
+        />
+      </AnimatedSection>
       <AnimatedGrid className="mt-8 grid gap-8 lg:grid-cols-2">
         <AnimatedGridItem
           className={cn(
@@ -366,73 +375,33 @@ export default async function ProfilePage() {
           </div>
         </AnimatedGridItem>
       </AnimatedGrid>
-      <AnimatedGrid className="mt-8 grid gap-8 lg:grid-cols-[2fr,1fr]">
-        <ProfileProgressCard
-          completionPercent={completionPercent}
-          completedCount={completedCount}
-          totalSteps={PROFILE_STEPS.length}
-          nextStepTitle={nextStep?.title}
-          stepCompletion={stepCompletion}
-        />
-        <div className="surface-card surface-card--static text-sm text-muted-foreground">
-          <div className="relative z-10">
-            <p className="text-base font-semibold text-foreground">Why it matters</p>
-            <ul className="mt-4 space-y-3 text-foreground/80">
-              <li>Unlock tighter match suggestions as soon as each section is saved.</li>
-              <li>Surface prerequisite gaps and testing needs with your academic profile.</li>
-              <li>Align application plans with your preferences and long-term goals.</li>
-            </ul>
-            <p className="mt-4 text-xs text-muted-foreground">
-              Need help? Email <a className="underline" href="mailto:hello@ascenda.com">hello@ascenda.com</a> to reach a
-              counsellor.
-            </p>
-          </div>
-        </div>
-      </AnimatedGrid>
-      <AnimatedSection className="mt-8" delay={0.1}>
-        <div
-          className={cn(
-            'surface-card surface-card--static border-l-4 text-sm text-muted-foreground',
-            PROFILE_SECTION_VISUAL.aspirations.border,
-            PROFILE_SECTION_VISUAL.aspirations.accent
-          )}
-        >
-          <div className="relative z-10 space-y-4">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className={cn('text-[11px] font-semibold uppercase tracking-[0.3em]', PROFILE_SECTION_VISUAL.aspirations.text)}>Match boosts</p>
-                <p className="text-lg font-semibold text-foreground">Top gains available</p>
-                <p className="text-xs text-muted-foreground">Complete these to unlock better results.</p>
+      {outcomeHints.length > 0 ? (
+        <AnimatedSection className="mt-8" delay={0.08}>
+          <div
+            className={cn(
+              'flex flex-col gap-4 rounded-2xl border border-l-4 bg-card/60 p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between',
+              PROFILE_SECTION_VISUAL.aspirations.border,
+              PROFILE_SECTION_VISUAL.aspirations.accent
+            )}
+          >
+            <div className="flex items-start gap-3">
+              <div className={PROFILE_SECTION_VISUAL.aspirations.swatch}>
+                <Compass className="h-4 w-4" />
               </div>
-              <div className={cn(PROFILE_SECTION_VISUAL.aspirations.swatch, 'h-10 w-10')}>
-                <Compass className="h-5 w-5" />
+              <div className="min-w-0">
+                <p className={cn('text-[11px] font-semibold uppercase tracking-[0.3em]', PROFILE_SECTION_VISUAL.aspirations.text)}>
+                  Top gains available
+                </p>
+                <p className="text-sm font-semibold text-foreground">{outcomeHints[0].title}</p>
+                <p className="text-xs text-muted-foreground">{outcomeHints[0].detail}</p>
               </div>
             </div>
-            <ul className="space-y-3">
-              {outcomeHints.length ? (
-                outcomeHints.map((hint) => (
-                  <li
-                    key={hint.title}
-                    className="surface-subcard px-3 py-3"
-                  >
-                    <p className="text-sm font-semibold text-foreground">{hint.title}</p>
-                    <p className="text-xs text-muted-foreground">{hint.detail}</p>
-                  </li>
-                ))
-              ) : (
-                <li className="surface-subcard px-3 py-3 text-sm text-foreground">
-                  You&apos;ve unlocked the major boosts. Keep details current to stay optimized.
-                </li>
-              )}
-            </ul>
-            <div className="flex flex-wrap gap-2">
-              <Button size="sm" variant="outline" asChild>
-                <Link href="/matches">Preview matches</Link>
-              </Button>
-            </div>
+            <Button size="sm" asChild className="shrink-0">
+              <Link href={`/profile/wizard?step=${nextStepKey}`}>Open wizard</Link>
+            </Button>
           </div>
-        </div>
-      </AnimatedSection>
+        </AnimatedSection>
+      ) : null}
       {completionPercent === 100 && (
         <AnimatedSection className="mt-8" delay={0.12}>
           <div className="rounded-[28px] border border-emerald-200/60 bg-emerald-500/5 p-8">

@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { DashboardShell } from '@/components/layout/shell';
 import { DeadlineTimeline } from '@/components/dashboard/deadline-timeline';
-import { MatchList } from '@/components/match/match-list';
+import { UniversityCard } from '@/components/university-card';
 import { loadMatchesForProfile } from '@/lib/matching/service';
 import type { EnrichedMatch } from '@/lib/matching/types';
 import { DashboardOverview, type OverviewPayload, type HighlightCard } from '@/components/dashboard/overview';
@@ -263,90 +263,21 @@ export default async function DashboardPage() {
       />
 
       <div className="space-y-6">
-        {profileIncomplete && (() => {
-          const band = classifyCompletion(completionPercent);
-          const visual = COMPLETION_VISUAL[band];
-          const Icon = visual.icon;
-          return (
-            <div
-              className={cn(
-                'relative overflow-hidden rounded-[28px] border border-l-4 bg-card p-6 shadow-sm',
-                visual.border,
-                visual.accent
-              )}
-            >
-              <div className="pointer-events-none absolute -top-10 -right-10 h-32 w-32 rounded-full bg-primary/10 blur-2xl" />
-              <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                <div className="flex items-start gap-4">
-                  <div className={visual.swatch}>
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  <div className="space-y-2">
-                    <p className={cn('text-xs font-bold uppercase tracking-[0.3em]', visual.text)}>Getting started</p>
-                    <h3 className="text-lg font-semibold text-foreground">
-                      Profile {completionPercent}% complete
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      {nextStep
-                        ? `Next up: ${nextStep.title}. Finish in a few minutes to unlock personalized matches.`
-                        : 'Almost there — complete your profile to unlock better recommendations.'}
-                    </p>
-                    <div className="flex items-center gap-2 pt-1">
-                      {PROFILE_STEPS.map((step) => (
-                        <div
-                          key={step.key}
-                          className={cn(
-                            'h-2 flex-1 rounded-full transition-colors',
-                            stepCompletion[step.key] ? visual.bar : 'bg-border'
-                          )}
-                          title={`${step.title}: ${stepCompletion[step.key] ? 'Complete' : 'Incomplete'}`}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                </div>
-                <div className="flex gap-2 shrink-0">
-                  <Button asChild size="sm">
-                    <Link href="/profile/wizard">Continue setup</Link>
-                  </Button>
-                  <Button asChild size="sm" variant="outline">
-                    <Link href="/profile">View profile</Link>
-                  </Button>
-                </div>
-              </div>
-            </div>
-          );
-        })()}
-
+        {/* 1. Today's focus + key stats (already prioritised inside DashboardOverview) */}
         <DashboardOverview data={overviewPayload} />
 
-        {deadlines.length > 0 ? (
-          <AnimatedSection delay={0.05}>
-            <div className="surface-card surface-card--static">
-              <div className="relative z-10 space-y-4">
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Timeline</p>
-                  <p className="text-lg font-semibold text-foreground">Upcoming deadlines</p>
-                </div>
-                <DeadlineTimeline
-                  items={deadlines.map((deadline) => ({
-                    id: deadline.id,
-                    name: deadline.name,
-                    date: deadline.deadline_date ?? 'TBD',
-                    context: deadline.intake ?? 'Application period'
-                  }))}
-                />
-              </div>
-            </div>
-          </AnimatedSection>
-        ) : null}
-
-        <AnimatedSection delay={0.08}>
+        {/* 2. Tasks — inline mark-done, no nav required */}
+        <AnimatedSection delay={0.05}>
           <div className="surface-card surface-card--static">
             <div className="relative z-10 space-y-4">
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Tasks</p>
-                <p className="text-lg font-semibold text-foreground">Application checklist</p>
+              <div className="flex flex-wrap items-end justify-between gap-3">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Tasks</p>
+                  <p className="text-lg font-semibold text-foreground">Mark today&apos;s tasks as you finish</p>
+                </div>
+                <Button asChild size="sm" variant="ghost">
+                  <Link href="/applications/tasks">Open all tasks →</Link>
+                </Button>
               </div>
               <TaskListPanel
                 title=""
@@ -361,12 +292,47 @@ export default async function DashboardPage() {
           </div>
         </AnimatedSection>
 
+        {/* 3. Upcoming deadlines */}
+        {deadlines.length > 0 ? (
+          <AnimatedSection delay={0.08}>
+            <div className="surface-card surface-card--static">
+              <div className="relative z-10 space-y-4">
+                <div className="flex flex-wrap items-end justify-between gap-3">
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Timeline</p>
+                    <p className="text-lg font-semibold text-foreground">Upcoming deadlines</p>
+                  </div>
+                  <Button asChild size="sm" variant="ghost">
+                    <Link href="/applications">Plan applications →</Link>
+                  </Button>
+                </div>
+                <DeadlineTimeline
+                  items={deadlines.map((deadline) => ({
+                    id: deadline.id,
+                    name: deadline.name,
+                    date: deadline.deadline_date ?? 'TBD',
+                    context: deadline.intake ?? 'Application period'
+                  }))}
+                />
+              </div>
+            </div>
+          </AnimatedSection>
+        ) : null}
+
+        {/* 4. Top matches peek — 3 cards max, link to full list */}
         <AnimatedSection delay={0.1}>
           <div className="surface-card surface-card--static">
             <div className="relative z-10 space-y-4">
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Matches</p>
-                <p className="text-lg font-semibold text-foreground">Recommended programs</p>
+              <div className="flex flex-wrap items-end justify-between gap-3">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Matches</p>
+                  <p className="text-lg font-semibold text-foreground">Top recommendations for you</p>
+                </div>
+                {matches.length > 0 ? (
+                  <Button asChild size="sm" variant="ghost">
+                    <Link href="/matches">See all {matches.length} matches →</Link>
+                  </Button>
+                ) : null}
               </div>
               {matchError ? (
                 <div className="space-y-3 text-sm text-muted-foreground">
@@ -374,14 +340,36 @@ export default async function DashboardPage() {
                   <p>We couldn&apos;t load recommendations. Please try again shortly.</p>
                 </div>
               ) : matches.length > 0 ? (
-                <MatchList matches={matches} />
+                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                  {matches.slice(0, 3).map((match) => (
+                    <UniversityCard
+                      key={match.program.id}
+                      id={match.program.id}
+                      name={match.university.name}
+                      program={match.program.name}
+                      location={match.university.country}
+                      fitScore={match.score}
+                      tier={match.tier}
+                      reasons={match.blockingReasons}
+                      highlights={[
+                        match.program.field ?? match.program.level ?? 'Program',
+                        match.program.tuition != null
+                          ? `${match.program.currency ?? 'GBP'} ${Math.round(match.program.tuition).toLocaleString()}/yr`
+                          : null,
+                        match.program.language && match.program.language !== 'English' ? match.program.language : null
+                      ].filter((value): value is string => Boolean(value))}
+                      variant="compact"
+                      trackingLabelVariant="planner"
+                    />
+                  ))}
+                </div>
               ) : (
                 <div className="space-y-3 text-sm text-muted-foreground">
                   <p className="text-base font-semibold text-foreground">No recommendations yet</p>
                   <p>Complete your profile and add preferred destinations to see personalized matches.</p>
                   <div className="flex flex-wrap gap-2">
                     <Button asChild size="sm">
-                      <Link href="/profile">Finish profile</Link>
+                      <Link href="/profile/wizard">Finish profile</Link>
                     </Button>
                     <Button asChild size="sm" variant="outline">
                       <Link href="/matches">See all matches</Link>
@@ -392,6 +380,51 @@ export default async function DashboardPage() {
             </div>
           </div>
         </AnimatedSection>
+
+        {/* 5. Setup nudge — small footer pill, only when truly incomplete */}
+        {profileIncomplete && (() => {
+          const band = classifyCompletion(completionPercent);
+          const visual = COMPLETION_VISUAL[band];
+          const Icon = visual.icon;
+          return (
+            <AnimatedSection delay={0.12}>
+              <div
+                className={cn(
+                  'flex flex-col gap-3 rounded-2xl border border-l-4 bg-card/60 p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between',
+                  visual.border,
+                  visual.accent
+                )}
+              >
+                <div className="flex items-start gap-3">
+                  <div className={visual.swatch}>
+                    <Icon className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">
+                      Profile {completionPercent}% complete
+                      {nextStep ? <span className="text-muted-foreground"> · Next: {nextStep.title}</span> : null}
+                    </p>
+                    <div className="mt-2 flex max-w-md items-center gap-1.5">
+                      {PROFILE_STEPS.map((step) => (
+                        <div
+                          key={step.key}
+                          className={cn(
+                            'h-1.5 flex-1 rounded-full transition-colors',
+                            stepCompletion[step.key] ? visual.bar : 'bg-border'
+                          )}
+                          title={`${step.title}: ${stepCompletion[step.key] ? 'Complete' : 'Incomplete'}`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <Button asChild size="sm" className="shrink-0">
+                  <Link href="/profile/wizard">Continue setup</Link>
+                </Button>
+              </div>
+            </AnimatedSection>
+          );
+        })()}
       </div>
     </DashboardShell>
   );
