@@ -134,20 +134,27 @@
     @apply font-heading tracking-tight;
   }
 
+  /* Tightened type scale — 5 sizes total across the app:
+     h1 / hero: 28px (sm) → 32px (md+)
+     h2 / page section: 22px → 24px (md+)
+     h3 / card title: 18px
+     body: 14px (text-sm)
+     caption: 12px (text-xs)
+     Marketing landing pages may opt out via inline overrides. */
   h1 {
-    @apply text-4xl md:text-5xl font-semibold leading-[1.05];
+    @apply text-[28px] leading-tight font-semibold md:text-[32px];
   }
 
   h2 {
-    @apply text-3xl md:text-4xl font-semibold leading-tight;
+    @apply text-[22px] leading-snug font-semibold md:text-2xl;
   }
 
   h3 {
-    @apply text-2xl font-semibold leading-snug;
+    @apply text-lg font-semibold leading-snug;
   }
 
   h4 {
-    @apply text-xl font-semibold leading-snug;
+    @apply text-base font-semibold leading-snug;
   }
 
   p {
@@ -174,7 +181,7 @@
   }
 
   .hover-lift {
-    @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-lg;
+    @apply transition-all duration-150 hover:-translate-y-px hover:shadow-md;
   }
 }
 

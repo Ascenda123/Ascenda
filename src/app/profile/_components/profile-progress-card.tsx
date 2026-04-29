@@ -63,7 +63,7 @@ export function ProfileProgressCard({
           </div>
           <div>
             <p className={cn('text-sm font-medium uppercase tracking-[0.2em]', visual.text)}>Profile completion</p>
-            <p className="text-3xl font-semibold text-foreground">{clampedPercent}%</p>
+            <p className="text-2xl font-semibold text-foreground">{clampedPercent}%</p>
             <p className="mt-1 text-xs text-muted-foreground">
               {completedCount}/{totalSteps} steps done {nextStepTitle ? `• Next: ${nextStepTitle}` : ''}
             </p>

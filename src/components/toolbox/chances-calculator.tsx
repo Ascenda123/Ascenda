@@ -73,7 +73,7 @@ export function ChancesCalculator({ grades, universities }: ChancesCalculatorPro
                 key={sliderScore}
                 initial={{ scale: 1.3, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                className="text-4xl font-bold text-foreground tabular-nums"
+                className="text-3xl font-semibold text-foreground tabular-nums"
               >
                 {sliderScore}
               </motion.span>

@@ -35,11 +35,11 @@ export function StatsCard({ label, value, detail, icon, trend, className }: Stat
                         {label}
                     </p>
                     <motion.h3
-                        className="text-3xl font-bold tracking-tight text-foreground"
+                        className="text-2xl font-semibold tracking-tight text-foreground"
                         key={value}
-                        initial={{ scale: 1.05, opacity: 0 }}
+                        initial={{ scale: 1.04, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
-                        transition={{ duration: 0.3 }}
+                        transition={{ duration: 0.15 }}
                     >
                         {value}
                     </motion.h3>

@@ -88,7 +88,7 @@ export const DashboardOverview = ({ data }: { data: OverviewPayload }) => {
                     <span className={cn('h-2 w-2 rounded-full shrink-0', toneDot(card.tone))} />
                     <p className="text-[11px] uppercase tracking-[0.3em] text-muted-foreground font-semibold">{card.label}</p>
                   </div>
-                  <p className="mt-2 text-xl sm:text-3xl font-bold text-foreground leading-tight tracking-tight">{card.value}</p>
+                  <p className="mt-2 text-xl sm:text-2xl font-semibold text-foreground leading-tight tracking-tight">{card.value}</p>
                   <p className="mt-1 sm:mt-1.5 text-xs sm:text-sm text-muted-foreground leading-relaxed">{card.detail}</p>
                   {card.href && (
                     <div className="mt-3 flex items-center gap-1 text-xs font-medium text-primary opacity-0 group-hover:opacity-100 transition-opacity translate-x-0 group-hover:translate-x-0.5 duration-200">

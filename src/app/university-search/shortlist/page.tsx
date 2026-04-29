@@ -67,7 +67,7 @@ export default function UniversitySearchShortlistPage() {
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="space-y-2">
             <p className="text-xs uppercase tracking-[0.35em] text-muted-foreground">Explore · Shortlist</p>
-            <h1 className="text-3xl font-bold text-foreground">Shortlist</h1>
+            <h1 className="text-[22px] font-semibold leading-snug text-foreground md:text-[28px]">Shortlist</h1>
             <p className="max-w-3xl text-sm text-muted-foreground">
               Courses you saved from search and matches. Track fit, next actions, and reopen them in results to compare.
             </p>
@@ -92,7 +92,7 @@ export default function UniversitySearchShortlistPage() {
               <Sparkles className="h-5 w-5 text-amber-500" aria-hidden />
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-semibold text-foreground">{metrics.count}</p>
+              <p className="text-2xl font-semibold text-foreground">{metrics.count}</p>
               <p className="text-xs text-muted-foreground">Saved from search</p>
             </CardContent>
           </Card>
@@ -102,7 +102,7 @@ export default function UniversitySearchShortlistPage() {
               <Target className="h-5 w-5 text-emerald-500" aria-hidden />
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-semibold text-foreground tabular-nums">
+              <p className="text-2xl font-semibold text-foreground tabular-nums">
                 {metrics.tierCounts.reach}/{metrics.tierCounts.match}/{metrics.tierCounts.safety}
               </p>
               <p className="text-xs text-muted-foreground">Banding across saved programs</p>
@@ -114,7 +114,7 @@ export default function UniversitySearchShortlistPage() {
               <Target className="h-5 w-5 text-emerald-500" aria-hidden />
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-semibold text-foreground">{metrics.avgFit !== null ? `${metrics.avgFit}%` : 'N/A'}</p>
+              <p className="text-2xl font-semibold text-foreground">{metrics.avgFit !== null ? `${metrics.avgFit}%` : 'N/A'}</p>
               <p className="text-xs text-muted-foreground">Across shortlisted programs</p>
             </CardContent>
           </Card>
@@ -124,7 +124,7 @@ export default function UniversitySearchShortlistPage() {
               <Clock className="h-5 w-5 text-indigo-500" aria-hidden />
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-semibold text-foreground">
+              <p className="text-2xl font-semibold text-foreground">
                 {items.reduce<string | null>((earliest, item) => {
                   if (!item.due) return earliest;
                   if (!earliest) return item.due;

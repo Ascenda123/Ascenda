@@ -30,7 +30,7 @@ export default async function TasksPage() {
     <DashboardShell>
       <SectionNav items={PLANNER_SECTION_ITEMS} />
       <section className="space-y-2">
-        <h1 className="text-3xl font-semibold text-foreground">Tasks</h1>
+        <h1 className="text-[22px] font-semibold leading-snug text-foreground md:text-[28px]">Tasks</h1>
         <p className="text-sm text-muted-foreground">Action items grouped across all applications.</p>
       </section>
       <TaskList

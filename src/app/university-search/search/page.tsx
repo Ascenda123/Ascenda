@@ -347,7 +347,7 @@ function UniversitySearchPageInner() {
           <div className="space-y-5">
             <p className="text-xs font-semibold uppercase tracking-[0.35em] text-muted-foreground">Search hub</p>
             <div className="space-y-4">
-              <h1 className="text-4xl font-semibold text-foreground">Cue up your next university discover session.</h1>
+              <h1 className="text-[24px] font-semibold leading-tight text-foreground md:text-[32px]">Cue up your next university discover session.</h1>
               <p className="text-base text-muted-foreground">
                 Drop a keyword, layer filters, and preview how well each program syncs with your profile before you meet a counselor.
               </p>

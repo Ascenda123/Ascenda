@@ -678,7 +678,7 @@ export default function UniversitySearchResultsPage() {
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div className="flex flex-col gap-2">
             <Breadcrumbs className="mb-2" />
-            <h1 className="text-3xl font-bold tracking-tight text-foreground">University Matches</h1>
+            <h1 className="text-[22px] font-semibold leading-snug tracking-tight text-foreground md:text-[28px]">University matches</h1>
             <p className="text-muted-foreground">
               Explore programs tailored to your profile and preferences.
             </p>

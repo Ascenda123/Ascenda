@@ -25,22 +25,22 @@ interface PageHeroProps {
 
 const containerVariants = {
   hidden: {},
-  show: { transition: { staggerChildren: 0.08, delayChildren: 0.05 } }
+  show: { transition: { staggerChildren: 0.04, delayChildren: 0 } }
 };
 
 const fadeUp = {
-  hidden: { opacity: 0, y: 14 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.45, ease: [0.25, 0.46, 0.45, 0.94] as const } }
+  hidden: { opacity: 0, y: 6 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.18, ease: [0.25, 0.46, 0.45, 0.94] as const } }
 };
 
 const statVariants = {
-  hidden: { opacity: 0, y: 10, scale: 0.97 },
-  show: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] as const } }
+  hidden: { opacity: 0, y: 6 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.18, ease: [0.25, 0.46, 0.45, 0.94] as const } }
 };
 
 const statsContainerVariants = {
   hidden: {},
-  show: { transition: { staggerChildren: 0.1, delayChildren: 0.25 } }
+  show: { transition: { staggerChildren: 0.04, delayChildren: 0.06 } }
 };
 
 function AnimatedNumber({ value }: { value: string }) {
@@ -121,7 +121,7 @@ export const PageHero = ({
                 <span>{accent}</span>
                 {highlight ? <span className="text-foreground font-bold">{highlight}</span> : null}
               </div>
-              <h1 className="text-2xl font-semibold text-foreground sm:text-3xl md:text-4xl">{title}</h1>
+              <h1 className="text-[22px] font-semibold leading-snug text-foreground md:text-[28px]">{title}</h1>
               <p className="max-w-xl text-xs sm:text-sm text-muted-foreground">{description}</p>
             </motion.div>
             {actions ? (

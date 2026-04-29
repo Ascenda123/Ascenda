@@ -13,6 +13,7 @@ import { LogOut } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useSupabase } from '@/hooks/useSupabase';
 import { Button } from '../ui/button';
+import { CommandPaletteIconTrigger, CommandPaletteTrigger } from './command-palette';
 
 export const Navbar = () => {
   const role = useUserRole();
@@ -67,6 +68,8 @@ export const Navbar = () => {
             ))}
           </nav>
           <div className="flex items-center gap-2">
+            <CommandPaletteTrigger />
+            <CommandPaletteIconTrigger />
             <ThemeToggle compact />
             <Button
               variant="ghost"

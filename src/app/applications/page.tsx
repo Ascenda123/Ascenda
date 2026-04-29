@@ -15,6 +15,8 @@ import { Button } from '@/components/ui/button';
 import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import { SectionNav } from '@/components/layout/section-nav';
 import { PLANNER_SECTION_ITEMS } from '@/components/layout/navigation';
+import { EmptyState } from '@/components/ui/empty-state';
+import { ClipboardCheck } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'Applications | Ascenda'
@@ -124,42 +126,31 @@ export default async function ApplicationsPage() {
         <PageHero
           eyebrow="Applications"
           title="Application workspace"
-          description="Track applications, requirements, and signals in one place once you add programs."
+          description="Track applications, requirements, and updates in one place — once you add a program."
           highlight="No applications yet"
           stats={[
             { label: 'Applications', value: '0', detail: 'Tracked' },
             { label: 'Deadlines', value: '—', detail: 'Awaiting programs' },
-            { label: 'Signals', value: '—', detail: 'Add programs first' }
+            { label: 'Updates', value: '—', detail: 'Add programs first' }
           ]}
           breadcrumbs={<Breadcrumbs />}
           actions={
-            <>
-              <Button asChild size="sm">
-                <Link href="/university-search/shortlist">Add from shortlist</Link>
-              </Button>
-              <Button asChild size="sm" variant="outline">
-                <Link href="/matches">Add from matches</Link>
-              </Button>
-              <Button asChild size="sm" variant="ghost">
-                <Link href="/university-search/search">Browse universities</Link>
-              </Button>
-            </>
-          }
-        />
-        <div className="rounded-[28px] border border-dashed border-border bg-muted/40 p-10 text-center text-muted-foreground">
-          <p className="text-base font-semibold text-foreground">Nothing here yet</p>
-          <p className="mt-2 text-sm">
-            Pull programs from your shortlist (or matches) to start planning tasks, deadlines, and documents.
-          </p>
-          <div className="mt-4 flex justify-center gap-3">
             <Button asChild size="sm">
               <Link href="/university-search/shortlist">Add from shortlist</Link>
             </Button>
-            <Button asChild size="sm" variant="outline">
-              <Link href="/matches">Add from matches</Link>
+          }
+        />
+        <EmptyState
+          icon={ClipboardCheck}
+          title="Nothing tracked yet"
+          description="Pull a program from your shortlist to start planning tasks, deadlines, and documents."
+          action={
+            <Button asChild size="sm">
+              <Link href="/university-search/shortlist">Add from shortlist</Link>
             </Button>
-          </div>
-        </div>
+          }
+          hint="Or pick from your matches if you haven't built a shortlist yet."
+        />
       </DashboardShell>
     );
   }
