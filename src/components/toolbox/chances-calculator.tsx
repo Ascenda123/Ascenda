@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, GraduationCap, Calendar, ClipboardList, TrendingUp, Target, Shield } from 'lucide-react';
+import { ChevronDown, GraduationCap, Calendar, ClipboardList, TrendingUp, Target, Shield, ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { stagger, cardFade } from '@/lib/motion';
 import type { DemoStudentGrades, UniversityChance } from '@/lib/data/student-demo-data';
@@ -199,9 +200,17 @@ export function ChancesCalculator({ grades, universities }: ChancesCalculatorPro
 
           return (
             <motion.div key={uni.id} variants={cardFade} layout>
-              <button
+              <div
+                role="button"
+                tabIndex={0}
                 onClick={() => setExpandedId(isExpanded ? null : uni.id)}
-                className={cn('w-full text-left rounded-2xl border p-4 transition-all hover:shadow-md', cfg.bg)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    setExpandedId(isExpanded ? null : uni.id);
+                  }
+                }}
+                className={cn('w-full text-left rounded-2xl border p-4 transition-all hover:shadow-md cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring', cfg.bg)}
               >
                 <div className="flex items-center gap-4">
                   {/* Chance ring */}
@@ -237,6 +246,15 @@ export function ChancesCalculator({ grades, universities }: ChancesCalculatorPro
                     <span className={cn('rounded-full px-3 py-1 text-xs font-semibold', cfg.bg, cfg.color)}>
                       {cfg.label}
                     </span>
+                    <Link
+                      href={`/course/${uni.id}`}
+                      onClick={(event) => event.stopPropagation()}
+                      className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-background/80 px-3 py-1 text-[11px] font-semibold text-muted-foreground transition hover:border-primary/30 hover:text-foreground"
+                      aria-label={`View ${uni.university} course details`}
+                    >
+                      View course
+                      <ExternalLink className="h-3 w-3" aria-hidden />
+                    </Link>
                     <ChevronDown className={cn('h-4 w-4 text-muted-foreground transition-transform', isExpanded && 'rotate-180')} />
                   </div>
                 </div>
@@ -304,7 +322,7 @@ export function ChancesCalculator({ grades, universities }: ChancesCalculatorPro
                     </motion.div>
                   )}
                 </AnimatePresence>
-              </button>
+              </div>
             </motion.div>
           );
         })}

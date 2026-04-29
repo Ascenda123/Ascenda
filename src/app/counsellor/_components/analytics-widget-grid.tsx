@@ -25,13 +25,13 @@ export interface AnalyticsWidgetConfig {
 }
 
 export const ANALYTICS_WIDGET_CONFIGS: AnalyticsWidgetConfig[] = [
-  { id: 'programmeSplit', label: 'Programme Split', description: 'IB vs A-Level breakdown', icon: PieChart },
-  { id: 'ibDistribution', label: 'IB Scores', description: 'Score distribution by bracket', icon: BarChart2 },
-  { id: 'fieldChart', label: 'Fields of Interest', description: 'Subject area distribution', icon: Target },
-  { id: 'completionBreakdown', label: 'Profile Completion', description: 'Completion rate buckets', icon: CheckCircle },
-  { id: 'fullFunnel', label: 'Application Funnel', description: 'Stage-by-stage breakdown', icon: TrendingUp },
-  { id: 'matchTierSummary', label: 'Match Distribution', description: 'Reach / Match / Safe', icon: Users },
-  { id: 'insights', label: 'Key Insights', description: 'Cohort takeaways at a glance', icon: BarChart2 }
+  { id: 'programmeSplit', label: 'IB vs A-Level split', description: 'Programme breakdown across students', icon: PieChart },
+  { id: 'ibDistribution', label: 'IB score distribution', description: 'How students are scoring across bands', icon: BarChart2 },
+  { id: 'fieldChart', label: 'Fields of interest', description: 'Subject areas students are pursuing', icon: Target },
+  { id: 'completionBreakdown', label: 'Profile completion', description: 'How complete student profiles are', icon: CheckCircle },
+  { id: 'fullFunnel', label: 'Applications by stage', description: 'Stage-by-stage view across the cohort', icon: TrendingUp },
+  { id: 'matchTierSummary', label: 'Reach / Match / Safe split', description: 'Banding across all matches', icon: Users },
+  { id: 'insights', label: 'Highlights', description: 'Quick takeaways across your students', icon: BarChart2 }
 ];
 
 const STORAGE_KEY = 'ascenda-counsellor-analytics-widgets';

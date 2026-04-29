@@ -1,7 +1,5 @@
 import type { Metadata } from 'next';
 import { PageHero } from '@/components/layout/page-hero';
-import { SectionNav } from '@/components/layout/section-nav';
-import { COUNSELLOR_SECTION_ITEMS } from '@/components/layout/navigation';
 import { OutcomeDashboard } from '../_components/outcome-dashboard';
 import { AnimatedSection } from '@/components/layout/animated-section';
 import { getOutcomeStats } from '@/lib/data/counsellor-dummy-data';
@@ -13,7 +11,6 @@ const stats = getOutcomeStats();
 export default function CounsellorOutcomesPage() {
   return (
     <div className="space-y-6">
-      <SectionNav items={COUNSELLOR_SECTION_ITEMS} />
       <PageHero
         eyebrow="Counsellor"
         title="Outcome tracking"

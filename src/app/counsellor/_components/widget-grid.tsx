@@ -26,19 +26,20 @@ export interface WidgetConfig {
 }
 
 export const WIDGET_CONFIGS: WidgetConfig[] = [
-  { id: 'alerts', label: 'Student Alerts', description: 'Students needing attention', icon: AlertTriangle },
-  { id: 'funnel', label: 'Application Funnel', description: 'Application stage distribution', icon: TrendingUp },
-  { id: 'matchDist', label: 'Match Distribution', description: 'Reach / Match / Safe breakdown', icon: BarChart2 },
-  { id: 'deadlines', label: 'Upcoming Deadlines', description: 'Deadlines in the next 7 days', icon: Clock },
-  { id: 'activity', label: 'Recent Activity', description: 'Latest counsellor notes and updates', icon: Activity },
-  { id: 'cohortBreakdown', label: 'Cohort Breakdown', description: 'Programme type and field distribution', icon: PieChart },
-  { id: 'topStudents', label: 'Top Students', description: 'Ranked by average match score', icon: Trophy }
+  { id: 'alerts', label: 'Students needing attention', description: 'Flagged or at-risk students', icon: AlertTriangle },
+  { id: 'funnel', label: 'Applications by stage', description: 'Where each student is in the process', icon: TrendingUp },
+  { id: 'matchDist', label: 'Reach / Match / Safe split', description: 'Banding across all your students', icon: BarChart2 },
+  { id: 'deadlines', label: 'Upcoming deadlines', description: 'Deadlines in the next 7 days', icon: Clock },
+  { id: 'activity', label: 'Recent activity', description: 'Latest notes and updates', icon: Activity },
+  { id: 'cohortBreakdown', label: 'Programme & interests breakdown', description: 'IB vs A-Level and fields of study', icon: PieChart },
+  { id: 'topStudents', label: 'Top students', description: 'Ranked by average match score', icon: Trophy }
 ];
 
 const STORAGE_KEY = 'ascenda-counsellor-widgets';
 const STORAGE_KEY_ORDER = 'ascenda-counsellor-widgets-order';
 const STORAGE_KEY_SIZES = 'ascenda-counsellor-widgets-sizes';
-const DEFAULT_VISIBLE: WidgetId[] = ['alerts', 'funnel', 'matchDist', 'deadlines', 'activity', 'cohortBreakdown', 'topStudents'];
+// Overview keeps a focused triage set; deeper analytics live on /counsellor/analytics.
+const DEFAULT_VISIBLE: WidgetId[] = ['alerts', 'deadlines', 'activity'];
 const DEFAULT_SIZES: Record<WidgetId, 'normal' | 'wide'> = {
   alerts: 'normal', funnel: 'normal', matchDist: 'normal',
   deadlines: 'normal', activity: 'normal', cohortBreakdown: 'wide', topStudents: 'normal'

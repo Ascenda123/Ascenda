@@ -1,8 +1,8 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, X, Globe, GraduationCap, DollarSign, Calendar, ExternalLink, Bookmark, BookmarkCheck, Filter } from 'lucide-react';
+import { Search, X, Globe, GraduationCap, DollarSign, Calendar, ExternalLink, Bookmark, BookmarkCheck, Filter, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { trackEvent } from '@/lib/analytics';
 import type { Scholarship } from './types';
@@ -53,6 +53,7 @@ export const ScholarshipExplorer = ({ scholarships }: ScholarshipExplorerProps) 
   const [maxAmount, setMaxAmount] = useState('');
   const [saved, setSaved] = useState<Set<string>>(new Set());
   const [showFilters, setShowFilters] = useState(false);
+  const [toast, setToast] = useState<{ message: string; tone: 'success' | 'info' } | null>(null);
 
   const countries = useMemo(
     () => Array.from(new Set(scholarships.map((s) => s.country).filter(Boolean))) as string[],
@@ -81,16 +82,53 @@ export const ScholarshipExplorer = ({ scholarships }: ScholarshipExplorerProps) 
   const toggleSave = (s: Scholarship) => {
     setSaved((prev) => {
       const next = new Set(prev);
-      if (next.has(s.id)) { next.delete(s.id); } else {
+      if (next.has(s.id)) {
+        next.delete(s.id);
+        setToast({ message: `Removed "${s.name}" from saved scholarships`, tone: 'info' });
+      } else {
         next.add(s.id);
         trackEvent('scholarship_saved', { scholarshipId: s.id });
+        setToast({ message: `Saved "${s.name}" to your scholarship list`, tone: 'success' });
       }
       return next;
     });
   };
 
+  useEffect(() => {
+    if (!toast) return;
+    const timer = window.setTimeout(() => setToast(null), 2400);
+    return () => window.clearTimeout(timer);
+  }, [toast]);
+
   return (
-    <div className="space-y-5">
+    <div className="relative space-y-5">
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            key={toast.message}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 12 }}
+            transition={{ duration: 0.2 }}
+            className="pointer-events-none fixed bottom-6 left-1/2 z-50 -translate-x-1/2"
+            role="status"
+            aria-live="polite"
+          >
+            <div
+              className={cn(
+                'pointer-events-auto flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium shadow-lg backdrop-blur',
+                toast.tone === 'success'
+                  ? 'border-emerald-200/60 bg-emerald-500/95 text-white dark:border-emerald-500/30'
+                  : 'border-border/60 bg-background/95 text-foreground'
+              )}
+            >
+              {toast.tone === 'success' ? <CheckCircle2 className="h-4 w-4" /> : <Bookmark className="h-4 w-4" />}
+              <span>{toast.message}</span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Search + filter bar */}
       <div className="rounded-2xl border border-border bg-card p-4 shadow-sm space-y-4">
         <div className="flex gap-2">

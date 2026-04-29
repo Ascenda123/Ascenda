@@ -72,7 +72,7 @@ export function ParentPortal() {
   const needsResponse = contacts.filter((c) => c.status === 'needs-response').length;
 
   return (
-    <div className="grid gap-0 lg:grid-cols-[320px,1fr] h-[650px] overflow-hidden rounded-2xl border border-border bg-card">
+    <div className="grid gap-0 lg:grid-cols-[320px,1fr] min-h-[480px] sm:min-h-[560px] lg:h-[650px] overflow-hidden rounded-2xl border border-border bg-card">
       {/* Left: Contact directory */}
       <div className="border-r border-border flex flex-col">
         <div className="p-3 border-b border-border">
@@ -126,13 +126,20 @@ export function ParentPortal() {
         {selectedContact ? (
           <>
             {/* Header */}
-            <div className="p-4 border-b border-border flex items-center justify-between">
-              <div>
+            <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-border p-4">
+              <div className="min-w-0">
                 <p className="text-sm font-semibold text-foreground">{selectedContact.parentName}</p>
-                <p className="text-xs text-muted-foreground">{selectedContact.relationship} of {selectedContact.flagEmoji} {selectedContact.studentName}</p>
+                <p className="text-xs text-muted-foreground">
+                  {selectedContact.relationship} of {selectedContact.flagEmoji} {selectedContact.studentName}
+                </p>
               </div>
-              <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                <span className="flex items-center gap-1"><Mail className="h-3 w-3" /> {selectedContact.email}</span>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                <span
+                  className="inline-flex max-w-[220px] items-center gap-1 truncate"
+                  title={selectedContact.email}
+                >
+                  <Mail className="h-3 w-3 shrink-0" /> {selectedContact.email}
+                </span>
                 <span className={cn('rounded-full px-2 py-0.5 text-[10px] font-semibold', STATUS_CONFIG[selectedContact.status].bg, STATUS_CONFIG[selectedContact.status].color)}>
                   {STATUS_CONFIG[selectedContact.status].label}
                 </span>

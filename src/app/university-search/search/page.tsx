@@ -1,46 +1,181 @@
 'use client';
 
-import { useEffect, useState, type FormEvent, type MouseEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type FormEvent, type MouseEvent } from 'react';
 import { useRouter } from 'next/navigation';
+import { Check, ChevronDown, Search as SearchIcon, X } from 'lucide-react';
 import { AnimatedBlobBanner } from '@/components/animated-blob-banner';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { IntelligentSearchBar, Suggestion } from '@/components/university-search/IntelligentSearchBar';
 import { getBrowserSupabaseClient } from '@/lib/supabase/client';
 import { buildSearchResultsUrl, buildSuggestionResultsUrl } from '@/lib/university-search/search-params';
-import { StudentWorkspaceDock } from '@/components/layout/student-workspace-dock';
 
-const DEFAULT_FILTER_GROUPS = [
+type FilterGroup = {
+  key: 'country' | 'subject' | 'fitFocus' | 'lifestyle';
+  title: string;
+  description: string;
+  options: string[];
+};
+
+const DEFAULT_FILTER_GROUPS: FilterGroup[] = [
   {
+    key: 'country',
     title: 'Country',
     description: 'Where do you picture yourself living?',
     options: ['USA', 'UK', 'Canada', 'Australia', 'Singapore']
   },
   {
+    key: 'subject',
     title: 'Subject',
     description: 'Pick the themes you want to explore.',
     options: ['Computer Science', 'Engineering', 'Design', 'Business', 'Humanities']
   },
   {
+    key: 'fitFocus',
     title: 'Fit focus',
     description: 'Dial in what matters most for you.',
     options: ['Career outcomes', 'Research focus', 'Campus feel', 'Internships', 'Cost']
   },
   {
+    key: 'lifestyle',
     title: 'Lifestyle',
-    description: 'Choose the energy you vibe with.',
-    options: ['City', 'Coastal', 'Suburban', 'Tight-knit', 'Global hub']
+    description: 'Choose the campus setting you want.',
+    options: ['Big city', 'College town', 'Suburban', 'Coastal', 'Rural', 'Tech hub', 'Arts scene']
   }
 ];
 
+interface FilterDropdownProps {
+  group: FilterGroup;
+  selected: Set<string>;
+  onToggle: (option: string) => void;
+}
+
+function FilterDropdown({ group, selected, onToggle }: FilterDropdownProps) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handleClickOutside = (event: MouseEvent | globalThis.MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    };
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('mousedown', handleClickOutside as EventListener);
+    document.addEventListener('keydown', handleKey);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside as EventListener);
+      document.removeEventListener('keydown', handleKey);
+    };
+  }, [open]);
+
+  const groupSelected = useMemo(
+    () => group.options.filter((option) => selected.has(option)),
+    [group.options, selected]
+  );
+
+  const filtered = useMemo(() => {
+    const trimmed = query.trim().toLowerCase();
+    if (!trimmed) return group.options;
+    return group.options.filter((option) => option.toLowerCase().includes(trimmed));
+  }, [group.options, query]);
+
+  return (
+    <div className="surface-subcard space-y-3 shadow-none" ref={containerRef}>
+      <div className="space-y-1">
+        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground">{group.title}</p>
+        <p className="helper-text">{group.description}</p>
+      </div>
+      <button
+        type="button"
+        onClick={() => setOpen((prev) => !prev)}
+        className={cn(
+          'flex w-full items-center justify-between gap-3 rounded-xl border px-4 py-2.5 text-left text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+          open ? 'border-primary/40 bg-primary/5' : 'border-border bg-background hover:border-border/80'
+        )}
+        aria-expanded={open}
+      >
+        <span className={cn('truncate', groupSelected.length === 0 && 'text-muted-foreground')}>
+          {groupSelected.length === 0
+            ? `Select ${group.title.toLowerCase()}`
+            : groupSelected.length === 1
+              ? groupSelected[0]
+              : `${groupSelected.length} selected`}
+        </span>
+        <ChevronDown className={cn('h-4 w-4 text-muted-foreground transition-transform', open && 'rotate-180')} />
+      </button>
+
+      {groupSelected.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {groupSelected.map((option) => (
+            <button
+              key={option}
+              type="button"
+              onClick={() => onToggle(option)}
+              className="inline-flex items-center gap-1 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-medium text-primary transition hover:bg-primary/20"
+            >
+              {option}
+              <X className="h-3 w-3" aria-hidden />
+            </button>
+          ))}
+        </div>
+      )}
+
+      {open && (
+        <div className="rounded-xl border border-border bg-background shadow-lg">
+          <div className="relative border-b border-border p-2">
+            <SearchIcon className="pointer-events-none absolute left-4 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+            <input
+              type="text"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder={`Search ${group.title.toLowerCase()}...`}
+              className="w-full rounded-lg border border-transparent bg-muted/40 py-1.5 pl-8 pr-3 text-sm focus:border-primary/30 focus:outline-none"
+              autoFocus
+            />
+          </div>
+          <ul className="max-h-60 overflow-y-auto p-1">
+            {filtered.length === 0 ? (
+              <li className="px-3 py-2 text-xs text-muted-foreground">No matches</li>
+            ) : (
+              filtered.map((option) => {
+                const isSelected = selected.has(option);
+                return (
+                  <li key={option}>
+                    <button
+                      type="button"
+                      onClick={() => onToggle(option)}
+                      className={cn(
+                        'flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition',
+                        isSelected ? 'bg-primary/10 text-foreground' : 'hover:bg-muted/60 text-foreground'
+                      )}
+                    >
+                      <span>{option}</span>
+                      {isSelected && <Check className="h-4 w-4 text-primary" />}
+                    </button>
+                  </li>
+                );
+              })
+            )}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function UniversitySearchPage() {
   const router = useRouter();
-  const [filterGroups, setFilterGroups] = useState(DEFAULT_FILTER_GROUPS);
+  const [filterGroups, setFilterGroups] = useState<FilterGroup[]>(DEFAULT_FILTER_GROUPS);
   const [selectedFilters, setSelectedFilters] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
-    const uniqueSorted = (values: (string | null | undefined)[], limit = 12) =>
+    const uniqueSorted = (values: (string | null | undefined)[], limit = 60) =>
       Array.from(new Set(values.filter((value): value is string => Boolean(value && value.trim()))))
         .sort((a, b) => a.localeCompare(b))
         .slice(0, limit);
@@ -49,7 +184,7 @@ export default function UniversitySearchPage() {
       try {
         const supabase = getBrowserSupabaseClient();
         const [{ data: universityData, error: universityError }, { data: programData, error: programError }] = await Promise.all([
-          supabase.from('universities').select('country,region,city'),
+          supabase.from('universities').select('country'),
           supabase.from('programs').select('field,study_level,level,mode')
         ]);
 
@@ -59,9 +194,6 @@ export default function UniversitySearchPage() {
         }
 
         const countries = uniqueSorted((universityData ?? []).map((uni) => uni.country));
-        const lifestyle = uniqueSorted(
-          (universityData ?? []).flatMap((uni) => [uni.region, uni.city])
-        );
         const subjects = uniqueSorted(
           (programData ?? []).flatMap((program) => [program.field, program.study_level, program.level])
         );
@@ -69,27 +201,18 @@ export default function UniversitySearchPage() {
           (programData ?? [])
             .map((program) => program.mode)
             .filter(Boolean),
-          8
+          16
         );
 
-        setFilterGroups([
-          {
-            ...DEFAULT_FILTER_GROUPS[0],
-            options: countries.length ? countries : DEFAULT_FILTER_GROUPS[0].options
-          },
-          {
-            ...DEFAULT_FILTER_GROUPS[1],
-            options: subjects.length ? subjects : DEFAULT_FILTER_GROUPS[1].options
-          },
-          {
-            ...DEFAULT_FILTER_GROUPS[2],
-            options: fitFocus.length ? fitFocus : DEFAULT_FILTER_GROUPS[2].options
-          },
-          {
-            ...DEFAULT_FILTER_GROUPS[3],
-            options: lifestyle.length ? lifestyle : DEFAULT_FILTER_GROUPS[3].options
-          }
-        ]);
+        setFilterGroups((prev) =>
+          prev.map((group) => {
+            if (group.key === 'country' && countries.length) return { ...group, options: countries };
+            if (group.key === 'subject' && subjects.length) return { ...group, options: subjects };
+            if (group.key === 'fitFocus' && fitFocus.length) return { ...group, options: fitFocus };
+            // Lifestyle stays curated — DB region/city values aren't student-friendly.
+            return group;
+          })
+        );
       } catch (err) {
         console.warn('Using fallback filters due to unexpected error', err);
       }
@@ -99,13 +222,12 @@ export default function UniversitySearchPage() {
   }, []);
 
   const toggleFilter = (option: string) => {
-    const next = new Set(selectedFilters);
-    if (next.has(option)) {
-      next.delete(option);
-    } else {
-      next.add(option);
-    }
-    setSelectedFilters(next);
+    setSelectedFilters((prev) => {
+      const next = new Set(prev);
+      if (next.has(option)) next.delete(option);
+      else next.add(option);
+      return next;
+    });
   };
 
   const resetFilters = () => {
@@ -122,20 +244,8 @@ export default function UniversitySearchPage() {
     router.push(buildSuggestionResultsUrl(item));
   };
 
-
-
   return (
     <div className="space-y-8">
-      <StudentWorkspaceDock
-        current="search"
-        metrics={{
-          dashboard: { value: 'Dashboard', detail: 'return to your active priorities' },
-          matches: { value: 'Matches', detail: 'review recommended programs first' },
-          applications: { value: 'Planner', detail: 'track anything you shortlist' },
-          profile: { value: 'Profile', detail: 'better inputs improve search quality' },
-          search: { value: `${selectedFilters.size}`, detail: selectedFilters.size ? 'filters currently selected' : 'start with a broad scan' }
-        }}
-      />
       <section className="surface-stage relative z-20 rounded-[28px] p-8 !overflow-visible">
         <div className="absolute inset-0 overflow-hidden rounded-[28px] pointer-events-none">
           <AnimatedBlobBanner className="opacity-80" />
@@ -171,7 +281,6 @@ export default function UniversitySearchPage() {
               </div>
             </form>
           </div>
-
         </div>
       </section>
 
@@ -182,42 +291,19 @@ export default function UniversitySearchPage() {
         </div>
         <div className="grid gap-4 lg:grid-cols-2">
           {filterGroups.map((group) => (
-            <div
-              key={group.title}
-              className="surface-subcard space-y-3 p-5 shadow-none"
-            >
-              <div className="space-y-1">
-                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground">{group.title}</p>
-                <p className="helper-text">{group.description}</p>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {group.options.map((option) => {
-                  const isSelected = selectedFilters.has(option);
-                  return (
-                    <button
-                      key={option}
-                      type="button"
-                      onClick={() => toggleFilter(option)}
-                      className={cn(
-                        'rounded-full border px-4 py-1 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
-                        isSelected
-                          ? 'border-foreground/30 bg-foreground/5 text-foreground'
-                          : 'border-border bg-background text-foreground hover:border-border hover:text-foreground'
-                      )}
-                    >
-                      {option}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+            <FilterDropdown
+              key={group.key}
+              group={group}
+              selected={selectedFilters}
+              onToggle={toggleFilter}
+            />
           ))}
         </div>
         <div className="mt-6 flex flex-col gap-4 border-t border-border pt-6 md:flex-row md:items-center md:justify-between">
           <p className="helper-text">
             {selectedFilters.size > 0
               ? `${selectedFilters.size} filter(s) selected - click Apply to search`
-              : "Select filters above to narrow your search"}
+              : 'Select filters above to narrow your search'}
           </p>
           <div className="flex gap-3">
             {selectedFilters.size > 0 && (

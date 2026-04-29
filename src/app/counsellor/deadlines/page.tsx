@@ -28,7 +28,7 @@ export default function CounsellorDeadlinesPage() {
         accent="Deadlines"
         highlight={`${allDeadlines.length} total`}
         title="Deadline Monitor"
-        description="All upcoming deadlines across your cohort in one place. Grouped by urgency — never let a student miss a critical date."
+        description="Date-first view of every upcoming submission across the cohort, grouped by urgency. For per-student application status (kanban / list), open Applications instead."
         stats={[
           { label: 'Total', value: String(allDeadlines.length), detail: 'All tracked deadlines' },
           { label: 'Overdue', value: String(overdue), detail: 'Require immediate action' },

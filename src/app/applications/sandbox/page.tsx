@@ -10,7 +10,7 @@ import { DEMO_SANDBOX_APPS } from '@/lib/data/student-demo-data';
 import { AnimatedSection } from '@/components/layout/animated-section';
 
 export const metadata: Metadata = {
-  title: 'Application Sandbox | Ascenda'
+  title: 'Practice board | Ascenda'
 };
 
 export default async function SandboxPage() {
@@ -31,9 +31,9 @@ export default async function SandboxPage() {
     <DashboardShell>
       <SectionNav items={PLANNER_SECTION_ITEMS} />
       <PageHero
-        eyebrow="Application sandbox"
+        eyebrow="Practice board"
         title="Apply everywhere, from one place"
-        description="One dashboard for UCAS, Common App, and direct applications across every country. This is a sandbox — nothing is sent to real platforms."
+        description="A safe practice space — try out UCAS, Common App, and direct applications side-by-side. Nothing here is sent to a real platform."
         highlight="Demo mode · 🇬🇧 🇨🇭 🇳🇱 🇺🇸"
         stats={[
           { label: 'Applications', value: String(DEMO_SANDBOX_APPS.length), detail: 'Across 4 countries' },
@@ -58,9 +58,9 @@ export default async function SandboxPage() {
       <AnimatedSection className="mt-8" delay={0.1}>
         <div className="surface-card surface-card--static">
           <div className="relative z-10">
-            <p className="text-base font-semibold text-foreground">About this sandbox</p>
+            <p className="text-base font-semibold text-foreground">About the practice board</p>
             <ul className="mt-4 space-y-3 text-sm text-foreground/80">
-              <li><strong>No real submissions</strong> — this is a demonstration environment. Nothing is sent to UCAS, Common App, or any university.</li>
+              <li><strong>No real submissions</strong> — this is a practice space. Nothing is sent to UCAS, Common App, or any university.</li>
               <li><strong>Unified view</strong> — in the future, Ascenda will connect to multiple application platforms so you can manage everything from one dashboard.</li>
               <li><strong>Status tracking</strong> — see application progress across all platforms at a glance.</li>
             </ul>

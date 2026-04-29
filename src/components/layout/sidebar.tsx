@@ -56,7 +56,7 @@ export const Sidebar = () => {
           <p className="text-base font-semibold leading-tight text-foreground">Mrs. Sarah Mitchell</p>
           <p className="text-xs text-muted-foreground">Request a session to discuss essays, applications, or university choices.</p>
           <Link
-            href="/counsellor/appointment"
+            href="/appointment"
             className="inline-flex items-center gap-2 justify-center rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition hover:-translate-y-0.5 hover:shadow-md w-full"
           >
             <CalendarPlus className="h-4 w-4" />

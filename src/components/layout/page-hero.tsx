@@ -44,15 +44,24 @@ const statsContainerVariants = {
 };
 
 function AnimatedNumber({ value }: { value: string }) {
-  const numeric = parseFloat(value.replace(/[^0-9.]/g, ''));
-  const suffix = value.replace(/[0-9.]/g, '').trim();
-  const isNumeric = !isNaN(numeric) && numeric > 0;
+  const numericMatch = value.match(/-?[\d,]*\.?\d+/);
+  const numericText = numericMatch ? numericMatch[0].replace(/,/g, '') : '';
+  const numeric = numericText ? parseFloat(numericText) : NaN;
+  const isNumeric = !Number.isNaN(numeric) && numeric > 0;
+  const prefix = numericMatch ? value.slice(0, numericMatch.index) : '';
+  const suffix = numericMatch ? value.slice((numericMatch.index ?? 0) + numericMatch[0].length) : '';
+  const isInteger = Number.isInteger(numeric) && !numericText.includes('.');
+
+  const formatNumber = (n: number) => {
+    if (isInteger) return Math.round(n).toLocaleString('en-US');
+    return (Math.round(n * 10) / 10).toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  };
 
   const ref = useRef<HTMLSpanElement>(null);
   const inView = useInView(ref, { once: true });
   const motionVal = useMotionValue(0);
   const spring = useSpring(motionVal, { stiffness: 80, damping: 18 });
-  const [display, setDisplay] = useState(isNumeric ? '0' : value);
+  const [display, setDisplay] = useState(isNumeric ? `${prefix}0${suffix}` : value);
 
   useEffect(() => {
     if (inView && isNumeric) motionVal.set(numeric);
@@ -61,10 +70,10 @@ function AnimatedNumber({ value }: { value: string }) {
   useEffect(() => {
     if (!isNumeric) return;
     return spring.on('change', (v) => {
-      const rounded = Number.isInteger(numeric) ? Math.round(v) : Math.round(v * 10) / 10;
-      setDisplay(`${rounded}${suffix}`);
+      setDisplay(`${prefix}${formatNumber(v)}${suffix}`);
     });
-  }, [spring, isNumeric, numeric, suffix]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [spring, isNumeric, numeric, prefix, suffix, isInteger]);
 
   return <span ref={ref}>{display}</span>;
 }

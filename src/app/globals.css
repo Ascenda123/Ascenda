@@ -184,7 +184,7 @@
   }
 
   .surface-card {
-    @apply relative overflow-hidden rounded-2xl border border-border bg-card p-4 sm:p-5 shadow-sm transition-all duration-200 hover:-translate-y-px hover:shadow-md dark:border-white/10 dark:bg-card;
+    @apply relative overflow-hidden rounded-2xl border border-border bg-card p-6 sm:p-7 shadow-sm transition-all duration-200 hover:-translate-y-px hover:shadow-md dark:border-white/10 dark:bg-card;
   }
 
   .surface-card--static {
@@ -192,23 +192,23 @@
   }
 
   .surface-subcard {
-    @apply rounded-xl border border-border bg-background p-4 transition-colors dark:border-white/10 dark:bg-muted/30;
+    @apply rounded-xl border border-border bg-background p-5 transition-colors dark:border-white/10 dark:bg-muted/30;
   }
 
   .surface-chip {
-    @apply inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/50 px-2.5 py-0.5 text-xs font-medium text-foreground transition-colors dark:border-white/10 dark:bg-muted/30;
+    @apply inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/50 px-3 py-1 text-xs font-medium text-foreground transition-colors dark:border-white/10 dark:bg-muted/30;
   }
 
   .surface-toolbar {
-    @apply relative overflow-hidden rounded-xl border border-border bg-card px-4 py-2.5 shadow-sm transition-colors dark:border-white/10 dark:bg-card;
+    @apply relative overflow-hidden rounded-xl border border-border bg-card px-5 py-3 shadow-sm transition-colors dark:border-white/10 dark:bg-card;
   }
 
   .surface-stage {
-    @apply relative overflow-hidden rounded-2xl border border-border bg-card p-4 sm:p-5 shadow-sm transition-all duration-200 dark:border-white/10 dark:bg-card;
+    @apply relative overflow-hidden rounded-2xl border border-border bg-card p-6 sm:p-7 shadow-sm transition-all duration-200 dark:border-white/10 dark:bg-card;
   }
 
   .surface-stat {
-    @apply relative overflow-hidden rounded-xl border border-border bg-card p-3 sm:p-4 shadow-sm transition-all duration-200 dark:border-white/10 dark:bg-card;
+    @apply relative overflow-hidden rounded-xl border border-border bg-card p-4 sm:p-5 shadow-sm transition-all duration-200 dark:border-white/10 dark:bg-card;
   }
 
   .nav-pill {

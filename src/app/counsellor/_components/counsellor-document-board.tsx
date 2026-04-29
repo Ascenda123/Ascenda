@@ -1,9 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import {
   AlertTriangle,
+  ArrowUpRight,
   Check,
   Clock,
   FileText,
@@ -106,7 +108,18 @@ export function CounsellorDocumentBoard({ documents }: CounsellorDocumentBoardPr
         const studentName = docs[0].studentName;
         return (
           <div key={studentId} className="surface-card surface-card--static space-y-3">
-            <p className="text-sm font-semibold text-foreground">{studentName}</p>
+            <div className="flex items-center justify-between gap-3">
+              <Link
+                href={`/counsellor/students/${studentId}`}
+                className="group inline-flex items-center gap-2 text-sm font-semibold text-foreground transition hover:text-primary"
+              >
+                {studentName}
+                <ArrowUpRight className="h-3.5 w-3.5 text-muted-foreground transition group-hover:text-primary" aria-hidden />
+              </Link>
+              <span className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+                {docs.length} doc{docs.length === 1 ? '' : 's'}
+              </span>
+            </div>
             <div className="space-y-2">
               {docs.map((doc) => {
                 const cfg = STATUS_CONFIG[doc.status];
@@ -114,10 +127,11 @@ export function CounsellorDocumentBoard({ documents }: CounsellorDocumentBoardPr
                 const TypeIcon = TYPE_ICON[doc.type] ?? FileText;
 
                 return (
-                  <div
+                  <Link
                     key={doc.id}
+                    href={`/counsellor/students/${studentId}?tab=documents`}
                     className={cn(
-                      'flex items-center gap-4 rounded-2xl border px-4 py-3 transition',
+                      'flex items-center gap-4 rounded-2xl border px-4 py-3 transition hover:-translate-y-px hover:shadow-sm',
                       doc.status === 'overdue' ? 'border-red-200/40 bg-red-500/5 dark:border-red-500/15' : 'border-border/60 bg-background/60'
                     )}
                   >
@@ -141,13 +155,14 @@ export function CounsellorDocumentBoard({ documents }: CounsellorDocumentBoardPr
                         <Icon className="h-3 w-3" />
                         {cfg.label}
                       </span>
+                      <ArrowUpRight className="h-4 w-4 text-muted-foreground" aria-hidden />
                     </div>
                     {doc.notes && (
                       <span className="text-[11px] text-muted-foreground/70 italic max-w-[140px] truncate" title={doc.notes}>
                         {doc.notes}
                       </span>
                     )}
-                  </div>
+                  </Link>
                 );
               })}
             </div>

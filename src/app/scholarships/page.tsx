@@ -73,12 +73,11 @@ export default async function ScholarshipsPage() {
     { label: 'Tracked scholarships', value: `${scholarships.length}`, detail: 'Active' },
     {
       label: 'Avg award',
-      value: `${scholarships.length
-        ? `USD ${Math.round(
-          scholarships.reduce((sum, item) => sum + (item.amount ?? 0), 0) / scholarships.length
-        ).toLocaleString()}`
-        : '—'
-        }`,
+      value: scholarships.length
+        ? `$${Math.round(
+            scholarships.reduce((sum, item) => sum + (item.amount ?? 0), 0) / scholarships.length
+          ).toLocaleString('en-US')} USD`
+        : '—',
       detail: 'Per program'
     },
     { label: 'Regions', value: `${new Set(scholarships.map((item) => item.country ?? 'Global')).size}`, detail: 'Covered' }

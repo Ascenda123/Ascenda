@@ -147,14 +147,7 @@ export const PLANNER_SECTION_ITEMS: SectionNavItem[] = [
   { label: 'Applications', href: '/applications', exact: true },
   { label: 'Tasks', href: '/applications/tasks' },
   { label: 'Documents', href: '/applications/documents' },
-  { label: 'Sandbox', href: '/applications/sandbox' }
-];
-
-export const PROFILE_SECTION_ITEMS: SectionNavItem[] = [
-  { label: 'Overview', href: '/profile', matchParam: { key: 'step', value: 'personal' } },
-  { label: 'Academics', href: '/profile?step=academics', matchParam: { key: 'step', value: 'academics' } },
-  { label: 'Preferences', href: '/profile?step=preferences', matchParam: { key: 'step', value: 'preferences' } },
-  { label: 'Aspirations', href: '/profile?step=aspirations', matchParam: { key: 'step', value: 'aspirations' } }
+  { label: 'Practice board', href: '/applications/sandbox' }
 ];
 
 export const TOOLBOX_SECTION_ITEMS: SectionNavItem[] = [

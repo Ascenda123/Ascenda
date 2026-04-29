@@ -13,8 +13,8 @@ import { loadMatchesForProfile } from '@/lib/matching/service';
 import { getFitScoreVisuals } from '@/lib/theme/fit-score';
 import { cn } from '@/lib/utils';
 import { TrackProgramButton } from '@/components/programs/track-program-button';
+import { ShareMatchButton } from '@/components/match/share-match-button';
 import { ACTION_TEXT, MATCHES_TEXT } from '@/lib/constants/text';
-import { StudentWorkspaceDock } from '@/components/layout/student-workspace-dock';
 
 export const metadata: Metadata = {
   title: 'Match suggestions | Ascenda'
@@ -134,16 +134,6 @@ export default async function MatchesPage() {
           </>
         }
       />
-      <StudentWorkspaceDock
-        current="matches"
-        metrics={{
-          dashboard: { value: 'Command', detail: 'priorities and deadlines' },
-          matches: { value: `${enriched.length}`, detail: 'ranked programs available' },
-          applications: { value: topMatch ? 'Track' : 'Planner', detail: topMatch ? 'save top programs to planner' : 'build your plan' },
-          profile: { value: 'Profile', detail: 'refine your fit signals' },
-          search: { value: 'Catalog', detail: 'expand beyond recommendations' }
-        }}
-      />
       {topMatch ? (
         <div className="surface-toolbar sticky top-4 z-10 mb-4 rounded-2xl p-4">
           <div className="relative z-10 flex flex-wrap items-center justify-between gap-3">
@@ -171,9 +161,10 @@ export default async function MatchesPage() {
                 fitScore={topMatch.score}
                 labelVariant="planner"
               />
-              <Button size="sm" variant="outline">
-                {ACTION_TEXT.share}
-              </Button>
+              <ShareMatchButton
+                programName={topMatch.program.name}
+                universityName={topMatch.university.name}
+              />
             </div>
           </div>
         </div>

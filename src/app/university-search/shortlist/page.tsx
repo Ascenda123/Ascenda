@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
-import { ArrowUpRight, Clock, MapPin, Sparkles, Target, Trash2, GitCompareArrows } from 'lucide-react';
+import { ArrowUpRight, Clock, Shield, Sparkles, Target, TrendingUp, Trash2, GitCompareArrows } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Breadcrumbs } from '@/components/ui/breadcrumbs';
@@ -15,6 +15,33 @@ const stageTone = {
   Researching: 'bg-amber-100 text-amber-900 border-amber-200',
   Shortlisted: 'bg-blue-100 text-blue-900 border-blue-200',
   Active: 'bg-emerald-100 text-emerald-900 border-emerald-200'
+};
+
+type FitTier = 'reach' | 'match' | 'safety';
+
+const TIER_CONFIG: Record<FitTier, { label: string; icon: typeof Target; className: string }> = {
+  reach: {
+    label: 'Reach',
+    icon: TrendingUp,
+    className: 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-500/20'
+  },
+  match: {
+    label: 'Match',
+    icon: Target,
+    className: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/20'
+  },
+  safety: {
+    label: 'Safety',
+    icon: Shield,
+    className: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/20'
+  }
+};
+
+const classifyFit = (fitScore: number | null | undefined): FitTier | null => {
+  if (typeof fitScore !== 'number' || Number.isNaN(fitScore)) return null;
+  if (fitScore >= 80) return 'safety';
+  if (fitScore >= 60) return 'match';
+  return 'reach';
 };
 
 export default function UniversitySearchShortlistPage() {
@@ -41,7 +68,12 @@ export default function UniversitySearchShortlistPage() {
     const count = items.length;
     const scored = items.filter((item) => typeof item.fitScore === 'number') as { fitScore: number }[];
     const avgFit = scored.length ? Math.round(scored.reduce((sum, item) => sum + item.fitScore, 0) / scored.length) : null;
-    return { count, avgFit };
+    const tierCounts: Record<FitTier, number> = { reach: 0, match: 0, safety: 0 };
+    items.forEach((item) => {
+      const tier = classifyFit(item.fitScore ?? null);
+      if (tier) tierCounts[tier] += 1;
+    });
+    return { count, avgFit, tierCounts };
   }, [items]);
 
   if (!ready) {
@@ -74,13 +106,10 @@ export default function UniversitySearchShortlistPage() {
             <Button asChild size="sm" variant="secondary">
               <Link href="/university-search/results">Add more courses</Link>
             </Button>
-            <Button asChild size="sm" variant="ghost">
-              <Link href="/matches">View matches</Link>
-            </Button>
           </div>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-4">
           <Card className="border-dashed border-border/70">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <span className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Shortlisted</span>
@@ -89,6 +118,18 @@ export default function UniversitySearchShortlistPage() {
             <CardContent>
               <p className="text-3xl font-semibold text-foreground">{metrics.count}</p>
               <p className="text-xs text-muted-foreground">Saved from search</p>
+            </CardContent>
+          </Card>
+          <Card className="border-dashed border-border/70">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <span className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Reach / Match / Safe</span>
+              <Target className="h-5 w-5 text-emerald-500" aria-hidden />
+            </CardHeader>
+            <CardContent>
+              <p className="text-3xl font-semibold text-foreground tabular-nums">
+                {metrics.tierCounts.reach}/{metrics.tierCounts.match}/{metrics.tierCounts.safety}
+              </p>
+              <p className="text-xs text-muted-foreground">Banding across saved programs</p>
             </CardContent>
           </Card>
           <Card className="border-dashed border-border/70">
@@ -127,11 +168,6 @@ export default function UniversitySearchShortlistPage() {
             <h2 className="text-xl font-semibold text-foreground">Shortlist board</h2>
             <p className="text-sm text-muted-foreground">Refine your picks, open them in results, or remove them here.</p>
           </div>
-          <Button asChild size="sm" variant="outline">
-            <Link href="/university-search/results">
-              Jump back to results <ArrowUpRight className="ml-2 h-4 w-4" aria-hidden />
-            </Link>
-          </Button>
         </div>
 
         {items.length === 0 ? (
@@ -149,48 +185,68 @@ export default function UniversitySearchShortlistPage() {
           </div>
         ) : (
           <div className="grid gap-6 md:grid-cols-2">
-            {items.map((item) => (
-              <Card key={item.id} className="border border-border/80 bg-card">
-                <CardHeader className="space-y-1">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-xs uppercase tracking-[0.35em] text-muted-foreground">
-                        {item.location ?? 'Location TBC'}
-                      </p>
-                      <CardTitle className="text-xl text-foreground">{item.name}</CardTitle>
-                      <p className="text-sm text-muted-foreground">{item.program}</p>
+            {items.map((item) => {
+              const tier = classifyFit(item.fitScore ?? null);
+              const tierCfg = tier ? TIER_CONFIG[tier] : null;
+              const TierIcon = tierCfg?.icon;
+              return (
+                <Card key={item.id} className="border border-border/80 bg-card">
+                  <CardHeader className="space-y-2">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-xs uppercase tracking-[0.35em] text-muted-foreground">
+                          {item.location ?? 'Location TBC'}
+                        </p>
+                        <CardTitle className="text-xl text-foreground">{item.name}</CardTitle>
+                        <p className="text-sm text-muted-foreground">{item.program}</p>
+                      </div>
+                      <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-900">
+                        {typeof item.fitScore === 'number' ? `${Math.round(item.fitScore)}% fit` : 'Fit TBD'}
+                      </span>
                     </div>
-                    <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-900">
-                      {typeof item.fitScore === 'number' ? `${Math.round(item.fitScore)}% fit` : 'Fit TBD'}
-                    </span>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span
-                      className={cn(
-                        'rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em]',
-                        stageTone[item.stage as keyof typeof stageTone] ?? 'bg-muted text-foreground border-border'
+                    <div className="flex flex-wrap items-center gap-2">
+                      {tierCfg && TierIcon ? (
+                        <span
+                          className={cn(
+                            'inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em]',
+                            tierCfg.className
+                          )}
+                          role="status"
+                          aria-label={`Banding: ${tierCfg.label}`}
+                        >
+                          <TierIcon className="h-3 w-3" aria-hidden />
+                          {tierCfg.label}
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 rounded-full border border-border bg-muted/40 px-3 py-1 text-xs font-medium text-muted-foreground">
+                          Fit TBD
+                        </span>
                       )}
-                      role="status"
-                      aria-label={`Stage: ${item.stage ?? 'Researching'}`}
-                    >
-                      {item.stage ?? 'Researching'}
-                    </span>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Clock className="h-4 w-4 text-muted-foreground" aria-hidden />
-                      <span>{item.due ?? 'Set a date'}</span>
+                      <span
+                        className={cn(
+                          'rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em]',
+                          stageTone[item.stage as keyof typeof stageTone] ?? 'bg-muted text-foreground border-border'
+                        )}
+                        role="status"
+                        aria-label={`Stage: ${item.stage ?? 'Researching'}`}
+                      >
+                        {item.stage ?? 'Researching'}
+                      </span>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <Clock className="h-4 w-4 text-muted-foreground" aria-hidden />
+                        <span>{item.due ?? 'Set a date'}</span>
+                      </div>
                     </div>
-                  </div>
-                </CardHeader>
+                  </CardHeader>
 
-                <CardContent className="space-y-3 pt-0">
-                  <div className="rounded-2xl bg-muted/60 p-4">
-                    <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Next action</p>
-                    <p className="mt-1 text-sm text-foreground">{item.nextAction ?? 'Add a next action to keep momentum.'}</p>
-                  </div>
-                </CardContent>
+                  <CardContent className="space-y-3 pt-0">
+                    <div className="rounded-2xl bg-muted/60 p-4">
+                      <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Next action</p>
+                      <p className="mt-1 text-sm text-foreground">{item.nextAction ?? 'Add a next action to keep momentum.'}</p>
+                    </div>
+                  </CardContent>
 
-                <CardFooter className="flex flex-wrap items-center justify-between gap-3 pt-0">
-                  <div className="flex gap-2">
+                  <CardFooter className="flex flex-wrap items-center justify-between gap-3 pt-0">
                     <Button
                       size="sm"
                       variant="outline"
@@ -200,20 +256,15 @@ export default function UniversitySearchShortlistPage() {
                       <Trash2 className="h-4 w-4" aria-hidden />
                       Remove
                     </Button>
-                    <Button asChild size="sm" variant="secondary">
-                      <Link href={`/university-search/results?q=${encodeURIComponent(item.name)}`}>
-                        View in results
+                    <Button asChild size="sm" variant="secondary" className="gap-2">
+                      <Link href={`/course/${item.id}`}>
+                        Open course <ArrowUpRight className="h-4 w-4" aria-hidden />
                       </Link>
                     </Button>
-                  </div>
-                  <Button asChild size="sm" variant="ghost">
-                    <Link href="/matches" className="gap-2">
-                      Match insights <ArrowUpRight className="h-4 w-4" aria-hidden />
-                    </Link>
-                  </Button>
-                </CardFooter>
-              </Card>
-            ))}
+                  </CardFooter>
+                </Card>
+              );
+            })}
           </div>
         )}
       </section>

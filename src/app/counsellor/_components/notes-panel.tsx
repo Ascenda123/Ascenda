@@ -11,9 +11,27 @@ interface NotesPanelProps {
 }
 
 const TYPE_CONFIG = {
-  session: { icon: MessageSquare, color: 'text-violet-600', bg: 'bg-violet-500/10', label: 'Session note' },
-  flag: { icon: Flag, color: 'text-amber-600', bg: 'bg-amber-500/10', label: 'Flag' },
-  update: { icon: RefreshCw, color: 'text-sky-600', bg: 'bg-sky-500/10', label: 'Update' }
+  session: {
+    icon: MessageSquare,
+    color: 'text-violet-600',
+    bg: 'bg-violet-500/10',
+    label: 'Session note',
+    helper: 'Notes from a 1:1 meeting (what was discussed, next steps).'
+  },
+  flag: {
+    icon: Flag,
+    color: 'text-amber-600',
+    bg: 'bg-amber-500/10',
+    label: 'Flag',
+    helper: 'Mark a concern that needs follow-up (missed deadlines, at-risk signals).'
+  },
+  update: {
+    icon: RefreshCw,
+    color: 'text-sky-600',
+    bg: 'bg-sky-500/10',
+    label: 'Update',
+    helper: 'Quick FYI — status change, new doc, parent contact, etc.'
+  }
 };
 
 function formatDate(iso: string) {
@@ -75,7 +93,10 @@ export const NotesPanel = ({ notes: seedNotes, studentId }: NotesPanelProps) => 
     <div className="space-y-6">
       {/* New note composer */}
       <div className="surface-card surface-card--static space-y-3">
-        <p className="text-sm font-semibold text-foreground">Add note</p>
+        <div>
+          <p className="text-sm font-semibold text-foreground">Add note</p>
+          <p className="text-xs text-muted-foreground">Pick a type so this note shows up in the right place later.</p>
+        </div>
 
         {/* Type selector */}
         <div className="flex items-center gap-1 rounded-xl border border-border bg-background p-1 shadow-sm">
@@ -85,6 +106,7 @@ export const NotesPanel = ({ notes: seedNotes, studentId }: NotesPanelProps) => 
               <button
                 key={type}
                 onClick={() => setNoteType(type)}
+                title={cfg.helper}
                 className={cn(
                   'flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition',
                   noteType === type
@@ -98,6 +120,7 @@ export const NotesPanel = ({ notes: seedNotes, studentId }: NotesPanelProps) => 
             );
           })}
         </div>
+        <p className="text-xs text-muted-foreground italic">{TYPE_CONFIG[noteType].helper}</p>
 
         <textarea
           value={newNote}

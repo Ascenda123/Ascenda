@@ -59,7 +59,7 @@ const WIDGET_META: Record<AnalyticsWidgetId, { title: string; description: strin
   ibDistribution: { title: 'IB Score Distribution', description: 'Score brackets across IB students' },
   fieldChart: { title: 'Fields of Interest', description: 'Subject area distribution' },
   completionBreakdown: { title: 'Profile Completion', description: 'Completion rate by bucket' },
-  fullFunnel: { title: 'Application Funnel', description: 'Stage-by-stage breakdown' },
+  fullFunnel: { title: 'Applications by stage', description: 'Stage-by-stage breakdown across the cohort' },
   matchTierSummary: { title: 'Match Distribution', description: 'Reach / Match / Safe across cohort' },
   insights: { title: 'Key Insights', description: 'Cohort takeaways at a glance' }
 };
@@ -320,7 +320,7 @@ export default function CounsellorAnalyticsPage() {
           if (urgentDeadlines.length > 0) {
             items.push({
               student: s,
-              detail: urgentDeadlines.map((d) => `${d.university} — ${new Date(d.date).toLocaleDateString()}`).join(' · '),
+              detail: urgentDeadlines.map((d) => `${d.university} — ${new Date(d.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`).join(' · '),
               badge: { label: `${urgentDeadlines.length} due`, color: 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-300' }
             });
           }
@@ -421,9 +421,9 @@ export default function CounsellorAnalyticsPage() {
       <PageHero
         eyebrow="Counsellor View"
         accent="Analytics"
-        highlight="Cohort insights"
+        highlight="Deep dive"
         title="Cohort Analytics"
-        description="Aggregate data and trends across your full student cohort. Use these insights to identify patterns and guide your counselling strategy."
+        description="The deep-dive view: drill into trends, cohorts, and outcomes across your full roster. Use Overview for daily triage; come here when you need to slice data and answer 'why'."
         actions={<ExportButton />}
         stats={[
           { label: 'Students', value: String(stats.total), detail: 'In cohort' },

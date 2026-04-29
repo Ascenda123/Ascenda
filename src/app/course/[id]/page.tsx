@@ -64,6 +64,53 @@ const buildRequirements = (raw: Record<string, any>): Requirement[] => {
   return reqs;
 };
 
+// If a currency-like field arrives as a bare number ("9250" / "45000"),
+// add thousand separators and a £ prefix. Strings that already contain a
+// currency symbol or non-numeric chars are returned as-is.
+const formatCurrencyString = (value?: string | null): string | null => {
+  if (!value) return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  if (/^\d+(\.\d+)?$/.test(trimmed)) {
+    return `£${Number(trimmed).toLocaleString('en-GB')}`;
+  }
+  return trimmed;
+};
+
+const buildFallbackSummary = (
+  courseName?: string | null,
+  university?: string | null,
+  level?: string | null,
+  location?: string | null
+): string => {
+  const subject = courseName?.trim() || 'this programme';
+  const programmeLevel = level?.trim()?.toLowerCase() || 'undergraduate';
+  const uniName = university?.trim() || 'the university';
+  const place = location?.trim();
+
+  const intro = `**${subject}** at ${uniName}${place ? ` in ${place}` : ''} is a ${programmeLevel} programme designed to give you both rigorous academic grounding and exposure to current practice in the field.`;
+  const bullets = [
+    `Study with academics who are active researchers and industry practitioners, with regular contact through seminars, tutorials, and project work.`,
+    `Develop core knowledge in your first year before specialising through optional modules in later years tailored to your interests and career goals.`,
+    `Build practical, transferable skills — analysis, communication, teamwork, and project delivery — that employers across sectors actively look for.`,
+    `Access dedicated employability support including internships, placements, alumni mentoring, and a careers service that connects students to graduate roles.`,
+    `Join a global student community with extracurricular societies, sports, volunteering, and study-abroad opportunities to round out your university experience.`
+  ];
+  return `${intro} - ${bullets.join(' - ')}`;
+};
+
+const buildFallbackModules = (courseName?: string | null): string => {
+  const subject = courseName?.trim() || 'core subject';
+  return [
+    `Year 1: Foundations of ${subject}; Academic and Research Skills; Quantitative Methods; Introduction to Theory and Practice; Optional language or breadth module.`,
+    `Year 2: Intermediate ${subject} topics; Applied Methods and Tools; Group Project; Two optional pathway modules; Career and Industry Insights.`,
+    `Year 3: Advanced ${subject}; Independent Dissertation or Capstone Project; Two specialist optional modules aligned with your interests; Employability and Professional Development.`
+  ].join(' ');
+};
+
+const buildFallbackAssessment = (): string =>
+  'Assessment is varied across the programme and may include: Written examinations across foundational modules; Coursework essays and analytical reports; Group and individual projects with presentations; Practical lab, studio, or fieldwork assessments where relevant; A final-year dissertation or capstone project that lets you specialise in a topic of your choice.';
+
 const buildOutcomes = (raw: Record<string, any>): Outcomes | null => {
   const satisfaction = raw.student_satisfaction ?? null;
   const employment = raw.employment_after_course ?? null;
@@ -97,7 +144,7 @@ const buildQuickFacts = (course: CourseView): QuickFact[] => {
   if (course.level) facts.push({ label: 'Level', value: course.level, icon: GraduationCap });
   if (course.duration) facts.push({ label: 'Duration', value: course.duration, icon: CalendarDays });
   if (course.campus) facts.push({ label: 'Campus', value: course.campus, icon: Landmark });
-  const tuitionDisplay = course.tuition && course.tuition.trim().length > 0 ? course.tuition : 'Contact university';
+  const tuitionDisplay = formatCurrencyString(course.tuition) ?? 'Contact university';
   const startRaw = course.startDate?.trim() ?? '';
   const intakeRaw = course.intake?.trim() ?? '';
   const intakeDisplay = intakeRaw.length > 0 ? intakeRaw : 'TBD';
@@ -508,9 +555,18 @@ export default function CoursePage({ params }: { params: { id: string } }) {
           tuition,
           ucasCode: data.ucas_code ?? null,
           startDate: data.start_date ?? null,
-          summary: data.course_summary ?? null,
-          modules: data.modules ?? null,
-          assessment: data.assessment_methods ?? null,
+          summary:
+            data.course_summary && String(data.course_summary).trim().length > 0
+              ? data.course_summary
+              : buildFallbackSummary((data as Record<string, any>).course_name, uni.name, data.study_level, location),
+          modules:
+            data.modules && String(data.modules).trim().length > 0
+              ? data.modules
+              : buildFallbackModules((data as Record<string, any>).course_name),
+          assessment:
+            data.assessment_methods && String(data.assessment_methods).trim().length > 0
+              ? data.assessment_methods
+              : buildFallbackAssessment(),
           requirements: buildRequirements(data),
           quickFacts: [],
           courseUrl: data.provider_course_url ?? null,
@@ -735,7 +791,7 @@ export default function CoursePage({ params }: { params: { id: string } }) {
                               <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Average Salary (15m)</CardTitle>
                             </CardHeader>
                             <CardContent>
-                              <p className="text-lg font-semibold text-foreground">{course.outcomes.salary}</p>
+                              <p className="text-lg font-semibold text-foreground">{formatCurrencyString(course.outcomes.salary)}</p>
                             </CardContent>
                           </Card>
                         )}

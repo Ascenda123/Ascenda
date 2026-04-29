@@ -678,13 +678,13 @@ export default function UniversitySearchResultsPage() {
             </p>
             <div className="mt-6 flex flex-wrap justify-center gap-2 text-sm font-semibold">
               <Button asChild size="sm" variant="outline" className="rounded-full px-4">
-                <Link href="/profile?step=academics">Add your GPA</Link>
+                <Link href="/profile/wizard?step=academic_details">Add your grades</Link>
               </Button>
               <Button asChild size="sm" variant="outline" className="rounded-full px-4">
-                <Link href="/profile?step=preferences">Set your budget range</Link>
+                <Link href="/profile/wizard?step=lifestyle_preferences">Set your preferences</Link>
               </Button>
               <Button asChild size="sm" variant="outline" className="rounded-full px-4">
-                <Link href="/profile?step=aspirations">Clarify goals & interests</Link>
+                <Link href="/profile/wizard?step=academic_input">Clarify goals & interests</Link>
               </Button>
             </div>
             <button

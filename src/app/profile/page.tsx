@@ -10,7 +10,6 @@ import { Button } from '@/components/ui/button';
 import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import { SectionNav } from '@/components/layout/section-nav';
 import { ProfileProgressCard } from './_components/profile-progress-card';
-import { recalculateStudentScore, resubmitStudentProfile } from './actions';
 import { Compass, GraduationCap, MapPin, Target } from 'lucide-react';
 import { AnimatedSection, AnimatedGrid, AnimatedGridItem } from '@/components/layout/animated-section';
 
@@ -91,11 +90,28 @@ export default async function ProfilePage() {
       .map((segment) => `${segment.charAt(0).toUpperCase()}${segment.slice(1)}`)
       .join(' ');
 
+  const PROGRAMME_LABEL: Record<string, string> = {
+    IB: 'IB',
+    A_LEVEL: 'A-Level'
+  };
+  const ENGLISH_STATUS_LABEL: Record<string, string> = {
+    met: 'Meets requirement',
+    exceeds: 'Exceeds requirement',
+    exceptional: 'Native / exceptional',
+    booked: 'Test booked',
+    missing: 'Not started',
+    failed: 'Below requirement'
+  };
+  const formatProgramme = (value?: string | null) =>
+    value ? PROGRAMME_LABEL[value] ?? value.replace(/_/g, ' ') : null;
+  const formatEnglishStatus = (value?: string | null) =>
+    value ? ENGLISH_STATUS_LABEL[value] ?? value.replace(/_/g, ' ') : null;
+
   const academicSignals = [
-    academicInput?.programme_type ? `Programme: ${academicInput.programme_type}` : null,
+    academicInput?.programme_type ? `Programme: ${formatProgramme(academicInput.programme_type)}` : null,
     typeof academicInput?.ib_total_points === 'number' ? `IB ${academicInput.ib_total_points}/45` : null,
     typeof subjects?.length === 'number' && subjects.length > 0 ? `Subjects: ${subjects.length}` : null,
-    academicInput?.english_status ? `English: ${academicInput.english_status}` : null
+    academicInput?.english_status ? `English: ${formatEnglishStatus(academicInput.english_status)}` : null
   ].filter(Boolean) as string[];
   const subjectHighlights = (subjects ?? [])
     .slice(0, 3)
@@ -140,11 +156,14 @@ export default async function ProfilePage() {
         breadcrumbs={<Breadcrumbs />}
         actions={
           <>
-            <Button asChild size="sm" variant="soft">
-              <Link href="/dashboard">Back to dashboard</Link>
+            <Button asChild size="sm">
+              <Link href={`/profile/wizard?step=${nextStepKey}`}>Open profile wizard</Link>
             </Button>
             <Button asChild size="sm" variant="outline">
               <Link href="/matches">Preview matches</Link>
+            </Button>
+            <Button asChild size="sm" variant="soft">
+              <Link href="/dashboard">Back to dashboard</Link>
             </Button>
           </>
         }
@@ -218,18 +237,8 @@ export default async function ProfilePage() {
           </div>
           <div className="mt-8 flex flex-wrap gap-3">
             <Button size="sm" variant="outline" asChild className="rounded-xl px-6">
-              <Link href="/profile/wizard?step=personal_information">Edit profile</Link>
+              <Link href="/profile/wizard?step=personal_information">Edit personal info</Link>
             </Button>
-            <form action={resubmitStudentProfile}>
-              <Button size="sm" variant="ghost" type="submit" className="rounded-xl">
-                Resubmit
-              </Button>
-            </form>
-            <form action={recalculateStudentScore}>
-              <Button size="sm" variant="secondary" type="submit" className="rounded-xl px-6 bg-primary/10 text-primary hover:bg-primary/20 border-none">
-                Recalculate score
-              </Button>
-            </form>
           </div>
         </AnimatedGridItem>
         <AnimatedGridItem className="space-y-8">
@@ -280,7 +289,7 @@ export default async function ProfilePage() {
                 <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Academics</p>
                 <p className="text-lg font-semibold text-foreground">Snapshot</p>
                 <p className="text-sm text-muted-foreground">
-                  {academicInput?.programme_type ? academicInput.programme_type : 'Add qualification and grades'}
+                  {academicInput?.programme_type ? formatProgramme(academicInput.programme_type) : 'Add qualification and grades'}
                 </p>
               </div>
               <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/20">
@@ -391,9 +400,6 @@ export default async function ProfilePage() {
               )}
             </ul>
             <div className="flex flex-wrap gap-2">
-              <Button size="sm" variant="secondary" asChild>
-                <Link href={`/profile/wizard?step=${nextStepKey}`}>Open wizard</Link>
-              </Button>
               <Button size="sm" variant="outline" asChild>
                 <Link href="/matches">Preview matches</Link>
               </Button>
@@ -406,11 +412,8 @@ export default async function ProfilePage() {
           <div className="rounded-[28px] border border-emerald-200/60 bg-emerald-500/5 p-8">
             <p className="text-base font-semibold text-emerald-700">Profile complete</p>
             <p className="mt-2 text-sm text-muted-foreground">
-              All sections are filled in. You can revisit the wizard anytime to update details.
+              All sections are filled in. You can revisit the wizard anytime from the top of this page to update details.
             </p>
-            <Button className="mt-6 rounded-xl px-8" size="sm" asChild>
-              <Link href="/profile/wizard">Open profile wizard</Link>
-            </Button>
           </div>
         </AnimatedSection>
       )}

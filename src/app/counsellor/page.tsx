@@ -37,11 +37,11 @@ const WIDGET_ICON_MAP: Record<WidgetId, typeof AlertTriangle> = {
 
 const WIDGET_META: Record<WidgetId, { title: string; description: string }> = {
   alerts: { title: 'Student Alerts', description: `${stats.flagged} students need attention` },
-  funnel: { title: 'Application Funnel', description: 'Distribution by stage' },
+  funnel: { title: 'Applications by stage', description: 'Where each student is in the application process' },
   matchDist: { title: 'Match Distribution', description: 'Reach / Match / Safe across cohort' },
   deadlines: { title: 'Upcoming Deadlines', description: 'Next 7 days' },
   activity: { title: 'Recent Activity', description: 'Latest notes and updates' },
-  cohortBreakdown: { title: 'Cohort Breakdown', description: 'Programme type & fields of interest' },
+  cohortBreakdown: { title: 'Programme & interests breakdown', description: 'IB vs A-Level and fields students are pursuing' },
   topStudents: { title: 'Top Students', description: 'Ranked by average match score' }
 };
 
@@ -119,7 +119,7 @@ export default function CounsellorOverviewPage() {
         accent="Cohort"
         highlight={`${stats.total} students`}
         title="Overview"
-        description="Your cohort at a glance — track progress, spot risks, and stay ahead of deadlines."
+        description="Daily triage view: at-risk students, this week's deadlines, and recent activity. For deeper trends and cohort breakdowns, head to Analytics."
         stats={[
           { label: 'Students', value: String(stats.total), detail: 'Active this cycle' },
           { label: 'Avg Completion', value: `${stats.avgCompletion}%`, detail: 'Profile completeness' },

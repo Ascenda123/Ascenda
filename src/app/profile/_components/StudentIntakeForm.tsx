@@ -187,8 +187,11 @@ const buildDefaultSubjects = (programmeType: ProgrammeType | ''): SubjectRowStat
       grade_value: ''
     }));
   }
-  return Array.from({ length: 6 }, () => buildEmptySubject('A_LEVEL'));
+  return Array.from({ length: 3 }, () => buildEmptySubject('A_LEVEL'));
 };
+
+const getMaxSubjects = (programmeType: ProgrammeType | '') =>
+  programmeType === 'A_LEVEL' ? 4 : 6;
 
 const clusterLabelMap = new Map(CLUSTER_OPTIONS.map((option) => [option.value, option.label]));
 
@@ -306,17 +309,20 @@ export const StudentIntakeForm = ({
       ee_summary: academic_input.ee_summary ?? ''
     });
     setSubjects(() => {
+      const programme = academic_input.programme_type ?? '';
+      const max = getMaxSubjects(programme);
+      const minRows = programme === 'IB' ? 6 : 3;
       const base = academic_input.subject_list ?? [];
-      const mapped = base.slice(0, 6).map((subject) => ({
+      const mapped = base.slice(0, max).map((subject) => ({
         subject_name: subject.subject_name ?? '',
-        level: subject.level ?? (academic_input.programme_type === 'IB' ? 'HL' : 'A_LEVEL'),
+        level: subject.level ?? (programme === 'IB' ? 'HL' : 'A_LEVEL'),
         grade_value:
           typeof subject.grade_value === 'number'
             ? String(subject.grade_value)
             : subject.grade_value ?? ''
       }));
-      while (mapped.length < 6) {
-        mapped.push(buildEmptySubject(academic_input.programme_type ?? ''));
+      while (mapped.length < minRows) {
+        mapped.push(buildEmptySubject(programme));
       }
       return mapped;
     });
@@ -466,7 +472,8 @@ export const StudentIntakeForm = ({
   };
 
   const addSubject = () => {
-    setSubjects((prev) => (prev.length >= 6 ? prev : [...prev, buildEmptySubject(programmeType)]));
+    const max = getMaxSubjects(programmeType);
+    setSubjects((prev) => (prev.length >= max ? prev : [...prev, buildEmptySubject(programmeType)]));
   };
 
   const removeSubject = (index: number) => {
@@ -1344,11 +1351,16 @@ export const StudentIntakeForm = ({
                     <div className="flex justify-between items-start gap-3">
                       <div>
                         <span className="text-base font-semibold text-foreground">Your subjects and predicted grades</span>
-                        <p className="text-xs text-muted-foreground mt-1">IB requires exactly 6 subjects with 3 HL.</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {programmeType === 'A_LEVEL'
+                            ? 'A-Levels: 3 subjects standard, up to 4 if you take an additional one.'
+                            : 'IB requires exactly 6 subjects with 3 HL.'}
+                        </p>
                       </div>
                       <button
                         type="button"
-                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 transition-all duration-200 text-xs font-bold uppercase tracking-wider border-none cursor-pointer"
+                        disabled={subjects.length >= getMaxSubjects(programmeType)}
+                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 transition-all duration-200 text-xs font-bold uppercase tracking-wider border-none cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                         onClick={addSubject}
                       >
                         <PlusCircle className="w-4 h-4" />
