@@ -18,6 +18,7 @@ import {
   buildSearchHubUrl,
   buildSearchResultsUrl,
   buildSuggestionResultsUrl,
+  groupFiltersByKey,
   readFiltersFromParams
 } from '@/lib/university-search/search-params';
 import type { Database } from '@/lib/types/database';
@@ -93,6 +94,10 @@ export default function UniversitySearchResultsPage() {
   const universityId = searchParams.get('universityId');
 
   const initialQuery = searchParams.get('q')?.trim() ?? '';
+  const chipFilters = useMemo(
+    () => groupFiltersByKey(readFiltersFromParams(searchParams)),
+    [searchParams]
+  );
 
   // State
   const [searchQuery, setSearchQuery] = useState(initialQuery);
@@ -188,7 +193,7 @@ export default function UniversitySearchResultsPage() {
     setResults([]);
     setPage(0);
     setHasMore(true);
-  }, [programId, universityId, selectedUniversities, selectedPrograms, searchQuery]);
+  }, [programId, universityId, selectedUniversities, selectedPrograms, searchQuery, chipFilters]);
 
   // If all filters and search are cleared, remove any lingering URL params so we fetch full results.
   useEffect(() => {
@@ -286,6 +291,50 @@ export default function UniversitySearchResultsPage() {
           query = query.in('course_name', activeProgFilters);
         } else if (programId && activeProgFilters.length === 0) {
           query = query.eq('id', programId);
+        }
+
+        // 1b. Filter chips from search hub (country / subject / fit focus).
+        // Lifestyle chips are advisory only and don't hard-filter results.
+        const chipCountries = chipFilters.country;
+        if (chipCountries.length > 0) {
+          // Look up university ids whose country matches one of the chosen chips.
+          const { data: countryUniRows } = await supabase
+            .from('universities')
+            .select('id')
+            .in('country', chipCountries);
+          const ids = (countryUniRows ?? [])
+            .map((row) => row.id)
+            .filter((id): id is string => Boolean(id));
+          if (ids.length === 0) {
+            // No university in the cohort matches those countries — bail with empty result.
+            query = query.eq('id', '__no_match__');
+          } else {
+            query = query.in('university_id', ids);
+          }
+        }
+
+        const chipSubjects = chipFilters.subject;
+        if (chipSubjects.length > 0) {
+          // Build an OR clause matching subject across field / study_level / level.
+          const escape = (value: string) => value.replace(/[(),%_]/g, ' ').trim();
+          const orParts = chipSubjects.flatMap((value) => {
+            const escaped = escape(value);
+            if (!escaped) return [];
+            return [
+              `field.ilike.%${escaped}%`,
+              `study_level.ilike.%${escaped}%`,
+              `level.ilike.%${escaped}%`,
+              `course_name.ilike.%${escaped}%`
+            ];
+          });
+          if (orParts.length > 0) {
+            query = query.or(orParts.join(','));
+          }
+        }
+
+        const chipFitFocus = chipFilters.fitFocus;
+        if (chipFitFocus.length > 0) {
+          query = query.in('mode', chipFitFocus);
         }
 
         // 2. Text Search
@@ -456,7 +505,7 @@ export default function UniversitySearchResultsPage() {
     };
 
     fetchResults();
-  }, [page, programId, universityId, selectedUniversities, selectedPrograms, searchQuery, allUniversities]);
+  }, [page, programId, universityId, selectedUniversities, selectedPrograms, searchQuery, allUniversities, chipFilters]);
 
   const availableUniversities = useMemo(() => {
     // Use the full universities list from Supabase (not the capped filterOptions)

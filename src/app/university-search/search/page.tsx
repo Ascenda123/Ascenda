@@ -21,10 +21,11 @@ import { getBrowserSupabaseClient } from '@/lib/supabase/client';
 import {
   buildSearchResultsUrl,
   buildSuggestionResultsUrl,
-  readFiltersFromParams
+  readFiltersFromParams,
+  type FilterChip,
+  type FilterGroupKey
 } from '@/lib/university-search/search-params';
 
-type FilterGroupKey = 'country' | 'subject' | 'fitFocus' | 'lifestyle';
 type FilterGroup = {
   key: FilterGroupKey;
   title: string;
@@ -93,8 +94,10 @@ const DEFAULT_FILTER_GROUPS: FilterGroup[] = [
 
 interface FilterDropdownProps {
   group: FilterGroup;
+  /** Values from this group that are currently selected. */
   selected: Set<string>;
-  onToggle: (option: string) => void;
+  /** Toggle a value within this group. */
+  onToggle: (group: FilterGroupKey, value: string) => void;
 }
 
 function FilterDropdown({ group, selected, onToggle }: FilterDropdownProps) {
@@ -169,7 +172,7 @@ function FilterDropdown({ group, selected, onToggle }: FilterDropdownProps) {
             <button
               key={option}
               type="button"
-              onClick={() => onToggle(option)}
+              onClick={() => onToggle(group.key, option)}
               className={cn(
                 'inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium transition hover:opacity-90',
                 visual.chip
@@ -205,7 +208,7 @@ function FilterDropdown({ group, selected, onToggle }: FilterDropdownProps) {
                   <li key={option}>
                     <button
                       type="button"
-                      onClick={() => onToggle(option)}
+                      onClick={() => onToggle(group.key, option)}
                       className={cn(
                         'flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition',
                         isSelected ? 'bg-primary/10 text-foreground' : 'hover:bg-muted/60 text-foreground'
@@ -225,14 +228,44 @@ function FilterDropdown({ group, selected, onToggle }: FilterDropdownProps) {
   );
 }
 
+type SelectedByGroup = Record<FilterGroupKey, Set<string>>;
+
+const emptySelectedByGroup = (): SelectedByGroup => ({
+  country: new Set<string>(),
+  subject: new Set<string>(),
+  fitFocus: new Set<string>(),
+  lifestyle: new Set<string>()
+});
+
+const chipsToSelectedByGroup = (chips: FilterChip[]): SelectedByGroup => {
+  const next = emptySelectedByGroup();
+  chips.forEach((chip) => next[chip.group].add(chip.value));
+  return next;
+};
+
+const selectedByGroupToChips = (selected: SelectedByGroup): FilterChip[] => {
+  const chips: FilterChip[] = [];
+  (Object.keys(selected) as FilterGroupKey[]).forEach((group) => {
+    selected[group].forEach((value) => chips.push({ group, value }));
+  });
+  return chips;
+};
+
+const totalSelected = (selected: SelectedByGroup): number =>
+  (Object.keys(selected) as FilterGroupKey[]).reduce((sum, key) => sum + selected[key].size, 0);
+
 function UniversitySearchPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialQuery = searchParams?.get('q') ?? '';
-  const initialFilters = readFiltersFromParams(searchParams);
+  const initialChips = readFiltersFromParams(searchParams);
   const [filterGroups, setFilterGroups] = useState<FilterGroup[]>(DEFAULT_FILTER_GROUPS);
-  const [selectedFilters, setSelectedFilters] = useState<Set<string>>(() => new Set(initialFilters));
+  const [selectedByGroup, setSelectedByGroup] = useState<SelectedByGroup>(() =>
+    chipsToSelectedByGroup(initialChips)
+  );
   const [searchQuery, setSearchQuery] = useState(initialQuery);
+
+  const selectedTotal = totalSelected(selectedByGroup);
 
   useEffect(() => {
     const uniqueSorted = (values: (string | null | undefined)[], limit = 60) =>
@@ -281,22 +314,22 @@ function UniversitySearchPageInner() {
     void loadFilters();
   }, []);
 
-  const toggleFilter = (option: string) => {
-    setSelectedFilters((prev) => {
-      const next = new Set(prev);
-      if (next.has(option)) next.delete(option);
-      else next.add(option);
-      return next;
+  const toggleFilter = (group: FilterGroupKey, value: string) => {
+    setSelectedByGroup((prev) => {
+      const nextSet = new Set(prev[group]);
+      if (nextSet.has(value)) nextSet.delete(value);
+      else nextSet.add(value);
+      return { ...prev, [group]: nextSet };
     });
   };
 
   const resetFilters = () => {
-    setSelectedFilters(new Set());
+    setSelectedByGroup(emptySelectedByGroup());
   };
 
   const handleSubmit = (event?: FormEvent<HTMLFormElement> | MouseEvent<HTMLButtonElement>) => {
     event?.preventDefault();
-    router.push(buildSearchResultsUrl(searchQuery, selectedFilters));
+    router.push(buildSearchResultsUrl(searchQuery, selectedByGroupToChips(selectedByGroup)));
   };
 
   const handleSelectSuggestion = (item: Suggestion) => {
@@ -354,19 +387,24 @@ function UniversitySearchPageInner() {
             <FilterDropdown
               key={group.key}
               group={group}
-              selected={selectedFilters}
+              selected={selectedByGroup[group.key]}
               onToggle={toggleFilter}
             />
           ))}
         </div>
+        {selectedByGroup.lifestyle.size > 0 ? (
+          <p className="mt-3 text-xs text-muted-foreground">
+            Lifestyle picks help us prioritise — they don&apos;t hard-filter results.
+          </p>
+        ) : null}
         <div className="mt-6 flex flex-col gap-4 border-t border-border pt-6 md:flex-row md:items-center md:justify-between">
           <p className="helper-text">
-            {selectedFilters.size > 0
-              ? `${selectedFilters.size} filter(s) selected - click Apply to search`
+            {selectedTotal > 0
+              ? `${selectedTotal} filter${selectedTotal === 1 ? '' : 's'} selected — click Apply to search`
               : 'Select filters above to narrow your search'}
           </p>
           <div className="flex gap-3">
-            {selectedFilters.size > 0 && (
+            {selectedTotal > 0 && (
               <button
                 type="button"
                 onClick={resetFilters}

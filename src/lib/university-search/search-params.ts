@@ -4,67 +4,101 @@ const RESULTS_PATH = '/university-search/results';
 const SEARCH_PATH = '/university-search/search';
 const FILTER_KEY = 'filters';
 
-const buildCombinedQuery = (query?: string, filters?: Iterable<string>) => {
-  const raw = [query?.trim(), ...(filters ? Array.from(filters) : [])]
-    .filter(Boolean)
-    .join(' ')
-    .trim();
-  return raw;
+export type FilterGroupKey = 'country' | 'subject' | 'fitFocus' | 'lifestyle';
+
+export interface FilterChip {
+  group: FilterGroupKey;
+  value: string;
+}
+
+const VALID_GROUPS: FilterGroupKey[] = ['country', 'subject', 'fitFocus', 'lifestyle'];
+const TOKEN_SEP = '|';
+const PAIR_SEP = ':';
+
+/** "country:USA" → { group: 'country', value: 'USA' }. Returns null on bad input. */
+const parseToken = (token: string): FilterChip | null => {
+  const idx = token.indexOf(PAIR_SEP);
+  if (idx < 0) return null;
+  const group = token.slice(0, idx) as FilterGroupKey;
+  const value = token.slice(idx + 1).trim();
+  if (!VALID_GROUPS.includes(group) || !value) return null;
+  return { group, value };
 };
 
+/** Build a URL-safe `group:value` token. */
+export const buildFilterToken = (chip: FilterChip): string =>
+  `${chip.group}${PAIR_SEP}${chip.value}`;
+
 /**
- * Serialise selected filter chips into the URL alongside the search query.
- * Filters are kept on a separate key so they can be round-tripped between
- * /search and /results without being lost in free-text concatenation.
+ * Serialise selected filter chips into the URL.
+ * `q` is kept clean (free text only) — chip names no longer pollute it.
  */
-export const buildSearchResultsUrl = (query?: string, filters?: Iterable<string>) => {
+export const buildSearchResultsUrl = (query?: string, chips?: Iterable<FilterChip>) => {
   const params = new URLSearchParams();
-  const filterArray = filters ? Array.from(filters).filter(Boolean) : [];
-  const combined = buildCombinedQuery(query, filterArray);
-  if (combined) {
-    params.set('q', combined);
+  const trimmed = query?.trim();
+  if (trimmed) params.set('q', trimmed);
+
+  const chipArray = chips ? Array.from(chips) : [];
+  if (chipArray.length) {
+    params.set(FILTER_KEY, chipArray.map(buildFilterToken).join(TOKEN_SEP));
   }
-  if (filterArray.length) {
-    params.set(FILTER_KEY, filterArray.join('|'));
-  }
+
   const suffix = params.toString();
   return suffix ? `${RESULTS_PATH}?${suffix}` : RESULTS_PATH;
 };
 
 /** Build a URL back to /search with filters and query restored. */
-export const buildSearchHubUrl = (query?: string, filters?: Iterable<string>) => {
+export const buildSearchHubUrl = (query?: string, chips?: Iterable<FilterChip>) => {
   const params = new URLSearchParams();
-  const filterArray = filters ? Array.from(filters).filter(Boolean) : [];
-  if (query?.trim()) params.set('q', query.trim());
-  if (filterArray.length) params.set(FILTER_KEY, filterArray.join('|'));
+  const trimmed = query?.trim();
+  if (trimmed) params.set('q', trimmed);
+
+  const chipArray = chips ? Array.from(chips) : [];
+  if (chipArray.length) {
+    params.set(FILTER_KEY, chipArray.map(buildFilterToken).join(TOKEN_SEP));
+  }
+
   const suffix = params.toString();
   return suffix ? `${SEARCH_PATH}?${suffix}` : SEARCH_PATH;
 };
 
-/** Read filter chips from a URLSearchParams-like reader. */
+/** Read structured filter chips from URL params. */
 export const readFiltersFromParams = (
   reader: Pick<URLSearchParams, 'get'> | null | undefined
-): string[] => {
+): FilterChip[] => {
   if (!reader) return [];
   const raw = reader.get(FILTER_KEY);
   if (!raw) return [];
-  return raw.split('|').map((value) => value.trim()).filter(Boolean);
+  return raw
+    .split(TOKEN_SEP)
+    .map((token) => token.trim())
+    .filter(Boolean)
+    .map(parseToken)
+    .filter((chip): chip is FilterChip => chip !== null);
+};
+
+/** Group chips by their group key for downstream consumers. */
+export const groupFiltersByKey = (chips: FilterChip[]): Record<FilterGroupKey, string[]> => {
+  const map: Record<FilterGroupKey, string[]> = {
+    country: [],
+    subject: [],
+    fitFocus: [],
+    lifestyle: []
+  };
+  chips.forEach((chip) => {
+    map[chip.group].push(chip.value);
+  });
+  return map;
 };
 
 export const buildSuggestionResultsUrl = (item: Suggestion) => {
   const params = new URLSearchParams();
   if (item.type === 'program') {
     params.set('programId', item.id);
-    const fallbackQuery = buildCombinedQuery(item.name, item.university ? [item.university] : []);
-    if (fallbackQuery) {
-      params.set('q', fallbackQuery);
-    }
+    if (item.name?.trim()) params.set('q', item.name.trim());
   } else {
     params.set('universityId', item.id);
-    const fallbackQuery = item.name?.trim();
-    if (fallbackQuery) {
-      params.set('q', fallbackQuery);
-    }
+    if (item.name?.trim()) params.set('q', item.name.trim());
   }
   return `${RESULTS_PATH}?${params.toString()}`;
 };
