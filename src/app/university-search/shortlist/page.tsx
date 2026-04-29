@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
-import { ArrowUpRight, Clock, Shield, Sparkles, Target, TrendingUp, Trash2, GitCompareArrows } from 'lucide-react';
+import { ArrowUpRight, Clock, Sparkles, Target, Trash2, GitCompareArrows } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Breadcrumbs } from '@/components/ui/breadcrumbs';
@@ -10,6 +10,7 @@ import { useShortlist } from '@/components/university-search/shortlist-store';
 import { ComparisonModal } from '@/components/university-search/ComparisonModal';
 import type { ProgramSearchResult } from '@/components/university-search/types';
 import { cn } from '@/lib/utils';
+import { classifyFitTier, TIER_VISUAL, TIER_LABEL, type FitTier } from '@/lib/theme/categories';
 
 const stageTone = {
   Researching: 'bg-amber-100 text-amber-900 border-amber-200',
@@ -17,32 +18,7 @@ const stageTone = {
   Active: 'bg-emerald-100 text-emerald-900 border-emerald-200'
 };
 
-type FitTier = 'reach' | 'match' | 'safety';
-
-const TIER_CONFIG: Record<FitTier, { label: string; icon: typeof Target; className: string }> = {
-  reach: {
-    label: 'Reach',
-    icon: TrendingUp,
-    className: 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:border-rose-500/20'
-  },
-  match: {
-    label: 'Match',
-    icon: Target,
-    className: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:border-amber-500/20'
-  },
-  safety: {
-    label: 'Safety',
-    icon: Shield,
-    className: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:border-emerald-500/20'
-  }
-};
-
-const classifyFit = (fitScore: number | null | undefined): FitTier | null => {
-  if (typeof fitScore !== 'number' || Number.isNaN(fitScore)) return null;
-  if (fitScore >= 80) return 'safety';
-  if (fitScore >= 60) return 'match';
-  return 'reach';
-};
+const classifyFit = classifyFitTier;
 
 export default function UniversitySearchShortlistPage() {
   const { items, removeItem, ready } = useShortlist();
@@ -187,35 +163,48 @@ export default function UniversitySearchShortlistPage() {
           <div className="grid gap-6 md:grid-cols-2">
             {items.map((item) => {
               const tier = classifyFit(item.fitScore ?? null);
-              const tierCfg = tier ? TIER_CONFIG[tier] : null;
-              const TierIcon = tierCfg?.icon;
+              const visual = tier ? TIER_VISUAL[tier] : null;
+              const TierIcon = visual?.icon;
               return (
-                <Card key={item.id} className="border border-border/80 bg-card">
+                <Card
+                  key={item.id}
+                  className={cn(
+                    'border border-l-4 bg-card transition hover:-translate-y-px hover:shadow-md',
+                    visual ? cn(visual.border, visual.accent) : 'border-l-border'
+                  )}
+                >
                   <CardHeader className="space-y-2">
                     <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="text-xs uppercase tracking-[0.35em] text-muted-foreground">
-                          {item.location ?? 'Location TBC'}
-                        </p>
-                        <CardTitle className="text-xl text-foreground">{item.name}</CardTitle>
-                        <p className="text-sm text-muted-foreground">{item.program}</p>
+                      <div className="flex min-w-0 items-start gap-3">
+                        {visual ? (
+                          <div className={visual.swatch}>
+                            {TierIcon ? <TierIcon className="h-4 w-4" /> : null}
+                          </div>
+                        ) : null}
+                        <div className="min-w-0">
+                          <p className="text-xs uppercase tracking-[0.35em] text-muted-foreground">
+                            {item.location ?? 'Location TBC'}
+                          </p>
+                          <CardTitle className="text-xl text-foreground">{item.name}</CardTitle>
+                          <p className="text-sm text-muted-foreground">{item.program}</p>
+                        </div>
                       </div>
-                      <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-900">
+                      <span className="shrink-0 rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-900 dark:bg-emerald-500/10 dark:text-emerald-300">
                         {typeof item.fitScore === 'number' ? `${Math.round(item.fitScore)}% fit` : 'Fit TBD'}
                       </span>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
-                      {tierCfg && TierIcon ? (
+                      {visual && tier ? (
                         <span
                           className={cn(
-                            'inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em]',
-                            tierCfg.className
+                            'inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em]',
+                            visual.chip
                           )}
                           role="status"
-                          aria-label={`Banding: ${tierCfg.label}`}
+                          aria-label={`Banding: ${TIER_LABEL[tier]}`}
                         >
-                          <TierIcon className="h-3 w-3" aria-hidden />
-                          {tierCfg.label}
+                          {TierIcon ? <TierIcon className="h-3 w-3" aria-hidden /> : null}
+                          {TIER_LABEL[tier]}
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 rounded-full border border-border bg-muted/40 px-3 py-1 text-xs font-medium text-muted-foreground">

@@ -2,18 +2,52 @@
 
 import { useState, type FormEvent } from 'react';
 import Link from 'next/link';
-import { CalendarPlus, Check, Mail, MessageSquare, Video, Users, Clock } from 'lucide-react';
+import { CalendarPlus, Check, Mail, MessageSquare, Video, Users, Clock, type LucideIcon } from 'lucide-react';
 import { DashboardShell } from '@/components/layout/shell';
 import { PageHero } from '@/components/layout/page-hero';
 import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
-const TOPICS = [
-  { id: 'university-choice', label: 'University choice', icon: Users },
-  { id: 'applications', label: 'Applications & essays', icon: MessageSquare },
-  { id: 'interview-prep', label: 'Interview prep', icon: Video },
-  { id: 'general', label: 'General check-in', icon: CalendarPlus }
+type TopicTone = 'sky' | 'violet' | 'rose' | 'emerald';
+const TOPIC_TONE: Record<TopicTone, { swatch: string; activeBorder: string; text: string; chip: string }> = {
+  sky: {
+    swatch:
+      'flex h-9 w-9 items-center justify-center rounded-xl bg-sky-500/10 text-sky-600 ring-1 ring-sky-500/20 dark:text-sky-400',
+    activeBorder: 'border-sky-300/60 bg-sky-500/5 dark:border-sky-500/30',
+    text: 'text-sky-600 dark:text-sky-400',
+    chip: 'bg-sky-500/10 text-sky-600 border border-sky-200/60 dark:text-sky-400 dark:border-sky-500/20'
+  },
+  violet: {
+    swatch:
+      'flex h-9 w-9 items-center justify-center rounded-xl bg-violet-500/10 text-violet-600 ring-1 ring-violet-500/20 dark:text-violet-400',
+    activeBorder: 'border-violet-300/60 bg-violet-500/5 dark:border-violet-500/30',
+    text: 'text-violet-600 dark:text-violet-400',
+    chip:
+      'bg-violet-500/10 text-violet-600 border border-violet-200/60 dark:text-violet-400 dark:border-violet-500/20'
+  },
+  rose: {
+    swatch:
+      'flex h-9 w-9 items-center justify-center rounded-xl bg-rose-500/10 text-rose-600 ring-1 ring-rose-500/20 dark:text-rose-400',
+    activeBorder: 'border-rose-300/60 bg-rose-500/5 dark:border-rose-500/30',
+    text: 'text-rose-600 dark:text-rose-400',
+    chip: 'bg-rose-500/10 text-rose-600 border border-rose-200/60 dark:text-rose-400 dark:border-rose-500/20'
+  },
+  emerald: {
+    swatch:
+      'flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 ring-1 ring-emerald-500/20 dark:text-emerald-400',
+    activeBorder: 'border-emerald-300/60 bg-emerald-500/5 dark:border-emerald-500/30',
+    text: 'text-emerald-600 dark:text-emerald-400',
+    chip:
+      'bg-emerald-500/10 text-emerald-600 border border-emerald-200/60 dark:text-emerald-400 dark:border-emerald-500/20'
+  }
+};
+
+const TOPICS: { id: string; label: string; icon: LucideIcon; tone: TopicTone }[] = [
+  { id: 'university-choice', label: 'University choice', icon: Users, tone: 'sky' },
+  { id: 'applications', label: 'Applications & essays', icon: MessageSquare, tone: 'violet' },
+  { id: 'interview-prep', label: 'Interview prep', icon: Video, tone: 'rose' },
+  { id: 'general', label: 'General check-in', icon: CalendarPlus, tone: 'emerald' }
 ];
 
 const TIMES = ['09:00', '11:00', '13:00', '15:00', '17:00'];
@@ -105,6 +139,7 @@ export default function AppointmentPage() {
           <div className="grid gap-3 sm:grid-cols-2">
             {TOPICS.map((option) => {
               const Icon = option.icon;
+              const tone = TOPIC_TONE[option.tone];
               const active = topic === option.id;
               return (
                 <button
@@ -114,19 +149,14 @@ export default function AppointmentPage() {
                   className={cn(
                     'flex items-center gap-3 rounded-2xl border px-4 py-3 text-left text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
                     active
-                      ? 'border-primary/30 bg-primary/5 text-foreground'
+                      ? cn(tone.activeBorder, 'text-foreground')
                       : 'border-border bg-background text-muted-foreground hover:border-border/80 hover:text-foreground'
                   )}
                 >
-                  <div
-                    className={cn(
-                      'flex h-9 w-9 items-center justify-center rounded-xl',
-                      active ? 'bg-primary/10 text-primary' : 'bg-muted/60 text-muted-foreground'
-                    )}
-                  >
+                  <div className={tone.swatch}>
                     <Icon className="h-4 w-4" />
                   </div>
-                  {option.label}
+                  <span className={cn(active && tone.text)}>{option.label}</span>
                 </button>
               );
             })}

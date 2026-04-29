@@ -687,12 +687,19 @@ export default function CoursePage({ params }: { params: { id: string } }) {
                 {/* Highlights Bar */}
                 <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
                   {course.quickFacts.map((fact) => (
-                    <div key={fact.label} className="flex flex-col gap-1 rounded-2xl border border-border/60 bg-card/50 p-4 transition-colors hover:bg-card">
-                      <div className="flex items-center gap-2 text-muted-foreground">
+                    <div
+                      key={fact.label}
+                      className="flex items-start gap-3 rounded-2xl border border-border/60 bg-card/50 p-4 transition-colors hover:bg-card"
+                    >
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/20">
                         <fact.icon className="h-4 w-4" />
-                        <span className="text-xs font-semibold uppercase tracking-wider">{fact.label}</span>
                       </div>
-                      <p className="font-semibold text-foreground">{fact.value}</p>
+                      <div className="min-w-0 flex-1">
+                        <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{fact.label}</span>
+                        <p className="truncate font-semibold text-foreground" title={fact.value}>
+                          {fact.value}
+                        </p>
+                      </div>
                     </div>
                   ))}
                 </div>

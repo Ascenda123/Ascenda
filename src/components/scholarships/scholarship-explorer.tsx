@@ -7,18 +7,15 @@ import { cn } from '@/lib/utils';
 import { trackEvent } from '@/lib/analytics';
 import type { Scholarship } from './types';
 import { filterScholarships } from './utils';
+import { SCHOLARSHIP_VISUAL, type ScholarshipCategory } from '@/lib/theme/categories';
 
 interface ScholarshipExplorerProps {
   scholarships: Scholarship[];
 }
 
-const CATEGORY_COLORS: Record<string, string> = {
-  Merit: 'bg-violet-500/10 text-violet-600 border-violet-200/50',
-  Regional: 'bg-sky-500/10 text-sky-600 border-sky-200/50',
-  STEM: 'bg-emerald-500/10 text-emerald-600 border-emerald-200/50',
-  Need: 'bg-amber-500/10 text-amber-600 border-amber-200/50',
-  Sports: 'bg-rose-500/10 text-rose-600 border-rose-200/50',
-  General: 'bg-muted/60 text-muted-foreground border-border/50',
+const resolveCategory = (raw: string | null | undefined): ScholarshipCategory => {
+  const key = (raw ?? 'General') as ScholarshipCategory;
+  return key in SCHOLARSHIP_VISUAL ? key : 'General';
 };
 
 const cardVariants = {
@@ -257,7 +254,9 @@ export const ScholarshipExplorer = ({ scholarships }: ScholarshipExplorerProps) 
             animate="show"
           >
             {filtered.map((scholarship) => {
-              const catColor = CATEGORY_COLORS[scholarship.category ?? 'General'] ?? CATEGORY_COLORS.General;
+              const category = resolveCategory(scholarship.category);
+              const visual = SCHOLARSHIP_VISUAL[category];
+              const CatIcon = visual.icon;
               const isSaved = saved.has(scholarship.id);
               const urgent = isUrgent(scholarship.deadline);
 
@@ -266,38 +265,48 @@ export const ScholarshipExplorer = ({ scholarships }: ScholarshipExplorerProps) 
                   key={scholarship.id}
                   variants={cardVariants}
                   layout
-                  className="group rounded-2xl border border-border bg-card p-4 sm:p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md hover:border-primary/10 overflow-hidden relative"
+                  className={cn(
+                    'group relative overflow-hidden rounded-2xl border border-l-4 bg-card p-4 sm:p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md',
+                    visual.border,
+                    visual.accent
+                  )}
                 >
-                  {/* Ambient blob */}
-                  <div className="pointer-events-none absolute -top-8 -right-8 h-24 w-24 rounded-full bg-primary/3 blur-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
-
                   <div className="relative flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                    {/* Left: info */}
-                    <div className="flex-1 min-w-0 space-y-2">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className={cn('rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.15em]', catColor)}>
-                          {scholarship.category ?? 'General'}
-                        </span>
-                        {urgent && (
-                          <span className="rounded-full bg-rose-500/10 border border-rose-200/50 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.15em] text-rose-600 motion-safe:animate-pulse">
-                            Closing soon
-                          </span>
-                        )}
+                    <div className="flex flex-1 min-w-0 items-start gap-3">
+                      <div className={visual.swatch}>
+                        <CatIcon className="h-4 w-4" />
                       </div>
-                      <h3 className="text-base font-semibold text-foreground leading-snug">{scholarship.name}</h3>
-                      <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1">
-                          <Globe className="h-3 w-3" />
-                          {scholarship.country ?? scholarship.region ?? 'Global'}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <GraduationCap className="h-3 w-3" />
-                          {scholarship.level ?? 'Any level'}
-                        </span>
-                        <span className={cn('flex items-center gap-1', urgent && 'text-rose-500 font-medium')}>
-                          <Calendar className="h-3 w-3" />
-                          {formatDeadline(scholarship.deadline)}
-                        </span>
+                      <div className="space-y-2 min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span
+                            className={cn(
+                              'rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.15em]',
+                              visual.chip
+                            )}
+                          >
+                            {category}
+                          </span>
+                          {urgent && (
+                            <span className="rounded-full bg-rose-500/10 border border-rose-200/50 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.15em] text-rose-600 motion-safe:animate-pulse dark:text-rose-400 dark:border-rose-500/20">
+                              Closing soon
+                            </span>
+                          )}
+                        </div>
+                        <h3 className="text-base font-semibold text-foreground leading-snug">{scholarship.name}</h3>
+                        <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <Globe className="h-3 w-3" />
+                            {scholarship.country ?? scholarship.region ?? 'Global'}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <GraduationCap className="h-3 w-3" />
+                            {scholarship.level ?? 'Any level'}
+                          </span>
+                          <span className={cn('flex items-center gap-1', urgent && 'text-rose-500 font-medium dark:text-rose-400')}>
+                            <Calendar className="h-3 w-3" />
+                            {formatDeadline(scholarship.deadline)}
+                          </span>
+                        </div>
                       </div>
                     </div>
 

@@ -31,9 +31,12 @@ export async function GET(request: NextRequest) {
   const weightTotal = weights.eligibility + weights.academicFit + weights.preferenceFit + weights.outcomes;
   const safeWeights = weightTotal > 0 ? weights : defaultWeights;
 
+  const forceRefresh = searchParams.get('refresh') === '1';
+
   const matchResult = await loadMatchesForProfile(supabase, user.id, {
     resultLimit: 20,
-    weights: safeWeights
+    weights: safeWeights,
+    forceRefresh
   });
 
   if (matchResult.error) {

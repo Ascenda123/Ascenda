@@ -12,6 +12,8 @@ import { SectionNav } from '@/components/layout/section-nav';
 import { ProfileProgressCard } from './_components/profile-progress-card';
 import { Compass, GraduationCap, MapPin, Target } from 'lucide-react';
 import { AnimatedSection, AnimatedGrid, AnimatedGridItem } from '@/components/layout/animated-section';
+import { PROFILE_SECTION_VISUAL, COMPLETION_VISUAL, classifyCompletion } from '@/lib/theme/categories';
+import { cn } from '@/lib/utils';
 
 export const metadata: Metadata = {
   title: 'Profile | Ascenda'
@@ -169,14 +171,20 @@ export default async function ProfilePage() {
         }
       />
       <AnimatedGrid className="mt-8 grid gap-8 lg:grid-cols-2">
-        <AnimatedGridItem className="surface-card surface-card--static">
+        <AnimatedGridItem
+          className={cn(
+            'surface-card surface-card--static border-l-4',
+            PROFILE_SECTION_VISUAL.personal.border,
+            PROFILE_SECTION_VISUAL.personal.accent
+          )}
+        >
           <div className="relative z-10 flex items-start justify-between gap-4">
             <div className="space-y-1">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Profile</p>
+              <p className={cn('text-[11px] font-semibold uppercase tracking-[0.3em]', PROFILE_SECTION_VISUAL.personal.text)}>Personal</p>
               <p className="text-xl font-semibold text-foreground">{profileFullName || 'Add your full name'}</p>
               <p className="text-sm text-muted-foreground">{profileEmail || 'Add an email'}</p>
             </div>
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/20">
+            <div className={cn(PROFILE_SECTION_VISUAL.personal.swatch, 'h-11 w-11')}>
               <MapPin className="h-5 w-5" />
             </div>
           </div>
@@ -242,14 +250,20 @@ export default async function ProfilePage() {
           </div>
         </AnimatedGridItem>
         <AnimatedGridItem className="space-y-8">
-          <div className="surface-card">
+          <div
+            className={cn(
+              'surface-card border-l-4',
+              PROFILE_SECTION_VISUAL.lifestyle.border,
+              PROFILE_SECTION_VISUAL.lifestyle.accent
+            )}
+          >
             <div className="relative z-10 flex items-start justify-between gap-4">
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Lifestyle</p>
+                <p className={cn('text-[11px] font-semibold uppercase tracking-[0.3em]', PROFILE_SECTION_VISUAL.lifestyle.text)}>Lifestyle</p>
                 <p className="text-lg font-semibold text-foreground">Study setup</p>
                 <p className="text-sm text-muted-foreground">Teaching style and campus feel</p>
               </div>
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/20">
+              <div className={cn(PROFILE_SECTION_VISUAL.lifestyle.swatch, 'h-10 w-10')}>
                 <Target className="h-5 w-5" />
               </div>
             </div>
@@ -283,16 +297,22 @@ export default async function ProfilePage() {
               </Button>
             </div>
           </div>
-          <div className="surface-card">
+          <div
+            className={cn(
+              'surface-card border-l-4',
+              PROFILE_SECTION_VISUAL.academics.border,
+              PROFILE_SECTION_VISUAL.academics.accent
+            )}
+          >
             <div className="relative z-10 flex items-start justify-between gap-4">
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Academics</p>
+                <p className={cn('text-[11px] font-semibold uppercase tracking-[0.3em]', PROFILE_SECTION_VISUAL.academics.text)}>Academics</p>
                 <p className="text-lg font-semibold text-foreground">Snapshot</p>
                 <p className="text-sm text-muted-foreground">
                   {academicInput?.programme_type ? formatProgramme(academicInput.programme_type) : 'Add qualification and grades'}
                 </p>
               </div>
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/20">
+              <div className={cn(PROFILE_SECTION_VISUAL.academics.swatch, 'h-10 w-10')}>
                 <GraduationCap className="h-5 w-5" />
               </div>
             </div>
@@ -370,15 +390,21 @@ export default async function ProfilePage() {
         </div>
       </AnimatedGrid>
       <AnimatedSection className="mt-8" delay={0.1}>
-        <div className="surface-card surface-card--static text-sm text-muted-foreground">
+        <div
+          className={cn(
+            'surface-card surface-card--static border-l-4 text-sm text-muted-foreground',
+            PROFILE_SECTION_VISUAL.aspirations.border,
+            PROFILE_SECTION_VISUAL.aspirations.accent
+          )}
+        >
           <div className="relative z-10 space-y-4">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Match boosts</p>
+                <p className={cn('text-[11px] font-semibold uppercase tracking-[0.3em]', PROFILE_SECTION_VISUAL.aspirations.text)}>Match boosts</p>
                 <p className="text-lg font-semibold text-foreground">Top gains available</p>
                 <p className="text-xs text-muted-foreground">Complete these to unlock better results.</p>
               </div>
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/20">
+              <div className={cn(PROFILE_SECTION_VISUAL.aspirations.swatch, 'h-10 w-10')}>
                 <Compass className="h-5 w-5" />
               </div>
             </div>

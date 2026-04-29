@@ -5,7 +5,7 @@ import { PageHero } from '@/components/layout/page-hero';
 import { SectionNav } from '@/components/layout/section-nav';
 import { TOOLBOX_SECTION_ITEMS } from '@/components/layout/navigation';
 import { AnimatedSection, AnimatedGrid, AnimatedGridItem } from '@/components/layout/animated-section';
-import { PenTool, BarChart3, ClipboardCheck, CalendarClock, ArrowRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import {
   DEMO_BUILDING_BLOCKS,
   DEMO_ESSAY_PROMPTS,
@@ -14,6 +14,8 @@ import {
   DEMO_TIMELINE_DEADLINES,
 } from '@/lib/data/student-demo-data';
 import { ToolboxProgressRing, ToolboxCountdown } from '@/components/toolbox/toolbox-landing-widgets';
+import { TOOL_VISUAL, type ToolboxTool } from '@/lib/theme/categories';
+import { cn } from '@/lib/utils';
 
 export const metadata: Metadata = { title: 'Toolbox | Ascenda' };
 
@@ -30,63 +32,64 @@ const upcoming30 = DEMO_TIMELINE_DEADLINES.filter((d) => {
 const reachCount = DEMO_UNIVERSITY_CHANCES.filter((u) => (39 - u.minimumScore) < 1).length;
 const safetyCount = DEMO_UNIVERSITY_CHANCES.filter((u) => (39 - u.minimumScore) >= 5).length;
 
-const TOOL_CARDS = [
+type ToolCard = {
+  title: string;
+  href: string;
+  tool: ToolboxTool;
+  description: string;
+  step: number;
+  stats: { label: string; value: string | number }[];
+};
+
+const TOOL_CARDS: ToolCard[] = [
   {
     title: 'Requirements Checker',
     href: '/toolbox/requirements',
-    icon: ClipboardCheck,
-    iconBg: 'bg-amber-500/10 text-amber-600',
-    gradient: 'from-amber-500/5 to-transparent',
-    description: 'Interactive status toggles and progress rings for each university\'s requirements.',
+    tool: 'requirements',
+    description: "Interactive status toggles and progress rings for each university's requirements.",
     step: 1,
     stats: [
       { label: 'Universities', value: DEMO_REQUIREMENTS.length },
       { label: 'Readiness', value: `${avgProgress}%` },
-      { label: 'Complete', value: DEMO_REQUIREMENTS.filter((r) => r.progress === 100).length },
-    ],
+      { label: 'Complete', value: DEMO_REQUIREMENTS.filter((r) => r.progress === 100).length }
+    ]
   },
   {
     title: 'Chances Calculator',
     href: '/toolbox/chances',
-    icon: BarChart3,
-    iconBg: 'bg-emerald-500/10 text-emerald-600',
-    gradient: 'from-emerald-500/5 to-transparent',
+    tool: 'chances',
     description: 'Visual probability gauges and what-if score slider for each university.',
     step: 2,
     stats: [
       { label: 'Universities', value: DEMO_UNIVERSITY_CHANCES.length },
       { label: 'Reach', value: reachCount },
-      { label: 'Safety', value: safetyCount },
-    ],
+      { label: 'Safety', value: safetyCount }
+    ]
   },
   {
     title: 'Essay Workshop',
     href: '/toolbox/essay-workshop',
-    icon: PenTool,
-    iconBg: 'bg-violet-500/10 text-violet-600',
-    gradient: 'from-violet-500/5 to-transparent',
+    tool: 'essay',
     description: 'Rich text editor with building blocks, platform-specific limits, and AI writing tips.',
     step: 3,
     stats: [
       { label: 'Blocks', value: DEMO_BUILDING_BLOCKS.length },
       { label: 'Prompts', value: DEMO_ESSAY_PROMPTS.length },
-      { label: 'Platforms', value: 4 },
-    ],
+      { label: 'Platforms', value: 4 }
+    ]
   },
   {
     title: 'Deadline Timeline',
     href: '/toolbox/timeline',
-    icon: CalendarClock,
-    iconBg: 'bg-rose-500/10 text-rose-600',
-    gradient: 'from-rose-500/5 to-transparent',
+    tool: 'timeline',
     description: 'Calendar and timeline views with urgency indicators and filtering.',
     step: 4,
     stats: [
       { label: 'Next 14d', value: upcoming14 },
       { label: 'Next 30d', value: upcoming30 },
-      { label: 'Total', value: DEMO_TIMELINE_DEADLINES.length },
-    ],
-  },
+      { label: 'Total', value: DEMO_TIMELINE_DEADLINES.length }
+    ]
+  }
 ];
 
 export default async function ToolboxPage() {
@@ -156,19 +159,22 @@ export default async function ToolboxPage() {
       {/* Tool cards grid */}
       <AnimatedGrid className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {TOOL_CARDS.map((tool) => {
-          const Icon = tool.icon;
+          const visual = TOOL_VISUAL[tool.tool];
+          const Icon = visual.icon;
           return (
             <AnimatedGridItem key={tool.href}>
-              <Link href={tool.href} className="surface-card group flex h-full flex-col hover:shadow-xl transition-all hover:-translate-y-1 overflow-hidden">
-                {/* Gradient header strip */}
-                <div className={`absolute inset-0 bg-gradient-to-br ${tool.gradient} rounded-[inherit] pointer-events-none`} />
-                <div className="pointer-events-none absolute -top-10 -right-10 h-32 w-32 rounded-full opacity-20 blur-2xl transition-opacity group-hover:opacity-40" style={{ background: 'var(--primary)' }} />
-
-                <div className="relative z-10 flex-1 flex flex-col gap-4">
-                  {/* Icon + title row */}
+              <Link
+                href={tool.href}
+                className={cn(
+                  'surface-card group relative flex h-full flex-col overflow-hidden border-l-4 transition-all hover:-translate-y-1 hover:shadow-xl',
+                  visual.border,
+                  visual.accent
+                )}
+              >
+                <div className="relative z-10 flex flex-1 flex-col gap-4">
                   <div className="flex items-start gap-3">
                     <div className="relative">
-                      <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${tool.iconBg} ring-1 ring-black/5 dark:ring-white/5 shadow-sm`}>
+                      <div className={cn(visual.swatch, 'h-12 w-12 shadow-sm')}>
                         <Icon className="h-5 w-5" />
                       </div>
                       <span className="absolute -top-1.5 -left-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-foreground text-[10px] font-bold text-background shadow-sm">
@@ -178,18 +184,17 @@ export default async function ToolboxPage() {
                     <div className="flex-1 min-w-0 pt-0.5">
                       <div className="flex items-center gap-1.5">
                         <p className="text-base font-semibold text-foreground">{tool.title}</p>
-                        <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/40 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                        <ArrowRight className={cn('h-3.5 w-3.5 opacity-0 transition-all group-hover:translate-x-1 group-hover:opacity-100', visual.text)} />
                       </div>
-                      <p className="text-sm text-muted-foreground leading-relaxed mt-0.5">{tool.description}</p>
+                      <p className="mt-0.5 text-sm leading-relaxed text-muted-foreground">{tool.description}</p>
                     </div>
                   </div>
 
-                  {/* Mini stats */}
-                  <div className="grid grid-cols-3 gap-2 mt-auto">
+                  <div className="mt-auto grid grid-cols-3 gap-2">
                     {tool.stats.map((stat) => (
-                      <div key={stat.label} className="surface-subcard px-2.5 py-2.5 text-center rounded-xl">
+                      <div key={stat.label} className="surface-subcard rounded-xl px-2.5 py-2.5 text-center">
                         <p className="text-sm font-bold text-foreground tabular-nums">{stat.value}</p>
-                        <p className="text-[10px] text-muted-foreground mt-0.5">{stat.label}</p>
+                        <p className="mt-0.5 text-[10px] text-muted-foreground">{stat.label}</p>
                       </div>
                     ))}
                   </div>

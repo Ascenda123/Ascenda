@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
 import { PROFILE_STEPS, type StepCompletionMap } from '@/lib/profile/steps';
 import { cn } from '@/lib/utils';
+import { classifyCompletion, COMPLETION_VISUAL } from '@/lib/theme/categories';
 
 interface ProfileProgressCardProps {
   completionPercent: number;
@@ -33,6 +34,8 @@ export function ProfileProgressCard({
   const [celebrate, setCelebrate] = useState(false);
   const clampedPercent = useMemo(() => Math.min(100, Math.max(0, completionPercent)), [completionPercent]);
   const isComplete = clampedPercent >= 100;
+  const band = classifyCompletion(clampedPercent);
+  const visual = COMPLETION_VISUAL[band];
 
   useEffect(() => {
     if (!isComplete) {
@@ -46,24 +49,35 @@ export function ProfileProgressCard({
   }, [isComplete]);
 
   return (
-    <div className="surface-card surface-card--static relative overflow-hidden rounded-[28px] p-6">
+    <div
+      className={cn(
+        'surface-card surface-card--static relative overflow-hidden rounded-[28px] border-l-4 p-6',
+        visual.border,
+        visual.accent
+      )}
+    >
       <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <p className="text-sm font-medium text-muted-foreground">Profile completion</p>
-          <p className="text-3xl font-semibold text-foreground">{clampedPercent}%</p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            {completedCount}/{totalSteps} steps done {nextStepTitle ? `• Next: ${nextStepTitle}` : ''}
-          </p>
+        <div className="flex items-start gap-4">
+          <div className={visual.swatch}>
+            <visual.icon className="h-5 w-5" />
+          </div>
+          <div>
+            <p className={cn('text-sm font-medium uppercase tracking-[0.2em]', visual.text)}>Profile completion</p>
+            <p className="text-3xl font-semibold text-foreground">{clampedPercent}%</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {completedCount}/{totalSteps} steps done {nextStepTitle ? `• Next: ${nextStepTitle}` : ''}
+            </p>
+          </div>
         </div>
-        <div className="surface-chip px-4 py-2 text-[11px] uppercase tracking-[0.35em]">
-          <Sparkles className="h-4 w-4 text-primary" />
+        <div className={cn('inline-flex items-center gap-2 rounded-full px-4 py-2 text-[11px] uppercase tracking-[0.35em]', visual.chip)}>
+          <Sparkles className="h-4 w-4" />
           Progress
         </div>
       </div>
 
       <div className="mt-4 h-2 overflow-hidden rounded-full bg-muted/70">
         <motion.div
-          className="h-full rounded-full bg-gradient-to-r from-primary via-sky-400 to-emerald-400 shadow-[0_0_0_1px_rgba(255,255,255,0.4)]"
+          className={cn('h-full rounded-full', visual.bar)}
           initial={{ width: 0 }}
           animate={{ width: `${clampedPercent}%` }}
           transition={{ type: 'spring', stiffness: 110, damping: 20 }}

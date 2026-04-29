@@ -11,6 +11,13 @@ import { MATCHES_TEXT } from '@/lib/constants/text';
 import { CompareBar } from '@/components/university-search/CompareBar';
 import { ComparisonModal } from '@/components/university-search/ComparisonModal';
 import type { ProgramSearchResult } from '@/components/university-search/types';
+import { TIER_VISUAL, type FitTier } from '@/lib/theme/categories';
+
+const MATCH_TIER_TO_FIT: Record<MatchTier, FitTier> = {
+  Reach: 'reach',
+  Match: 'match',
+  Safe: 'safety'
+};
 
 interface MatchListProps {
   matches: EnrichedMatch[];
@@ -134,11 +141,11 @@ export const MatchList = ({ matches }: MatchListProps) => {
           <div className="hidden sm:flex items-center gap-1.5 mt-1">
             <Info className="h-3 w-3 text-muted-foreground/60 shrink-0" />
             <p className="text-[11px] text-muted-foreground/80">
-              <span className="font-semibold text-rose-500">Reach</span>{' '}{'<'}30% admission
+              <span className={cn('font-semibold', TIER_VISUAL.reach.text)}>Reach</span>{' '}{'<'}30% admission
               {' \u00B7 '}
-              <span className="font-semibold text-amber-500">Match</span> 30-60%
+              <span className={cn('font-semibold', TIER_VISUAL.match.text)}>Match</span> 30-60%
               {' \u00B7 '}
-              <span className="font-semibold text-emerald-500">Safe</span>{' '}{'>'} 60%
+              <span className={cn('font-semibold', TIER_VISUAL.safety.text)}>Safe</span>{' '}{'>'} 60%
             </p>
           </div>
         </div>
@@ -197,32 +204,39 @@ export const MatchList = ({ matches }: MatchListProps) => {
             {MATCHES_TEXT.list.noResults}
           </div>
         ) : (
-          tierGroups.map(({ tier, visible, totalDeduped, hasMore }) =>
-            (selectedTier !== 'All' || totalDeduped > 0) ? (
+          tierGroups.map(({ tier, visible, totalDeduped, hasMore }) => {
+            const visual = TIER_VISUAL[MATCH_TIER_TO_FIT[tier]];
+            const TierIcon = visual.icon;
+            return (selectedTier !== 'All' || totalDeduped > 0) ? (
               <motion.div
                 key={tier}
-                className="surface-stage space-y-5"
+                className={cn('surface-stage space-y-5 border-l-4', visual.border, visual.accent)}
                 variants={tierCardVariants}
                 initial="hidden"
                 whileInView="show"
                 viewport={{ once: true, margin: '-80px' }}
               >
-                <div className="flex flex-col gap-2 border-b border-border pb-3">
-                  <div className="flex items-center justify-between gap-4">
-                    <p className="text-xs uppercase tracking-[0.35em] text-muted-foreground">Tier</p>
-                    <span className="surface-chip uppercase tracking-[0.3em]">
+                <div className="flex flex-col gap-3 border-b border-border pb-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-start gap-3">
+                      <div className={visual.swatch}>
+                        <TierIcon className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <p className={cn('text-xs uppercase tracking-[0.35em]', visual.text)}>Tier</p>
+                        <h3 className="text-2xl font-semibold text-foreground">
+                          {tier} programs
+                          <span className="ml-2 text-base font-normal text-muted-foreground">
+                            ({totalDeduped})
+                          </span>
+                        </h3>
+                      </div>
+                    </div>
+                    <span className={cn('inline-flex shrink-0 items-center rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.3em]', visual.chip)}>
                       {tier}
                     </span>
                   </div>
-                  <div className="flex flex-col gap-1">
-                    <h3 className="text-2xl font-semibold text-foreground">
-                      {tier} programs
-                      <span className="ml-2 text-base font-normal text-muted-foreground">
-                        ({totalDeduped})
-                      </span>
-                    </h3>
-                    <p className="text-sm text-muted-foreground">{TIER_DESCRIPTIONS[tier]}</p>
-                  </div>
+                  <p className="text-sm text-muted-foreground">{TIER_DESCRIPTIONS[tier]}</p>
                 </div>
 
                 {visible.length ? (
@@ -286,8 +300,8 @@ export const MatchList = ({ matches }: MatchListProps) => {
                   </div>
                 )}
               </motion.div>
-            ) : null
-          )
+            ) : null;
+          })
         )}
       </section>
 

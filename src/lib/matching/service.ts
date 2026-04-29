@@ -23,6 +23,7 @@ type LoadMatchesOptions = {
   programLimit?: number;
   resultLimit?: number;
   weights?: MatchingWeights;
+  forceRefresh?: boolean;
 };
 
 export type MatchComputationResult = {
@@ -456,7 +457,7 @@ export const loadMatchesForProfile = async (
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle();
-  if (!forceDemoTierMix && latestMatchMeta.data?.created_at) {
+  if (!forceDemoTierMix && !options.forceRefresh && latestMatchMeta.data?.created_at) {
     const latestCreatedAt = new Date(latestMatchMeta.data.created_at);
     if (Number.isFinite(latestCreatedAt.valueOf())) {
       const age = Date.now() - latestCreatedAt.getTime();
@@ -737,6 +738,30 @@ export const loadMatchesForProfile = async (
   }
   const ranked = rankCourseMatches(studentPayload, studentScore, enrichedCourses)
     .filter((match) => !match.excluded);
+
+  if (process.env.MATCH_DEBUG === '1') {
+    const byTier = {
+      Safety: ranked.filter((m) => m.tier_fit === 'Safety').length,
+      Target: ranked.filter((m) => m.tier_fit === 'Target').length,
+      Reach: ranked.filter((m) => m.tier_fit === 'Reach').length,
+      Hard: ranked.filter((m) => m.tier_fit === 'Harder-than-reach').length
+    };
+    const sample = ranked.slice(0, 8).map((m) => ({
+      uni: m.university,
+      course: m.course,
+      tier: m.tier_fit,
+      chance: m.chance_percent,
+      courseTier: m.course_tier
+    }));
+    console.info('[match-debug]', {
+      profileId,
+      studentIb: studentPayload.academic_input.ib_total_points,
+      enrichedCount: enrichedCourses.length,
+      rankedCount: ranked.length,
+      byTier,
+      sample
+    });
+  }
 
   // Apply result limit per-tier to ensure balanced Reach/Match/Safe representation.
   // Without this, a top-N cut returns only Safety results (highest admission %).

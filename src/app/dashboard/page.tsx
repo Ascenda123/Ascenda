@@ -18,6 +18,7 @@ import { buildStepCompletion, isProfileComplete, ProfileRecordGroup } from '@/li
 import { PROFILE_STEPS } from '@/lib/profile/steps';
 import { AnimatedSection } from '@/components/layout/animated-section';
 import { cn } from '@/lib/utils';
+import { classifyCompletion, COMPLETION_VISUAL } from '@/lib/theme/categories';
 
 type ChecklistRow = Database['public']['Tables']['application_checklist']['Row'];
 type DeadlineRow = Database['public']['Tables']['deadlines']['Row'];
@@ -262,44 +263,60 @@ export default async function DashboardPage() {
       />
 
       <div className="space-y-6">
-        {profileIncomplete && (
-          <div className="relative overflow-hidden rounded-[28px] border border-primary/20 bg-primary/5 p-6 shadow-sm">
-            <div className="pointer-events-none absolute -top-10 -right-10 h-32 w-32 rounded-full bg-primary/10 blur-2xl" />
-            <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="space-y-2">
-                <p className="text-xs font-bold uppercase tracking-[0.3em] text-primary">Getting started</p>
-                <h3 className="text-lg font-semibold text-foreground">
-                  Profile {completionPercent}% complete
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  {nextStep
-                    ? `Next up: ${nextStep.title}. Finish in a few minutes to unlock personalized matches.`
-                    : 'Almost there — complete your profile to unlock better recommendations.'}
-                </p>
-                <div className="flex items-center gap-2 pt-1">
-                  {PROFILE_STEPS.map((step) => (
-                    <div
-                      key={step.key}
-                      className={cn(
-                        'h-2 flex-1 rounded-full transition-colors',
-                        stepCompletion[step.key] ? 'bg-primary' : 'bg-border'
-                      )}
-                      title={`${step.title}: ${stepCompletion[step.key] ? 'Complete' : 'Incomplete'}`}
-                    />
-                  ))}
+        {profileIncomplete && (() => {
+          const band = classifyCompletion(completionPercent);
+          const visual = COMPLETION_VISUAL[band];
+          const Icon = visual.icon;
+          return (
+            <div
+              className={cn(
+                'relative overflow-hidden rounded-[28px] border border-l-4 bg-card p-6 shadow-sm',
+                visual.border,
+                visual.accent
+              )}
+            >
+              <div className="pointer-events-none absolute -top-10 -right-10 h-32 w-32 rounded-full bg-primary/10 blur-2xl" />
+              <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div className="flex items-start gap-4">
+                  <div className={visual.swatch}>
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <div className="space-y-2">
+                    <p className={cn('text-xs font-bold uppercase tracking-[0.3em]', visual.text)}>Getting started</p>
+                    <h3 className="text-lg font-semibold text-foreground">
+                      Profile {completionPercent}% complete
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      {nextStep
+                        ? `Next up: ${nextStep.title}. Finish in a few minutes to unlock personalized matches.`
+                        : 'Almost there — complete your profile to unlock better recommendations.'}
+                    </p>
+                    <div className="flex items-center gap-2 pt-1">
+                      {PROFILE_STEPS.map((step) => (
+                        <div
+                          key={step.key}
+                          className={cn(
+                            'h-2 flex-1 rounded-full transition-colors',
+                            stepCompletion[step.key] ? visual.bar : 'bg-border'
+                          )}
+                          title={`${step.title}: ${stepCompletion[step.key] ? 'Complete' : 'Incomplete'}`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex gap-2 shrink-0">
+                  <Button asChild size="sm">
+                    <Link href="/profile/wizard">Continue setup</Link>
+                  </Button>
+                  <Button asChild size="sm" variant="outline">
+                    <Link href="/profile">View profile</Link>
+                  </Button>
                 </div>
               </div>
-              <div className="flex gap-2 shrink-0">
-                <Button asChild size="sm">
-                  <Link href="/profile/wizard">Continue setup</Link>
-                </Button>
-                <Button asChild size="sm" variant="outline">
-                  <Link href="/profile">View profile</Link>
-                </Button>
-              </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         <DashboardOverview data={overviewPayload} />
 

@@ -2,7 +2,17 @@
 
 import { useEffect, useMemo, useRef, useState, type FormEvent, type MouseEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { Check, ChevronDown, Search as SearchIcon, X } from 'lucide-react';
+import {
+  BookOpen,
+  Check,
+  ChevronDown,
+  Compass,
+  Globe,
+  Heart,
+  Search as SearchIcon,
+  X,
+  type LucideIcon
+} from 'lucide-react';
 import { AnimatedBlobBanner } from '@/components/animated-blob-banner';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -10,11 +20,44 @@ import { IntelligentSearchBar, Suggestion } from '@/components/university-search
 import { getBrowserSupabaseClient } from '@/lib/supabase/client';
 import { buildSearchResultsUrl, buildSuggestionResultsUrl } from '@/lib/university-search/search-params';
 
+type FilterGroupKey = 'country' | 'subject' | 'fitFocus' | 'lifestyle';
 type FilterGroup = {
-  key: 'country' | 'subject' | 'fitFocus' | 'lifestyle';
+  key: FilterGroupKey;
   title: string;
   description: string;
   options: string[];
+};
+
+const FILTER_VISUAL: Record<FilterGroupKey, { icon: LucideIcon; chip: string; swatch: string; text: string }> = {
+  country: {
+    icon: Globe,
+    chip: 'bg-sky-500/10 text-sky-600 border border-sky-200/60 dark:text-sky-400 dark:border-sky-500/20',
+    swatch:
+      'flex h-10 w-10 items-center justify-center rounded-2xl bg-sky-500/10 text-sky-600 ring-1 ring-sky-500/20 dark:text-sky-400',
+    text: 'text-sky-600 dark:text-sky-400'
+  },
+  subject: {
+    icon: BookOpen,
+    chip: 'bg-violet-500/10 text-violet-600 border border-violet-200/60 dark:text-violet-400 dark:border-violet-500/20',
+    swatch:
+      'flex h-10 w-10 items-center justify-center rounded-2xl bg-violet-500/10 text-violet-600 ring-1 ring-violet-500/20 dark:text-violet-400',
+    text: 'text-violet-600 dark:text-violet-400'
+  },
+  fitFocus: {
+    icon: Compass,
+    chip:
+      'bg-emerald-500/10 text-emerald-600 border border-emerald-200/60 dark:text-emerald-400 dark:border-emerald-500/20',
+    swatch:
+      'flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600 ring-1 ring-emerald-500/20 dark:text-emerald-400',
+    text: 'text-emerald-600 dark:text-emerald-400'
+  },
+  lifestyle: {
+    icon: Heart,
+    chip: 'bg-amber-500/10 text-amber-600 border border-amber-200/60 dark:text-amber-400 dark:border-amber-500/20',
+    swatch:
+      'flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-600 ring-1 ring-amber-500/20 dark:text-amber-400',
+    text: 'text-amber-600 dark:text-amber-400'
+  }
 };
 
 const DEFAULT_FILTER_GROUPS: FilterGroup[] = [
@@ -54,6 +97,8 @@ function FilterDropdown({ group, selected, onToggle }: FilterDropdownProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const visual = FILTER_VISUAL[group.key];
+  const Icon = visual.icon;
 
   useEffect(() => {
     if (!open) return;
@@ -86,9 +131,14 @@ function FilterDropdown({ group, selected, onToggle }: FilterDropdownProps) {
 
   return (
     <div className="surface-subcard space-y-3 shadow-none" ref={containerRef}>
-      <div className="space-y-1">
-        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground">{group.title}</p>
-        <p className="helper-text">{group.description}</p>
+      <div className="flex items-start gap-3">
+        <div className={visual.swatch}>
+          <Icon className="h-4 w-4" />
+        </div>
+        <div className="space-y-0.5 min-w-0">
+          <p className={cn('text-xs font-semibold uppercase tracking-[0.3em]', visual.text)}>{group.title}</p>
+          <p className="helper-text">{group.description}</p>
+        </div>
       </div>
       <button
         type="button"
@@ -116,7 +166,10 @@ function FilterDropdown({ group, selected, onToggle }: FilterDropdownProps) {
               key={option}
               type="button"
               onClick={() => onToggle(option)}
-              className="inline-flex items-center gap-1 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-medium text-primary transition hover:bg-primary/20"
+              className={cn(
+                'inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium transition hover:opacity-90',
+                visual.chip
+              )}
             >
               {option}
               <X className="h-3 w-3" aria-hidden />
