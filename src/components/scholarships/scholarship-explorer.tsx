@@ -278,14 +278,7 @@ export const ScholarshipExplorer = ({ scholarships }: ScholarshipExplorerProps) 
                       </div>
                       <div className="space-y-2 min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
-                          <span
-                            className={cn(
-                              'rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.15em]',
-                              visual.chip
-                            )}
-                          >
-                            {category}
-                          </span>
+                          <span className={cn(visual.chip, 'uppercase tracking-[0.15em]')}>{category}</span>
                           {urgent && (
                             <span className="rounded-full bg-rose-500/10 border border-rose-200/50 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-[0.15em] text-rose-600 motion-safe:animate-pulse dark:text-rose-400 dark:border-rose-500/20">
                               Closing soon

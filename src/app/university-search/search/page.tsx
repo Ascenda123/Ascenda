@@ -173,10 +173,7 @@ function FilterDropdown({ group, selected, onToggle }: FilterDropdownProps) {
               key={option}
               type="button"
               onClick={() => onToggle(group.key, option)}
-              className={cn(
-                'inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium transition hover:opacity-90',
-                visual.chip
-              )}
+              className={cn(visual.chip, 'transition hover:opacity-90')}
             >
               {option}
               <X className="h-3 w-3" aria-hidden />

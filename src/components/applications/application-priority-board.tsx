@@ -88,12 +88,7 @@ export const ApplicationPriorityBoard = ({ items }: { items: PriorityItem[] }) =
                     <h3 className="truncate text-base font-semibold text-foreground">{item.program}</h3>
                   </div>
                 </div>
-                <span
-                  className={cn(
-                    'inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em]',
-                    visual.chip
-                  )}
-                >
+                <span className={cn(visual.chip, 'shrink-0 whitespace-nowrap uppercase tracking-[0.2em]')}>
                   {PRIORITY_LABEL[item.priority]}
                 </span>
               </div>

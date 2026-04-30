@@ -68,9 +68,7 @@ export const DeadlineTimeline = ({ items }: DeadlineTimelineProps) => {
             <div className="shrink-0 text-right">
               <p className={cn('text-xs font-semibold uppercase tracking-wider', visual.text)}>{item.date}</p>
               {badgeLabel ? (
-                <span className={cn('mt-1 inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold', visual.chip)}>
-                  {badgeLabel}
-                </span>
+                <span className={cn(visual.chip, 'mt-1')}>{badgeLabel}</span>
               ) : null}
             </div>
           </motion.li>

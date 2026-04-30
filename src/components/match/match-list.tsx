@@ -232,7 +232,7 @@ export const MatchList = ({ matches }: MatchListProps) => {
                         </h3>
                       </div>
                     </div>
-                    <span className={cn('inline-flex shrink-0 items-center rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.3em]', visual.chip)}>
+                    <span className={cn(visual.chip, 'shrink-0 uppercase tracking-[0.3em]')}>
                       {tier}
                     </span>
                   </div>

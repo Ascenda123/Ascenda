@@ -196,10 +196,7 @@ export default function UniversitySearchShortlistPage() {
                     <div className="flex flex-wrap items-center gap-2">
                       {visual && tier ? (
                         <span
-                          className={cn(
-                            'inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em]',
-                            visual.chip
-                          )}
+                          className={cn(visual.chip, 'uppercase tracking-[0.18em]')}
                           role="status"
                           aria-label={`Banding: ${TIER_LABEL[tier]}`}
                         >

@@ -43,7 +43,10 @@ import {
  * Each category exposes:
  *   - icon: a lucide icon component
  *   - text / bg / border / ring / accent class strings
- *   - chip: a single-line className for inline pills
+ *   - chip: a single-line className for inline pills.
+ *           ALL chips are pill-shaped (rounded-full) and pre-include
+ *           `inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-semibold`
+ *           so call sites should NOT add their own radius / padding.
  *   - swatch: a single-line className for icon-in-box (h-9 w-9 rounded-2xl)
  */
 
@@ -84,7 +87,8 @@ const TONE: Record<CategoryTone, Omit<CategoryVisual, 'icon' | 'tone'>> = {
     border: 'border-rose-200/60 dark:border-rose-500/20',
     ring: 'ring-rose-500/20',
     accent: 'border-l-rose-500',
-    chip: 'bg-rose-500/10 text-rose-600 border border-rose-200/60 dark:text-rose-400 dark:border-rose-500/20',
+    chip:
+      'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold bg-rose-500/10 text-rose-600 border border-rose-200/60 dark:text-rose-400 dark:border-rose-500/20',
     swatch:
       'flex h-9 w-9 items-center justify-center rounded-2xl bg-rose-500/10 text-rose-600 ring-1 ring-rose-500/20 dark:text-rose-400',
     bar: 'bg-rose-500'
@@ -95,7 +99,8 @@ const TONE: Record<CategoryTone, Omit<CategoryVisual, 'icon' | 'tone'>> = {
     border: 'border-amber-200/60 dark:border-amber-500/20',
     ring: 'ring-amber-500/20',
     accent: 'border-l-amber-500',
-    chip: 'bg-amber-500/10 text-amber-600 border border-amber-200/60 dark:text-amber-400 dark:border-amber-500/20',
+    chip:
+      'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold bg-amber-500/10 text-amber-600 border border-amber-200/60 dark:text-amber-400 dark:border-amber-500/20',
     swatch:
       'flex h-9 w-9 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-600 ring-1 ring-amber-500/20 dark:text-amber-400',
     bar: 'bg-amber-500'
@@ -107,7 +112,7 @@ const TONE: Record<CategoryTone, Omit<CategoryVisual, 'icon' | 'tone'>> = {
     ring: 'ring-emerald-500/20',
     accent: 'border-l-emerald-500',
     chip:
-      'bg-emerald-500/10 text-emerald-600 border border-emerald-200/60 dark:text-emerald-400 dark:border-emerald-500/20',
+      'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold bg-emerald-500/10 text-emerald-600 border border-emerald-200/60 dark:text-emerald-400 dark:border-emerald-500/20',
     swatch:
       'flex h-9 w-9 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600 ring-1 ring-emerald-500/20 dark:text-emerald-400',
     bar: 'bg-emerald-500'
@@ -118,7 +123,8 @@ const TONE: Record<CategoryTone, Omit<CategoryVisual, 'icon' | 'tone'>> = {
     border: 'border-sky-200/60 dark:border-sky-500/20',
     ring: 'ring-sky-500/20',
     accent: 'border-l-sky-500',
-    chip: 'bg-sky-500/10 text-sky-600 border border-sky-200/60 dark:text-sky-400 dark:border-sky-500/20',
+    chip:
+      'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold bg-sky-500/10 text-sky-600 border border-sky-200/60 dark:text-sky-400 dark:border-sky-500/20',
     swatch:
       'flex h-9 w-9 items-center justify-center rounded-2xl bg-sky-500/10 text-sky-600 ring-1 ring-sky-500/20 dark:text-sky-400',
     bar: 'bg-sky-500'
@@ -130,7 +136,7 @@ const TONE: Record<CategoryTone, Omit<CategoryVisual, 'icon' | 'tone'>> = {
     ring: 'ring-violet-500/20',
     accent: 'border-l-violet-500',
     chip:
-      'bg-violet-500/10 text-violet-600 border border-violet-200/60 dark:text-violet-400 dark:border-violet-500/20',
+      'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold bg-violet-500/10 text-violet-600 border border-violet-200/60 dark:text-violet-400 dark:border-violet-500/20',
     swatch:
       'flex h-9 w-9 items-center justify-center rounded-2xl bg-violet-500/10 text-violet-600 ring-1 ring-violet-500/20 dark:text-violet-400',
     bar: 'bg-violet-500'
@@ -141,7 +147,8 @@ const TONE: Record<CategoryTone, Omit<CategoryVisual, 'icon' | 'tone'>> = {
     border: 'border-primary/20',
     ring: 'ring-primary/20',
     accent: 'border-l-primary',
-    chip: 'bg-primary/10 text-primary border border-primary/20',
+    chip:
+      'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold bg-primary/10 text-primary border border-primary/20',
     swatch:
       'flex h-9 w-9 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/20',
     bar: 'bg-primary'
@@ -152,7 +159,8 @@ const TONE: Record<CategoryTone, Omit<CategoryVisual, 'icon' | 'tone'>> = {
     border: 'border-border',
     ring: 'ring-border',
     accent: 'border-l-border',
-    chip: 'bg-muted/60 text-foreground border border-border',
+    chip:
+      'inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold bg-muted/60 text-foreground border border-border',
     swatch:
       'flex h-9 w-9 items-center justify-center rounded-2xl bg-muted/60 text-foreground ring-1 ring-border',
     bar: 'bg-muted-foreground/30'
