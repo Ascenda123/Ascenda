@@ -90,8 +90,8 @@ export const TaskList = ({ title, tasks, onToggle, disabled }: TaskListProps) =>
               exit="exit"
             >
               <ListChecks className="mx-auto mb-2 h-8 w-8 text-muted-foreground/40" />
-              <p className="text-sm font-semibold text-foreground">No tasks yet</p>
-              <p className="text-xs text-muted-foreground">Add programs to generate a checklist.</p>
+              <p className="text-sm font-semibold text-foreground">Quiet for now ✨</p>
+              <p className="text-xs text-muted-foreground">Add a program and we&apos;ll build your checklist.</p>
             </motion.div>
           ) : (
             tasks.map((task) => {

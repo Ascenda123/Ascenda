@@ -4,7 +4,7 @@ import { OutcomeDashboard } from '../_components/outcome-dashboard';
 import { AnimatedSection } from '@/components/layout/animated-section';
 import { getOutcomeStats } from '@/lib/data/counsellor-dummy-data';
 
-export const metadata: Metadata = { title: 'Outcomes | Counsellor | Ascenda' };
+export const metadata: Metadata = { title: 'Outcomes · Counsellor' };
 
 const stats = getOutcomeStats();
 
@@ -13,8 +13,9 @@ export default function CounsellorOutcomesPage() {
     <div className="space-y-6">
       <PageHero
         eyebrow="Counsellor"
+        accent="Outcomes"
         title="Outcome tracking"
-        description="Track application decisions across your entire cohort — acceptances, rejections, waitlists, and pending responses."
+        description="Acceptances, rejections, waitlists, and pending responses across the cohort."
         stats={[
           { label: 'Total', value: String(stats.total), detail: 'Applications tracked' },
           { label: 'Acceptance', value: `${stats.acceptanceRate}%`, detail: 'Of decided applications' },

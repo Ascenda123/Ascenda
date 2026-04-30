@@ -14,7 +14,6 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useSupabase } from '@/hooks/useSupabase';
-import { useTypingEffect } from '@/hooks/use-typing-effect';
 import { useAnimatedNumber } from '@/hooks/use-animated-number';
 import { RETURNING_USER_STORAGE_KEY } from '@/lib/constants';
 import { fadeIn, blurIn } from '@/lib/motion';
@@ -22,7 +21,7 @@ import { useThemeMode } from '../theme/theme-provider';
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from '../theme/theme-toggle';
 
-const heroHeadline = 'The #1 University Application Companion.';
+const heroHeadline = "Find universities you'll actually get into.";
 const FIT_SCORE_TARGET = 92;
 const PROFILE_SEGMENTS = 5;
 const PROFILE_FILLED = 4;
@@ -71,16 +70,15 @@ export function HeroSection() {
     const { mode } = useThemeMode();
     const shouldReduceMotion = useReducedMotion();
 
-    const { typed: typedHeadline, isDone: isTypingDone } = useTypingEffect(
-        heroHeadline,
-        shouldReduceMotion ? true : storyReady,
-        shouldReduceMotion ? 0 : 20,
-    );
+    // Headline renders immediately on mount — typing-effect was a 2022 portfolio
+    // pattern that delayed the value prop. `isTypingDone` is kept (named for
+    // backwards compatibility downstream) and simply mirrors `storyReady`.
+    const isTypingDone = storyReady;
 
     const fitScore = useAnimatedNumber(
         FIT_SCORE_TARGET,
         shouldReduceMotion ? true : isTypingDone,
-        shouldReduceMotion ? 0 : 1600,
+        shouldReduceMotion ? 0 : 1400,
     );
 
     useEffect(() => {
@@ -130,29 +128,9 @@ export function HeroSection() {
     return (
         <section className="relative min-h-[75vh] overflow-hidden">
             <div className="absolute inset-0">
-                {/* Background gradient orbs — only animate when in view */}
-                <motion.div
-                    className="absolute -left-24 top-[-15%] h-[55vw] w-[55vw] rounded-full bg-indigo-500/25 blur-3xl"
-                    {...(shouldReduceMotion
-                        ? { style: { opacity: 0.27 } }
-                        : {
-                            whileInView: { x: [0, 50, -40, 0], y: [0, 30, 10, 0], opacity: [0.22, 0.32, 0.22] },
-                            viewport: { once: false },
-                            transition: { duration: 14, repeat: Infinity, ease: 'easeInOut' },
-                        }
-                    )}
-                />
-                <motion.div
-                    className="absolute -right-24 bottom-[-20%] h-[45vw] w-[45vw] rounded-full bg-emerald-400/20 blur-3xl"
-                    {...(shouldReduceMotion
-                        ? { style: { opacity: 0.23 } }
-                        : {
-                            whileInView: { x: [0, -60, 40, 0], y: [0, -20, 30, 0], rotate: [0, 5, -5, 0], opacity: [0.18, 0.28, 0.18] },
-                            viewport: { once: false },
-                            transition: { duration: 16, repeat: Infinity, ease: 'easeInOut' },
-                        }
-                    )}
-                />
+                {/* Static gradient blobs — perpetual motion was visual noise. */}
+                <div className="absolute -left-24 top-[-15%] h-[55vw] w-[55vw] rounded-full bg-indigo-500/25 blur-3xl" aria-hidden />
+                <div className="absolute -right-24 bottom-[-20%] h-[45vw] w-[45vw] rounded-full bg-emerald-400/20 blur-3xl" aria-hidden />
                 <Image
                     src="/ascenda-banner.png"
                     alt="Ascenda hero banner"
@@ -167,9 +145,12 @@ export function HeroSection() {
                 <div
                     className={cn(
                         'absolute inset-0 pointer-events-none transition-colors duration-300',
+                        // On mobile the headline is closer to the top of the banner, so we
+                        // lift the wash from `transparent` → `background/40` to keep text
+                        // legible (was 3:1 contrast against the night-sky banner).
                         mode === 'dark'
                             ? 'bg-gradient-to-b from-background/60 via-background/45 to-background'
-                            : 'bg-gradient-to-b from-transparent via-background/25 to-background'
+                            : 'bg-gradient-to-b from-background/40 via-background/30 to-background sm:from-transparent sm:via-background/25'
                     )}
                 />
             </div>
@@ -223,29 +204,20 @@ export function HeroSection() {
                                     transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
                                 >
                                     <motion.h1
-                                        className="text-3xl font-heading font-semibold leading-tight tracking-tight text-foreground sm:text-5xl lg:text-[3.6rem]"
-                                        aria-label={heroHeadline}
+                                        className="text-3xl font-heading font-semibold leading-[1.1] tracking-tight text-foreground sm:text-5xl lg:text-[3.6rem]"
                                         initial={shouldReduceMotion ? false : 'hidden'}
                                         animate="visible"
                                         variants={fadeIn}
                                     >
-                                        <span className="inline-block">
-                                            {typedHeadline || ' '}
-                                            {!shouldReduceMotion && (
-                                                <span
-                                                    aria-hidden
-                                                    className={`ml-1 inline-block h-[1.1em] w-px bg-accent align-middle ${isTypingDone ? 'opacity-0 transition-opacity duration-700' : 'animate-pulse'}`}
-                                                />
-                                            )}
-                                        </span>
+                                        {heroHeadline}
                                     </motion.h1>
                                     <motion.p
-                                        className="mt-3 text-sm text-muted-foreground sm:mt-4 sm:text-lg lg:text-xl"
+                                        className="mt-3 text-sm text-foreground/80 sm:mt-4 sm:text-lg lg:text-xl"
                                         variants={blurIn}
                                         initial={shouldReduceMotion ? false : 'hidden'}
                                         animate={isTypingDone ? 'visible' : 'hidden'}
                                     >
-                                        Get matched to the right universities and courses, unlock real campus insights, and receive a tailored application plan in one modern workspace.
+                                        Real fit scores, real deadlines, real plans — built around your grades, your goals, and the universities you&apos;re actually aiming at.
                                     </motion.p>
                                 </motion.div>
                                 <motion.div
@@ -274,22 +246,22 @@ export function HeroSection() {
                                     </Button>
                                 </motion.div>
                                 <motion.ul
-                                    className="flex flex-wrap gap-4 text-sm text-muted-foreground"
+                                    className="flex flex-wrap gap-x-4 gap-y-2 text-sm text-foreground/75"
                                     variants={fadeIn}
                                     initial={shouldReduceMotion ? false : 'hidden'}
                                     animate={isTypingDone ? 'visible' : 'hidden'}
                                 >
                                     <li className="flex items-center gap-2">
                                         <span className="h-1.5 w-1.5 rounded-full bg-accent" />
-                                        Know which programs actually fit you.
+                                        Know which programs fit you.
                                     </li>
                                     <li className="flex items-center gap-2">
                                         <span className="h-1.5 w-1.5 rounded-full bg-accent" />
-                                        Never miss a deadline or requirement.
+                                        Never miss a deadline.
                                     </li>
                                     <li className="flex items-center gap-2">
                                         <span className="h-1.5 w-1.5 rounded-full bg-accent" />
-                                        One workspace your whole team can share.
+                                        Loop in your counsellor &amp; family.
                                     </li>
                                 </motion.ul>
                             </div>
@@ -313,13 +285,12 @@ export function HeroSection() {
                                             <Zap className="h-4 w-4 text-primary" aria-hidden />
                                         </span>
                                         <div>
-                                            <p className="text-[11px] font-semibold uppercase tracking-[0.4em] text-muted-foreground">Command center</p>
-                                            <p className="text-sm font-semibold text-foreground">Application overview</p>
+                                            <p className="text-xs font-medium text-muted-foreground">Your dashboard</p>
+                                            <p className="text-sm font-semibold text-foreground">Good morning, Maya</p>
                                         </div>
                                     </div>
-                                    <span className="flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.3em] text-primary/70">
-                                        <span className="h-1.5 w-1.5 rounded-full bg-primary motion-safe:animate-pulse" />
-                                        Live
+                                    <span className="flex items-center gap-2 rounded-full border border-primary/15 bg-primary/5 px-3 py-1 text-[11px] font-medium text-primary/80">
+                                        Today
                                     </span>
                                 </motion.div>
 
@@ -328,21 +299,21 @@ export function HeroSection() {
                                     {/* Fit score — hero stat with extra weight */}
                                     <div className="relative overflow-hidden rounded-2xl border border-emerald-500/20 bg-background px-4 py-4 text-center shadow-sm">
                                         <div className="pointer-events-none absolute -top-8 -right-8 h-28 w-28 rounded-full bg-emerald-400 blur-2xl opacity-30" aria-hidden />
-                                        <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Fit score</p>
+                                        <p className="text-[11px] font-medium text-muted-foreground">Fit score</p>
                                         <p className="mt-1 text-2xl sm:text-4xl font-bold text-foreground leading-none tracking-tight">{fitScore}<span className="text-base sm:text-xl text-emerald-500">%</span></p>
                                         <p className="mt-1 text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">Top match</p>
                                     </div>
                                     {/* Due soon */}
                                     <div className="relative overflow-hidden rounded-2xl border border-border bg-background px-4 py-4 text-center shadow-sm">
                                         <div className="pointer-events-none absolute -top-6 -right-6 h-24 w-24 rounded-full bg-amber-400 blur-2xl opacity-40" aria-hidden />
-                                        <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Due soon</p>
+                                        <p className="text-[11px] font-medium text-muted-foreground">Due soon</p>
                                         <p className="mt-1 text-xl sm:text-2xl font-semibold text-foreground leading-tight tracking-tight">3</p>
                                         <p className="mt-0.5 text-[10px] text-muted-foreground">This week</p>
                                     </div>
                                     {/* Profile — with animated circular progress */}
                                     <div className="relative overflow-hidden rounded-2xl border border-border bg-background px-4 py-4 text-center shadow-sm">
                                         <div className="pointer-events-none absolute -top-6 -right-6 h-24 w-24 rounded-full bg-primary blur-2xl opacity-40" aria-hidden />
-                                        <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Profile</p>
+                                        <p className="text-[11px] font-medium text-muted-foreground">Profile</p>
                                         <div className="mt-1 flex items-center justify-center gap-2">
                                             {/* Mini circular progress ring */}
                                             <svg width="28" height="28" viewBox="0 0 28 28" className="shrink-0 -rotate-90">
@@ -383,9 +354,9 @@ export function HeroSection() {
                                     variants={dashboardItemVariants}
                                 >
                                     <div className="flex items-center justify-between mb-2">
-                                        <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Profile progress</p>
+                                        <p className="text-[11px] font-medium text-muted-foreground">Profile progress</p>
                                         <motion.p
-                                            className="text-[10px] font-semibold uppercase tracking-[0.3em] text-primary/70"
+                                            className="text-[11px] font-medium text-primary/80"
                                             initial={shouldReduceMotion ? false : { opacity: 0 }}
                                             animate={isTypingDone ? { opacity: 1 } : { opacity: 0 }}
                                             transition={{ delay: shouldReduceMotion ? 0 : 1.6, duration: 0.4 }}
@@ -428,7 +399,7 @@ export function HeroSection() {
                                     animate={isTypingDone ? 'visible' : 'hidden'}
                                 >
                                     <motion.div className="flex items-center gap-2" variants={radarItemVariants}>
-                                        <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Focus radar</p>
+                                        <p className="text-xs font-medium text-muted-foreground">Up next</p>
                                     </motion.div>
                                     {[
                                         { num: 1, label: 'Due today', title: 'Scholarship essay — Parsons Paris', detail: 'Final draft due Friday', border: 'border-l-rose-500', badge: 'bg-rose-500/10 text-rose-600 dark:text-rose-400' },
@@ -445,7 +416,7 @@ export function HeroSection() {
                                             </span>
                                             <div className="min-w-0 flex-1">
                                                 <div className="flex items-center gap-2">
-                                                    <span className={cn('rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.2em]', item.badge)}>
+                                                    <span className={cn('rounded-full px-2 py-0.5 text-[10px] font-semibold', item.badge)}>
                                                         {item.label}
                                                     </span>
                                                 </div>

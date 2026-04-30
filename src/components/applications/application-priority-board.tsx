@@ -41,8 +41,8 @@ export const ApplicationPriorityBoard = ({ items }: { items: PriorityItem[] }) =
     return (
       <EmptyState
         icon={ListPlus}
-        title="No priorities yet"
-        description="Add programs to see real-time priority scoring."
+        title="Nothing to prioritise yet"
+        description="Add a program and we'll show you what to tackle first."
         className="surface-card surface-card--static min-h-[260px] rounded-[28px] border-solid text-muted-foreground"
       />
     );

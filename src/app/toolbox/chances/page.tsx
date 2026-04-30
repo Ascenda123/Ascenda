@@ -5,7 +5,7 @@ import { TOOLBOX_SECTION_ITEMS } from '@/components/layout/navigation';
 import { ChancesClient } from '@/components/toolbox/chances-client';
 import { DEMO_STUDENT_GRADES, DEMO_UNIVERSITY_CHANCES } from '@/lib/data/student-demo-data';
 
-export const metadata: Metadata = { title: 'Chances Calculator | Ascenda' };
+export const metadata: Metadata = { title: 'Chances calculator' };
 
 export default function ChancesPage() {
   return (

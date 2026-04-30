@@ -15,11 +15,11 @@ export default function CounsellorDocumentsPage() {
   return (
     <div className="space-y-6">
       <PageHero
-        eyebrow="Counsellor View"
+        eyebrow="Counsellor"
         accent="Documents"
         highlight={overdue > 0 ? `${overdue} overdue` : 'All on track'}
-        title="Document Management"
-        description="Track transcripts, recommendation letters, essays, and certificates across your entire cohort."
+        title="Document management"
+        description="Transcripts, recommendation letters, essays, and certificates across the cohort."
         stats={[
           { label: 'Total', value: String(DEMO_COUNSELLOR_DOCS.length), detail: 'Documents tracked' },
           { label: 'Received', value: String(received), detail: 'Complete' },

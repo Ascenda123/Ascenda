@@ -10,7 +10,7 @@ import { DEMO_SANDBOX_APPS } from '@/lib/data/student-demo-data';
 import { AnimatedSection } from '@/components/layout/animated-section';
 
 export const metadata: Metadata = {
-  title: 'Practice board | Ascenda'
+  title: 'Practice board'
 };
 
 export default async function SandboxPage() {
@@ -31,10 +31,12 @@ export default async function SandboxPage() {
     <DashboardShell>
       <SectionNav items={PLANNER_SECTION_ITEMS} />
       <PageHero
+        tone="student"
         eyebrow="Practice board"
-        title="Apply everywhere, from one place"
-        description="A safe practice space — try out UCAS, Common App, and direct applications side-by-side. Nothing here is sent to a real platform."
+        title="Try applying — for real, but not really"
+        description="A safe sandbox to practice UCAS, Common App, and direct applications side-by-side. Nothing here gets submitted anywhere."
         highlight="Demo mode · 🇬🇧 🇨🇭 🇳🇱 🇺🇸"
+        accent="Sandbox"
         stats={[
           { label: 'Applications', value: String(DEMO_SANDBOX_APPS.length), detail: 'Across 4 countries' },
           { label: 'Submitted', value: String(submittedCount), detail: 'Sent' },

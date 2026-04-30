@@ -4,7 +4,7 @@ import { ParentPortal } from '../_components/parent-portal';
 import { AnimatedSection } from '@/components/layout/animated-section';
 import { getParentContacts } from '@/lib/data/counsellor-dummy-data';
 
-export const metadata: Metadata = { title: 'Parents | Counsellor | Ascenda' };
+export const metadata: Metadata = { title: 'Parents · Counsellor' };
 
 const contacts = getParentContacts();
 const needsResponse = contacts.filter((c) => c.status === 'needs-response').length;
@@ -14,8 +14,9 @@ export default function CounsellorParentsPage() {
     <div className="space-y-6">
       <PageHero
         eyebrow="Counsellor"
+        accent="Comms"
         title="Parent communication"
-        description="Structured channel for counsellor-parent messaging. Use templates for common updates or write custom messages."
+        description="Counsellor-parent messaging with templates for common updates."
         stats={[
           { label: 'Parents', value: String(contacts.length), detail: 'In directory' },
           { label: 'Needs response', value: String(needsResponse), detail: 'Awaiting your reply' },

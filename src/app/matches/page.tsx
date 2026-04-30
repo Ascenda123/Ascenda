@@ -14,7 +14,7 @@ import { TrackProgramButton } from '@/components/programs/track-program-button';
 import { ACTION_TEXT, MATCHES_TEXT } from '@/lib/constants/text';
 
 export const metadata: Metadata = {
-  title: 'Match suggestions | Ascenda'
+  title: 'Matches'
 };
 
 export const dynamic = 'force-dynamic';
@@ -36,11 +36,13 @@ export default async function MatchesPage() {
       <DashboardShell>
         <SectionNav items={EXPLORE_SECTION_ITEMS} />
         <PageHero
+          tone="student"
           eyebrow={MATCHES_TEXT.hero.eyebrow}
-          title="Matches temporarily unavailable"
-          description="We hit an issue loading recommendations. Please try again shortly."
-          highlight="Service issue"
-          stats={[{ label: 'Matches', value: '—' }, { label: 'Programs', value: '—' }, { label: 'Signals', value: '—' }]}
+          title="We can't pull your matches right now"
+          description="Something's off on our side. Give it another go in a minute."
+          highlight="Try again soon"
+          accent="Heads up"
+          stats={[{ label: 'Matches', value: '—' }, { label: 'Programs', value: '—' }, { label: 'Updates', value: '—' }]}
           breadcrumbs={<Breadcrumbs />}
           actions={
             <Button asChild size="sm" variant="outline">
@@ -49,8 +51,8 @@ export default async function MatchesPage() {
           }
         />
         <div className="rounded-[28px] border border-dashed border-border bg-muted/60 p-8 text-center text-muted-foreground">
-          <p className="text-base font-semibold text-foreground">We couldn&apos;t load matches.</p>
-          <p className="mt-2 text-sm">Stage: {matchResult.error.stage}. Please retry or update your profile later.</p>
+          <p className="text-base font-semibold text-foreground">Hit a snag loading your matches</p>
+          <p className="mt-2 text-sm">Try refreshing in a bit, or pop into your profile and tweak something — that often helps.</p>
         </div>
       </DashboardShell>
     );
@@ -61,11 +63,13 @@ export default async function MatchesPage() {
       <DashboardShell>
         <SectionNav items={EXPLORE_SECTION_ITEMS} />
         <PageHero
+          tone="student"
           eyebrow={MATCHES_TEXT.hero.eyebrow}
           title={MATCHES_TEXT.profileIncomplete.title}
           description={MATCHES_TEXT.profileIncomplete.description}
           highlight={MATCHES_TEXT.profileIncomplete.highlight}
-          stats={[{ label: 'Matches', value: '—' }, { label: 'Programs', value: '0' }, { label: 'Signals', value: '—' }]}
+          accent="Almost there"
+          stats={[{ label: 'Matches', value: '—' }, { label: 'Programs', value: '0' }, { label: 'Updates', value: '—' }]}
           actions={
             <Button asChild size="sm">
               <Link href="/profile/wizard">{ACTION_TEXT.finishProfile}</Link>
@@ -102,10 +106,12 @@ export default async function MatchesPage() {
     <DashboardShell>
       <SectionNav items={EXPLORE_SECTION_ITEMS} />
       <PageHero
+        tone="student"
         eyebrow={MATCHES_TEXT.hero.eyebrow}
         title={MATCHES_TEXT.hero.title}
         description={MATCHES_TEXT.hero.description}
         highlight={MATCHES_TEXT.hero.highlight}
+        accent="Picked for you"
         stats={heroStats}
         breadcrumbs={<Breadcrumbs />}
         actions={

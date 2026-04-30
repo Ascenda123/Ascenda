@@ -10,7 +10,7 @@ import { DEMO_REC_LETTERS } from '@/lib/data/student-demo-data';
 import { AnimatedSection } from '@/components/layout/animated-section';
 
 export const metadata: Metadata = {
-  title: 'Documents | Ascenda'
+  title: 'Documents'
 };
 
 export default async function DocumentsPage() {
@@ -31,9 +31,11 @@ export default async function DocumentsPage() {
     <DashboardShell>
       <SectionNav items={PLANNER_SECTION_ITEMS} />
       <PageHero
+        tone="student"
         eyebrow="Documents"
-        title="Document centre"
-        description="Manage recommendation letters, transcripts, and application documents in one place."
+        title="Letters, transcripts, the rest"
+        description="Keep your recommendation letters, transcripts, and other application docs in one tidy place."
+        accent="Files"
         stats={[
           { label: 'Letters', value: `${completedLetters}/${DEMO_REC_LETTERS.length}`, detail: 'Received' },
           { label: 'Documents', value: '3', detail: 'Uploaded' },

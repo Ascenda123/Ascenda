@@ -376,7 +376,7 @@ export function ChatbotWidget() {
             exit={{ scale: 0, opacity: 0 }}
             transition={{ duration: 0.3, ease: [0.34, 1.56, 0.64, 1] }}
             onClick={() => setIsOpen(true)}
-            className="fixed bottom-5 right-5 z-[60] flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/30 active:translate-y-0 md:bottom-6 md:right-6"
+            className="fixed right-5 bottom-[calc(env(safe-area-inset-bottom,8px)+72px)] z-40 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/30 active:translate-y-0 md:bottom-6 md:right-6 md:z-[60]"
             aria-label="Open Ascendi AI assistant"
           >
             <Bot className="h-5 w-5" />
@@ -392,7 +392,7 @@ export function ChatbotWidget() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
-            className="fixed bottom-5 right-5 z-[60] flex h-[min(560px,calc(100vh-40px))] w-[min(400px,calc(100vw-40px))] flex-col overflow-hidden rounded-[24px] border border-border bg-card shadow-2xl md:bottom-6 md:right-6"
+            className="fixed right-5 bottom-[calc(env(safe-area-inset-bottom,8px)+72px)] z-[55] flex h-[min(560px,calc(100vh-140px))] w-[min(400px,calc(100vw-40px))] flex-col overflow-hidden rounded-[24px] border border-border bg-card shadow-2xl md:bottom-6 md:right-6 md:z-[60] md:h-[min(560px,calc(100vh-40px))]"
           >
             {/* Header */}
             <div className="flex items-center justify-between border-b border-border bg-card px-4 py-3">

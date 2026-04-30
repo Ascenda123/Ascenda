@@ -55,12 +55,7 @@ export const Navbar = () => {
                 className={cn('rounded-full object-contain transition')}
               />
             </div>
-            <div className="flex flex-col leading-tight">
-              <span className="navbar-brand text-base sm:text-lg transition-colors">Ascenda</span>
-              <span className="navbar-subtitle hidden sm:block text-[11px] font-medium uppercase tracking-[0.4em] transition-colors">
-                workspace
-              </span>
-            </div>
+            <span className="navbar-brand text-base sm:text-lg transition-colors">Ascenda</span>
           </Link>
           <nav className="hidden items-center gap-5 text-xs font-medium text-muted-foreground md:flex">
             {navItems.map((link) => (

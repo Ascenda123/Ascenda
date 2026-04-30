@@ -19,7 +19,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { ClipboardCheck } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: 'Applications | Ascenda'
+  title: 'Applications'
 };
 
 export default async function ApplicationsPage() {
@@ -124,10 +124,12 @@ export default async function ApplicationsPage() {
       <DashboardShell>
         <SectionNav items={PLANNER_SECTION_ITEMS} />
         <PageHero
-          eyebrow="Applications"
-          title="Application workspace"
-          description="Track applications, requirements, and updates in one place — once you add a program."
-          highlight="No applications yet"
+          tone="student"
+          eyebrow="Your applications"
+          title="Let's get your first one in motion"
+          description="Pick a program from your shortlist and we'll set up the tasks, deadlines, and docs for you."
+          highlight="Nothing tracked yet"
+          accent="Ready when you are"
           stats={[
             { label: 'Applications', value: '0', detail: 'Tracked' },
             { label: 'Deadlines', value: '—', detail: 'Awaiting programs' },
@@ -142,14 +144,14 @@ export default async function ApplicationsPage() {
         />
         <EmptyState
           icon={ClipboardCheck}
-          title="Nothing tracked yet"
-          description="Pull a program from your shortlist to start planning tasks, deadlines, and documents."
+          title="No applications yet — let's pick a first one"
+          description="Add a program from your shortlist and we'll line up the tasks, deadlines, and documents for you."
           action={
             <Button asChild size="sm">
               <Link href="/university-search/shortlist">Add from shortlist</Link>
             </Button>
           }
-          hint="Or pick from your matches if you haven't built a shortlist yet."
+          hint="Don't have a shortlist yet? Browse your matches instead."
         />
       </DashboardShell>
     );
@@ -284,17 +286,19 @@ export default async function ApplicationsPage() {
   const heroStats = [
     { label: 'Applications', value: `${appRecords.length}`, detail: 'Tracked' },
     { label: 'Deadlines', value: `${deadlineRecords.length}`, detail: 'Synced' },
-    { label: 'Signals', value: `${signalItems.length}`, detail: 'Latest updates' }
+    { label: 'Updates', value: `${signalItems.length}`, detail: 'Latest activity' }
   ];
 
   return (
     <DashboardShell>
       <SectionNav items={PLANNER_SECTION_ITEMS} />
       <PageHero
-        eyebrow="Applications"
-        title="Application workspace"
-        description="Prioritize, schedule, and execute every requirement—documents, references, tasks, and signals in one calm space."
-        highlight={`Today • ${dailySummary.tasks} tasks, ${dailySummary.deadlines} deadlines`}
+        tone="student"
+        eyebrow="Your applications"
+        title="Where everything's at"
+        description="Tasks, deadlines, docs, references — your whole application picture in one spot."
+        highlight={`Today · ${dailySummary.tasks} tasks, ${dailySummary.deadlines} deadlines`}
+        accent="Today"
         stats={heroStats}
         breadcrumbs={<Breadcrumbs />}
         actions={

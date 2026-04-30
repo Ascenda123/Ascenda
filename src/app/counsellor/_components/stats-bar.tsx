@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Users, CheckCircle, Clock, AlertTriangle } from 'lucide-react';
-import { motion, useSpring, useTransform, animate } from 'framer-motion';
+import { motion, animate } from 'framer-motion';
 import type { CohortStats } from './types';
 
 interface StatsBarProps {
@@ -10,7 +10,7 @@ interface StatsBarProps {
 const STAT_CONFIG = [
   {
     key: 'total' as const,
-    label: 'Total Students',
+    label: 'Total students',
     icon: Users,
     color: 'text-violet-600',
     bg: 'bg-violet-500/10',
@@ -18,7 +18,7 @@ const STAT_CONFIG = [
   },
   {
     key: 'avgCompletion' as const,
-    label: 'Avg Profile Complete',
+    label: 'Avg profile complete',
     icon: CheckCircle,
     color: 'text-emerald-600',
     bg: 'bg-emerald-500/10',
@@ -27,7 +27,7 @@ const STAT_CONFIG = [
   },
   {
     key: 'deadlinesThisWeek' as const,
-    label: 'Deadlines This Week',
+    label: 'Deadlines this week',
     icon: Clock,
     color: 'text-amber-600',
     bg: 'bg-amber-500/10',
@@ -35,7 +35,7 @@ const STAT_CONFIG = [
   },
   {
     key: 'flagged' as const,
-    label: 'Need Attention',
+    label: 'Need attention',
     icon: AlertTriangle,
     color: 'text-red-500',
     bg: 'bg-red-500/10',
@@ -48,7 +48,7 @@ function CountUp({ value }: { value: number }) {
 
   useEffect(() => {
     const controls = animate(0, value, {
-      duration: 1.2,
+      duration: 0.6,
       ease: [0.16, 1, 0.3, 1],
       onUpdate: (latest) => setDisplay(Math.round(latest))
     });
@@ -71,9 +71,9 @@ export const StatsBar = ({ stats }: StatsBarProps) => {
       {STAT_CONFIG.map(({ key, label, icon: Icon, color, bg, border, suffix }, idx) => (
         <motion.div
           key={key}
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 4 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: idx * 0.1, duration: 0.4 }}
+          transition={{ delay: idx * 0.04, duration: 0.18 }}
           className={`surface-card surface-card--static flex items-center gap-4 border ${border}`}
         >
           <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${bg}`}>

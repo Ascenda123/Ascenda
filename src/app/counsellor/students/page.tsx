@@ -16,16 +16,16 @@ export default async function CounsellorStudentsPage({ searchParams }: Props) {
   return (
     <div className="space-y-6">
       <PageHero
-        eyebrow="Counsellor View"
+        eyebrow="Counsellor"
         accent="Cohort"
         highlight={`${stats.total} students`}
-        title="Student Roster"
-        description="Search, filter, and review your full cohort. Click any student to view their full profile, matches, and applications."
+        title="Student roster"
+        description="Search, filter, and open any student to see their profile, matches, and applications."
         stats={[
           { label: 'Total', value: String(stats.total), detail: 'In this cohort' },
-          { label: 'Profile Complete', value: String(complete), detail: `${Math.round((complete / stats.total) * 100)}% of cohort` },
-          { label: 'Need Attention', value: String(flagged), detail: 'Have active flags' },
-          { label: 'Avg Completion', value: `${stats.avgCompletion}%`, detail: 'Across all students' }
+          { label: 'Profile complete', value: String(complete), detail: `${Math.round((complete / stats.total) * 100)}% of cohort` },
+          { label: 'Need attention', value: String(flagged), detail: 'Have active flags' },
+          { label: 'Avg completion', value: `${stats.avgCompletion}%`, detail: 'Across all students' }
         ]}
       />
       <StudentsPageClient

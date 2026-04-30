@@ -7,10 +7,12 @@ export default function DashboardLoading() {
     return (
         <DashboardShell>
             <PageHero
-                eyebrow="Mission control"
+                tone="student"
+                eyebrow="Your dashboard"
                 title="Welcome back"
-                description="Track every checklist, deadline, and match signal in one calm dashboard. Keep momentum rolling."
-                highlight="Syncing"
+                description="Pulling together your tasks, deadlines, and matches. One sec."
+                highlight="Loading"
+                accent="Today"
                 stats={[
                     { label: 'Profile', value: '—', detail: 'Loading' },
                     { label: 'Checklist', value: '—', detail: 'Loading' },

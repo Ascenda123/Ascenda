@@ -16,7 +16,7 @@ import { PROFILE_SECTION_VISUAL, COMPLETION_VISUAL, classifyCompletion } from '@
 import { cn } from '@/lib/utils';
 
 export const metadata: Metadata = {
-  title: 'Profile | Ascenda'
+  title: 'Profile'
 };
 
 export default async function ProfilePage() {
@@ -150,10 +150,12 @@ export default async function ProfilePage() {
     <DashboardShell>
       <SectionNav items={profileNavItems} />
       <PageHero
-        eyebrow="Profile"
-        title="Build your student profile"
-        description="We use this information to personalize match suggestions, academic guidance, and your application plan."
-        highlight={nextStep ? `Next • ${nextStep.title}` : 'All set'}
+        tone="student"
+        eyebrow="Your profile"
+        title="The more we know, the better we can help"
+        description="Tell us about you — your grades, what you're into, where you want to be — and we'll tune everything to fit."
+        highlight={nextStep ? `Up next · ${nextStep.title}` : 'All done'}
+        accent="About you"
         stats={heroStats}
         breadcrumbs={<Breadcrumbs />}
         actions={

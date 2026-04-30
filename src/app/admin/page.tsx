@@ -12,7 +12,7 @@ type SourceRow = {
 };
 
 export const metadata: Metadata = {
-  title: 'Admin console | Ascenda'
+  title: 'Admin console'
 };
 
 export default async function AdminPage() {

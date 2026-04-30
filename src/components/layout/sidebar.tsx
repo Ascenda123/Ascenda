@@ -90,18 +90,34 @@ export const Sidebar = () => {
       </nav>
 
       {!pathname.startsWith('/counsellor') && !collapsed ? (
-        <div className="mt-4 space-y-2 rounded-2xl border border-primary/20 bg-primary/5 p-3 text-foreground transition-colors">
-          <p className="text-[10px] uppercase tracking-[0.3em] text-primary font-semibold">Your counsellor</p>
-          <p className="text-sm font-semibold leading-tight text-foreground">Mrs. Sarah Mitchell</p>
+        <div className="mt-4 space-y-3 rounded-2xl border border-primary/20 bg-primary/5 p-3 text-foreground transition-colors">
+          <div className="flex items-center gap-2.5">
+            <div className="relative shrink-0">
+              <div
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-violet-400 to-primary text-[11px] font-bold text-white shadow-sm"
+                aria-hidden
+              >
+                SM
+              </div>
+              <span
+                className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-card bg-emerald-500"
+                aria-label="Available today"
+              />
+            </div>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold leading-tight text-foreground">Sarah Mitchell</p>
+              <p className="text-[11px] text-muted-foreground">Your counsellor · usually replies same-day</p>
+            </div>
+          </div>
           <p className="text-xs text-muted-foreground">
-            Request a session to discuss essays, applications, or university choices.
+            Stuck on an essay or shortlist? Sarah&apos;s here to help — book a chat.
           </p>
           <Link
             href="/appointment"
             className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
           >
             <CalendarPlus className="h-3.5 w-3.5" />
-            Request appointment
+            Book a chat with Sarah
           </Link>
         </div>
       ) : null}

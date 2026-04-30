@@ -291,7 +291,7 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
         <span>Continue with Google</span>
       </Button>
       <p className="text-center text-xs text-muted-foreground">
-        Supabase keeps your session secure and lets us warn you if this email is already registered.
+        We keep your session secure and let you know if you already have an account with this email.
       </p>
     </form>
   );

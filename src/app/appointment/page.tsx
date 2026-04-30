@@ -72,12 +72,14 @@ export default function AppointmentPage() {
     return (
       <DashboardShell>
         <PageHero
-          eyebrow="Counsellor"
-          title="Appointment requested"
-          description="Your counsellor will confirm shortly. You'll get an email once the time is locked in."
+          tone="student"
+          eyebrow="Your counsellor"
+          title="Sent — sit tight"
+          description="Sarah will confirm shortly. We'll email you the moment the time is locked in."
           highlight="Pending confirmation"
+          accent="On its way"
           stats={[
-            { label: 'Counsellor', value: 'Mrs. Sarah Mitchell', detail: 'Your assigned counsellor' },
+            { label: 'Counsellor', value: 'Sarah Mitchell', detail: 'Your assigned counsellor' },
             { label: 'When', value: `${date} ${time}`, detail: duration },
             { label: 'Topic', value: TOPICS.find((t) => t.id === topic)?.label ?? 'General', detail: 'Selected focus' }
           ]}
@@ -99,10 +101,10 @@ export default function AppointmentPage() {
               <Check className="h-5 w-5" />
             </div>
             <div className="space-y-2">
-              <p className="text-base font-semibold text-foreground">Request received</p>
+              <p className="text-base font-semibold text-foreground">Got it — we&apos;ve let Sarah know</p>
               <p className="text-sm text-muted-foreground">
-                We&apos;ve passed your preferred time to your counsellor. You&apos;ll get an email at the address on
-                your profile when they confirm.
+                We passed your preferred time over. You&apos;ll get an email at the address on your profile
+                as soon as it&apos;s confirmed.
               </p>
               <div className="rounded-xl bg-muted/40 p-4 text-sm text-foreground">
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Notes shared with your counsellor</p>
@@ -118,12 +120,14 @@ export default function AppointmentPage() {
   return (
     <DashboardShell>
       <PageHero
-        eyebrow="Counsellor"
-        title="Request an appointment"
-        description="Pick a topic and a time that works for you. Your counsellor will confirm the slot by email."
-        highlight="Mrs. Sarah Mitchell · usually replies within a day"
+        tone="student"
+        eyebrow="Your counsellor"
+        title="Book a chat with Sarah"
+        description="Pick a topic and a time that works for you. Sarah will confirm by email — usually within a day."
+        highlight="Sarah Mitchell · replies within a day"
+        accent="Book a slot"
         stats={[
-          { label: 'Counsellor', value: 'Mrs. Sarah Mitchell', detail: 'Your assigned counsellor' },
+          { label: 'Counsellor', value: 'Sarah Mitchell', detail: 'Your assigned counsellor' },
           { label: 'Channel', value: 'Video / In-person', detail: 'Choose at the meeting' },
           { label: 'Slots', value: 'Mon–Fri', detail: '09:00–17:00 local time' }
         ]}

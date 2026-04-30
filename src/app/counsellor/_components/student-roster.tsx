@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { Search, SlidersHorizontal, ChevronDown, X, Filter, FilterX } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -45,6 +45,18 @@ export const StudentRoster = ({ students, externalFilter, onClearExternalFilter,
   const [programme, setProgramme] = useState<ProgrammeFilter>(initialProgramme ?? 'all');
   const [flagFilter, setFlagFilter] = useState<FlagFilter>(initialFlagFilter ?? 'all');
   const [filtersOpen, setFiltersOpen] = useState(!!(initialProgramme || initialFlagFilter));
+  const searchRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === '/' && document.activeElement?.tagName !== 'INPUT' && document.activeElement?.tagName !== 'TEXTAREA') {
+        e.preventDefault();
+        searchRef.current?.focus();
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
 
   const filtered = useMemo(() => {
     let list = [...students];
@@ -97,8 +109,8 @@ export const StudentRoster = ({ students, externalFilter, onClearExternalFilter,
   const SORT_OPTS: { key: SortKey; label: string }[] = [
     { key: 'name', label: 'Name' },
     { key: 'completion', label: 'Completion %' },
-    { key: 'matchScore', label: 'Match Score' },
-    { key: 'lastActive', label: 'Last Active' }
+    { key: 'matchScore', label: 'Match score' },
+    { key: 'lastActive', label: 'Last active' }
   ];
 
   const hasExternalFilter = !!(externalFilter?.type && externalFilter.value);
@@ -121,7 +133,7 @@ export const StudentRoster = ({ students, externalFilter, onClearExternalFilter,
           >
             <div className="flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-xs font-semibold text-primary">
               <Filter className="h-3 w-3" />
-              Showing {filterLabel} Students
+              Showing {filterLabel} students
               <button
                 onClick={onClearExternalFilter}
                 className="ml-1 rounded-full p-0.5 hover:bg-primary/10"
@@ -142,12 +154,16 @@ export const StudentRoster = ({ students, externalFilter, onClearExternalFilter,
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input
+            ref={searchRef}
             type="text"
             placeholder="Search by name, school, nationality…"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="w-full rounded-full border border-border bg-background py-2 pl-9 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+            className="w-full rounded-full border border-border bg-background py-2 pl-9 pr-12 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
           />
+          <kbd className="pointer-events-none absolute right-3 top-1/2 hidden -translate-y-1/2 rounded border border-border bg-muted px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground sm:inline-block">
+            /
+          </kbd>
         </div>
 
         <button
@@ -240,10 +256,10 @@ export const StudentRoster = ({ students, externalFilter, onClearExternalFilter,
               <motion.div
                 key={student.id}
                 layout
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ duration: 0.2 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.12 }}
               >
                 <StudentCard student={student} highlight={query.trim()} />
               </motion.div>
@@ -252,8 +268,8 @@ export const StudentRoster = ({ students, externalFilter, onClearExternalFilter,
         </motion.div>
       ) : (
         <div className="rounded-[28px] border border-dashed border-border bg-muted/40 p-12 text-center">
-          <p className="text-base font-semibold text-foreground">No students found</p>
-          <p className="mt-1 text-sm text-muted-foreground">Try adjusting your search or filters.</p>
+          <p className="text-base font-semibold text-foreground">No students match these filters</p>
+          <p className="mt-1 text-sm text-muted-foreground">Adjust the search, programme, or status filter.</p>
           {(hasExternalFilter || query || programme !== 'all' || flagFilter !== 'all') && (
             <button
               onClick={() => {

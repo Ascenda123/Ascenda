@@ -6,7 +6,7 @@ import { TOOLBOX_SECTION_ITEMS } from '@/components/layout/navigation';
 import { DeadlineTimelineTool } from '@/components/toolbox/deadline-timeline-tool';
 import { DEMO_TIMELINE_DEADLINES } from '@/lib/data/student-demo-data';
 
-export const metadata: Metadata = { title: 'Deadline Timeline | Ascenda' };
+export const metadata: Metadata = { title: 'Deadline timeline' };
 
 export default async function TimelinePage() {
 
@@ -21,9 +21,11 @@ export default async function TimelinePage() {
     <DashboardShell>
       <SectionNav items={TOOLBOX_SECTION_ITEMS} />
       <PageHero
-        eyebrow="Deadline Timeline"
-        title="Every deadline, one view"
-        description="Submissions, exams, interviews, and documents — all mapped chronologically across your applications."
+        tone="student"
+        eyebrow="Deadline timeline"
+        title="Every deadline in one place"
+        description="Submissions, exams, interviews, docs — laid out in order so nothing sneaks up on you."
+        accent="Timeline"
         stats={[
           { label: 'Upcoming', value: String(upcoming), detail: 'Deadlines ahead' },
           { label: 'Next 14 days', value: String(next14), detail: 'Requiring action' },

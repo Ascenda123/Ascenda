@@ -7,7 +7,7 @@ import { SectionNav } from '@/components/layout/section-nav';
 import { PLANNER_SECTION_ITEMS } from '@/components/layout/navigation';
 
 export const metadata: Metadata = {
-  title: 'Tasks | Ascenda'
+  title: 'Tasks'
 };
 
 export default async function TasksPage() {

@@ -15,7 +15,7 @@ import { ToolboxProgressRing, ToolboxCountdown } from '@/components/toolbox/tool
 import { TOOL_VISUAL, type ToolboxTool } from '@/lib/theme/categories';
 import { cn } from '@/lib/utils';
 
-export const metadata: Metadata = { title: 'Toolbox | Ascenda' };
+export const metadata: Metadata = { title: 'Toolbox' };
 
 const avgProgress = DEMO_REQUIREMENTS.length ? Math.round(DEMO_REQUIREMENTS.reduce((sum, r) => sum + r.progress, 0) / DEMO_REQUIREMENTS.length) : 0;
 const upcoming14 = DEMO_TIMELINE_DEADLINES.filter((d) => {
@@ -103,9 +103,11 @@ export default async function ToolboxPage() {
   return (
     <DashboardShell>
       <PageHero
+        tone="student"
         eyebrow="Toolbox"
-        title="Your toolkit"
-        description="Four purpose-built tools to plan, write, and track every part of your applications."
+        title="Tools to make this easier"
+        description="Plan timelines, draft essays, check requirements, see your odds — four ways to take the stress out of applying."
+        accent="Pick a tool"
         stats={[
           { label: 'Tools', value: '4', detail: 'Available' },
           { label: 'Readiness', value: `${avgProgress}%`, detail: 'Overall' },

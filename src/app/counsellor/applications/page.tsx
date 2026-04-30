@@ -4,7 +4,7 @@ import { ApplicationOverview } from '../_components/application-overview';
 import { AnimatedSection } from '@/components/layout/animated-section';
 import { getAllApplicationsWithPlatform } from '@/lib/data/counsellor-dummy-data';
 
-export const metadata: Metadata = { title: 'Student application overview | Counsellor | Ascenda' };
+export const metadata: Metadata = { title: 'Applications · Counsellor' };
 
 const allApps = getAllApplicationsWithPlatform();
 const submitted = allApps.filter((a) => a.status === 'submitted').length;
@@ -15,8 +15,9 @@ export default function CounsellorApplicationsPage() {
     <div className="space-y-6">
       <PageHero
         eyebrow="Counsellor"
-        title="Student application overview"
-        description="Status of every student's applications across platforms — kanban or list view with filters. For deadline-only triage across the cohort, use Deadlines."
+        accent="Applications"
+        title="Application overview"
+        description="Every student's applications across platforms — kanban or list, with filters. For deadline-only triage, see Deadlines."
         stats={[
           { label: 'Total', value: String(allApps.length), detail: 'Applications' },
           { label: 'Submitted', value: String(submitted), detail: 'Sent to universities' },

@@ -25,7 +25,7 @@ type DeadlineRow = Database['public']['Tables']['deadlines']['Row'];
 type ApplicationRow = Database['public']['Tables']['applications']['Row'];
 
 export const metadata: Metadata = {
-  title: 'Dashboard | Ascenda'
+  title: 'Dashboard'
 };
 
 const shortDateFormatter = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' });
@@ -188,9 +188,9 @@ export default async function DashboardPage() {
   if (focusItems.length === 0) {
     focusItems.push({
       id: 'focus-clear',
-      label: 'Systems check',
-      title: 'You are on track',
-      detail: 'Keep logging progress or add programs to surface new actions.'
+      label: 'All caught up',
+      title: "Nice — you're all caught up",
+      detail: 'Add a program or update your profile when you want a new step.'
     });
   }
 
@@ -232,20 +232,30 @@ export default async function DashboardPage() {
     nextStepTitle: nextStep?.title ?? null
   };
 
-  const heroHighlight = primaryFocus ? primaryFocus.label : 'Systems steady';
+  const heroHighlight = primaryFocus ? primaryFocus.label : 'All caught up';
   const heroStats = [
     { label: 'Due today', value: todayFocus.tasks > 0 ? `${todayFocus.tasks}` : '0', detail: dueSoonCount > 0 ? `${dueSoonCount} due this week` : 'Nothing urgent' },
     { label: 'Deadlines', value: deadlines.length > 0 ? `${deadlines.length}` : '0', detail: nextDeadline ? `Next: ${formatShortDate(nextDeadline.deadline_date)}` : 'Add a program to track milestones' },
     { label: 'Match health', value: matchError ? '—' : averageMatchScore !== null ? `${averageMatchScore}%` : '-', detail: matchError ? 'Service unavailable' : matches.length ? `${matches[0].program.name}` : 'Finish profile to unlock' }
   ];
 
+  const hour = new Date().getHours();
+  const timeGreeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+  const firstName = personal?.first_name?.trim();
+  const greeting = firstName ? `${timeGreeting}, ${firstName}` : timeGreeting;
+  const heroDescription = primaryFocus
+    ? `Here's what's next for you — ${primaryFocus.title.toLowerCase()}. Take it one step at a time.`
+    : "You're all caught up. Add a program or polish your profile when you're ready for the next step.";
+
   return (
     <DashboardShell>
       <PageHero
-        eyebrow="Mission control"
-        title="Command center"
-        description="Only the signals that matter: what needs you now, what's next on the roadmap, and where your profile can unlock better matches."
+        tone="student"
+        eyebrow="Your dashboard"
+        title={greeting}
+        description={heroDescription}
         highlight={heroHighlight}
+        accent="Today"
         stats={heroStats}
         actions={
           <>
@@ -336,8 +346,8 @@ export default async function DashboardPage() {
               </div>
               {matchError ? (
                 <div className="space-y-3 text-sm text-muted-foreground">
-                  <p className="text-base font-semibold text-foreground">Matches are temporarily unavailable</p>
-                  <p>We couldn&apos;t load recommendations. Please try again shortly.</p>
+                  <p className="text-base font-semibold text-foreground">Can&apos;t pull your matches right now</p>
+                  <p>Something&apos;s off on our side. Refresh in a moment and you should be back in business.</p>
                 </div>
               ) : matches.length > 0 ? (
                 <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -365,8 +375,8 @@ export default async function DashboardPage() {
                 </div>
               ) : (
                 <div className="space-y-3 text-sm text-muted-foreground">
-                  <p className="text-base font-semibold text-foreground">No recommendations yet</p>
-                  <p>Complete your profile and add preferred destinations to see personalized matches.</p>
+                  <p className="text-base font-semibold text-foreground">Tell us a bit more, then we&apos;ll find your matches</p>
+                  <p>Finish your profile and add a country or two — we&apos;ll do the matching.</p>
                   <div className="flex flex-wrap gap-2">
                     <Button asChild size="sm">
                       <Link href="/profile/wizard">Finish profile</Link>

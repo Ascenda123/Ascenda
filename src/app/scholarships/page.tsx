@@ -7,7 +7,7 @@ import type { Scholarship } from '@/components/scholarships/types';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 
 export const metadata: Metadata = {
-  title: 'Scholarships | Ascenda'
+  title: 'Scholarships'
 };
 
 const fallbackScholarships: Scholarship[] = [
@@ -86,10 +86,12 @@ export default async function ScholarshipsPage() {
   return (
     <DashboardShell>
       <PageHero
+        tone="student"
         eyebrow="Scholarships"
-        title="Scholarship tracker"
-        description="Filter by country, level, and award size. Save the grants that matter and push them to your planner."
+        title="Find money for school"
+        description="Filter by country, level, and award size. Save the ones worth chasing and we'll add them to your plan."
         highlight="Updated hourly"
+        accent="For you"
         stats={heroStats}
         breadcrumbs={<Breadcrumbs />}
       />

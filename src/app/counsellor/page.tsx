@@ -115,11 +115,11 @@ export default function CounsellorOverviewPage() {
   return (
     <div className="space-y-6">
       <PageHero
-        eyebrow="Counsellor View"
+        eyebrow="Counsellor"
         accent="Cohort"
         highlight={`${stats.total} students`}
         title="Overview"
-        description="Daily triage view: at-risk students, this week's deadlines, and recent activity. For deeper trends and cohort breakdowns, head to Analytics."
+        description="Daily triage — at-risk students, this week's deadlines, recent activity. For trends and cohort breakdowns, see Analytics."
         stats={[
           { label: 'Students', value: String(stats.total), detail: 'Active this cycle' },
           { label: 'Avg Completion', value: `${stats.avgCompletion}%`, detail: 'Profile completeness' },

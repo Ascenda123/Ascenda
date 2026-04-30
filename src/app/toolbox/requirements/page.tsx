@@ -6,7 +6,7 @@ import { TOOLBOX_SECTION_ITEMS } from '@/components/layout/navigation';
 import { RequirementsChecker } from '@/components/toolbox/requirements-checker';
 import { DEMO_REQUIREMENTS } from '@/lib/data/student-demo-data';
 
-export const metadata: Metadata = { title: 'Requirements Checker | Ascenda' };
+export const metadata: Metadata = { title: 'Requirements' };
 
 export default async function RequirementsPage() {
 
@@ -17,9 +17,11 @@ export default async function RequirementsPage() {
     <DashboardShell>
       <SectionNav items={TOOLBOX_SECTION_ITEMS} />
       <PageHero
-        eyebrow="Requirements Checker"
-        title="What each university needs"
-        description="Track subjects, exams, interviews, documents, and essays for every university on your shortlist."
+        tone="student"
+        eyebrow="Requirements"
+        title="What each uni actually wants"
+        description="Subjects, exams, interviews, docs, essays — see exactly what you need for every uni on your list."
+        accent="Checklist"
         stats={[
           { label: 'Universities', value: String(DEMO_REQUIREMENTS.length), detail: 'Being tracked' },
           { label: 'Readiness', value: `${avgProgress}%`, detail: 'Average progress' },

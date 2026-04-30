@@ -33,20 +33,20 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: {
-    default: 'Ascenda — Admissions studio for global students',
+    default: "Ascenda — Find universities you'll actually get into",
     template: '%s | Ascenda'
   },
-  description: 'Plan essays, scholarships, and counselor updates in one playful workspace built for ambitious students.',
+  description: "Find universities you'll actually get into. Real fit scores, real deadlines, real plans — built for ambitious students.",
   openGraph: {
-    title: 'Ascenda — Admissions studio for global students',
-    description: 'Plan essays, scholarships, and counselor updates in one playful workspace built for ambitious students.',
+    title: 'Ascenda — Find universities you\'ll actually get into',
+    description: "Find universities you'll actually get into. Real fit scores, real deadlines, real plans — built for ambitious students.",
     siteName: 'Ascenda',
     type: 'website'
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Ascenda — Admissions studio for global students',
-    description: 'Plan essays, scholarships, and counselor updates in one playful workspace built for ambitious students.'
+    title: 'Ascenda — Find universities you\'ll actually get into',
+    description: "Find universities you'll actually get into. Real fit scores, real deadlines, real plans — built for ambitious students."
   },
   robots: {
     index: true,

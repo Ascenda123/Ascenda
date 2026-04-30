@@ -4,7 +4,7 @@ import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { UniversityInformation, type UniversityData } from '@/components/university-search/university-information';
 
 export const metadata: Metadata = {
-  title: 'University Information | Ascenda'
+  title: 'University'
 };
 
 type PageProps = {

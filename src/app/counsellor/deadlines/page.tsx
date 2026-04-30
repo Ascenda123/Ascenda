@@ -24,16 +24,16 @@ export default function CounsellorDeadlinesPage() {
   return (
     <div className="space-y-6">
       <PageHero
-        eyebrow="Counsellor View"
+        eyebrow="Counsellor"
         accent="Deadlines"
         highlight={`${allDeadlines.length} total`}
-        title="Deadline Monitor"
-        description="Date-first view of every upcoming submission across the cohort, grouped by urgency. For per-student application status (kanban / list), open Applications instead."
+        title="Deadline monitor"
+        description="Every upcoming submission across the cohort, grouped by urgency. Open Applications for per-student status."
         stats={[
           { label: 'Total', value: String(allDeadlines.length), detail: 'All tracked deadlines' },
           { label: 'Overdue', value: String(overdue), detail: 'Require immediate action' },
-          { label: 'This Week', value: String(thisWeek), detail: 'Due in ≤7 days' },
-          { label: 'This Month', value: String(thisMonth), detail: 'Due in ≤30 days' }
+          { label: 'This week', value: String(thisWeek), detail: 'Due in ≤7 days' },
+          { label: 'This month', value: String(thisMonth), detail: 'Due in ≤30 days' }
         ]}
       />
       <AnimatedSection>

@@ -13,7 +13,7 @@ import Link from 'next/link';
 import { Download, Home, User } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: 'Profile wizard | Ascenda'
+  title: 'Profile setup'
 };
 
 interface ProfileWizardPageProps {
@@ -103,11 +103,12 @@ export default async function ProfileWizardPage({ searchParams }: ProfileWizardP
           </Button>
         </div>
         <PageHero
-          eyebrow="Profile wizard"
-          title="Let's build your profile"
-          description="We'll use this information to personalize matches, recommendations, and counselor updates. You can always tweak the details later."
-          highlight={hasCompletedProfile ? 'Profile complete' : 'Step ' + initialStep + ' ready'}
-          accent="Student setup"
+          tone="student"
+          eyebrow="Setup"
+          title="Let's set you up"
+          description="A few quick questions and we'll personalize your matches, deadlines, and counsellor updates. You can always come back and edit."
+          highlight={hasCompletedProfile ? 'All done' : 'Step ' + initialStep + ' of ' + PROFILE_STEPS.length}
+          accent="About you"
           stats={[
             { label: 'Completed', value: completedCount + '/' + PROFILE_STEPS.length, detail: 'Sections finished' },
             { label: 'Current step', value: String(initialStep), detail: currentStepDetail },

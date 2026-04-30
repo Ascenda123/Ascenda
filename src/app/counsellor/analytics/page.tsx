@@ -419,11 +419,11 @@ export default function CounsellorAnalyticsPage() {
   return (
     <div className="space-y-6">
       <PageHero
-        eyebrow="Counsellor View"
+        eyebrow="Counsellor"
         accent="Analytics"
         highlight="Deep dive"
-        title="Cohort Analytics"
-        description="The deep-dive view: drill into trends, cohorts, and outcomes across your full roster. Use Overview for daily triage; come here when you need to slice data and answer 'why'."
+        title="Cohort analytics"
+        description="Drill into trends, cohorts, and outcomes across your roster. Use Overview for daily triage."
         actions={<ExportButton />}
         stats={[
           { label: 'Students', value: String(stats.total), detail: 'In cohort' },

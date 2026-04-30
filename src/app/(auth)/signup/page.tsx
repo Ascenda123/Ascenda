@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { AuthForm } from '@/components/forms/auth-form';
 
 export const metadata: Metadata = {
-  title: 'Create account | Ascenda'
+  title: 'Create account'
 };
 
 export default function SignupPage() {
