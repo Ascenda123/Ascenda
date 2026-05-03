@@ -84,21 +84,40 @@ const getClient = () => {
   return createClient(supabaseUrl, serviceRole);
 };
 
-const deleteAll = async (table: string) => {
+const deleteRowsInBatches = async (table: string, key: string, batchSize = 500) => {
   const supabase = getClient();
-  console.log(`  Deleting all rows from ${table}...`);
-  // Delete in chunks using a filter that matches all rows
-  const { error } = await supabase.from(table).delete().gte('id' as any, '00000000-0000-0000-0000-000000000000');
-  if (error) throw new Error(`Delete failed on ${table}: ${error.message}`);
+  console.log(`  Deleting all rows from ${table} in batches...`);
+
+  while (true) {
+    const { data, error: selectError } = await supabase
+      .from(table)
+      .select(key)
+      .order(key, { ascending: true })
+      .limit(batchSize);
+
+    if (selectError) {
+      throw new Error(`Select failed on ${table}: ${selectError.message}`);
+    }
+
+    if (!data || data.length === 0) {
+      break;
+    }
+
+    const keys = data.map((row: any) => row[key]);
+    const { error } = await supabase.from(table).delete().in(key, keys);
+    if (error) {
+      throw new Error(`Delete failed on ${table}: ${error.message}`);
+    }
+
+    if (data.length < batchSize) {
+      break;
+    }
+  }
 };
 
-const deleteAllByPk = async (table: string, pkColumn: string) => {
-  // For tables whose PK isn't `id` (e.g. program_requirements uses program_id)
-  const supabase = getClient();
-  console.log(`  Deleting all rows from ${table}...`);
-  const { error } = await supabase.from(table).delete().gte(pkColumn as any, '00000000-0000-0000-0000-000000000000');
-  if (error) throw new Error(`Delete failed on ${table}: ${error.message}`);
-};
+const deleteAll = async (table: string) => deleteRowsInBatches(table, 'id');
+
+const deleteAllByPk = async (table: string, pkColumn: string) => deleteRowsInBatches(table, pkColumn);
 
 const upsertTable = async (table: string, rows: Row[], onConflict: string) => {
   if (!rows.length) { console.log(`  No rows to upsert into ${table}, skipping.`); return; }

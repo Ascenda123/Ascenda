@@ -33,7 +33,11 @@ type CourseView = {
   duration?: string | null;
   intake?: string | null;
   campus?: string | null;
-  tuition?: string | null;
+  tuition?: string | number | null;
+  currency?: string | null;
+  tuitionFeesInternational?: string | null;
+  tuitionFeesHome?: string | null;
+  yearlyIntlTuition?: number | null;
   ucasCode?: string | null;
   startDate?: string | null;
   summary?: string | null;
@@ -45,6 +49,30 @@ type CourseView = {
   applyUrl?: string | null;
   outcomes?: Outcomes | null;
   openDays?: OpenDayEvent[] | null;
+  // University life & campus
+  universityLife?: string | null;
+  culturalSocialEnvironment?: string | null;
+  cityLife?: string | null;
+  climate?: string | null;
+  safety?: string | null;
+  transportAccessibility?: string | null;
+  numberOfStudents?: number | null;
+  studentToStaffRatio?: number | null;
+  nssPct?: number | null;
+  internationalStudentsPct?: number | null;
+  intlTuitionLow?: number | null;
+  intlTuitionHigh?: number | null;
+  // Career outcomes
+  placementYear?: boolean | null;
+  placementYearDetail?: string | null;
+  topIndustries?: string | null;
+  graduateEmploymentRate?: number | null;
+  averageStartingSalary?: number | null;
+  studyAbroadOption?: string | null;
+  // Cost of living
+  studentDormCost?: number | null;
+  averageRentOutsideCampus?: number | null;
+  costOfLife?: string | null;
 };
 
 const normalizeLocation = (city?: string | null, region?: string | null, country?: string | null) =>
@@ -65,16 +93,32 @@ const buildRequirements = (raw: Record<string, any>): Requirement[] => {
 };
 
 // If a currency-like field arrives as a bare number ("9250" / "45000"),
-// add thousand separators and a £ prefix. Strings that already contain a
-// currency symbol or non-numeric chars are returned as-is.
-const formatCurrencyString = (value?: string | null): string | null => {
-  if (!value) return null;
-  const trimmed = value.trim();
-  if (!trimmed) return null;
-  if (/^\d+(\.\d+)?$/.test(trimmed)) {
-    return `£${Number(trimmed).toLocaleString('en-GB')}`;
+// add thousand separators and a currency prefix. Strings that already
+// contain a currency symbol or non-numeric chars are returned as-is.
+const formatCurrencyString = (
+  value?: string | number | null,
+  currency?: string | null
+): string | null => {
+  if (value === null || value === undefined) return null;
+  const stringVal = String(value).trim();
+  if (!stringVal) return null;
+
+  const hasSymbol = /[£$€¥]/.test(stringVal);
+  if (hasSymbol) return stringVal;
+
+  const symbol = currency?.toUpperCase() === 'USD'
+    ? '$'
+    : currency?.toUpperCase() === 'EUR'
+      ? '€'
+      : currency?.toUpperCase() === 'GBP'
+        ? '£'
+        : '£';
+
+  if (/^\d+(\.\d+)?$/.test(stringVal)) {
+    return `${symbol}${Number(stringVal).toLocaleString('en-GB')}`;
   }
-  return trimmed;
+
+  return stringVal;
 };
 
 const buildFallbackSummary = (
@@ -144,7 +188,7 @@ const buildQuickFacts = (course: CourseView): QuickFact[] => {
   if (course.level) facts.push({ label: 'Level', value: course.level, icon: GraduationCap });
   if (course.duration) facts.push({ label: 'Duration', value: course.duration, icon: CalendarDays });
   if (course.campus) facts.push({ label: 'Campus', value: course.campus, icon: Landmark });
-  const tuitionDisplay = formatCurrencyString(course.tuition) ?? 'Contact university';
+  const tuitionDisplay = formatCurrencyString(course.tuition, course.currency) ?? 'Contact university';
   const startRaw = course.startDate?.trim() ?? '';
   const intakeRaw = course.intake?.trim() ?? '';
   const intakeDisplay = intakeRaw.length > 0 ? intakeRaw : 'TBD';
@@ -516,7 +560,22 @@ export default function CoursePage({ params }: { params: { id: string } }) {
               city,
               region,
               country,
-              metadata
+              metadata,
+              university_life,
+              cultural_social_environment,
+              city_life,
+              climate,
+              safety_index,
+              transport_accessibility,
+              number_of_students,
+              student_to_staff_ratio,
+              nss_score_pct,
+              international_students_ratio_pct,
+              graduate_employment_rate_pct,
+              average_starting_salary_gbp,
+              intl_tuition_low,
+              intl_tuition_high,
+              currency
             )
           `
           )
@@ -540,7 +599,17 @@ export default function CoursePage({ params }: { params: { id: string } }) {
         const location = normalizeLocation(uni.city, uni.region, uni.country);
         const duration = data.duration || null;
         const intake = data.start_date || null;
-        const tuition = data.tuition_fees_international || data.tuition_fees_home || null;
+        // Use numeric tuition field first, fall back to string fields
+        const tuitionValue =
+          data.yearly_international_tuition_fee_gbp ??
+          (data.tuition_fees_international ? String(data.tuition_fees_international) : null) ??
+          (data.tuition_fees_home ? String(data.tuition_fees_home) : null) ??
+          null;
+        const tuition = tuitionValue !== null && tuitionValue !== undefined
+          ? typeof tuitionValue === 'number'
+            ? tuitionValue.toString()
+            : tuitionValue
+          : null;
 
         const mapped: CourseView = {
           id: data.id,
@@ -572,7 +641,33 @@ export default function CoursePage({ params }: { params: { id: string } }) {
           courseUrl: data.provider_course_url ?? null,
           applyUrl: data.provider_apply_url ?? null,
           outcomes: buildOutcomes(data),
-          openDays: parseOpenDays((data as Record<string, any>).open_days)
+          openDays: parseOpenDays((data as Record<string, any>).open_days),
+          // University life & campus
+          universityLife: uni.university_life ?? null,
+          culturalSocialEnvironment: uni.cultural_social_environment ?? null,
+          cityLife: uni.city_life ?? null,
+          climate: uni.climate ?? null,
+          safety: uni.safety_index ?? null,
+          transportAccessibility: uni.transport_accessibility ?? null,
+          numberOfStudents: uni.number_of_students ?? null,
+          studentToStaffRatio: uni.student_to_staff_ratio ?? null,
+          nssPct: uni.nss_score_pct ?? null,
+          internationalStudentsPct: uni.international_students_ratio_pct ?? null,
+          // Career outcomes
+          placementYear: data.placement_year ?? null,
+          placementYearDetail: data.placement_year_detail ?? null,
+          topIndustries: data.top_industries ?? null,
+          graduateEmploymentRate: uni.graduate_employment_rate_pct ?? null,
+          averageStartingSalary: data.average_starting_salary_gbp_override ?? uni.average_starting_salary_gbp ?? null,
+          studyAbroadOption: data.study_abroad_option ?? null,
+          // Cost of living
+          studentDormCost: data.student_dorm_cost_gbp_per_year_override ?? null,
+          averageRentOutsideCampus: data.average_rent_outside_campus_gbp_per_month_override ?? null,
+          costOfLife: data.cost_of_life_override ?? null,
+          currency: data.currency ?? uni.currency ?? null,
+          tuitionFeesInternational: data.tuition_fees_international ?? null,
+          tuitionFeesHome: data.tuition_fees_home ?? null,
+          yearlyIntlTuition: data.yearly_international_tuition_fee_gbp ?? null,
         };
 
         mapped.quickFacts = buildQuickFacts(mapped);
@@ -590,11 +685,51 @@ export default function CoursePage({ params }: { params: { id: string } }) {
 
   const [activeTab, setActiveTab] = useState('overview');
 
+  const costTuition = useMemo(() => {
+    if (!course) return null;
+    if (course.tuition) return course.tuition;
+    if (course.yearlyIntlTuition) return String(course.yearlyIntlTuition);
+    if (course.tuitionFeesInternational) return course.tuitionFeesInternational;
+    if (course.tuitionFeesHome) return course.tuitionFeesHome;
+    return null;
+  }, [course]);
+
+  const formattedCostTuition = costTuition
+    ? formatCurrencyString(costTuition, course?.currency)
+    : null;
+
+  const numericCostTuition = useMemo(() => {
+    if (!costTuition) return 0;
+    const parsed = Number(String(costTuition).replace(/[^0-9.-]+/g, ''));
+    return Number.isFinite(parsed) ? parsed : 0;
+  }, [costTuition]);
+
+  const totalCost = useMemo(() => {
+    if (!course?.duration || !numericCostTuition) return null;
+    const durationMatch = course.duration.match(/(\d+)/);
+    if (!durationMatch) return null;
+    const years = parseInt(durationMatch[1], 10);
+    if (!years || years <= 0) return null;
+    return numericCostTuition * years;
+  }, [course?.duration, numericCostTuition]);
+
+  const hasCostDetails = Boolean(
+    costTuition ||
+    course?.studentDormCost ||
+    course?.averageRentOutsideCampus ||
+    course?.costOfLife ||
+    course?.intlTuitionLow ||
+    course?.intlTuitionHigh
+  );
+
   const TABS = [
     { id: 'overview', label: 'Overview', icon: BookOpen },
     { id: 'curriculum', label: 'Curriculum', icon: Layers },
     { id: 'requirements', label: 'Requirements', icon: ListChecks },
     { id: 'assessment', label: 'Assessment', icon: ShieldCheck },
+    { id: 'campus', label: 'Campus and\nCity Life', icon: Landmark },
+    { id: 'career', label: 'Career', icon: GraduationCap },
+    { id: 'costs', label: 'Costs', icon: Wallet },
   ];
 
   return (
@@ -722,14 +857,14 @@ export default function CoursePage({ params }: { params: { id: string } }) {
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)}
                         className={cn(
-                          'flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium transition-all',
+                          'flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium transition-all whitespace-normal text-center min-w-[12rem] max-w-[14rem]',
                           isActive
                             ? 'bg-primary text-primary-foreground shadow-md'
                             : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                         )}
                       >
                         <Icon className="h-4 w-4" />
-                        {tab.label}
+                        <span className="whitespace-pre-line leading-tight">{tab.label}</span>
                       </button>
                     );
                   })}
@@ -752,13 +887,154 @@ export default function CoursePage({ params }: { params: { id: string } }) {
                     </div>
                   </div>
 
+                  {/* University at a Glance Stats */}
+                  {(course.numberOfStudents || course.studentToStaffRatio || course.nssPct || course.internationalStudentsPct) && (
+                    <div className="rounded-3xl border border-border/60 bg-gradient-to-br from-muted/50 to-muted/5 p-8">
+                      <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
+                        <Landmark className="h-5 w-5 text-primary" />
+                        The University at a Glance
+                      </h3>
+                      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                        {course.numberOfStudents && (
+                          <div className="rounded-2xl bg-card/50 border border-border/40 p-4">
+                            <p className="text-xs font-bold text-primary uppercase tracking-wider mb-2">Student Population</p>
+                            <p className="text-2xl font-bold text-foreground">{course.numberOfStudents.toLocaleString()}</p>
+                          </div>
+                        )}
+                        {course.studentToStaffRatio && (
+                          <div className="rounded-2xl bg-card/50 border border-border/40 p-4">
+                            <p className="text-xs font-bold text-primary uppercase tracking-wider mb-2">Staff Ratio</p>
+                            <p className="text-2xl font-bold text-foreground">{course.studentToStaffRatio.toFixed(1)}:1</p>
+                          </div>
+                        )}
+                        {course.nssPct && (
+                          <div className="rounded-2xl bg-card/50 border border-border/40 p-4">
+                            <p className="text-xs font-bold text-primary uppercase tracking-wider mb-2">Satisfaction (NSS)</p>
+                            <p className="text-2xl font-bold text-foreground">{course.nssPct.toFixed(1)}%</p>
+                          </div>
+                        )}
+                        {course.internationalStudentsPct && (
+                          <div className="rounded-2xl bg-card/50 border border-border/40 p-4">
+                            <p className="text-xs font-bold text-primary uppercase tracking-wider mb-2">International</p>
+                            <p className="text-2xl font-bold text-foreground">{course.internationalStudentsPct.toFixed(1)}%</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Career Outcomes Highlights */}
+                  {(course.graduateEmploymentRate || course.averageStartingSalary || course.placementYear) && (
+                    <div className="rounded-3xl border border-border/60 bg-gradient-to-br from-green-500/5 to-green-500/0 p-8">
+                      <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
+                        <GraduationCap className="h-5 w-5 text-green-600 dark:text-green-400" />
+                        Career Prospects
+                      </h3>
+                      <div className="grid gap-4 sm:grid-cols-3">
+                        {course.graduateEmploymentRate && (
+                          <div className="rounded-2xl bg-card/50 border border-border/40 p-4">
+                            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Employment Rate</p>
+                            <p className="text-2xl font-bold text-green-600 dark:text-green-400">{course.graduateEmploymentRate.toFixed(1)}%</p>
+                            <p className="text-xs text-muted-foreground mt-1">of graduates employed</p>
+                          </div>
+                        )}
+                        {course.averageStartingSalary && (
+                          <div className="rounded-2xl bg-card/50 border border-border/40 p-4">
+                            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Avg Starting Salary</p>
+                            <p className="text-2xl font-bold text-foreground">£{course.averageStartingSalary.toLocaleString()}</p>
+                            <p className="text-xs text-muted-foreground mt-1">First-year earnings</p>
+                          </div>
+                        )}
+                        {course.placementYear && (
+                          <div className="rounded-2xl bg-card/50 border border-border/40 p-4">
+                            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Placement Year</p>
+                            <p className="text-lg font-bold text-foreground">✓ Available</p>
+                            <p className="text-xs text-muted-foreground mt-1">Work experience option</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Cost & Living Overview */}
+                  {hasCostDetails && (
+                    <div className="rounded-3xl border border-border/60 bg-gradient-to-br from-orange-500/5 to-orange-500/0 p-8">
+                      <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
+                        <Wallet className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+                        Costs & Living
+                      </h3>
+                      <div className="grid gap-4 sm:grid-cols-3">
+                        {formattedCostTuition && (
+                          <div className="rounded-2xl bg-card/50 border border-border/40 p-4">
+                            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Annual Tuition</p>
+                            <p className="text-2xl font-bold text-foreground">{formattedCostTuition}</p>
+                          </div>
+                        )}
+                        {course.studentDormCost && (
+                          <div className="rounded-2xl bg-card/50 border border-border/40 p-4">
+                            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Halls of Residence</p>
+                            <p className="text-2xl font-bold text-foreground">{formatCurrencyString(course.studentDormCost, 'GBP')}</p>
+                            <p className="text-xs text-muted-foreground mt-1">per year</p>
+                          </div>
+                        )}
+                        {course.averageRentOutsideCampus && (
+                          <div className="rounded-2xl bg-card/50 border border-border/40 p-4">
+                            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Off-Campus Rent</p>
+                            <p className="text-2xl font-bold text-foreground">{formatCurrencyString(course.averageRentOutsideCampus, 'GBP')}</p>
+                            <p className="text-xs text-muted-foreground mt-1">per month (avg)</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Campus Life Highlights */}
+                  {(course.universityLife || course.culturalSocialEnvironment || course.cityLife) && (
+                    <div className="grid gap-4 md:grid-cols-2">
+                      {course.universityLife && (
+                        <div className="rounded-3xl border border-border/60 bg-card p-6">
+                          <h4 className="font-bold text-foreground mb-3 flex items-center gap-2">
+                            <Landmark className="h-4 w-4 text-primary" />
+                            University Life
+                          </h4>
+                          <p className="text-sm text-muted-foreground line-clamp-3">
+                            {typeof course.universityLife === 'string' ? course.universityLife : 'Vibrant campus life with diverse student community'}
+                          </p>
+                          <button
+                            onClick={() => setActiveTab('campus')}
+                            className="text-xs font-bold text-primary uppercase tracking-wider mt-3 hover:text-primary/80"
+                          >
+                            Learn More →
+                          </button>
+                        </div>
+                      )}
+                      {course.cityLife && (
+                        <div className="rounded-3xl border border-border/60 bg-card p-6">
+                          <h4 className="font-bold text-foreground mb-3 flex items-center gap-2">
+                            <MapPin className="h-4 w-4 text-primary" />
+                            City & Location
+                          </h4>
+                          <p className="text-sm text-muted-foreground line-clamp-3">
+                            {typeof course.cityLife === 'string' ? course.cityLife : 'Located in a vibrant city with plenty to explore'}
+                          </p>
+                          <button
+                            onClick={() => setActiveTab('campus')}
+                            className="text-xs font-bold text-primary uppercase tracking-wider mt-3 hover:text-primary/80"
+                          >
+                            Learn More →
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   {/* Outcomes */}
                   {hasOutcomes && course.outcomes && (
                     <div className="rounded-3xl border border-border/60 bg-card p-8 shadow-sm">
                       <div className="flex items-center justify-between mb-6">
                         <h2 className="text-2xl font-bold flex items-center gap-2">
                           <CheckCircle2 className="h-5 w-5 text-primary" />
-                          Outcomes & Satisfaction
+                          Student Outcomes & Satisfaction
                         </h2>
                       </div>
                       <div className="grid gap-4 sm:grid-cols-2">
@@ -833,7 +1109,7 @@ export default function CoursePage({ params }: { params: { id: string } }) {
                     </div>
                   )}
 
-                  {/* At a Glance Dashboard */}
+                  {/* Quick Navigation - Requirements & Curriculum */}
                   <div className="grid gap-6 md:grid-cols-2">
 
                     {/* Requirements Preview */}
@@ -1033,6 +1309,348 @@ export default function CoursePage({ params }: { params: { id: string } }) {
                       <p className="text-muted-foreground italic">No assessment information available.</p>
                     )}
                   </div>
+                </div>
+              )}
+
+              {/* Campus Life Tab */}
+              {activeTab === 'campus' && (
+                <div className="w-full space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <h2 className="text-2xl font-bold">Campus & Student Life</h2>
+
+                  {/* University Stats Grid */}
+                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                    {course.numberOfStudents && (
+                      <Card className="border-border/60 bg-gradient-to-br from-primary/5 to-transparent">
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-xs font-bold text-primary uppercase tracking-wider">Student Population</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-2xl font-bold text-foreground">{course.numberOfStudents.toLocaleString()}</p>
+                          <p className="text-xs text-muted-foreground mt-1">Total students</p>
+                        </CardContent>
+                      </Card>
+                    )}
+                    {course.studentToStaffRatio && (
+                      <Card className="border-border/60">
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Staff Ratio</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-2xl font-bold text-foreground">{course.studentToStaffRatio.toFixed(1)}:1</p>
+                          <p className="text-xs text-muted-foreground mt-1">Students per staff member</p>
+                        </CardContent>
+                      </Card>
+                    )}
+                    {course.nssPct && (
+                      <Card className="border-border/60">
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Satisfaction (NSS)</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-2xl font-bold text-foreground">{course.nssPct.toFixed(1)}%</p>
+                          <p className="text-xs text-muted-foreground mt-1">Student satisfaction</p>
+                        </CardContent>
+                      </Card>
+                    )}
+                    {course.internationalStudentsPct && (
+                      <Card className="border-border/60">
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider">International Students</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-2xl font-bold text-foreground">{course.internationalStudentsPct.toFixed(1)}%</p>
+                          <p className="text-xs text-muted-foreground mt-1">Of student body</p>
+                        </CardContent>
+                      </Card>
+                    )}
+                  </div>
+
+                  {/* Campus & Location Info */}
+                  {(course.universityLife || course.culturalSocialEnvironment || course.cityLife || course.climate || course.safety || course.transportAccessibility) && (
+                    <div className="space-y-4">
+                      {course.universityLife && (
+                        <div className="rounded-3xl border border-border/60 bg-card p-8">
+                          <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                            <Landmark className="h-5 w-5 text-primary" />
+                            University Life
+                          </h3>
+                          <div className="prose prose-neutral dark:prose-invert max-w-none text-muted-foreground">
+                            {renderRichText(course.universityLife)}
+                          </div>
+                        </div>
+                      )}
+
+                      {course.culturalSocialEnvironment && (
+                        <div className="rounded-3xl border border-border/60 bg-card p-8">
+                          <h3 className="text-xl font-bold mb-4">Cultural & Social Environment</h3>
+                          <div className="prose prose-neutral dark:prose-invert max-w-none text-muted-foreground">
+                            {renderRichText(course.culturalSocialEnvironment)}
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="grid gap-4 md:grid-cols-2">
+                        {course.cityLife && (
+                          <div className="rounded-3xl border border-border/60 bg-card p-8">
+                            <h3 className="text-lg font-bold mb-4">City Life</h3>
+                            <div className="prose prose-neutral dark:prose-invert max-w-none text-muted-foreground">
+                              {renderRichText(course.cityLife)}
+                            </div>
+                          </div>
+                        )}
+
+                        {course.climate && (
+                          <div className="rounded-3xl border border-border/60 bg-card p-8">
+                            <h3 className="text-lg font-bold mb-4">Climate</h3>
+                            <p className="text-muted-foreground">{course.climate}</p>
+                          </div>
+                        )}
+
+                        {course.safety && (
+                          <div className="rounded-3xl border border-border/60 bg-card p-8">
+                            <h3 className="text-lg font-bold mb-4">Safety</h3>
+                            <p className="text-muted-foreground">{course.safety}</p>
+                          </div>
+                        )}
+
+                        {course.transportAccessibility && (
+                          <div className="rounded-3xl border border-border/60 bg-card p-8">
+                            <h3 className="text-lg font-bold mb-4">Transport & Accessibility</h3>
+                            <div className="prose prose-neutral dark:prose-invert max-w-none text-muted-foreground">
+                              {renderRichText(course.transportAccessibility)}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {!course.universityLife && !course.culturalSocialEnvironment && !course.cityLife && !course.climate && !course.safety && !course.transportAccessibility && (
+                    <div className="rounded-3xl border border-border/60 bg-card p-8">
+                      <p className="text-muted-foreground italic">Campus and student life information coming soon.</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Career Tab */}
+              {activeTab === 'career' && (
+                <div className="w-full space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <h2 className="text-2xl font-bold">Career & Outcomes</h2>
+
+                  {/* Career Stats Grid */}
+                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    {course.graduateEmploymentRate && (
+                      <Card className="border-border/60 bg-gradient-to-br from-green-500/5 to-transparent">
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-xs font-bold text-green-600 dark:text-green-400 uppercase tracking-wider">Graduate Employment</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-3xl font-bold text-foreground">{course.graduateEmploymentRate.toFixed(1)}%</p>
+                          <p className="text-xs text-muted-foreground mt-1">Employed after graduation</p>
+                        </CardContent>
+                      </Card>
+                    )}
+                    {course.averageStartingSalary && (
+                      <Card className="border-border/60 bg-gradient-to-br from-blue-500/5 to-transparent">
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">Starting Salary</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-2xl font-bold text-foreground">{formatCurrencyString(course.averageStartingSalary, 'GBP')}</p>
+                          <p className="text-xs text-muted-foreground mt-1">Average first-year salary</p>
+                        </CardContent>
+                      </Card>
+                    )}
+                    {course.placementYear && (
+                      <Card className="border-border/60 bg-gradient-to-br from-purple-500/5 to-transparent">
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-xs font-bold text-purple-600 dark:text-purple-400 uppercase tracking-wider">Placement Year</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-2xl font-bold text-foreground">✓ Available</p>
+                          <p className="text-xs text-muted-foreground mt-1">Work experience option</p>
+                        </CardContent>
+                      </Card>
+                    )}
+                  </div>
+
+                  {/* Placement Year Detail */}
+                  {course.placementYearDetail && (
+                    <div className="rounded-3xl border border-border/60 bg-card p-8">
+                      <h3 className="text-xl font-bold mb-4">Placement Year Options</h3>
+                      <div className="prose prose-neutral dark:prose-invert max-w-none text-muted-foreground">
+                        {renderRichText(course.placementYearDetail)}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Top Industries */}
+                  {course.topIndustries && (
+                    <div className="rounded-3xl border border-border/60 bg-card p-8">
+                      <h3 className="text-xl font-bold mb-4">Top Industries for Graduates</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {course.topIndustries.split(/[,;]/).map((industry, idx) => (
+                          <span key={idx} className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-sm font-medium text-primary ring-1 ring-primary/20">
+                            {industry.trim()}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Study Abroad */}
+                  {course.studyAbroadOption && (
+                    <div className="rounded-3xl border border-border/60 bg-card p-8">
+                      <h3 className="text-xl font-bold mb-4">Study Abroad Opportunities</h3>
+                      <div className="prose prose-neutral dark:prose-invert max-w-none text-muted-foreground">
+                        {renderRichText(course.studyAbroadOption)}
+                      </div>
+                    </div>
+                  )}
+
+                  {!course.graduateEmploymentRate && !course.averageStartingSalary && !course.placementYear && !course.topIndustries && !course.studyAbroadOption && (
+                    <div className="rounded-3xl border border-border/60 bg-card p-8">
+                      <p className="text-muted-foreground italic">Career and outcomes information coming soon.</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Costs Tab */}
+              {activeTab === 'costs' && (
+                <div className="w-full space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <h2 className="text-2xl font-bold">Costs & Living Expenses</h2>
+
+                  {/* Cost Overview Cards */}
+                  <div className="grid gap-4 md:grid-cols-3">
+                    {formattedCostTuition && (
+                      <Card className="border-border/60 bg-gradient-to-br from-orange-500/5 to-transparent">
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-xs font-bold text-orange-600 dark:text-orange-400 uppercase tracking-wider">Annual Tuition</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-2xl font-bold text-foreground">{formattedCostTuition}</p>
+                          <p className="text-xs text-muted-foreground mt-1">Per year</p>
+                        </CardContent>
+                      </Card>
+                    )}
+                    {totalCost && (
+                      <Card className="border-border/60 bg-gradient-to-br from-red-500/5 to-transparent">
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-xs font-bold text-red-600 dark:text-red-400 uppercase tracking-wider">Total Programme Cost</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-2xl font-bold text-foreground">{formatCurrencyString(totalCost, course.currency)}</p>
+                          <p className="text-xs text-muted-foreground mt-1">For full {course.duration}</p>
+                        </CardContent>
+                      </Card>
+                    )}
+                    {course.studentDormCost && (
+                      <Card className="border-border/60 bg-gradient-to-br from-blue-500/5 to-transparent">
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">Halls of Residence</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-2xl font-bold text-foreground">{formatCurrencyString(course.studentDormCost, 'GBP')}</p>
+                          <p className="text-xs text-muted-foreground mt-1">Per year</p>
+                        </CardContent>
+                      </Card>
+                    )}
+                    {course.averageRentOutsideCampus && (
+                      <Card className="border-border/60 bg-gradient-to-br from-cyan-500/5 to-transparent">
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-xs font-bold text-cyan-600 dark:text-cyan-400 uppercase tracking-wider">Off-Campus Rent</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-2xl font-bold text-foreground">{formatCurrencyString(course.averageRentOutsideCampus, 'GBP')}</p>
+                          <p className="text-xs text-muted-foreground mt-1">Per month (average)</p>
+                        </CardContent>
+                      </Card>
+                    )}
+                  </div>
+
+                  {/* Cost of Living Indicator */}
+                  {course.costOfLife && (
+                    <div className="rounded-3xl border border-border/60 bg-card p-8">
+                      <h3 className="text-xl font-bold mb-4">Overall Cost of Living</h3>
+                      <div className="flex items-center gap-4">
+                        <div className={cn(
+                          "flex h-16 w-16 items-center justify-center rounded-2xl text-lg font-bold",
+                          course.costOfLife === 'HIGH' && "bg-red-500/10 text-red-600 dark:text-red-400",
+                          course.costOfLife === 'MEDIUM' && "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400",
+                          course.costOfLife === 'LOW' && "bg-green-500/10 text-green-600 dark:text-green-400"
+                        )}>
+                          {course.costOfLife}
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground">
+                            {course.costOfLife === 'HIGH' && "This location has a higher cost of living. Budget accordingly for accommodation, food, and general expenses."}
+                            {course.costOfLife === 'MEDIUM' && "This location has moderate living costs. Standard student budget recommended."}
+                            {course.costOfLife === 'LOW' && "This location has a lower cost of living, making it more affordable for student life."}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Cost Breakdown */}
+                  {(costTuition || course.studentDormCost || course.averageRentOutsideCampus || course.intlTuitionLow || course.intlTuitionHigh) && (
+                    <div className="rounded-3xl border border-border/60 bg-card p-8">
+                      <h3 className="text-xl font-bold mb-6">Estimated Annual Costs</h3>
+                      <div className="space-y-4">
+                        {formattedCostTuition && (
+                          <div className="flex items-center justify-between pb-4 border-b border-border/40">
+                            <span className="text-foreground font-medium">Tuition Fees</span>
+                            <span className="text-lg font-bold text-primary">{formattedCostTuition}</span>
+                          </div>
+                        )}
+                        {course.studentDormCost && (
+                          <div className="flex items-center justify-between pb-4 border-b border-border/40">
+                            <span className="text-foreground font-medium">Student Accommodation</span>
+                            <span className="text-lg font-bold">{formatCurrencyString(course.studentDormCost, 'GBP')}</span>
+                          </div>
+                        )}
+                        {course.averageRentOutsideCampus && (
+                          <div className="flex items-center justify-between pb-4 border-b border-border/40">
+                            <span className="text-foreground font-medium">Off-Campus Rent (estimated)</span>
+                            <span className="text-lg font-bold">{formatCurrencyString(course.averageRentOutsideCampus * 12, 'GBP')}</span>
+                          </div>
+                        )}
+                        {(course.intlTuitionLow || course.intlTuitionHigh) && (
+                          <div className="flex items-center justify-between pb-4 border-b border-border/40">
+                            <span className="text-foreground font-medium">University Estimate</span>
+                            <span className="text-lg font-bold text-primary">
+                              {course.intlTuitionLow && course.intlTuitionHigh
+                                ? `${formatCurrencyString(course.intlTuitionLow, course.currency)} – ${formatCurrencyString(course.intlTuitionHigh, course.currency)}`
+                                : course.intlTuitionLow
+                                  ? formatCurrencyString(course.intlTuitionLow, course.currency)
+                                  : formatCurrencyString(course.intlTuitionHigh, course.currency)}
+                            </span>
+                          </div>
+                        )}
+                        {(course.tuition || course.studentDormCost || course.averageRentOutsideCampus) && (
+                          <div className="flex items-center justify-between pt-4 border-t-2 border-border/60">
+                            <span className="text-foreground font-bold text-lg">Estimated Total (per year)</span>
+                            <span className="text-2xl font-bold text-primary">
+                              {formatCurrencyString(
+                                numericCostTuition +
+                                (course.studentDormCost ?? 0) +
+                                ((course.averageRentOutsideCampus ?? 0) * 12),
+                                course.currency ?? 'GBP'
+                              )}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {!course.tuition && !course.studentDormCost && !course.averageRentOutsideCampus && !course.costOfLife && (
+                    <div className="rounded-3xl border border-border/60 bg-card p-8">
+                      <p className="text-muted-foreground italic">Cost and living expense information coming soon.</p>
+                    </div>
+                  )}
                 </div>
               )}
 
