@@ -49,6 +49,11 @@ type CourseView = {
   applyUrl?: string | null;
   outcomes?: Outcomes | null;
   openDays?: OpenDayEvent[] | null;
+  courseRequirements?: string | null;
+  careerOutcomesOverview?: string | null;
+  studentLifeOverview?: string | null;
+  studentLifeTags?: string | null;
+  costOverview?: string | null;
   // University life & campus
   universityLife?: string | null;
   culturalSocialEnvironment?: string | null;
@@ -89,6 +94,8 @@ const buildRequirements = (raw: Record<string, any>): Requirement[] => {
   if (raw.additional_entry_requirements) reqs.push({ label: 'Additional', value: raw.additional_entry_requirements });
   if (raw.english_requirements) reqs.push({ label: 'English', value: raw.english_requirements });
   if (raw.contextual_admissions) reqs.push({ label: 'Contextual admissions', value: raw.contextual_admissions });
+  const courseReqs = raw.course_requirements ?? raw.metadata?.course_requirements;
+  if (courseReqs) reqs.push({ label: 'Course requirements', value: String(courseReqs) });
   return reqs;
 };
 
@@ -590,6 +597,7 @@ export default function CoursePage({ params }: { params: { id: string } }) {
 
         const uni = (data as Record<string, any>).universities ?? {};
         const uniMeta = uni && typeof uni.metadata === 'object' && uni.metadata !== null ? (uni.metadata as Record<string, unknown>) : {};
+        const programMeta = data.metadata && typeof data.metadata === 'object' ? (data.metadata as Record<string, unknown>) : {};
         const logoUrl =
           typeof uniMeta.logo_url === 'string'
             ? (uniMeta.logo_url as string)
@@ -642,6 +650,11 @@ export default function CoursePage({ params }: { params: { id: string } }) {
           applyUrl: data.provider_apply_url ?? null,
           outcomes: buildOutcomes(data),
           openDays: parseOpenDays((data as Record<string, any>).open_days),
+          courseRequirements: data.course_requirements ?? (programMeta.course_requirements as string | undefined) ?? null,
+          careerOutcomesOverview: data.career_outcomes_overview ?? (programMeta.career_outcomes_overview as string | undefined) ?? null,
+          studentLifeOverview: data.student_life_overview ?? (programMeta.student_life_overview as string | undefined) ?? null,
+          studentLifeTags: data.student_life_tags ?? (programMeta.student_life_tags as string | undefined) ?? null,
+          costOverview: data.cost_overview ?? (programMeta.cost_overview as string | undefined) ?? null,
           // University life & campus
           universityLife: uni.university_life ?? null,
           culturalSocialEnvironment: uni.cultural_social_environment ?? null,
@@ -886,6 +899,42 @@ export default function CoursePage({ params }: { params: { id: string } }) {
                       {renderRichText(course.summary)}
                     </div>
                   </div>
+
+                  {course.courseRequirements && (
+                    <div className="rounded-3xl border border-border/60 bg-card p-8 shadow-sm">
+                      <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                        <ListChecks className="h-5 w-5 text-primary" />
+                        Course requirements
+                      </h3>
+                      <div className="prose prose-lg prose-neutral dark:prose-invert max-w-none text-muted-foreground">
+                        {renderRichText(course.courseRequirements)}
+                      </div>
+                    </div>
+                  )}
+
+                  {course.careerOutcomesOverview && (
+                    <div className="rounded-3xl border border-border/60 bg-card p-8">
+                      <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                        <GraduationCap className="h-5 w-5 text-green-600 dark:text-green-400" />
+                        Career snapshot
+                      </h3>
+                      <div className="prose prose-lg prose-neutral dark:prose-invert max-w-none text-muted-foreground">
+                        {renderRichText(course.careerOutcomesOverview)}
+                      </div>
+                    </div>
+                  )}
+
+                  {course.studentLifeOverview && (
+                    <div className="rounded-3xl border border-border/60 bg-card p-8">
+                      <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                        <Landmark className="h-5 w-5 text-primary" />
+                        Student life
+                      </h3>
+                      <div className="prose prose-lg prose-neutral dark:prose-invert max-w-none text-muted-foreground">
+                        {renderRichText(course.studentLifeOverview)}
+                      </div>
+                    </div>
+                  )}
 
                   {/* University at a Glance Stats */}
                   {(course.numberOfStudents || course.studentToStaffRatio || course.nssPct || course.internationalStudentsPct) && (
@@ -1399,6 +1448,19 @@ export default function CoursePage({ params }: { params: { id: string } }) {
                           </div>
                         )}
 
+                        {course.studentLifeTags && (
+                          <div className="rounded-3xl border border-border/60 bg-card p-8">
+                            <h3 className="text-lg font-bold mb-4">Student life tags</h3>
+                            <div className="flex flex-wrap gap-2">
+                              {course.studentLifeTags.split(/[,;|]+/).map((tag, idx) => (
+                                <span key={idx} className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary ring-1 ring-primary/20">
+                                  {tag.trim()}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
                         {course.climate && (
                           <div className="rounded-3xl border border-border/60 bg-card p-8">
                             <h3 className="text-lg font-bold mb-4">Climate</h3>
@@ -1495,6 +1557,15 @@ export default function CoursePage({ params }: { params: { id: string } }) {
                             {industry.trim()}
                           </span>
                         ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {course.careerOutcomesOverview && (
+                    <div className="rounded-3xl border border-border/60 bg-card p-8">
+                      <h3 className="text-xl font-bold mb-4">Career outcomes overview</h3>
+                      <div className="prose prose-neutral dark:prose-invert max-w-none text-muted-foreground">
+                        {renderRichText(course.careerOutcomesOverview)}
                       </div>
                     </div>
                   )}
