@@ -65,19 +65,27 @@ export function UniversityCard({
                 className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent"
                 aria-hidden
             />
-            {/* Selection Checkbox (Visible on hover or when selected) */}
             {onToggleSelect && (
                 <button
                     onClick={onToggleSelect}
                     className={cn(
-                        'absolute right-4 top-4 z-10 flex h-8 w-8 items-center justify-center rounded-full border transition-all',
+                        'absolute right-4 top-4 z-10 flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider backdrop-blur-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
                         isSelected
-                            ? 'border-primary bg-primary text-primary-foreground'
-                            : 'border-border/60 bg-background/60 text-transparent opacity-0 backdrop-blur-[2px] group-hover:opacity-100 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-primary hover:border-primary/50'
+                            ? 'border-primary bg-primary text-primary-foreground shadow-sm'
+                            : 'border-border/70 bg-background/80 text-muted-foreground hover:border-primary/60 hover:text-primary'
                     )}
-                    aria-label={isSelected ? 'Deselect' : 'Select for comparison'}
+                    aria-label={isSelected ? 'Deselect for comparison' : 'Select for comparison'}
+                    aria-pressed={isSelected}
                 >
-                    {isSelected ? <Check className="h-4 w-4" /> : null}
+                    <span
+                        className={cn(
+                            'flex h-4 w-4 items-center justify-center rounded-full border',
+                            isSelected ? 'border-primary-foreground bg-primary-foreground/20' : 'border-current'
+                        )}
+                    >
+                        {isSelected ? <Check className="h-3 w-3" /> : null}
+                    </span>
+                    {isSelected ? 'Selected' : 'Compare'}
                 </button>
             )}
 
