@@ -78,6 +78,11 @@ type CourseView = {
   studentDormCost?: number | null;
   averageRentOutsideCampus?: number | null;
   costOfLife?: string | null;
+  monthlyHousingGbp?: number | null;
+  monthlyFoodGbp?: number | null;
+  monthlyTransportGbp?: number | null;
+  monthlyTotalGbp?: number | null;
+  annualLivingCostGbp?: number | null;
 };
 
 const normalizeLocation = (city?: string | null, region?: string | null, country?: string | null) =>
@@ -677,7 +682,12 @@ export default function CoursePage({ params }: { params: { id: string } }) {
           // Cost of living
           studentDormCost: rawData.student_dorm_cost_gbp_per_year_override ?? null,
           averageRentOutsideCampus: rawData.average_rent_outside_campus_gbp_per_month_override ?? null,
-          costOfLife: rawData.cost_of_life_override ?? null,
+          costOfLife: rawData.cost_of_life_override ?? (programMeta.cost_of_life as string | undefined) ?? null,
+          monthlyHousingGbp: (programMeta.monthly_housing_gbp as number | undefined) ?? null,
+          monthlyFoodGbp: (programMeta.monthly_food_gbp as number | undefined) ?? null,
+          monthlyTransportGbp: (programMeta.monthly_transport_gbp as number | undefined) ?? null,
+          monthlyTotalGbp: (programMeta.monthly_total_gbp as number | undefined) ?? null,
+          annualLivingCostGbp: (programMeta.annual_living_cost_gbp as number | undefined) ?? null,
           currency: rawData.currency ?? uni.currency ?? null,
           tuitionFeesInternational: rawData.tuition_fees_international ?? null,
           tuitionFeesHome: rawData.tuition_fees_home ?? null,
@@ -1365,7 +1375,7 @@ export default function CoursePage({ params }: { params: { id: string } }) {
               {/* Campus Life Tab */}
               {activeTab === 'campus' && (
                 <div className="w-full space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                  <h2 className="text-2xl font-bold">Campus & Student Life</h2>
+                  <h2 className="text-2xl font-bold">Campus & City Life</h2>
 
                   {/* University Stats Grid */}
                   <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -1381,114 +1391,155 @@ export default function CoursePage({ params }: { params: { id: string } }) {
                       </Card>
                     )}
                     {course.studentToStaffRatio && (
-                      <Card className="border-border/60">
+                      <Card className="border-border/60 bg-gradient-to-br from-blue-500/5 to-transparent">
                         <CardHeader className="pb-2">
-                          <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Staff Ratio</CardTitle>
+                          <CardTitle className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">Staff Ratio</CardTitle>
                         </CardHeader>
                         <CardContent>
-                          <p className="text-2xl font-bold text-foreground">{course.studentToStaffRatio.toFixed(1)}:1</p>
-                          <p className="text-xs text-muted-foreground mt-1">Students per staff member</p>
+                          <p className="text-2xl font-bold text-foreground">{course.studentToStaffRatio.toFixed(0)}:1</p>
+                          <p className="text-xs text-muted-foreground mt-1">Students per staff</p>
                         </CardContent>
                       </Card>
                     )}
                     {course.nssPct && (
-                      <Card className="border-border/60">
+                      <Card className="border-border/60 bg-gradient-to-br from-green-500/5 to-transparent">
                         <CardHeader className="pb-2">
-                          <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Satisfaction (NSS)</CardTitle>
+                          <CardTitle className="text-xs font-bold text-green-600 dark:text-green-400 uppercase tracking-wider">Satisfaction (NSS)</CardTitle>
                         </CardHeader>
                         <CardContent>
-                          <p className="text-2xl font-bold text-foreground">{course.nssPct.toFixed(1)}%</p>
+                          <p className="text-2xl font-bold text-foreground">{course.nssPct.toFixed(0)}%</p>
                           <p className="text-xs text-muted-foreground mt-1">Student satisfaction</p>
                         </CardContent>
                       </Card>
                     )}
                     {course.internationalStudentsPct && (
-                      <Card className="border-border/60">
+                      <Card className="border-border/60 bg-gradient-to-br from-orange-500/5 to-transparent">
                         <CardHeader className="pb-2">
-                          <CardTitle className="text-xs font-bold text-muted-foreground uppercase tracking-wider">International Students</CardTitle>
+                          <CardTitle className="text-xs font-bold text-orange-600 dark:text-orange-400 uppercase tracking-wider">International Students</CardTitle>
                         </CardHeader>
                         <CardContent>
-                          <p className="text-2xl font-bold text-foreground">{course.internationalStudentsPct.toFixed(1)}%</p>
+                          <p className="text-2xl font-bold text-foreground">{course.internationalStudentsPct.toFixed(0)}%</p>
                           <p className="text-xs text-muted-foreground mt-1">Of student body</p>
                         </CardContent>
                       </Card>
                     )}
                   </div>
 
-                  {/* Campus & Location Info */}
-                  {(course.universityLife || course.culturalSocialEnvironment || course.cityLife || course.climate || course.safety || course.transportAccessibility) && (
-                    <div className="space-y-4">
-                      {course.universityLife && (
-                        <div className="rounded-3xl border border-border/60 bg-card p-8">
-                          <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-                            <Landmark className="h-5 w-5 text-primary" />
-                            University Life
-                          </h3>
-                          <div className="prose prose-neutral dark:prose-invert max-w-none text-muted-foreground">
-                            {renderRichText(course.universityLife)}
+                  {/* Quick-glance campus attributes */}
+                  {(course.universityLife || course.cityLife || course.climate || course.safety || course.transportAccessibility) && (
+                    <div className="rounded-3xl border border-border/60 bg-card p-8">
+                      <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
+                        <Landmark className="h-5 w-5 text-primary" />
+                        Campus at a Glance
+                      </h3>
+                      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                        {course.universityLife && (
+                          <div className="rounded-2xl bg-muted/30 border border-border/40 p-4">
+                            <p className="text-xs font-bold text-primary uppercase tracking-wider mb-2">Campus Type</p>
+                            <p className="text-sm font-semibold text-foreground">{course.universityLife}</p>
                           </div>
-                        </div>
-                      )}
-
-                      {course.culturalSocialEnvironment && (
-                        <div className="rounded-3xl border border-border/60 bg-card p-8">
-                          <h3 className="text-xl font-bold mb-4">Cultural & Social Environment</h3>
-                          <div className="prose prose-neutral dark:prose-invert max-w-none text-muted-foreground">
-                            {renderRichText(course.culturalSocialEnvironment)}
-                          </div>
-                        </div>
-                      )}
-
-                      <div className="grid gap-4 md:grid-cols-2">
+                        )}
                         {course.cityLife && (
-                          <div className="rounded-3xl border border-border/60 bg-card p-8">
-                            <h3 className="text-lg font-bold mb-4">City Life</h3>
-                            <div className="prose prose-neutral dark:prose-invert max-w-none text-muted-foreground">
-                              {renderRichText(course.cityLife)}
-                            </div>
+                          <div className="rounded-2xl bg-muted/30 border border-border/40 p-4">
+                            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">City Size</p>
+                            <p className="text-sm font-semibold text-foreground">{course.cityLife}</p>
                           </div>
                         )}
-
-                        {course.studentLifeTags && (
-                          <div className="rounded-3xl border border-border/60 bg-card p-8">
-                            <h3 className="text-lg font-bold mb-4">Student life tags</h3>
-                            <div className="flex flex-wrap gap-2">
-                              {course.studentLifeTags.split(/[,;|]+/).map((tag, idx) => (
-                                <span key={idx} className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary ring-1 ring-primary/20">
-                                  {tag.trim()}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
                         {course.climate && (
-                          <div className="rounded-3xl border border-border/60 bg-card p-8">
-                            <h3 className="text-lg font-bold mb-4">Climate</h3>
-                            <p className="text-muted-foreground">{course.climate}</p>
+                          <div className="rounded-2xl bg-muted/30 border border-border/40 p-4">
+                            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Climate</p>
+                            <p className="text-sm font-semibold text-foreground">{course.climate}</p>
                           </div>
                         )}
-
                         {course.safety && (
-                          <div className="rounded-3xl border border-border/60 bg-card p-8">
-                            <h3 className="text-lg font-bold mb-4">Safety</h3>
-                            <p className="text-muted-foreground">{course.safety}</p>
+                          <div className="rounded-2xl bg-muted/30 border border-border/40 p-4">
+                            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Safety Index</p>
+                            <p className="text-sm font-semibold text-foreground">{course.safety}/10</p>
                           </div>
                         )}
-
                         {course.transportAccessibility && (
-                          <div className="rounded-3xl border border-border/60 bg-card p-8">
-                            <h3 className="text-lg font-bold mb-4">Transport & Accessibility</h3>
-                            <div className="prose prose-neutral dark:prose-invert max-w-none text-muted-foreground">
-                              {renderRichText(course.transportAccessibility)}
-                            </div>
+                          <div className="rounded-2xl bg-muted/30 border border-border/40 p-4">
+                            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Transport</p>
+                            <p className="text-sm font-semibold text-foreground">{course.transportAccessibility}</p>
+                          </div>
+                        )}
+                        {course.culturalSocialEnvironment && (
+                          <div className="rounded-2xl bg-muted/30 border border-border/40 p-4">
+                            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Social Scene</p>
+                            <p className="text-sm font-semibold text-foreground">{course.culturalSocialEnvironment}</p>
                           </div>
                         )}
                       </div>
                     </div>
                   )}
 
-                  {!course.universityLife && !course.culturalSocialEnvironment && !course.cityLife && !course.climate && !course.safety && !course.transportAccessibility && (
+                  {/* Student Life Overview narrative */}
+                  {course.studentLifeOverview && (
+                    <div className="rounded-3xl border border-border/60 bg-card p-8">
+                      <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                        <MapPin className="h-5 w-5 text-primary" />
+                        Student Life & City
+                      </h3>
+                      <div className="prose prose-lg prose-neutral dark:prose-invert max-w-none text-muted-foreground">
+                        {renderRichText(course.studentLifeOverview, { forceBullets: true })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Student Life Tags */}
+                  {course.studentLifeTags && (
+                    <div className="rounded-3xl border border-border/60 bg-card p-8">
+                      <h3 className="text-xl font-bold mb-6">What Students Love</h3>
+                      <div className="flex flex-wrap gap-3">
+                        {course.studentLifeTags.split(/[,;|]+/).map((tag, idx) => (
+                          <span key={idx} className="inline-flex items-center rounded-full bg-primary/10 px-4 py-2 text-sm font-medium text-primary ring-1 ring-primary/20">
+                            {tag.trim()}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Breakdown table — same pattern as Cost Breakdown */}
+                  {(course.numberOfStudents || course.studentToStaffRatio || course.nssPct || course.internationalStudentsPct) && (
+                    <div className="rounded-3xl border border-border/60 bg-card p-8">
+                      <h3 className="text-xl font-bold mb-6">University Stats</h3>
+                      <div className="space-y-4">
+                        {course.numberOfStudents && (
+                          <div className="flex items-center justify-between pb-4 border-b border-border/40">
+                            <span className="text-foreground font-medium">Total Students</span>
+                            <span className="text-lg font-bold text-primary">{course.numberOfStudents.toLocaleString()}</span>
+                          </div>
+                        )}
+                        {course.studentToStaffRatio && (
+                          <div className="flex items-center justify-between pb-4 border-b border-border/40">
+                            <span className="text-foreground font-medium">Student-to-Staff Ratio</span>
+                            <span className="text-lg font-bold">{course.studentToStaffRatio.toFixed(0)}:1</span>
+                          </div>
+                        )}
+                        {course.nssPct && (
+                          <div className="flex items-center justify-between pb-4 border-b border-border/40">
+                            <span className="text-foreground font-medium">NSS Student Satisfaction</span>
+                            <span className="text-lg font-bold text-green-600 dark:text-green-400">{course.nssPct.toFixed(0)}%</span>
+                          </div>
+                        )}
+                        {course.internationalStudentsPct && (
+                          <div className="flex items-center justify-between pb-4 border-b border-border/40">
+                            <span className="text-foreground font-medium">International Students</span>
+                            <span className="text-lg font-bold">{course.internationalStudentsPct.toFixed(0)}%</span>
+                          </div>
+                        )}
+                        {course.safety && (
+                          <div className="flex items-center justify-between pb-4 border-b border-border/40">
+                            <span className="text-foreground font-medium">Safety Index</span>
+                            <span className="text-lg font-bold">{course.safety}/10</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {!course.universityLife && !course.studentLifeOverview && !course.culturalSocialEnvironment && !course.cityLife && !course.numberOfStudents && (
                     <div className="rounded-3xl border border-border/60 bg-card p-8">
                       <p className="text-muted-foreground italic">Campus and student life information coming soon.</p>
                     </div>
@@ -1502,14 +1553,14 @@ export default function CoursePage({ params }: { params: { id: string } }) {
                   <h2 className="text-2xl font-bold">Career & Outcomes</h2>
 
                   {/* Career Stats Grid */}
-                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  <div className="grid gap-4 md:grid-cols-3">
                     {course.graduateEmploymentRate && (
                       <Card className="border-border/60 bg-gradient-to-br from-green-500/5 to-transparent">
                         <CardHeader className="pb-2">
                           <CardTitle className="text-xs font-bold text-green-600 dark:text-green-400 uppercase tracking-wider">Graduate Employment</CardTitle>
                         </CardHeader>
                         <CardContent>
-                          <p className="text-3xl font-bold text-foreground">{course.graduateEmploymentRate.toFixed(1)}%</p>
+                          <p className="text-3xl font-bold text-foreground">{course.graduateEmploymentRate.toFixed(0)}%</p>
                           <p className="text-xs text-muted-foreground mt-1">Employed after graduation</p>
                         </CardContent>
                       </Card>
@@ -1517,7 +1568,7 @@ export default function CoursePage({ params }: { params: { id: string } }) {
                     {course.averageStartingSalary && (
                       <Card className="border-border/60 bg-gradient-to-br from-blue-500/5 to-transparent">
                         <CardHeader className="pb-2">
-                          <CardTitle className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">Starting Salary</CardTitle>
+                          <CardTitle className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">Avg Starting Salary</CardTitle>
                         </CardHeader>
                         <CardContent>
                           <p className="text-2xl font-bold text-foreground">{formatCurrencyString(course.averageStartingSalary, 'GBP')}</p>
@@ -1525,25 +1576,28 @@ export default function CoursePage({ params }: { params: { id: string } }) {
                         </CardContent>
                       </Card>
                     )}
-                    {course.placementYear && (
-                      <Card className="border-border/60 bg-gradient-to-br from-purple-500/5 to-transparent">
+                    {course.placementYear !== null && course.placementYear !== undefined && (
+                      <Card className={`border-border/60 bg-gradient-to-br ${course.placementYear ? 'from-purple-500/5 to-transparent' : 'from-muted/30 to-transparent'}`}>
                         <CardHeader className="pb-2">
-                          <CardTitle className="text-xs font-bold text-purple-600 dark:text-purple-400 uppercase tracking-wider">Placement Year</CardTitle>
+                          <CardTitle className={`text-xs font-bold uppercase tracking-wider ${course.placementYear ? 'text-purple-600 dark:text-purple-400' : 'text-muted-foreground'}`}>Placement Year</CardTitle>
                         </CardHeader>
                         <CardContent>
-                          <p className="text-2xl font-bold text-foreground">✓ Available</p>
-                          <p className="text-xs text-muted-foreground mt-1">Work experience option</p>
+                          <p className="text-2xl font-bold text-foreground">{course.placementYear ? '✓ Available' : '✗ Not offered'}</p>
+                          <p className="text-xs text-muted-foreground mt-1">Industry work experience</p>
                         </CardContent>
                       </Card>
                     )}
                   </div>
 
-                  {/* Placement Year Detail */}
-                  {course.placementYearDetail && (
+                  {/* Career Overview narrative */}
+                  {course.careerOutcomesOverview && (
                     <div className="rounded-3xl border border-border/60 bg-card p-8">
-                      <h3 className="text-xl font-bold mb-4">Placement Year Options</h3>
-                      <div className="prose prose-neutral dark:prose-invert max-w-none text-muted-foreground">
-                        {renderRichText(course.placementYearDetail)}
+                      <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                        <GraduationCap className="h-5 w-5 text-green-600 dark:text-green-400" />
+                        Career Outcomes Overview
+                      </h3>
+                      <div className="prose prose-lg prose-neutral dark:prose-invert max-w-none text-muted-foreground">
+                        {renderRichText(course.careerOutcomesOverview, { forceBullets: true })}
                       </div>
                     </div>
                   )}
@@ -1551,10 +1605,11 @@ export default function CoursePage({ params }: { params: { id: string } }) {
                   {/* Top Industries */}
                   {course.topIndustries && (
                     <div className="rounded-3xl border border-border/60 bg-card p-8">
-                      <h3 className="text-xl font-bold mb-4">Top Industries for Graduates</h3>
-                      <div className="flex flex-wrap gap-2">
-                        {course.topIndustries.split(/[,;]/).map((industry, idx) => (
+                      <h3 className="text-xl font-bold mb-6">Top Industries for Graduates</h3>
+                      <div className="flex flex-wrap gap-3">
+                        {course.topIndustries.split(/[,;|]/).map((industry, idx) => (
                           <span key={idx} className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-sm font-medium text-primary ring-1 ring-primary/20">
+                            <Dot className="h-3 w-3 shrink-0" />
                             {industry.trim()}
                           </span>
                         ))}
@@ -1562,11 +1617,12 @@ export default function CoursePage({ params }: { params: { id: string } }) {
                     </div>
                   )}
 
-                  {course.careerOutcomesOverview && (
+                  {/* Placement Year Detail */}
+                  {course.placementYearDetail && (
                     <div className="rounded-3xl border border-border/60 bg-card p-8">
-                      <h3 className="text-xl font-bold mb-4">Career outcomes overview</h3>
+                      <h3 className="text-xl font-bold mb-4">Placement Year Detail</h3>
                       <div className="prose prose-neutral dark:prose-invert max-w-none text-muted-foreground">
-                        {renderRichText(course.careerOutcomesOverview)}
+                        {renderRichText(course.placementYearDetail, { forceBullets: true })}
                       </div>
                     </div>
                   )}
@@ -1574,14 +1630,53 @@ export default function CoursePage({ params }: { params: { id: string } }) {
                   {/* Study Abroad */}
                   {course.studyAbroadOption && (
                     <div className="rounded-3xl border border-border/60 bg-card p-8">
-                      <h3 className="text-xl font-bold mb-4">Study Abroad Opportunities</h3>
+                      <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                        <MapPin className="h-5 w-5 text-primary" />
+                        Study Abroad Opportunities
+                      </h3>
                       <div className="prose prose-neutral dark:prose-invert max-w-none text-muted-foreground">
-                        {renderRichText(course.studyAbroadOption)}
+                        {renderRichText(course.studyAbroadOption, { forceBullets: true })}
                       </div>
                     </div>
                   )}
 
-                  {!course.graduateEmploymentRate && !course.averageStartingSalary && !course.placementYear && !course.topIndustries && !course.studyAbroadOption && (
+                  {/* Outcomes data from legacy fields */}
+                  {hasOutcomes && course.outcomes && (
+                    <div className="rounded-3xl border border-border/60 bg-card p-8">
+                      <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
+                        <CheckCircle2 className="h-5 w-5 text-primary" />
+                        Student Outcomes
+                      </h3>
+                      <div className="grid gap-4 sm:grid-cols-2">
+                        {course.outcomes.satisfaction && (
+                          <div className="rounded-2xl bg-primary/5 border border-primary/20 p-4">
+                            <p className="text-xs font-bold text-primary uppercase tracking-wider mb-2">Student Satisfaction</p>
+                            <p className="text-lg font-semibold text-foreground">{course.outcomes.satisfaction}</p>
+                          </div>
+                        )}
+                        {course.outcomes.employment && (
+                          <div className="rounded-2xl bg-muted/30 border border-border/40 p-4">
+                            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Employment</p>
+                            <p className="text-lg font-semibold text-foreground">{course.outcomes.employment}</p>
+                          </div>
+                        )}
+                        {course.outcomes.outcomes && (
+                          <div className="rounded-2xl bg-muted/30 border border-border/40 p-4">
+                            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Outcomes</p>
+                            <p className="text-lg font-semibold text-foreground">{course.outcomes.outcomes}</p>
+                          </div>
+                        )}
+                        {course.outcomes.salary && (
+                          <div className="rounded-2xl bg-muted/30 border border-border/40 p-4">
+                            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Avg Salary (15m)</p>
+                            <p className="text-lg font-semibold text-foreground">{formatCurrencyString(course.outcomes.salary)}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {!course.graduateEmploymentRate && !course.averageStartingSalary && course.placementYear === null && !course.topIndustries && !course.studyAbroadOption && !course.careerOutcomesOverview && !hasOutcomes && (
                     <div className="rounded-3xl border border-border/60 bg-card p-8">
                       <p className="text-muted-foreground italic">Career and outcomes information coming soon.</p>
                     </div>
@@ -1718,7 +1813,59 @@ export default function CoursePage({ params }: { params: { id: string } }) {
                     </div>
                   )}
 
-                  {!course.tuition && !course.studentDormCost && !course.averageRentOutsideCampus && !course.costOfLife && (
+                  {/* Monthly Living Cost Breakdown */}
+                  {(course.monthlyHousingGbp || course.monthlyFoodGbp || course.monthlyTransportGbp) && (
+                    <div className="rounded-3xl border border-border/60 bg-card p-8">
+                      <h3 className="text-xl font-bold mb-6">Monthly Student Budget</h3>
+                      <div className="space-y-4">
+                        {course.monthlyHousingGbp && (
+                          <div className="flex items-center justify-between pb-4 border-b border-border/40">
+                            <span className="text-foreground font-medium">Housing</span>
+                            <span className="text-lg font-bold">{formatCurrencyString(course.monthlyHousingGbp, 'GBP')}<span className="text-xs text-muted-foreground font-normal ml-1">/mo</span></span>
+                          </div>
+                        )}
+                        {course.monthlyFoodGbp && (
+                          <div className="flex items-center justify-between pb-4 border-b border-border/40">
+                            <span className="text-foreground font-medium">Food & Groceries</span>
+                            <span className="text-lg font-bold">{formatCurrencyString(course.monthlyFoodGbp, 'GBP')}<span className="text-xs text-muted-foreground font-normal ml-1">/mo</span></span>
+                          </div>
+                        )}
+                        {course.monthlyTransportGbp && (
+                          <div className="flex items-center justify-between pb-4 border-b border-border/40">
+                            <span className="text-foreground font-medium">Transport</span>
+                            <span className="text-lg font-bold">{formatCurrencyString(course.monthlyTransportGbp, 'GBP')}<span className="text-xs text-muted-foreground font-normal ml-1">/mo</span></span>
+                          </div>
+                        )}
+                        {course.monthlyTotalGbp && (
+                          <div className="flex items-center justify-between pt-4 border-t-2 border-border/60">
+                            <span className="text-foreground font-bold text-lg">Estimated Monthly Total</span>
+                            <span className="text-2xl font-bold text-primary">{formatCurrencyString(course.monthlyTotalGbp, 'GBP')}</span>
+                          </div>
+                        )}
+                        {course.annualLivingCostGbp && (
+                          <div className="flex items-center justify-between pt-2">
+                            <span className="text-muted-foreground text-sm">Annual living costs</span>
+                            <span className="text-base font-semibold text-muted-foreground">{formatCurrencyString(course.annualLivingCostGbp, 'GBP')}/yr</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Cost Overview narrative */}
+                  {course.costOverview && (
+                    <div className="rounded-3xl border border-border/60 bg-card p-8">
+                      <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                        <Wallet className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+                        Cost Overview
+                      </h3>
+                      <div className="prose prose-lg prose-neutral dark:prose-invert max-w-none text-muted-foreground">
+                        {renderRichText(course.costOverview, { forceBullets: true })}
+                      </div>
+                    </div>
+                  )}
+
+                  {!course.tuition && !course.studentDormCost && !course.averageRentOutsideCampus && !course.costOfLife && !course.monthlyTotalGbp && (
                     <div className="rounded-3xl border border-border/60 bg-card p-8">
                       <p className="text-muted-foreground italic">Cost and living expense information coming soon.</p>
                     </div>
