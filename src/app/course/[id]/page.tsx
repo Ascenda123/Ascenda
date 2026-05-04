@@ -616,6 +616,7 @@ export default function CoursePage({ params }: { params: { id: string } }) {
         // Use numeric tuition field first, fall back to string fields
         const tuitionValue =
           rawData.yearly_international_tuition_fee_gbp ??
+          rawData.tuition ??
           (rawData.tuition_fees_international ? String(rawData.tuition_fees_international) : null) ??
           (rawData.tuition_fees_home ? String(rawData.tuition_fees_home) : null) ??
           null;
