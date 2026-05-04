@@ -2,9 +2,12 @@ import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { DashboardShell } from '@/components/layout/shell';
-import { TaskList } from '@/components/dashboard/task-list';
+import { PageHero } from '@/components/layout/page-hero';
 import { SectionNav } from '@/components/layout/section-nav';
+import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import { PLANNER_SECTION_ITEMS } from '@/components/layout/navigation';
+import { CrossApplicationTasks, type SeedTask } from '@/components/applications/cross-application-tasks';
+import { DEMO_REQUIREMENTS, DEMO_NUDGES, DEMO_TIMELINE_DEADLINES } from '@/lib/data/student-demo-data';
 
 export const metadata: Metadata = {
   title: 'Tasks'
@@ -20,28 +23,54 @@ export default async function TasksPage() {
     redirect('/login');
   }
 
-  const { data: tasks } = await supabase
-    .from('application_checklist')
-    .select('*')
-    .eq('status', 'todo')
-    .order('due_date', { ascending: true });
+  // Build a unified task feed from requirements, nudges, and deadlines.
+  const seed: SeedTask[] = [];
+
+  DEMO_REQUIREMENTS.forEach((req) => {
+    req.cells
+      .filter((cell) => cell.status !== 'not-required')
+      .forEach((cell, i) => {
+        seed.push({
+          id: `${req.id}-cell-${i}`,
+          name: `${cell.detail ?? cell.category} — ${req.university}`,
+          done: cell.status === 'complete',
+          group: req.university
+        });
+      });
+  });
+
+  DEMO_NUDGES.forEach((n) => {
+    seed.push({
+      id: `nudge-${n.id}`,
+      name: n.title,
+      done: false,
+      dueDate: n.dueDate,
+      group: n.university ?? 'General'
+    });
+  });
+
+  DEMO_TIMELINE_DEADLINES.slice(0, 6).forEach((d) => {
+    seed.push({
+      id: `deadline-${d.id}`,
+      name: d.title,
+      done: false,
+      dueDate: d.date,
+      group: d.university
+    });
+  });
 
   return (
     <DashboardShell>
       <SectionNav items={PLANNER_SECTION_ITEMS} />
-      <section className="space-y-2">
-        <h1 className="text-[22px] font-semibold leading-snug text-foreground md:text-[28px]">Tasks</h1>
-        <p className="text-sm text-muted-foreground">Action items grouped across all applications.</p>
-      </section>
-      <TaskList
-        title="Tasks to complete"
-        tasks={(tasks ?? []).map((task) => ({
-          id: task.id,
-          name: task.task_name,
-          status: task.status,
-          dueDate: task.due_date ?? undefined
-        }))}
+      <PageHero
+        tone="student"
+        eyebrow="Tasks"
+        title="Everything still to do"
+        description="Action items across all your applications. Mark them off as you go."
+        accent="Action board"
+        breadcrumbs={<Breadcrumbs />}
       />
+      <CrossApplicationTasks initialTasks={seed} />
     </DashboardShell>
   );
 }
