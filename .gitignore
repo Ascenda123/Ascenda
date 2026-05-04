@@ -14,3 +14,4 @@ Interview Transcripts/
 
 # Generated import CSVs (recreated by scripts/all-countries-to-supabase.ts)
 supabase/imports/*.csv
+.vercel

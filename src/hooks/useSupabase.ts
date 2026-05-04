@@ -6,5 +6,11 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/lib/types/database';
 
 export const useSupabase = (): SupabaseClient<Database> => {
-  return useMemo(() => getBrowserSupabaseClient(), []);
+  return useMemo(() => {
+    if (typeof window === 'undefined') {
+      return {} as SupabaseClient<Database>;
+    }
+
+    return getBrowserSupabaseClient();
+  }, []);
 };

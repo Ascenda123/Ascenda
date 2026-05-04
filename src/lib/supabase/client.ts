@@ -11,7 +11,9 @@ export const getBrowserSupabaseClient = () => {
     const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
     if (!url || !anonKey) {
-      throw new Error('Missing Supabase browser credentials');
+      throw new Error(
+        'Missing Supabase browser credentials. Create .env.local from .env.example and set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.'
+      );
     }
 
     client = createBrowserClient<Database>(url, anonKey);

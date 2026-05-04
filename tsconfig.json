@@ -44,6 +44,9 @@
   ],
   "exclude": [
     "node_modules",
-    "supabase"
+    "supabase",
+    "Ascenda",
+    "scripts",
+    ".next"
   ]
 }

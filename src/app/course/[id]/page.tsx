@@ -595,9 +595,10 @@ export default function CoursePage({ params }: { params: { id: string } }) {
           return;
         }
 
-        const uni = (data as Record<string, any>).universities ?? {};
+        const rawData = data as Record<string, any>;
+        const uni = rawData.universities ?? {};
         const uniMeta = uni && typeof uni.metadata === 'object' && uni.metadata !== null ? (uni.metadata as Record<string, unknown>) : {};
-        const programMeta = data.metadata && typeof data.metadata === 'object' ? (data.metadata as Record<string, unknown>) : {};
+        const programMeta = rawData.metadata && typeof rawData.metadata === 'object' ? (rawData.metadata as Record<string, unknown>) : {};
         const logoUrl =
           typeof uniMeta.logo_url === 'string'
             ? (uniMeta.logo_url as string)
@@ -605,13 +606,13 @@ export default function CoursePage({ params }: { params: { id: string } }) {
               ? (uniMeta.logoUrl as string)
               : undefined;
         const location = normalizeLocation(uni.city, uni.region, uni.country);
-        const duration = data.duration || null;
-        const intake = data.start_date || null;
+        const duration = rawData.duration || null;
+        const intake = rawData.start_date || null;
         // Use numeric tuition field first, fall back to string fields
         const tuitionValue =
-          data.yearly_international_tuition_fee_gbp ??
-          (data.tuition_fees_international ? String(data.tuition_fees_international) : null) ??
-          (data.tuition_fees_home ? String(data.tuition_fees_home) : null) ??
+          rawData.yearly_international_tuition_fee_gbp ??
+          (rawData.tuition_fees_international ? String(rawData.tuition_fees_international) : null) ??
+          (rawData.tuition_fees_home ? String(rawData.tuition_fees_home) : null) ??
           null;
         const tuition = tuitionValue !== null && tuitionValue !== undefined
           ? typeof tuitionValue === 'number'
@@ -620,41 +621,41 @@ export default function CoursePage({ params }: { params: { id: string } }) {
           : null;
 
         const mapped: CourseView = {
-          id: data.id,
-          title: (data as Record<string, any>).course_name,
+          id: rawData.id,
+          title: rawData.course_name,
           university: uni.name ?? 'University',
           logoUrl: logoUrl ?? null,
           location,
-          level: data.study_level ?? null,
+          level: rawData.study_level ?? null,
           duration,
           intake,
-          campus: data.campus ?? null,
+          campus: rawData.campus ?? null,
           tuition,
-          ucasCode: data.ucas_code ?? null,
-          startDate: data.start_date ?? null,
+          ucasCode: rawData.ucas_code ?? null,
+          startDate: rawData.start_date ?? null,
           summary:
-            data.course_summary && String(data.course_summary).trim().length > 0
-              ? data.course_summary
-              : buildFallbackSummary((data as Record<string, any>).course_name, uni.name, data.study_level, location),
+            rawData.course_summary && String(rawData.course_summary).trim().length > 0
+              ? rawData.course_summary
+              : buildFallbackSummary(rawData.course_name, uni.name, rawData.study_level, location),
           modules:
-            data.modules && String(data.modules).trim().length > 0
-              ? data.modules
-              : buildFallbackModules((data as Record<string, any>).course_name),
+            rawData.modules && String(rawData.modules).trim().length > 0
+              ? rawData.modules
+              : buildFallbackModules(rawData.course_name),
           assessment:
-            data.assessment_methods && String(data.assessment_methods).trim().length > 0
-              ? data.assessment_methods
+            rawData.assessment_methods && String(rawData.assessment_methods).trim().length > 0
+              ? rawData.assessment_methods
               : buildFallbackAssessment(),
-          requirements: buildRequirements(data),
+          requirements: buildRequirements(rawData),
           quickFacts: [],
-          courseUrl: data.provider_course_url ?? null,
-          applyUrl: data.provider_apply_url ?? null,
-          outcomes: buildOutcomes(data),
-          openDays: parseOpenDays((data as Record<string, any>).open_days),
-          courseRequirements: data.course_requirements ?? (programMeta.course_requirements as string | undefined) ?? null,
-          careerOutcomesOverview: data.career_outcomes_overview ?? (programMeta.career_outcomes_overview as string | undefined) ?? null,
-          studentLifeOverview: data.student_life_overview ?? (programMeta.student_life_overview as string | undefined) ?? null,
-          studentLifeTags: data.student_life_tags ?? (programMeta.student_life_tags as string | undefined) ?? null,
-          costOverview: data.cost_overview ?? (programMeta.cost_overview as string | undefined) ?? null,
+          courseUrl: rawData.provider_course_url ?? null,
+          applyUrl: rawData.provider_apply_url ?? null,
+          outcomes: buildOutcomes(rawData),
+          openDays: parseOpenDays(rawData.open_days),
+          courseRequirements: rawData.course_requirements ?? (programMeta.course_requirements as string | undefined) ?? null,
+          careerOutcomesOverview: rawData.career_outcomes_overview ?? (programMeta.career_outcomes_overview as string | undefined) ?? null,
+          studentLifeOverview: rawData.student_life_overview ?? (programMeta.student_life_overview as string | undefined) ?? null,
+          studentLifeTags: rawData.student_life_tags ?? (programMeta.student_life_tags as string | undefined) ?? null,
+          costOverview: rawData.cost_overview ?? (programMeta.cost_overview as string | undefined) ?? null,
           // University life & campus
           universityLife: uni.university_life ?? null,
           culturalSocialEnvironment: uni.cultural_social_environment ?? null,
@@ -667,20 +668,20 @@ export default function CoursePage({ params }: { params: { id: string } }) {
           nssPct: uni.nss_score_pct ?? null,
           internationalStudentsPct: uni.international_students_ratio_pct ?? null,
           // Career outcomes
-          placementYear: data.placement_year ?? null,
-          placementYearDetail: data.placement_year_detail ?? null,
-          topIndustries: data.top_industries ?? null,
+          placementYear: rawData.placement_year ?? null,
+          placementYearDetail: rawData.placement_year_detail ?? null,
+          topIndustries: rawData.top_industries ?? null,
           graduateEmploymentRate: uni.graduate_employment_rate_pct ?? null,
-          averageStartingSalary: data.average_starting_salary_gbp_override ?? uni.average_starting_salary_gbp ?? null,
-          studyAbroadOption: data.study_abroad_option ?? null,
+          averageStartingSalary: rawData.average_starting_salary_gbp_override ?? uni.average_starting_salary_gbp ?? null,
+          studyAbroadOption: rawData.study_abroad_option ?? null,
           // Cost of living
-          studentDormCost: data.student_dorm_cost_gbp_per_year_override ?? null,
-          averageRentOutsideCampus: data.average_rent_outside_campus_gbp_per_month_override ?? null,
-          costOfLife: data.cost_of_life_override ?? null,
-          currency: data.currency ?? uni.currency ?? null,
-          tuitionFeesInternational: data.tuition_fees_international ?? null,
-          tuitionFeesHome: data.tuition_fees_home ?? null,
-          yearlyIntlTuition: data.yearly_international_tuition_fee_gbp ?? null,
+          studentDormCost: rawData.student_dorm_cost_gbp_per_year_override ?? null,
+          averageRentOutsideCampus: rawData.average_rent_outside_campus_gbp_per_month_override ?? null,
+          costOfLife: rawData.cost_of_life_override ?? null,
+          currency: rawData.currency ?? uni.currency ?? null,
+          tuitionFeesInternational: rawData.tuition_fees_international ?? null,
+          tuitionFeesHome: rawData.tuition_fees_home ?? null,
+          yearlyIntlTuition: rawData.yearly_international_tuition_fee_gbp ?? null,
         };
 
         mapped.quickFacts = buildQuickFacts(mapped);
