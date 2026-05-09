@@ -131,7 +131,7 @@ export default function UniversitySearchResultsPage() {
 
     const fetchFilters = async () => {
       try {
-        const response = await fetch('/api/search/filters', { cache: 'no-store' });
+        const response = await fetch('/api/search/filters', { next: { revalidate: 300 } });
         if (!response.ok) {
           throw new Error(`Failed to load filters (${response.status})`);
         }
@@ -243,7 +243,18 @@ export default function UniversitySearchResultsPage() {
             .from('programs')
             .select(
               `
-            *,
+            id,
+            course_name,
+            name,
+            university_id,
+            study_level,
+            level,
+            duration,
+            duration_years,
+            start_date,
+            tuition,
+            currency,
+            metadata,
             universities!left (
               id,
               name,

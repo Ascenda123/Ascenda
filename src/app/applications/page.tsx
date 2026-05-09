@@ -7,7 +7,19 @@ import { DeadlineTimeline } from '@/components/dashboard/deadline-timeline';
 import { DocumentUploader } from '@/components/applications/document-uploader';
 import { ApplicationPriorityBoard, type PriorityItem } from '@/components/applications/application-priority-board';
 import { RequirementTracker, type RequirementItem } from '@/components/applications/requirement-tracker';
-import { PlannerCalendar, type PlannerEvent } from '@/components/applications/planner-calendar';
+import dynamic from 'next/dynamic';
+const PlannerCalendar = dynamic(
+  () => import('@/components/applications/planner-calendar').then((m) => m.PlannerCalendar),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex h-96 items-center justify-center rounded-2xl border border-border bg-muted/20 text-sm text-muted-foreground">
+        Loading calendar…
+      </div>
+    ),
+  }
+);
+type PlannerEvent = import('@/components/applications/planner-calendar').PlannerEvent;
 import { ReferenceTracker, type ReferenceItem } from '@/components/applications/reference-tracker';
 import { SignalCenter, type SignalItem } from '@/components/applications/signal-center';
 import { PageHero } from '@/components/layout/page-hero';

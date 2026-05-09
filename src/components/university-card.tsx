@@ -115,7 +115,6 @@ export function UniversityCard({
                                 fill
                                 className="object-contain"
                                 sizes="48px"
-                                unoptimized
                             />
                         </div>
                     ) : null}
