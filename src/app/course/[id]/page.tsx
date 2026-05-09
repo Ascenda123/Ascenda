@@ -34,6 +34,7 @@ type CourseView = {
   intake?: string | null;
   campus?: string | null;
   tuition?: string | number | null;
+  domesticTuition?: string | number | null;
   currency?: string | null;
   tuitionFeesInternational?: string | null;
   tuitionFeesHome?: string | null;
@@ -206,7 +207,11 @@ const buildQuickFacts = (course: CourseView): QuickFact[] => {
   const intakeDisplay = intakeRaw.length > 0 ? intakeRaw : 'TBD';
   const showStart = startRaw.length > 0 && startRaw.toLowerCase() !== intakeRaw.toLowerCase();
   const startDisplay = showStart ? startRaw : '';
-  facts.push({ label: 'Tuition', value: tuitionDisplay, icon: Wallet });
+  facts.push({ label: course.domesticTuition ? 'Intl. Tuition' : 'Tuition', value: tuitionDisplay, icon: Wallet });
+  if (course.domesticTuition) {
+    const domesticDisplay = formatCurrencyString(course.domesticTuition, course.currency) ?? '';
+    if (domesticDisplay) facts.push({ label: 'Home Tuition', value: domesticDisplay, icon: Wallet });
+  }
   facts.push({ label: 'Intake', value: intakeDisplay, icon: CalendarDays });
   if (showStart) {
     facts.push({ label: 'Start date', value: startDisplay, icon: CalendarDays });
@@ -637,6 +642,10 @@ export default function CoursePage({ params }: { params: { id: string } }) {
           intake,
           campus: rawData.campus ?? null,
           tuition,
+          domesticTuition:
+            rawData.yearly_international_tuition_fee_gbp != null && rawData.tuition != null
+              ? rawData.tuition
+              : null,
           ucasCode: rawData.ucas_code ?? null,
           startDate: rawData.start_date ?? null,
           summary:
@@ -723,6 +732,10 @@ export default function CoursePage({ params }: { params: { id: string } }) {
     ? formatCurrencyString(costTuition, course?.currency)
     : null;
 
+  const formattedDomesticTuition = course?.domesticTuition
+    ? formatCurrencyString(course.domesticTuition, course.currency)
+    : null;
+
   const numericCostTuition = useMemo(() => {
     if (!costTuition) return 0;
     const parsed = Number(String(costTuition).replace(/[^0-9.-]+/g, ''));
@@ -744,7 +757,12 @@ export default function CoursePage({ params }: { params: { id: string } }) {
     course?.averageRentOutsideCampus ||
     course?.costOfLife ||
     course?.intlTuitionLow ||
-    course?.intlTuitionHigh
+    course?.intlTuitionHigh ||
+    course?.monthlyHousingGbp ||
+    course?.monthlyFoodGbp ||
+    course?.monthlyTotalGbp ||
+    course?.annualLivingCostGbp ||
+    course?.costOverview
   );
 
   const TABS = [
@@ -1027,8 +1045,14 @@ export default function CoursePage({ params }: { params: { id: string } }) {
                       <div className="grid gap-4 sm:grid-cols-3">
                         {formattedCostTuition && (
                           <div className="rounded-2xl bg-card/50 border border-border/40 p-4">
-                            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Annual Tuition</p>
+                            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">{formattedDomesticTuition ? 'Intl. Tuition' : 'Annual Tuition'}</p>
                             <p className="text-2xl font-bold text-foreground">{formattedCostTuition}</p>
+                          </div>
+                        )}
+                        {formattedDomesticTuition && (
+                          <div className="rounded-2xl bg-card/50 border border-border/40 p-4">
+                            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Home Tuition</p>
+                            <p className="text-2xl font-bold text-foreground">{formattedDomesticTuition}</p>
                           </div>
                         )}
                         {course.studentDormCost && (
@@ -1695,10 +1719,21 @@ export default function CoursePage({ params }: { params: { id: string } }) {
                     {formattedCostTuition && (
                       <Card className="border-border/60 bg-gradient-to-br from-orange-500/5 to-transparent">
                         <CardHeader className="pb-2">
-                          <CardTitle className="text-xs font-bold text-orange-600 dark:text-orange-400 uppercase tracking-wider">Annual Tuition</CardTitle>
+                          <CardTitle className="text-xs font-bold text-orange-600 dark:text-orange-400 uppercase tracking-wider">{formattedDomesticTuition ? 'Intl. Tuition' : 'Annual Tuition'}</CardTitle>
                         </CardHeader>
                         <CardContent>
                           <p className="text-2xl font-bold text-foreground">{formattedCostTuition}</p>
+                          <p className="text-xs text-muted-foreground mt-1">Per year</p>
+                        </CardContent>
+                      </Card>
+                    )}
+                    {formattedDomesticTuition && (
+                      <Card className="border-border/60 bg-gradient-to-br from-green-500/5 to-transparent">
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-xs font-bold text-green-600 dark:text-green-400 uppercase tracking-wider">Home Tuition</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-2xl font-bold text-foreground">{formattedDomesticTuition}</p>
                           <p className="text-xs text-muted-foreground mt-1">Per year</p>
                         </CardContent>
                       </Card>
@@ -1769,8 +1804,14 @@ export default function CoursePage({ params }: { params: { id: string } }) {
                       <div className="space-y-4">
                         {formattedCostTuition && (
                           <div className="flex items-center justify-between pb-4 border-b border-border/40">
-                            <span className="text-foreground font-medium">Tuition Fees</span>
+                            <span className="text-foreground font-medium">{formattedDomesticTuition ? 'Tuition (International)' : 'Tuition Fees'}</span>
                             <span className="text-lg font-bold text-primary">{formattedCostTuition}</span>
+                          </div>
+                        )}
+                        {formattedDomesticTuition && (
+                          <div className="flex items-center justify-between pb-4 border-b border-border/40">
+                            <span className="text-foreground font-medium">Tuition (Home/EU)</span>
+                            <span className="text-lg font-bold text-green-600 dark:text-green-400">{formattedDomesticTuition}</span>
                           </div>
                         )}
                         {course.studentDormCost && (
