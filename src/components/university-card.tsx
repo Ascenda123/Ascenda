@@ -185,7 +185,7 @@ export function UniversityCard({
                                 className={cn(
                                     buttonVariants({ size: 'sm', className: 'w-full rounded-xl font-semibold shadow-sm' })
                                 )}
-                                prefetch
+                                prefetch={false}
                             >
                                 {ACTION_TEXT.viewCourse}
                             </Link>
