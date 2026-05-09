@@ -662,11 +662,6 @@ export function CoursePageClient({ params, initialData }: { params: { id: string
             average_salary_after_15m,
             historic_entry_grades,
             open_days,
-            course_requirements,
-            career_outcomes_overview,
-            student_life_overview,
-            student_life_tags,
-            cost_overview,
             cost_of_life_override,
             placement_year,
             placement_year_detail,
@@ -717,7 +712,10 @@ export function CoursePageClient({ params, initialData }: { params: { id: string
         const mapped = mapRawData(rawData, uni);
         setCourse(mapped);
       } catch (err) {
-        const message = err instanceof Error ? err.message : 'Unable to load this course.';
+        console.error('[CoursePageClient] fetch error:', err);
+        const message = err instanceof Error
+          ? err.message
+          : (err as any)?.message ?? JSON.stringify(err) ?? 'Unable to load this course.';
         setError(message);
       } finally {
         setLoading(false);

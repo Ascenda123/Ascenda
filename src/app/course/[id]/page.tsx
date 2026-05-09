@@ -34,11 +34,6 @@ const PROGRAMS_SELECT = `
   average_salary_after_15m,
   historic_entry_grades,
   open_days,
-  course_requirements,
-  career_outcomes_overview,
-  student_life_overview,
-  student_life_tags,
-  cost_overview,
   cost_of_life_override,
   placement_year,
   placement_year_detail,
@@ -88,15 +83,17 @@ export default async function CoursePage({ params }: { params: { id: string } })
       .eq('id', params.id)
       .maybeSingle();
 
-    if (!error && data) {
+    if (error) {
+      console.error('[CoursePage SSR] supabase error:', error);
+    } else if (data) {
       const raw = data as Record<string, any>;
       initialData = {
         programData: raw,
         universityData: raw.universities ?? {},
       };
     }
-  } catch {
-    // Falls back to client-side fetch inside CoursePageClient
+  } catch (e) {
+    console.error('[CoursePage SSR] exception:', e);
   }
 
   return (
