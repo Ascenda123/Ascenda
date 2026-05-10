@@ -174,7 +174,7 @@ export const MatchList = ({ matches }: MatchListProps) => {
           tierGroups.map(({ tier, visible, totalDeduped, hasMore }) => {
             const visual = TIER_VISUAL[MATCH_TIER_TO_FIT[tier]];
             const TierIcon = visual.icon;
-            return (selectedTier !== 'All' || totalDeduped > 0) ? (
+            return (selectedTier === 'All' ? totalDeduped > 0 : tier === selectedTier) ? (
               <motion.div
                 key={tier}
                 className={cn('surface-stage space-y-5 border-l-4', visual.border, visual.accent)}
