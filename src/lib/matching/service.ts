@@ -529,8 +529,19 @@ export const loadMatchesForProfile = async (
             .filter((value): value is EnrichedMatch => value !== null);
 
           if (cachedMatches.length > 0) {
-            const limited = options.resultLimit ? cachedMatches.slice(0, options.resultLimit) : cachedMatches;
-            const universitiesCount = new Set(cachedMatches.map((match) => match.university.id)).size;
+            const cachedWithRecognition = cachedMatches.map((m) => {
+              const bd = (cachedRows.find((r) => r.program_id === m.program.id)?.breakdown ?? {}) as Record<string, unknown>;
+              const recScore = typeof bd.university_recognition_score === 'number' ? bd.university_recognition_score : 3;
+              return { match: m, recScore };
+            });
+            cachedWithRecognition.sort((a, b) => {
+              const keyA = a.match.score + (a.recScore / 10) * 5;
+              const keyB = b.match.score + (b.recScore / 10) * 5;
+              return keyB - keyA;
+            });
+            const sortedCachedMatches = cachedWithRecognition.map((x) => x.match);
+            const limited = options.resultLimit ? sortedCachedMatches.slice(0, options.resultLimit) : sortedCachedMatches;
+            const universitiesCount = new Set(sortedCachedMatches.map((match) => match.university.id)).size;
             return {
               matches: limited,
               catalogSize: { programs: cachedMatches.length, universities: universitiesCount },
@@ -843,6 +854,28 @@ export const loadMatchesForProfile = async (
     });
   }
 
+  // Fetch recognition scores and apply as secondary sort key within score bands.
+  // Gives well-known universities a slight boost (up to +5 pts) so equally-good
+  // programs from Oxford/Harvard surface before unknown institutions.
+  const uniqueUniIds = [...new Set(matches.map((m) => m.university.id).filter(Boolean))];
+  const recognitionByUniId = new Map<string, number>();
+  if (uniqueUniIds.length > 0) {
+    const { data: recData } = await (supabase as any)
+      .from('universities')
+      .select('id, recognition_score')
+      .in('id', uniqueUniIds);
+    for (const row of (recData ?? []) as Array<{ id: string; recognition_score: number }>) {
+      if (row.id && typeof row.recognition_score === 'number') {
+        recognitionByUniId.set(row.id, row.recognition_score);
+      }
+    }
+  }
+
+  matches = matches
+    .map((m) => ({ m, key: m.score + ((recognitionByUniId.get(m.university.id) ?? 3) / 10) * 5 }))
+    .sort((a, b) => b.key - a.key)
+    .map((x) => x.m);
+
   if (matches.length > 0) {
     const cachePayload = matches.map((match) => ({
       profile_id: profileId,
@@ -864,7 +897,8 @@ export const loadMatchesForProfile = async (
         university_country: match.university.country,
         university_rank_overall: match.university.rankOverall,
         university_rank_source: match.university.rankSource,
-        university_requires_test: match.university.requiresTest
+        university_requires_test: match.university.requiresTest,
+        university_recognition_score: recognitionByUniId.get(match.university.id) ?? 3
       }
     }));
     const { error: deleteError } = await supabase.from('student_matches').delete().eq('profile_id', profileId);
