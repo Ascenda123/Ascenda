@@ -96,7 +96,7 @@ export function UniversityCard({
                         {scoreValue !== null ? `${scoreValue}%` : 'N/A'}
                     </span>
                 </div>
-                <div className="text-right">
+                <div className={cn('text-right', onToggleSelect ? 'pr-20' : '')}>
                     <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">{location}</p>
                     {tier ? (
                         <p className="mt-1 text-xs font-semibold text-foreground/80">{tier} tier</p>
