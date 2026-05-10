@@ -352,39 +352,70 @@ export default function UniversitySearchResultsPage() {
         const safeSearchQuery = sanitizeSearchValue(searchQuery);
 
         if (safeSearchQuery && !programId && !universityId) {
-          // Split into words so "oxford university" matches "University of Oxford" (any order).
           const normalizedQ = safeSearchQuery.toLowerCase();
           const words = normalizedQ.split(/\s+/).filter((w) => w.length >= 2);
 
-          let matchedUniIds: string[] = [];
-
-          if (allUniversities.length > 0) {
-            // Use already-loaded list for instant client-side match
-            matchedUniIds = allUniversities
-              .filter((u) => {
-                const lower = u.name?.toLowerCase() ?? '';
-                return words.length > 1
-                  ? words.every((w) => lower.includes(w))
-                  : lower.includes(normalizedQ);
-              })
-              .map((u) => u.id)
-              .slice(0, 50);
-          } else {
-            // allUniversities not loaded yet — query DB directly so we don't miss results
-            let uniLookup = supabase.from('universities').select('id').limit(50);
-            if (words.length > 1) {
-              words.forEach((w) => { uniLookup = uniLookup.ilike('name', `%${w}%`); });
-            } else {
-              uniLookup = uniLookup.ilike('name', `%${normalizedQ}%`);
+          // Helper: find university IDs where every given word appears in the name.
+          const lookupUniIds = async (mustMatchWords: string[]): Promise<string[]> => {
+            if (allUniversities.length > 0) {
+              return allUniversities
+                .filter((u) => mustMatchWords.every((w) => (u.name?.toLowerCase() ?? '').includes(w)))
+                .map((u) => u.id)
+                .slice(0, 100);
             }
-            const { data: uniRows } = await uniLookup;
-            matchedUniIds = (uniRows ?? []).map((u) => u.id);
+            let q = supabase.from('universities').select('id').limit(100);
+            mustMatchWords.forEach((w) => { q = q.ilike('name', `%${w}%`); });
+            const { data } = await q;
+            return (data ?? []).map((u) => u.id);
+          };
+
+          // For multi-word queries, try AND-matching all words against university names first.
+          // If that yields nothing, fall back to the most specific single word (shortest,
+          // least likely to be a common word like "university" or "of").
+          let matchedUniIds: string[] = [];
+          if (words.length > 0) {
+            matchedUniIds = await lookupUniIds(words);
+            if (matchedUniIds.length === 0 && words.length > 1) {
+              // Try each word individually, pick the one returning the fewest universities
+              // (most specific). Skip very common words.
+              const skip = new Set(['university', 'college', 'institute', 'school', 'of', 'the', 'and']);
+              const candidates = words.filter((w) => !skip.has(w));
+              for (const word of candidates) {
+                const ids = await lookupUniIds([word]);
+                if (ids.length > 0 && (matchedUniIds.length === 0 || ids.length < matchedUniIds.length)) {
+                  matchedUniIds = ids;
+                }
+              }
+            }
           }
 
           if (matchedUniIds.length > 0) {
-            query = query.or(`course_name.ilike.%${safeSearchQuery}%,university_id.in.(${matchedUniIds.join(',')})`);
+            // Filter by university IDs directly — avoids .or() with spaces in ilike values
+            // which causes PostgREST parse errors.
+            query = query.in('university_id', matchedUniIds);
+            // If there are also non-university words (e.g. "oxford economics"), narrow by course name too.
+            const skip = new Set(['university', 'college', 'institute', 'school', 'of', 'the', 'and']);
+            const courseWords = words.filter((w) => !skip.has(w) && !matchedUniIds.length);
+            // Narrow by course name words that aren't purely university-identifying words
+            const uniNameWords = (allUniversities.length > 0
+              ? allUniversities.filter((u) => matchedUniIds.includes(u.id)).flatMap((u) =>
+                  (u.name?.toLowerCase() ?? '').split(/\s+/)
+                )
+              : []
+            );
+            const extraWords = words.filter(
+              (w) => !skip.has(w) && !uniNameWords.includes(w)
+            );
+            if (extraWords.length > 0) {
+              extraWords.forEach((w) => { query = query.ilike('course_name', `%${w}%`); });
+            }
           } else {
-            query = query.ilike('course_name', `%${safeSearchQuery}%`);
+            // No university matched — search course name with each word (AND)
+            if (words.length > 1) {
+              words.forEach((w) => { query = query.ilike('course_name', `%${w}%`); });
+            } else {
+              query = query.ilike('course_name', `%${normalizedQ}%`);
+            }
           }
         }
 
@@ -513,13 +544,19 @@ export default function UniversitySearchResultsPage() {
         }
 
       } catch (fetchError) {
+        console.error('[SearchResults] fetch error:', fetchError);
+        // Supabase errors are plain objects, not Error instances — never render them raw.
         const message =
           fetchError instanceof Error
             ? fetchError.message
             : typeof fetchError === 'object' && fetchError !== null && 'message' in fetchError
               ? String((fetchError as { message?: unknown }).message)
-              : 'Unable to load results';
-        setError(message || 'Unable to load results');
+              : null;
+        setError(
+          message && !message.startsWith('{') && !message.startsWith('[')
+            ? message
+            : 'Something went wrong loading results. Please try again.'
+        );
       } finally {
         if (isFirstPage) {
           setIsLoading(false);

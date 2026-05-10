@@ -2,17 +2,53 @@ import { NextResponse } from 'next/server';
 import { createRouteHandlerSupabaseClient } from '@/lib/supabase/server';
 
 const MIN_QUERY_LENGTH = 2;
+const LIMIT = 6;
+
+// Words that are almost certainly subject/course terms, not university-identifying words.
+const SUBJECT_WORDS = new Set([
+  'economics', 'law', 'science', 'sciences', 'engineering', 'business', 'finance',
+  'medicine', 'arts', 'technology', 'management', 'computing', 'mathematics', 'maths',
+  'physics', 'chemistry', 'biology', 'history', 'psychology', 'philosophy', 'politics',
+  'sociology', 'literature', 'english', 'accounting', 'marketing', 'design', 'architecture',
+  'education', 'nursing', 'dentistry', 'pharmacy', 'geography', 'languages', 'music',
+  'theology', 'classics', 'anthropology', 'linguistics', 'statistics', 'data',
+  'computer', 'software', 'electrical', 'mechanical', 'civil', 'chemical', 'biomedical',
+  'environmental', 'media', 'journalism', 'communications', 'healthcare', 'social',
+  'criminology', 'economics', 'international', 'global', 'development', 'sustainability',
+  'neuroscience', 'biochemistry', 'genetics', 'mathematics'
+]);
+
+// Stop words that identify nothing on their own.
+const STOP_WORDS = new Set(['university', 'college', 'institute', 'school', 'of', 'the', 'and', 'at', 'in', 'for']);
+
+// Common university abbreviations → a distinctive substring of the full name.
+const ABBREVIATIONS: Record<string, string> = {
+  lse: 'london school of economics',
+  mit: 'massachusetts institute of technology',
+  ucl: 'university college london',
+  nyu: 'new york university',
+  ucla: 'los angeles',
+  usc: 'southern california',
+  cmu: 'carnegie mellon',
+  kcl: "king's college",
+  ic: 'imperial college',
+  ubc: 'british columbia',
+  anu: 'australian national',
+  eth: 'eidgenössische technische',
+  epfl: 'lausanne',
+};
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const query = url.searchParams.get('q')?.trim() ?? '';
   const trending = url.searchParams.get('trending') === 'true';
-  const limit = 6;
 
   const supabase = createRouteHandlerSupabaseClient();
 
   if (!trending && query.length < MIN_QUERY_LENGTH) {
-    return NextResponse.json({ programs: [], universities: [] }, { status: 200, headers: { 'Cache-Control': 'no-store' } });
+    return NextResponse.json({ programs: [], universities: [] }, {
+      status: 200, headers: { 'Cache-Control': 'no-store' }
+    });
   }
 
   const programSelect = 'id,course_name,name,study_level,universities!inner(name,country,city,region)';
@@ -20,8 +56,8 @@ export async function GET(request: Request) {
 
   if (trending) {
     const [programsRes, universitiesRes] = await Promise.all([
-      supabase.from('programs').select(programSelect).order('course_name', { ascending: true }).limit(limit),
-      supabase.from('universities').select(universitySelect).order('name', { ascending: true }).limit(limit)
+      supabase.from('programs').select(programSelect).order('course_name', { ascending: true }).limit(LIMIT),
+      supabase.from('universities').select(universitySelect).order('name', { ascending: true }).limit(LIMIT)
     ]);
     return NextResponse.json(
       { programs: programsRes.data ?? [], universities: universitiesRes.data ?? [] },
@@ -29,47 +65,81 @@ export async function GET(request: Request) {
     );
   }
 
-  // Split query into meaningful words (≥2 chars) for word-order-independent matching.
-  // e.g. "oxford university" → ["oxford", "university"] matches "University of Oxford"
-  const words = query.split(/\s+/).filter((w) => w.length >= 2);
-  const fullPattern = `%${query}%`;
+  const words = query.split(/\s+/).filter((w) => w.length >= 2).map((w) => w.toLowerCase());
+  // Words that could identify a university (not stop words, not pure subject terms)
+  const uniWords = words.filter((w) => !STOP_WORDS.has(w) && !SUBJECT_WORDS.has(w));
+  // Words that look like subject/course terms
+  const subjectWords = words.filter((w) => !STOP_WORDS.has(w) && SUBJECT_WORDS.has(w));
 
-  // 1. Find universities where ALL words appear in the name (in any order).
-  let universityQuery = supabase.from('universities').select(universitySelect).limit(limit);
-  if (words.length > 1) {
-    words.forEach((word) => { universityQuery = universityQuery.ilike('name', `%${word}%`); });
+  // ── University suggestions (autocomplete dropdown) ───────────────────────
+  // AND-match all non-stop words so "oxford university" finds "University of Oxford".
+  const allMeaningful = words.filter((w) => !STOP_WORDS.has(w));
+  let universityQuery = supabase.from('universities').select(universitySelect).limit(LIMIT);
+  if (allMeaningful.length > 0) {
+    allMeaningful.forEach((w) => { universityQuery = universityQuery.ilike('name', `%${w}%`); });
   } else {
-    universityQuery = universityQuery.ilike('name', fullPattern);
+    universityQuery = universityQuery.ilike('name', `%${query}%`);
   }
 
-  // 2. Find university IDs matching all words — used to surface programs from those universities.
+  // ── Program suggestions ──────────────────────────────────────────────────
+  // Strategy:
+  //  1. If there are uni-identifying words, find well-known universities (recognition_score ≥ 6)
+  //     matching those words. Filter programs from those unis, narrowed by subject words.
+  //  2. If no high-recognition university found, search course_name using subject words
+  //     (or uni words if no subject words exist).
+  let programQuery = supabase.from('programs').select(programSelect).limit(LIMIT);
+
   let matchedUniIds: string[] = [];
-  if (words.length > 1) {
-    let uniIdQuery = supabase.from('universities').select('id').limit(20);
-    words.forEach((word) => { uniIdQuery = uniIdQuery.ilike('name', `%${word}%`); });
-    const { data: uniIdData } = await uniIdQuery;
-    matchedUniIds = (uniIdData ?? []).map((u) => u.id);
+
+  if (uniWords.length > 0) {
+    // Try AND-match all uni-identifying words against well-known universities.
+    // Known abbreviations (lse, mit, ucl…) are expanded to a distinctive substring.
+    const recSelect = 'id,recognition_score';
+    let uniLookup = (supabase as any).from('universities').select(recSelect).gte('recognition_score', 5).limit(200);
+    uniWords.forEach((w) => {
+      const expanded = ABBREVIATIONS[w] ?? w;
+      uniLookup = uniLookup.ilike('name', `%${expanded}%`);
+    });
+    const { data: uniData } = await uniLookup;
+    matchedUniIds = ((uniData ?? []) as Array<{ id: string; recognition_score: number }>)
+      .sort((a, b) => b.recognition_score - a.recognition_score)
+      .map((u) => u.id)
+      .slice(0, 20);
   }
 
-  // 3. Program query: match course_name on each word AND/OR be from a matched university.
-  //    Priority: programs whose course_name matches the query OR programs at matched universities.
-  let programQuery = supabase.from('programs').select(programSelect).limit(limit);
   if (matchedUniIds.length > 0) {
-    // Words matched a university — find programs at that university or matching any word in course_name
-    const wordOrParts = words.map((w) => `course_name.ilike.%${w}%`).join(',');
-    programQuery = programQuery.or(`${wordOrParts},university_id.in.(${matchedUniIds.join(',')})`);
-  } else if (words.length > 1) {
-    // No university matched — search course_name for each word (AND)
-    words.forEach((word) => { programQuery = programQuery.ilike('course_name', `%${word}%`); });
+    // Found recognizable universities — show programs from them.
+    programQuery = programQuery.in('university_id', matchedUniIds);
+    // If there are subject words too (e.g. "cambridge economics"), narrow by course name.
+    if (subjectWords.length > 0) {
+      subjectWords.forEach((w) => { programQuery = programQuery.ilike('course_name', `%${w}%`); });
+    }
   } else {
-    programQuery = programQuery.or(`course_name.ilike.${fullPattern},name.ilike.${fullPattern}`);
+    // No recognizable university matched — search by subject/course terms.
+    const courseTerms = subjectWords.length > 0 ? subjectWords : uniWords;
+    if (courseTerms.length > 0) {
+      // Use OR so single-word subject searches ("economics") are flexible,
+      // and multi-word ("computer science") get both terms.
+      // Avoid chaining ilike AND on different terms since "computer" AND "science"
+      // would miss courses named just "Computer Science" if either word is missing.
+      const firstTerm = courseTerms[0];
+      programQuery = programQuery.ilike('course_name', `%${firstTerm}%`);
+      // For multi-word subject queries, also filter by second term to stay relevant.
+      if (courseTerms.length > 1) {
+        programQuery = programQuery.ilike('course_name', `%${courseTerms[1]}%`);
+      }
+    } else {
+      programQuery = programQuery.ilike('course_name', `%${query}%`);
+    }
   }
 
   const [programsRes, universitiesRes] = await Promise.all([programQuery, universityQuery]);
 
   if (programsRes.error || universitiesRes.error) {
-    const error = programsRes.error ?? universitiesRes.error;
-    return NextResponse.json({ error: error?.message ?? 'Search failed' }, { status: 500 });
+    console.error('[suggestions] error:', programsRes.error ?? universitiesRes.error);
+    return NextResponse.json({ programs: [], universities: [] }, {
+      status: 200, headers: { 'Cache-Control': 'no-store' }
+    });
   }
 
   return NextResponse.json(
