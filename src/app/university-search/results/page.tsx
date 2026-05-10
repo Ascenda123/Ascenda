@@ -352,19 +352,34 @@ export default function UniversitySearchResultsPage() {
         const safeSearchQuery = sanitizeSearchValue(searchQuery);
 
         if (safeSearchQuery && !programId && !universityId) {
-          // Split into words so "oxford university" matches "University of Oxford".
-          // Each word must appear somewhere in the university name (AND).
+          // Split into words so "oxford university" matches "University of Oxford" (any order).
           const normalizedQ = safeSearchQuery.toLowerCase();
           const words = normalizedQ.split(/\s+/).filter((w) => w.length >= 2);
-          const matchedUniIds = allUniversities
-            .filter((u) => {
-              const lower = u.name?.toLowerCase() ?? '';
-              return words.length > 1
-                ? words.every((w) => lower.includes(w))
-                : lower.includes(normalizedQ);
-            })
-            .map((u) => u.id)
-            .slice(0, 50);
+
+          let matchedUniIds: string[] = [];
+
+          if (allUniversities.length > 0) {
+            // Use already-loaded list for instant client-side match
+            matchedUniIds = allUniversities
+              .filter((u) => {
+                const lower = u.name?.toLowerCase() ?? '';
+                return words.length > 1
+                  ? words.every((w) => lower.includes(w))
+                  : lower.includes(normalizedQ);
+              })
+              .map((u) => u.id)
+              .slice(0, 50);
+          } else {
+            // allUniversities not loaded yet — query DB directly so we don't miss results
+            let uniLookup = supabase.from('universities').select('id').limit(50);
+            if (words.length > 1) {
+              words.forEach((w) => { uniLookup = uniLookup.ilike('name', `%${w}%`); });
+            } else {
+              uniLookup = uniLookup.ilike('name', `%${normalizedQ}%`);
+            }
+            const { data: uniRows } = await uniLookup;
+            matchedUniIds = (uniRows ?? []).map((u) => u.id);
+          }
 
           if (matchedUniIds.length > 0) {
             query = query.or(`course_name.ilike.%${safeSearchQuery}%,university_id.in.(${matchedUniIds.join(',')})`);
