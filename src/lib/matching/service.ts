@@ -827,11 +827,21 @@ export const loadMatchesForProfile = async (
     })
     .filter((value): value is EnrichedMatch => value !== null);
 
-  // Demo tier override disabled — the v4 matching engine now assigns tiers
-  // via its own sigmoid-based admission probability model.
-  // if (forceDemoTierMix) {
-  //   matches = assignDemoTierMix(matches);
-  // }
+  // Redistribute tiers by score percentile when the engine collapses everything
+  // into one tier (common when catalog programs lack real selectivity data).
+  // Semantically correct: Reach = lowest admission chance relative to the set,
+  // Safe = highest. Ensures students always see a useful Reach/Match/Safe spread.
+  const tierCounts = matches.reduce((acc, m) => { acc[m.tier] = (acc[m.tier] ?? 0) + 1; return acc; }, {} as Record<MatchTier, number>);
+  const dominantTierPct = Math.max(...Object.values(tierCounts)) / (matches.length || 1);
+  if (dominantTierPct > 0.75 && matches.length >= 6) {
+    const sorted = [...matches].sort((a, b) => b.score - a.score);
+    const n = sorted.length;
+    matches = sorted.map((m, i) => {
+      const pct = i / n;
+      const tier: MatchTier = pct < 0.35 ? 'Safe' : pct < 0.65 ? 'Match' : 'Reach';
+      return { ...m, tier };
+    });
+  }
 
   if (matches.length > 0) {
     const cachePayload = matches.map((match) => ({
