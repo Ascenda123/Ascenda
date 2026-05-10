@@ -352,17 +352,21 @@ export default function UniversitySearchResultsPage() {
         const safeSearchQuery = sanitizeSearchValue(searchQuery);
 
         if (safeSearchQuery && !programId && !universityId) {
-          // Complex Logic: Find IDs of universities matching the name
+          // Split into words so "oxford university" matches "University of Oxford".
+          // Each word must appear somewhere in the university name (AND).
           const normalizedQ = safeSearchQuery.toLowerCase();
+          const words = normalizedQ.split(/\s+/).filter((w) => w.length >= 2);
           const matchedUniIds = allUniversities
-            .filter(u => u.name?.toLowerCase().includes(normalizedQ))
-            .map(u => u.id)
-            .slice(0, 50); // Limit to 50 to avoid massive URLs
+            .filter((u) => {
+              const lower = u.name?.toLowerCase() ?? '';
+              return words.length > 1
+                ? words.every((w) => lower.includes(w))
+                : lower.includes(normalizedQ);
+            })
+            .map((u) => u.id)
+            .slice(0, 50);
 
-          // Construct OR query
-          // course_name ILIKE query OR university_id IN (matches)
           if (matchedUniIds.length > 0) {
-            // Use the simplified syntax avoiding joined table reference
             query = query.or(`course_name.ilike.%${safeSearchQuery}%,university_id.in.(${matchedUniIds.join(',')})`);
           } else {
             query = query.ilike('course_name', `%${safeSearchQuery}%`);

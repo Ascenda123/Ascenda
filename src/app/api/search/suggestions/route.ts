@@ -25,9 +25,18 @@ export async function GET(request: Request) {
     programQuery = programQuery.order('course_name', { ascending: true });
     universityQuery = universityQuery.order('name', { ascending: true });
   } else {
+    // Split into words so "oxford university" matches "University of Oxford".
+    // Each word must appear somewhere in the name (AND logic via chained ilike).
+    const words = query.split(/\s+/).filter((w) => w.length >= 2);
     const pattern = `%${query}%`;
     programQuery = programQuery.or(`course_name.ilike.${pattern},name.ilike.${pattern}`);
-    universityQuery = universityQuery.ilike('name', pattern);
+    if (words.length > 1) {
+      words.forEach((word) => {
+        universityQuery = universityQuery.ilike('name', `%${word}%`);
+      });
+    } else {
+      universityQuery = universityQuery.ilike('name', pattern);
+    }
   }
 
   const [programsRes, universitiesRes] = await Promise.all([programQuery, universityQuery]);
