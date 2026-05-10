@@ -25,7 +25,7 @@ const TIER_DESCRIPTIONS: Record<MatchTier, string> = MATCHES_TEXT.tierDescriptio
 
 const INITIAL_PER_TIER = 6;
 const EXPAND_STEP = 12;
-const MAX_PER_UNIVERSITY = 3;
+const MAX_PER_UNIVERSITY = 2;
 const tierCardVariants = {
   hidden: { opacity: 0, y: 16 },
   show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: 'easeOut' as any } }

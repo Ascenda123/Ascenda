@@ -29,7 +29,7 @@ export default async function MatchesPage() {
     redirect('/login');
   }
 
-  const matchResult = await loadMatchesForProfile(supabase, user.id, { resultLimit: 300 });
+  const matchResult = await loadMatchesForProfile(supabase, user.id, { resultLimit: 900 });
 
   if (matchResult.error) {
     return (

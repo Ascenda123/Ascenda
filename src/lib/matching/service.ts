@@ -729,6 +729,23 @@ export const loadMatchesForProfile = async (
 
   const universitiesCount = new Set(enrichedCourses.map((course) => course.university_id)).size;
 
+  // Fetch recognition scores for all universities in the catalog up front.
+  // Used both for pinning high-prestige schools that fall below the result cap
+  // and for the final recognition-boosted sort.
+  const allUniIds = [...new Set(enrichedCourses.map((c) => c.university_id).filter(Boolean))];
+  const recognitionByUniId = new Map<string, number>();
+  if (allUniIds.length > 0) {
+    const { data: recData } = await (supabase as any)
+      .from('universities')
+      .select('id, recognition_score')
+      .in('id', allUniIds);
+    for (const row of (recData ?? []) as Array<{ id: string; recognition_score: number }>) {
+      if (row.id && typeof row.recognition_score === 'number') {
+        recognitionByUniId.set(row.id, row.recognition_score);
+      }
+    }
+  }
+
   const studentPayload = buildStudentPayload({
     academic: academicData!,
     lifestyle: lifestyleData ?? null,
@@ -776,13 +793,35 @@ export const loadMatchesForProfile = async (
 
   // Apply result limit per-tier to ensure balanced Reach/Match/Safe representation.
   // Without this, a top-N cut returns only Safety results (highest admission %).
+  // After capping, we pin programs from high-recognition universities (score ≥ 9) that
+  // would otherwise be cut off — prestigious schools always appear as Reach options.
   let limited: RankedCourseMatch[];
   if (options.resultLimit) {
     const perTier = Math.ceil(options.resultLimit / 3);
     const safety = ranked.filter((m) => m.tier_fit === 'Safety').slice(0, perTier);
     const target = ranked.filter((m) => m.tier_fit === 'Target').slice(0, perTier);
-    const reach = ranked.filter((m) => m.tier_fit === 'Reach' || m.tier_fit === 'Harder-than-reach').slice(0, perTier);
-    limited = [...reach, ...target, ...safety];
+    const reachAll = ranked.filter((m) => m.tier_fit === 'Reach' || m.tier_fit === 'Harder-than-reach');
+    const reach = reachAll.slice(0, perTier);
+
+    // Pin top-recognition universities that got cut off from the Reach cap
+    const includedIds = new Set([...reach, ...target, ...safety].map((m) => m.program_id));
+    const cutOffReach = reachAll.slice(perTier);
+    const pinnedReach: RankedCourseMatch[] = [];
+    const pinnedUniCounts = new Map<string, number>();
+    for (const m of cutOffReach) {
+      const course = enrichedCourses.find((c) => c.program_id === m.program_id);
+      if (!course) continue;
+      const recScore = recognitionByUniId.get(course.university_id) ?? 3;
+      if (recScore < 9) continue;
+      const uniCount = pinnedUniCounts.get(course.university_id) ?? 0;
+      if (uniCount >= 3) continue;
+      if (includedIds.has(m.program_id)) continue;
+      pinnedReach.push(m);
+      pinnedUniCounts.set(course.university_id, uniCount + 1);
+      includedIds.add(m.program_id);
+    }
+
+    limited = [...reach, ...pinnedReach, ...target, ...safety];
   } else {
     limited = ranked;
   }
@@ -854,23 +893,8 @@ export const loadMatchesForProfile = async (
     });
   }
 
-  // Fetch recognition scores and apply as secondary sort key within score bands.
-  // Gives well-known universities a slight boost (up to +5 pts) so equally-good
-  // programs from Oxford/Harvard surface before unknown institutions.
-  const uniqueUniIds = [...new Set(matches.map((m) => m.university.id).filter(Boolean))];
-  const recognitionByUniId = new Map<string, number>();
-  if (uniqueUniIds.length > 0) {
-    const { data: recData } = await (supabase as any)
-      .from('universities')
-      .select('id, recognition_score')
-      .in('id', uniqueUniIds);
-    for (const row of (recData ?? []) as Array<{ id: string; recognition_score: number }>) {
-      if (row.id && typeof row.recognition_score === 'number') {
-        recognitionByUniId.set(row.id, row.recognition_score);
-      }
-    }
-  }
-
+  // Apply recognition-boosted sort: well-known universities surface before unknown
+  // ones when admission chances are similar (up to +5 pts boost for score-10 schools).
   matches = matches
     .map((m) => ({ m, key: m.score + ((recognitionByUniId.get(m.university.id) ?? 3) / 10) * 5 }))
     .sort((a, b) => b.key - a.key)
