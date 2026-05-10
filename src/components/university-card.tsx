@@ -4,7 +4,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { Check } from 'lucide-react';
 import type { MatchTier } from '@/lib/matching/match-tier';
 import { TrackProgramButton, type TrackLabelVariant } from '@/components/programs/track-program-button';
 import { ACTION_TEXT } from '@/lib/constants/text';
@@ -20,10 +19,8 @@ export interface UniversityCardProps {
     fitScore?: number | null;
     tier?: MatchTier | null;
     reasons?: string[];
-    highlights?: string[]; // Optional, as EnrichedMatch might not have this exact field yet
-    isSelected?: boolean;
-    onToggleSelect?: () => void;
-    actions?: React.ReactNode; // Slot for custom actions
+    highlights?: string[];
+    actions?: React.ReactNode;
     variant?: 'default' | 'compact';
     trackingLabelVariant?: TrackLabelVariant;
     hideTrackingButton?: boolean;
@@ -39,8 +36,6 @@ export function UniversityCard({
     tier,
     reasons = [],
     highlights = [],
-    isSelected = false,
-    onToggleSelect,
     actions,
     variant = 'default',
     trackingLabelVariant = 'shortlist',
@@ -52,8 +47,7 @@ export function UniversityCard({
     return (
         <article
             className={cn(
-                'group relative flex h-full flex-col overflow-hidden rounded-[28px] border bg-card/80 shadow-[0_22px_50px_-28px_rgba(15,23,42,0.38)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_28px_70px_-30px_rgba(15,23,42,0.42)] dark:bg-muted/20 dark:border-white/10 dark:shadow-none dark:hover:border-primary/50 dark:hover:bg-muted/30',
-                isSelected ? 'border-primary ring-1 ring-primary' : 'border-border',
+                'group relative flex h-full flex-col overflow-hidden rounded-[28px] border border-border bg-card/80 shadow-[0_22px_50px_-28px_rgba(15,23,42,0.38)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_28px_70px_-30px_rgba(15,23,42,0.42)] dark:bg-muted/20 dark:border-white/10 dark:shadow-none dark:hover:border-primary/50 dark:hover:bg-muted/30',
                 variant === 'compact' ? 'p-4' : 'p-5'
             )}
         >
@@ -65,30 +59,6 @@ export function UniversityCard({
                 className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent"
                 aria-hidden
             />
-            {onToggleSelect && (
-                <button
-                    onClick={onToggleSelect}
-                    className={cn(
-                        'absolute right-4 top-4 z-10 flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider backdrop-blur-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
-                        isSelected
-                            ? 'border-primary bg-primary text-primary-foreground shadow-sm'
-                            : 'border-border/70 bg-background/80 text-muted-foreground hover:border-primary/60 hover:text-primary'
-                    )}
-                    aria-label={isSelected ? 'Deselect for comparison' : 'Select for comparison'}
-                    aria-pressed={isSelected}
-                >
-                    <span
-                        className={cn(
-                            'flex h-4 w-4 items-center justify-center rounded-full border',
-                            isSelected ? 'border-primary-foreground bg-primary-foreground/20' : 'border-current'
-                        )}
-                    >
-                        {isSelected ? <Check className="h-3 w-3" /> : null}
-                    </span>
-                    {isSelected ? 'Selected' : 'Compare'}
-                </button>
-            )}
-
             {/* Header: Score & Location */}
             <div className="relative z-10 flex items-start justify-between">
                 <div className={cn('flex items-center justify-center rounded-[18px] border border-white/50 ring-4 shadow-[0_16px_30px_-20px_rgba(15,23,42,0.55)]', scoreColorClass, variant === 'compact' ? 'h-10 w-10' : 'h-12 w-12')}>
@@ -96,7 +66,7 @@ export function UniversityCard({
                         {scoreValue !== null ? `${scoreValue}%` : 'N/A'}
                     </span>
                 </div>
-                <div className={cn('text-right', onToggleSelect ? 'pr-20' : '')}>
+                <div className="text-right">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">{location}</p>
                     {tier ? (
                         <p className="mt-1 text-xs font-semibold text-foreground/80">{tier} tier</p>

@@ -8,9 +8,6 @@ import { cn } from '@/lib/utils';
 import { Grid, LayoutList, ChevronDown, Info } from 'lucide-react';
 import type { EnrichedMatch } from '@/lib/matching/types';
 import { MATCHES_TEXT } from '@/lib/constants/text';
-import { CompareBar } from '@/components/university-search/CompareBar';
-import { ComparisonModal } from '@/components/university-search/ComparisonModal';
-import type { ProgramSearchResult } from '@/components/university-search/types';
 import { TIER_VISUAL, type FitTier } from '@/lib/theme/categories';
 
 const MATCH_TIER_TO_FIT: Record<MatchTier, FitTier> = {
@@ -29,8 +26,6 @@ const TIER_DESCRIPTIONS: Record<MatchTier, string> = MATCHES_TEXT.tierDescriptio
 const INITIAL_PER_TIER = 6;
 const EXPAND_STEP = 12;
 const MAX_PER_UNIVERSITY = 3;
-const MAX_COMPARE_ITEMS = 5;
-
 const tierCardVariants = {
   hidden: { opacity: 0, y: 16 },
   show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: 'easeOut' as any } }
@@ -58,8 +53,6 @@ const dedupeByUniversity = (items: EnrichedMatch[], maxPerUni: number): Enriched
 export const MatchList = ({ matches }: MatchListProps) => {
   const [selectedTier, setSelectedTier] = useState<MatchTier | 'All'>('All');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [selectedForComparison, setSelectedForComparison] = useState<ProgramSearchResult[]>([]);
-  const [isComparisonOpen, setIsComparisonOpen] = useState(false);
   const [tierLimits, setTierLimits] = useState<Record<MatchTier, number>>({
     Reach: INITIAL_PER_TIER,
     Match: INITIAL_PER_TIER,
@@ -98,32 +91,6 @@ export const MatchList = ({ matches }: MatchListProps) => {
       ...prev,
       [tier]: prev[tier] + EXPAND_STEP
     }));
-  }, []);
-
-  const handleToggleSelect = useCallback((match: EnrichedMatch) => {
-    setSelectedForComparison((prev) => {
-      const isSelected = prev.some((item) => item.id === match.program.id);
-      if (isSelected) {
-        return prev.filter((item) => item.id !== match.program.id);
-      }
-      if (prev.length >= MAX_COMPARE_ITEMS) {
-        return prev;
-      }
-
-      const nextItem: ProgramSearchResult = {
-        id: match.program.id,
-        universityId: match.university.id,
-        universityName: match.university.name,
-        programName: match.program.name,
-        location: match.university.country,
-        fitScore: match.score,
-        tier: match.tier,
-        highlights: [match.program.level ?? 'Program', match.program.language ?? 'English'].filter(Boolean),
-        requiresTest: match.university.requiresTest ?? null
-      };
-
-      return [...prev, nextItem];
-    });
   }, []);
 
   const totalShown = tierGroups.reduce((sum, g) => sum + g.visible.length, 0);
@@ -275,8 +242,6 @@ export const MatchList = ({ matches }: MatchListProps) => {
                             ].filter((h): h is string => h != null)}
                             variant={viewMode === 'list' ? 'compact' : 'default'}
                             trackingLabelVariant="planner"
-                            isSelected={selectedForComparison.some((item) => item.id === match.program.id)}
-                            onToggleSelect={() => handleToggleSelect(match)}
                           />
                         </motion.div>
                       ))}
@@ -305,21 +270,6 @@ export const MatchList = ({ matches }: MatchListProps) => {
         )}
       </section>
 
-      <CompareBar
-        selectedItems={selectedForComparison}
-        onClear={() => setSelectedForComparison([])}
-        onRemove={(id) => setSelectedForComparison((prev) => prev.filter((item) => item.id !== id))}
-        onCompare={() => setIsComparisonOpen(true)}
-        maxItems={MAX_COMPARE_ITEMS}
-      />
-
-      <ComparisonModal
-        isOpen={isComparisonOpen}
-        onClose={() => setIsComparisonOpen(false)}
-        universities={selectedForComparison}
-        onRemove={(id) => setSelectedForComparison((prev) => prev.filter((item) => item.id !== id))}
-        maxItems={MAX_COMPARE_ITEMS}
-      />
     </div>
   );
 };

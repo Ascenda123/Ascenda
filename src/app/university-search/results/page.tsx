@@ -7,8 +7,6 @@ import type { MatchTier } from '@/lib/matching/match-tier';
 import { UniversityCard } from '@/components/university-card';
 import { UniversityCardSkeleton } from '@/components/university-card-skeleton';
 import { FilterBar } from '@/components/university-search/FilterBar';
-import { CompareBar } from '@/components/university-search/CompareBar';
-import { ComparisonModal } from '@/components/university-search/ComparisonModal';
 import { cn } from '@/lib/utils';
 import { getBrowserSupabaseClient } from '@/lib/supabase/client';
 import { ProgramSearchResult, tierFromScore } from '@/components/university-search/types';
@@ -86,7 +84,6 @@ const applyProgramVisibilityFilters = (
 };
 
 export default function UniversitySearchResultsPage() {
-  const MAX_COMPARE_ITEMS = 5;
   const PAGE_SIZE = 50;
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -103,8 +100,6 @@ export default function UniversitySearchResultsPage() {
   const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [selectedTiers, setSelectedTiers] = useState<MatchTier[]>(['Reach', 'Match', 'Safe']);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [selectedForComparison, setSelectedForComparison] = useState<ProgramSearchResult[]>([]);
-  const [isComparisonOpen, setIsComparisonOpen] = useState(false);
   const [selectedUniversities, setSelectedUniversities] = useState<string[]>([]);
   const [selectedPrograms, setSelectedPrograms] = useState<string[]>([]);
   const [filterOptions, setFilterOptions] = useState<FilterOption[]>([]);
@@ -664,25 +659,6 @@ export default function UniversitySearchResultsPage() {
     return () => observer.disconnect();
   }, [hasMore, isLoading, isLoadingMore, programId, universityId]);
 
-  const handleToggleSelect = (result: ProgramSearchResult) => {
-    setSelectedForComparison((prev) => {
-      const isSelected = prev.some((item) => item.id === result.id);
-      if (isSelected) {
-        return prev.filter((item) => item.id !== result.id);
-      } else {
-        if (prev.length >= MAX_COMPARE_ITEMS) {
-          // Optional: Show toast notification that max comparison is reached
-          return prev;
-        }
-        return [...prev, result];
-      }
-    });
-  };
-
-  const handleCompare = () => {
-    setIsComparisonOpen(true);
-  };
-
   return (
     <div className="min-h-screen space-y-8 pb-24" >
       <section className="space-y-6">
@@ -789,8 +765,6 @@ export default function UniversitySearchResultsPage() {
                 fitScore={result.fitScore}
                 tier={result.tier ?? undefined}
                 highlights={result.highlights}
-                isSelected={selectedForComparison.some((item) => item.id === result.id)}
-                onToggleSelect={() => handleToggleSelect(result)}
               />
             ))}
           </div>
@@ -810,21 +784,6 @@ export default function UniversitySearchResultsPage() {
         ) : null}
       </section>
 
-      <CompareBar
-        selectedItems={selectedForComparison}
-        onClear={() => setSelectedForComparison([])}
-        onRemove={(id) => setSelectedForComparison((prev) => prev.filter((item) => item.id !== id))}
-        onCompare={handleCompare}
-        maxItems={MAX_COMPARE_ITEMS}
-      />
-
-      <ComparisonModal
-        isOpen={isComparisonOpen}
-        onClose={() => setIsComparisonOpen(false)}
-        universities={selectedForComparison}
-        onRemove={(id) => setSelectedForComparison((prev) => prev.filter((i) => i.id !== id))}
-        maxItems={MAX_COMPARE_ITEMS}
-      />
     </div>
   );
 }
