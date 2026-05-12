@@ -1,20 +1,46 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import {
   AlertTriangle,
   ArrowUpRight,
+  Building2,
   Check,
   Clock,
   FileText,
   GraduationCap,
   Mail,
   MessageSquare,
-  Search
+  Search,
+  Send,
+  UserRound
 } from 'lucide-react';
 import type { CounsellorDocument, CounsellorDocStatus } from '@/lib/data/student-demo-data';
+import { useToast } from '@/components/ui/toast';
+
+type NudgeTarget = 'student' | 'teacher' | 'registrar';
+
+type NudgeState = Record<string, { target: NudgeTarget; at: number }>;
+
+const NUDGE_STORAGE_KEY = 'ascenda-doc-nudges';
+
+const NUDGE_LABELS: Record<NudgeTarget, { label: string; icon: typeof UserRound }> = {
+  student: { label: 'Nudge student', icon: UserRound },
+  teacher: { label: 'Nudge teacher', icon: GraduationCap },
+  registrar: { label: 'Nudge registrar', icon: Building2 }
+};
+
+const formatNudgeAge = (at: number): string => {
+  const sec = Math.max(1, Math.round((Date.now() - at) / 1000));
+  if (sec < 60) return `${sec}s ago`;
+  const min = Math.round(sec / 60);
+  if (min < 60) return `${min}m ago`;
+  const hr = Math.round(min / 60);
+  if (hr < 24) return `${hr}h ago`;
+  return `${Math.round(hr / 24)}d ago`;
+};
 
 const STATUS_CONFIG: Record<CounsellorDocStatus, { icon: typeof Check; label: string; color: string; bg: string }> = {
   received: { icon: Check, label: 'Received', color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-200/60 dark:border-emerald-500/20' },
@@ -43,6 +69,36 @@ interface CounsellorDocumentBoardProps {
 export function CounsellorDocumentBoard({ documents }: CounsellorDocumentBoardProps) {
   const [statusFilter, setStatusFilter] = useState<FilterStatus>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [nudges, setNudges] = useState<NudgeState>({});
+  const { showToast } = useToast();
+
+  // Load persisted nudge state on mount; persist on change.
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(NUDGE_STORAGE_KEY);
+      if (raw) setNudges(JSON.parse(raw));
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(NUDGE_STORAGE_KEY, JSON.stringify(nudges));
+    } catch {
+      // ignore
+    }
+  }, [nudges]);
+
+  const handleNudge = (doc: CounsellorDocument, target: NudgeTarget) => {
+    setNudges((prev) => ({ ...prev, [doc.id]: { target, at: Date.now() } }));
+    const label = target === 'student' ? doc.studentName : target === 'teacher' ? 'the recommender' : 'the registrar';
+    showToast({
+      title: `Nudge sent to ${label}`,
+      description: `${doc.documentName} · ${doc.studentName}`,
+      variant: 'success'
+    });
+  };
 
   const filtered = documents.filter((doc) => {
     if (statusFilter !== 'all' && doc.status !== statusFilter) return false;
@@ -125,44 +181,86 @@ export function CounsellorDocumentBoard({ documents }: CounsellorDocumentBoardPr
                 const cfg = STATUS_CONFIG[doc.status];
                 const Icon = cfg.icon;
                 const TypeIcon = TYPE_ICON[doc.type] ?? FileText;
+                const nudge = nudges[doc.id];
+                const canNudge = doc.status !== 'received';
 
                 return (
-                  <Link
+                  <div
                     key={doc.id}
-                    href={`/counsellor/students/${studentId}?tab=documents`}
                     className={cn(
-                      'flex items-center gap-4 rounded-2xl border px-4 py-3 transition hover:-translate-y-px hover:shadow-sm',
+                      'rounded-2xl border px-4 py-3 transition hover:-translate-y-px hover:shadow-sm',
                       doc.status === 'overdue' ? 'border-red-200/40 bg-red-500/5 dark:border-red-500/15' : 'border-border/60 bg-background/60'
                     )}
                   >
-                    <div className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-xl', cfg.bg)}>
-                      <TypeIcon className={cn('h-4 w-4', cfg.color)} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-foreground truncate">{doc.documentName}</p>
-                      <p className="text-xs text-muted-foreground capitalize">{doc.type}</p>
-                    </div>
-                    <div className="flex items-center gap-3 shrink-0">
-                      {doc.uploadedDate && (
-                        <span className="text-xs text-muted-foreground">Uploaded {formatDate(doc.uploadedDate)}</span>
-                      )}
-                      {doc.status !== 'received' && doc.dueDate && (
-                        <span className={cn('text-xs', doc.status === 'overdue' ? 'text-red-500 font-semibold' : 'text-muted-foreground')}>
-                          Due {formatDate(doc.dueDate)}
-                        </span>
-                      )}
-                      <span className={cn('flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-semibold', cfg.bg, cfg.color)}>
-                        <Icon className="h-3 w-3" />
-                        {cfg.label}
-                      </span>
-                      <ArrowUpRight className="h-4 w-4 text-muted-foreground" aria-hidden />
+                    <div className="flex items-center gap-4">
+                      <div className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-xl', cfg.bg)}>
+                        <TypeIcon className={cn('h-4 w-4', cfg.color)} />
+                      </div>
+                      <Link
+                        href={`/counsellor/students/${studentId}?tab=documents`}
+                        className="flex-1 min-w-0 group"
+                      >
+                        <p className="text-sm font-semibold text-foreground truncate group-hover:text-primary">
+                          {doc.documentName}
+                        </p>
+                        <p className="text-xs text-muted-foreground capitalize">{doc.type}</p>
+                      </Link>
+                      <div className="flex items-center gap-3 shrink-0">
+                        {doc.uploadedDate && (
+                          <span className="text-xs text-muted-foreground">Uploaded {formatDate(doc.uploadedDate)}</span>
+                        )}
+                        {doc.status !== 'received' && doc.dueDate && (
+                          <span className={cn('text-xs', doc.status === 'overdue' ? 'text-red-500 font-semibold' : 'text-muted-foreground')}>
+                            Due {formatDate(doc.dueDate)}
+                          </span>
+                        )}
+                        {nudge ? (
+                          <span className="flex items-center gap-1 rounded-full border border-sky-200/60 bg-sky-500/10 px-2.5 py-1 text-[11px] font-semibold text-sky-700 dark:text-sky-300">
+                            <Send className="h-3 w-3" />
+                            Nudge sent · {formatNudgeAge(nudge.at)}
+                          </span>
+                        ) : (
+                          <span className={cn('flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-semibold', cfg.bg, cfg.color)}>
+                            <Icon className="h-3 w-3" />
+                            {cfg.label}
+                          </span>
+                        )}
+                      </div>
                     </div>
                     {doc.notes && (
-                      <span className="text-[11px] text-muted-foreground/70 italic max-w-[140px] truncate" title={doc.notes}>
+                      <p className="mt-2 text-[11px] italic text-muted-foreground/70" title={doc.notes}>
                         {doc.notes}
-                      </span>
+                      </p>
                     )}
-                  </Link>
+                    {canNudge ? (
+                      <div className="mt-2 flex flex-wrap items-center gap-2 border-t border-border/40 pt-2">
+                        <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                          Chase
+                        </span>
+                        {(['student', 'teacher', 'registrar'] as const).map((target) => {
+                          const meta = NUDGE_LABELS[target];
+                          const NudgeIcon = meta.icon;
+                          const isActive = nudge?.target === target;
+                          return (
+                            <button
+                              key={target}
+                              type="button"
+                              onClick={() => handleNudge(doc, target)}
+                              className={cn(
+                                'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium transition',
+                                isActive
+                                  ? 'border-sky-300/70 bg-sky-500/15 text-sky-700 dark:text-sky-300'
+                                  : 'border-border/60 text-muted-foreground hover:border-primary/40 hover:bg-muted/60 hover:text-foreground'
+                              )}
+                            >
+                              <NudgeIcon className="h-3 w-3" aria-hidden />
+                              {meta.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    ) : null}
+                  </div>
                 );
               })}
             </div>
