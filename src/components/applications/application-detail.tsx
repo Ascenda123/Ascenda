@@ -15,8 +15,10 @@ import {
   MessageCircle,
   Plus,
   Send,
+  Sparkles,
   XCircle
 } from 'lucide-react';
+import { HelpRequestModal } from './help-request-modal';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type {
@@ -129,6 +131,7 @@ export function ApplicationDetail({
     outcome?.result ?? (status === 'submitted' || status === 'confirmed' ? 'pending' : 'pending')
   );
   const [outcomeNotes, setOutcomeNotes] = useState(outcome?.notes ?? '');
+  const [helpOpen, setHelpOpen] = useState(false);
 
   const progress = useMemo(() => {
     const considered = requirementCells.filter((c) => c.status !== 'not-required');
@@ -200,6 +203,15 @@ export function ApplicationDetail({
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
+            <Button
+              onClick={() => setHelpOpen(true)}
+              size="sm"
+              variant="outline"
+              className="border-violet-400/50 bg-violet-500/5 text-violet-700 hover:border-violet-400 hover:bg-violet-500/10 dark:text-violet-300"
+            >
+              <Sparkles className="mr-1.5 h-3.5 w-3.5" />
+              Request counsellor help
+            </Button>
             {status === 'ready' ? (
               <Button onClick={submitApplication} size="sm" disabled={progress < 60}>
                 <Send className="mr-1.5 h-3.5 w-3.5" />
@@ -504,6 +516,13 @@ export function ApplicationDetail({
           className="w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground/70 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-50"
         />
       </section>
+
+      <HelpRequestModal
+        open={helpOpen}
+        onOpenChange={setHelpOpen}
+        app={app}
+        requirement={requirement ?? undefined}
+      />
     </div>
   );
 }
