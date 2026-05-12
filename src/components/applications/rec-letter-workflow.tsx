@@ -1,9 +1,23 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Check, Clock, FileSignature, Mail, PenLine, Upload } from 'lucide-react';
+import { Check, FileSignature, Mail, PenLine, Send, Upload } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/components/ui/toast';
 import type { RecLetterRequest, RecLetterStatus } from '@/lib/data/student-demo-data';
+
+const REMIND_STORAGE_KEY = 'ascenda-letter-reminders';
+
+const formatReminderAge = (at: number): string => {
+  const sec = Math.max(1, Math.round((Date.now() - at) / 1000));
+  if (sec < 60) return `${sec}s ago`;
+  const min = Math.round(sec / 60);
+  if (min < 60) return `${min}m ago`;
+  const hr = Math.round(min / 60);
+  if (hr < 24) return `${hr}h ago`;
+  return `${Math.round(hr / 24)}d ago`;
+};
 
 // ─── Status config ───────────────────────────────────────────────────────────
 
@@ -63,6 +77,34 @@ function formatDate(iso: string) {
 
 export function RecLetterWorkflow({ letters }: RecLetterWorkflowProps) {
   const completedCount = letters.filter((l) => l.status === 'uploaded' || l.status === 'signed').length;
+  const [reminders, setReminders] = useState<Record<string, number>>({});
+  const { showToast } = useToast();
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(REMIND_STORAGE_KEY);
+      if (raw) setReminders(JSON.parse(raw));
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(REMIND_STORAGE_KEY, JSON.stringify(reminders));
+    } catch {
+      // ignore
+    }
+  }, [reminders]);
+
+  const handleRemind = (letter: RecLetterRequest) => {
+    setReminders((prev) => ({ ...prev, [letter.id]: Date.now() }));
+    showToast({
+      title: `Reminder sent to ${letter.teacherName}`,
+      description: 'They’ll get a nudge through the platform',
+      variant: 'success'
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -171,6 +213,30 @@ export function RecLetterWorkflow({ letters }: RecLetterWorkflowProps) {
                   </span>
                 )}
               </div>
+
+              {/* Remind affordance — chase the teacher without leaving the app */}
+              {(letter.status === 'requested' || letter.status === 'writing') ? (
+                <div className="flex flex-wrap items-center gap-2 border-t border-border/40 pt-3">
+                  {reminders[letter.id] ? (
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-sky-200/60 bg-sky-500/10 px-3 py-1 text-[11px] font-semibold text-sky-700 dark:text-sky-300">
+                      <Send className="h-3 w-3" aria-hidden />
+                      Reminder sent · {formatReminderAge(reminders[letter.id])}
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => handleRemind(letter)}
+                      className="inline-flex items-center gap-1.5 rounded-full border border-border/60 px-3 py-1 text-[11px] font-semibold text-muted-foreground transition hover:-translate-y-0.5 hover:border-primary/40 hover:bg-muted/60 hover:text-foreground"
+                    >
+                      <Send className="h-3 w-3" aria-hidden />
+                      Remind {letter.teacherName.split(' ')[0]}
+                    </button>
+                  )}
+                  <span className="ml-auto text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                    Through the platform
+                  </span>
+                </div>
+              ) : null}
             </motion.div>
           );
         })}
