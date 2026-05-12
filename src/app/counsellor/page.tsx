@@ -18,6 +18,7 @@ import { ActivityFeed } from './_components/activity-feed';
 import { CohortBreakdown } from './_components/cohort-breakdown';
 import { StudentRoster } from './_components/student-roster';
 import { TopStudents } from './_components/top-students';
+import { HelpRequestsWidget } from '@/components/counsellor/help-requests-widget';
 
 const stats = getCohortStats();
 const upcomingDeadlines = getUpcomingDeadlines(7);
@@ -143,6 +144,9 @@ export default function CounsellorOverviewPage() {
           </div>
         </div>
       )}
+
+      {/* Live help requests — student-originated, demo segue lands here */}
+      <HelpRequestsWidget />
 
       <WidgetGrid>
         {(visibleWidgets, removeWidget, sizes, toggleSize, dragHandlers) => (
