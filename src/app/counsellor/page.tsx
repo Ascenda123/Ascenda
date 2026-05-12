@@ -19,6 +19,7 @@ import { CohortBreakdown } from './_components/cohort-breakdown';
 import { StudentRoster } from './_components/student-roster';
 import { TopStudents } from './_components/top-students';
 import { HelpRequestsWidget } from '@/components/counsellor/help-requests-widget';
+import { ConnectorsRow } from '@/components/counsellor/connectors-row';
 
 const stats = getCohortStats();
 const upcomingDeadlines = getUpcomingDeadlines(7);
@@ -147,6 +148,9 @@ export default function CounsellorOverviewPage() {
 
       {/* Live help requests — student-originated, demo segue lands here */}
       <HelpRequestsWidget />
+
+      {/* Tech stack teaser — Beat 8: sits alongside the tools you already use */}
+      <ConnectorsRow />
 
       <WidgetGrid>
         {(visibleWidgets, removeWidget, sizes, toggleSize, dragHandlers) => (
