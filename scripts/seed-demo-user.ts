@@ -206,6 +206,136 @@ const upsertLifestyle = async (supabase: SupabaseClient, profileId: string) => {
   console.log('  Upserted student_lifestyle_preference');
 };
 
+// Real Supabase program IDs (uniid|programid):
+// Verified live against the demo db on 2026-05-13.
+//   Lancaster Uni / Mathematics with Economics — the Beat-2 demo hero
+//   LSE / Economics — Reach
+//   Imperial / Economics, Finance & Data Science — Reach
+//   Warwick / Mathematics and Statistics — Match
+//   Edinburgh / Business and Economics — Match
+//   Bristol / Economics — Safe
+const DEMO_APPLICATIONS: Array<{
+  programId: string;
+  label: string;
+  status: 'planning' | 'in_progress' | 'submitted' | 'decision' | 'enrolled';
+  notes: string;
+  priority: number;
+  tasks: Array<{ name: string; due_offset_days: number; status: 'todo' | 'doing' | 'done' }>;
+}> = [
+  {
+    programId: '25d8297e-6423-5d81-af25-c4db1039bc72',
+    label: 'Lancaster · Mathematics with Economics',
+    status: 'in_progress',
+    notes: 'Top choice — applied via UCAS, references being collected.',
+    priority: 88,
+    tasks: [
+      { name: 'Submit personal statement final draft', due_offset_days: 5, status: 'doing' },
+      { name: 'Confirm reference from Mr Patel (Economics teacher)', due_offset_days: 8, status: 'doing' },
+      { name: 'Upload predicted-grades transcript', due_offset_days: 12, status: 'done' },
+      { name: 'Attend Lancaster offer-holder open day', due_offset_days: 21, status: 'todo' }
+    ]
+  },
+  {
+    programId: 'd904d5b5-813f-5b20-8baf-8f306d48afe9',
+    label: 'LSE · Economics',
+    status: 'in_progress',
+    notes: 'Reach — strong fit on quant side, working on the personal statement narrative.',
+    priority: 72,
+    tasks: [
+      { name: 'Draft personal statement (LSE-tailored hook)', due_offset_days: 3, status: 'doing' },
+      { name: 'Register for TMUA', due_offset_days: 18, status: 'todo' },
+      { name: 'Reference from Mr Patel', due_offset_days: 8, status: 'doing' }
+    ]
+  },
+  {
+    programId: '07119710-c3d8-5af5-9ba0-f36eadee9f74',
+    label: 'Imperial · Economics, Finance and Data Science',
+    status: 'planning',
+    notes: 'Reach — pending decision on whether to apply or focus on Lancaster + LSE.',
+    priority: 58,
+    tasks: [
+      { name: 'Decide whether to apply (deadline 15 Oct)', due_offset_days: 4, status: 'doing' },
+      { name: 'Read course handbook + reach out to current student', due_offset_days: 10, status: 'todo' }
+    ]
+  },
+  {
+    programId: '2d459bbc-b6d8-5afa-8921-112c9f008711',
+    label: 'Warwick · Mathematics and Statistics',
+    status: 'in_progress',
+    notes: 'Match — comfortable with the entry requirements, just need to finalise statement.',
+    priority: 68,
+    tasks: [
+      { name: 'Tailor personal statement closing paragraph', due_offset_days: 6, status: 'todo' },
+      { name: 'Reference from Mr Patel', due_offset_days: 8, status: 'doing' }
+    ]
+  },
+  {
+    programId: '6b921543-66d8-5873-a237-e2a9dfa29f98',
+    label: 'Edinburgh · Business and Economics',
+    status: 'submitted',
+    notes: 'Submitted Oct 12 — waiting on decision.',
+    priority: 48,
+    tasks: [
+      { name: 'Prepare for potential alumni interview', due_offset_days: 25, status: 'todo' }
+    ]
+  },
+  {
+    programId: '5f267fc2-209d-5965-9d11-fce944150174',
+    label: 'Bristol · Economics',
+    status: 'submitted',
+    notes: 'Safety — submitted, confident on offer.',
+    priority: 35,
+    tasks: [
+      { name: 'Update parents on Bristol offer if it comes through', due_offset_days: 14, status: 'todo' }
+    ]
+  }
+];
+
+const replaceApplications = async (supabase: SupabaseClient, profileId: string) => {
+  // Remove existing applications + their checklists for a clean re-seed.
+  const { data: existing } = await supabase
+    .from('applications')
+    .select('id')
+    .eq('profile_id', profileId);
+  if (existing && existing.length) {
+    const ids = existing.map((r: { id: string }) => r.id);
+    await supabase.from('application_checklist').delete().in('application_id', ids);
+    await supabase.from('applications').delete().in('id', ids);
+  }
+
+  for (const app of DEMO_APPLICATIONS) {
+    const { data: inserted, error: appError } = await supabase
+      .from('applications')
+      .insert({
+        profile_id: profileId,
+        program_id: app.programId,
+        status: app.status,
+        notes: app.notes
+      })
+      .select('id')
+      .single();
+    if (appError || !inserted) {
+      throw new Error(`applications insert failed for ${app.label}: ${appError?.message}`);
+    }
+
+    const now = new Date();
+    const taskRows = app.tasks.map((task) => {
+      const due = new Date(now);
+      due.setDate(due.getDate() + task.due_offset_days);
+      return {
+        application_id: inserted.id,
+        task_name: task.name,
+        status: task.status,
+        due_date: due.toISOString().slice(0, 10)
+      };
+    });
+    const { error: taskError } = await supabase.from('application_checklist').insert(taskRows);
+    if (taskError) throw new Error(`application_checklist insert failed for ${app.label}: ${taskError.message}`);
+
+    console.log(`  Seeded ${app.label} (${app.tasks.length} tasks)`);
+  }
+};
+
 const main = async () => {
   console.log(`Seeding demo user ${DEMO_EMAIL}…`);
   const supabase = getClient();
@@ -216,6 +346,7 @@ const main = async () => {
   await upsertAcademic(supabase, profileId);
   await replaceSubjects(supabase, profileId);
   await upsertLifestyle(supabase, profileId);
+  await replaceApplications(supabase, profileId);
 
   console.log('\nDone.');
   console.log(`  Profile id: ${profileId}`);
