@@ -138,7 +138,6 @@ export const NAV_ITEMS: NavItem[] = [
 
 export const EXPLORE_SECTION_ITEMS: SectionNavItem[] = [
   { label: 'Search', href: '/university-search/search' },
-  { label: 'Results', href: '/university-search/results' },
   { label: 'Matches', href: '/matches' },
   { label: 'Shortlist', href: '/university-search/shortlist' }
 ];

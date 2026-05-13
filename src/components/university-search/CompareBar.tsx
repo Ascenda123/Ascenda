@@ -112,7 +112,6 @@ export function CompareBar({ selectedItems, onClear, onRemove, onCompare, maxIte
                                             fill
                                             className="object-contain"
                                             sizes="32px"
-                                            unoptimized
                                         />
                                     </div>
                                 ) : (

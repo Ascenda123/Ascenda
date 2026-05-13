@@ -512,8 +512,19 @@ export const loadMatchesForProfile = async (
             .filter((value): value is EnrichedMatch => value !== null);
 
           if (cachedMatches.length > 0) {
-            const limited = options.resultLimit ? cachedMatches.slice(0, options.resultLimit) : cachedMatches;
-            const universitiesCount = new Set(cachedMatches.map((match) => match.university.id)).size;
+            const cachedWithRecognition = cachedMatches.map((m) => {
+              const bd = (cachedRows.find((r) => r.program_id === m.program.id)?.breakdown ?? {}) as Record<string, unknown>;
+              const recScore = typeof bd.university_recognition_score === 'number' ? bd.university_recognition_score : 3;
+              return { match: m, recScore };
+            });
+            cachedWithRecognition.sort((a, b) => {
+              const keyA = a.match.score + (a.recScore / 10) * 5;
+              const keyB = b.match.score + (b.recScore / 10) * 5;
+              return keyB - keyA;
+            });
+            const sortedCachedMatches = cachedWithRecognition.map((x) => x.match);
+            const limited = options.resultLimit ? sortedCachedMatches.slice(0, options.resultLimit) : sortedCachedMatches;
+            const universitiesCount = new Set(sortedCachedMatches.map((match) => match.university.id)).size;
             return {
               matches: limited,
               catalogSize: { programs: cachedMatches.length, universities: universitiesCount },
@@ -701,6 +712,23 @@ export const loadMatchesForProfile = async (
 
   const universitiesCount = new Set(enrichedCourses.map((course) => course.university_id)).size;
 
+  // Fetch recognition scores for all universities in the catalog up front.
+  // Used both for pinning high-prestige schools that fall below the result cap
+  // and for the final recognition-boosted sort.
+  const allUniIds = [...new Set(enrichedCourses.map((c) => c.university_id).filter(Boolean))];
+  const recognitionByUniId = new Map<string, number>();
+  if (allUniIds.length > 0) {
+    const { data: recData } = await (supabase as any)
+      .from('universities')
+      .select('id, recognition_score')
+      .in('id', allUniIds);
+    for (const row of (recData ?? []) as Array<{ id: string; recognition_score: number }>) {
+      if (row.id && typeof row.recognition_score === 'number') {
+        recognitionByUniId.set(row.id, row.recognition_score);
+      }
+    }
+  }
+
   const studentPayload = buildStudentPayload({
     academic: academicData!,
     lifestyle: lifestyleData ?? null,
@@ -748,13 +776,35 @@ export const loadMatchesForProfile = async (
 
   // Apply result limit per-tier to ensure balanced Reach/Match/Safe representation.
   // Without this, a top-N cut returns only Safety results (highest admission %).
+  // After capping, we pin programs from high-recognition universities (score ≥ 9) that
+  // would otherwise be cut off — prestigious schools always appear as Reach options.
   let limited: RankedCourseMatch[];
   if (options.resultLimit) {
     const perTier = Math.ceil(options.resultLimit / 3);
     const safety = ranked.filter((m) => m.tier_fit === 'Safety').slice(0, perTier);
     const target = ranked.filter((m) => m.tier_fit === 'Target').slice(0, perTier);
-    const reach = ranked.filter((m) => m.tier_fit === 'Reach' || m.tier_fit === 'Harder-than-reach').slice(0, perTier);
-    limited = [...reach, ...target, ...safety];
+    const reachAll = ranked.filter((m) => m.tier_fit === 'Reach' || m.tier_fit === 'Harder-than-reach');
+    const reach = reachAll.slice(0, perTier);
+
+    // Pin top-recognition universities that got cut off from the Reach cap
+    const includedIds = new Set([...reach, ...target, ...safety].map((m) => m.program_id));
+    const cutOffReach = reachAll.slice(perTier);
+    const pinnedReach: RankedCourseMatch[] = [];
+    const pinnedUniCounts = new Map<string, number>();
+    for (const m of cutOffReach) {
+      const course = enrichedCourses.find((c) => c.program_id === m.program_id);
+      if (!course) continue;
+      const recScore = recognitionByUniId.get(course.university_id) ?? 3;
+      if (recScore < 9) continue;
+      const uniCount = pinnedUniCounts.get(course.university_id) ?? 0;
+      if (uniCount >= 3) continue;
+      if (includedIds.has(m.program_id)) continue;
+      pinnedReach.push(m);
+      pinnedUniCounts.set(course.university_id, uniCount + 1);
+      includedIds.add(m.program_id);
+    }
+
+    limited = [...reach, ...pinnedReach, ...target, ...safety];
   } else {
     limited = ranked;
   }
@@ -810,11 +860,28 @@ export const loadMatchesForProfile = async (
     })
     .filter((value): value is EnrichedMatch => value !== null);
 
-  // Demo tier override disabled — the v4 matching engine now assigns tiers
-  // via its own sigmoid-based admission probability model.
-  // if (forceDemoTierMix) {
-  //   matches = assignDemoTierMix(matches);
-  // }
+  // Redistribute tiers by score percentile when the engine collapses everything
+  // into one tier (common when catalog programs lack real selectivity data).
+  // Semantically correct: Reach = lowest admission chance relative to the set,
+  // Safe = highest. Ensures students always see a useful Reach/Match/Safe spread.
+  const tierCounts = matches.reduce((acc, m) => { acc[m.tier] = (acc[m.tier] ?? 0) + 1; return acc; }, {} as Record<MatchTier, number>);
+  const dominantTierPct = Math.max(...Object.values(tierCounts)) / (matches.length || 1);
+  if (dominantTierPct > 0.75 && matches.length >= 6) {
+    const sorted = [...matches].sort((a, b) => b.score - a.score);
+    const n = sorted.length;
+    matches = sorted.map((m, i) => {
+      const pct = i / n;
+      const tier: MatchTier = pct < 0.35 ? 'Safe' : pct < 0.65 ? 'Match' : 'Reach';
+      return { ...m, tier };
+    });
+  }
+
+  // Apply recognition-boosted sort: well-known universities surface before unknown
+  // ones when admission chances are similar (up to +5 pts boost for score-10 schools).
+  matches = matches
+    .map((m) => ({ m, key: m.score + ((recognitionByUniId.get(m.university.id) ?? 3) / 10) * 5 }))
+    .sort((a, b) => b.key - a.key)
+    .map((x) => x.m);
 
   if (matches.length > 0) {
     const cachePayload = matches.map((match) => ({
@@ -837,7 +904,8 @@ export const loadMatchesForProfile = async (
         university_country: match.university.country,
         university_rank_overall: match.university.rankOverall,
         university_rank_source: match.university.rankSource,
-        university_requires_test: match.university.requiresTest
+        university_requires_test: match.university.requiresTest,
+        university_recognition_score: recognitionByUniId.get(match.university.id) ?? 3
       }
     }));
     const { error: deleteError } = await supabase.from('student_matches').delete().eq('profile_id', profileId);

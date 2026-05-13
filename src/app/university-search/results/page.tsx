@@ -7,8 +7,6 @@ import type { MatchTier } from '@/lib/matching/match-tier';
 import { UniversityCard } from '@/components/university-card';
 import { UniversityCardSkeleton } from '@/components/university-card-skeleton';
 import { FilterBar } from '@/components/university-search/FilterBar';
-import { CompareBar } from '@/components/university-search/CompareBar';
-import { ComparisonModal } from '@/components/university-search/ComparisonModal';
 import { cn } from '@/lib/utils';
 import { getBrowserSupabaseClient } from '@/lib/supabase/client';
 import { ProgramSearchResult, tierFromScore } from '@/components/university-search/types';
@@ -86,7 +84,6 @@ const applyProgramVisibilityFilters = (
 };
 
 export default function UniversitySearchResultsPage() {
-  const MAX_COMPARE_ITEMS = 5;
   const PAGE_SIZE = 50;
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -103,8 +100,6 @@ export default function UniversitySearchResultsPage() {
   const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [selectedTiers, setSelectedTiers] = useState<MatchTier[]>(['Reach', 'Match', 'Safe']);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [selectedForComparison, setSelectedForComparison] = useState<ProgramSearchResult[]>([]);
-  const [isComparisonOpen, setIsComparisonOpen] = useState(false);
   const [selectedUniversities, setSelectedUniversities] = useState<string[]>([]);
   const [selectedPrograms, setSelectedPrograms] = useState<string[]>([]);
   const [filterOptions, setFilterOptions] = useState<FilterOption[]>([]);
@@ -131,7 +126,7 @@ export default function UniversitySearchResultsPage() {
 
     const fetchFilters = async () => {
       try {
-        const response = await fetch('/api/search/filters', { cache: 'no-store' });
+        const response = await fetch('/api/search/filters', { next: { revalidate: 300 } });
         if (!response.ok) {
           throw new Error(`Failed to load filters (${response.status})`);
         }
@@ -243,7 +238,18 @@ export default function UniversitySearchResultsPage() {
             .from('programs')
             .select(
               `
-            *,
+            id,
+            course_name,
+            name,
+            university_id,
+            study_level,
+            level,
+            duration,
+            duration_years,
+            start_date,
+            tuition,
+            currency,
+            metadata,
             universities!left (
               id,
               name,
@@ -346,20 +352,70 @@ export default function UniversitySearchResultsPage() {
         const safeSearchQuery = sanitizeSearchValue(searchQuery);
 
         if (safeSearchQuery && !programId && !universityId) {
-          // Complex Logic: Find IDs of universities matching the name
           const normalizedQ = safeSearchQuery.toLowerCase();
-          const matchedUniIds = allUniversities
-            .filter(u => u.name?.toLowerCase().includes(normalizedQ))
-            .map(u => u.id)
-            .slice(0, 50); // Limit to 50 to avoid massive URLs
+          const words = normalizedQ.split(/\s+/).filter((w) => w.length >= 2);
 
-          // Construct OR query
-          // course_name ILIKE query OR university_id IN (matches)
+          // Helper: find university IDs where every given word appears in the name.
+          const lookupUniIds = async (mustMatchWords: string[]): Promise<string[]> => {
+            if (allUniversities.length > 0) {
+              return allUniversities
+                .filter((u) => mustMatchWords.every((w) => (u.name?.toLowerCase() ?? '').includes(w)))
+                .map((u) => u.id)
+                .slice(0, 100);
+            }
+            let q = supabase.from('universities').select('id').limit(100);
+            mustMatchWords.forEach((w) => { q = q.ilike('name', `%${w}%`); });
+            const { data } = await q;
+            return (data ?? []).map((u) => u.id);
+          };
+
+          // For multi-word queries, try AND-matching all words against university names first.
+          // If that yields nothing, fall back to the most specific single word (shortest,
+          // least likely to be a common word like "university" or "of").
+          let matchedUniIds: string[] = [];
+          if (words.length > 0) {
+            matchedUniIds = await lookupUniIds(words);
+            if (matchedUniIds.length === 0 && words.length > 1) {
+              // Try each word individually, pick the one returning the fewest universities
+              // (most specific). Skip very common words.
+              const skip = new Set(['university', 'college', 'institute', 'school', 'of', 'the', 'and']);
+              const candidates = words.filter((w) => !skip.has(w));
+              for (const word of candidates) {
+                const ids = await lookupUniIds([word]);
+                if (ids.length > 0 && (matchedUniIds.length === 0 || ids.length < matchedUniIds.length)) {
+                  matchedUniIds = ids;
+                }
+              }
+            }
+          }
+
           if (matchedUniIds.length > 0) {
-            // Use the simplified syntax avoiding joined table reference
-            query = query.or(`course_name.ilike.%${safeSearchQuery}%,university_id.in.(${matchedUniIds.join(',')})`);
+            // Filter by university IDs directly — avoids .or() with spaces in ilike values
+            // which causes PostgREST parse errors.
+            query = query.in('university_id', matchedUniIds);
+            // If there are also non-university words (e.g. "oxford economics"), narrow by course name too.
+            const skip = new Set(['university', 'college', 'institute', 'school', 'of', 'the', 'and']);
+            const courseWords = words.filter((w) => !skip.has(w) && !matchedUniIds.length);
+            // Narrow by course name words that aren't purely university-identifying words
+            const uniNameWords = (allUniversities.length > 0
+              ? allUniversities.filter((u) => matchedUniIds.includes(u.id)).flatMap((u) =>
+                  (u.name?.toLowerCase() ?? '').split(/\s+/)
+                )
+              : []
+            );
+            const extraWords = words.filter(
+              (w) => !skip.has(w) && !uniNameWords.includes(w)
+            );
+            if (extraWords.length > 0) {
+              extraWords.forEach((w) => { query = query.ilike('course_name', `%${w}%`); });
+            }
           } else {
-            query = query.ilike('course_name', `%${safeSearchQuery}%`);
+            // No university matched — search course name with each word (AND)
+            if (words.length > 1) {
+              words.forEach((w) => { query = query.ilike('course_name', `%${w}%`); });
+            } else {
+              query = query.ilike('course_name', `%${normalizedQ}%`);
+            }
           }
         }
 
@@ -488,13 +544,19 @@ export default function UniversitySearchResultsPage() {
         }
 
       } catch (fetchError) {
+        console.error('[SearchResults] fetch error:', fetchError);
+        // Supabase errors are plain objects, not Error instances — never render them raw.
         const message =
           fetchError instanceof Error
             ? fetchError.message
             : typeof fetchError === 'object' && fetchError !== null && 'message' in fetchError
               ? String((fetchError as { message?: unknown }).message)
-              : 'Unable to load results';
-        setError(message || 'Unable to load results');
+              : null;
+        setError(
+          message && !message.startsWith('{') && !message.startsWith('[')
+            ? message
+            : 'Something went wrong loading results. Please try again.'
+        );
       } finally {
         if (isFirstPage) {
           setIsLoading(false);
@@ -653,25 +715,6 @@ export default function UniversitySearchResultsPage() {
     return () => observer.disconnect();
   }, [hasMore, isLoading, isLoadingMore, programId, universityId]);
 
-  const handleToggleSelect = (result: ProgramSearchResult) => {
-    setSelectedForComparison((prev) => {
-      const isSelected = prev.some((item) => item.id === result.id);
-      if (isSelected) {
-        return prev.filter((item) => item.id !== result.id);
-      } else {
-        if (prev.length >= MAX_COMPARE_ITEMS) {
-          // Optional: Show toast notification that max comparison is reached
-          return prev;
-        }
-        return [...prev, result];
-      }
-    });
-  };
-
-  const handleCompare = () => {
-    setIsComparisonOpen(true);
-  };
-
   return (
     <div className="min-h-screen space-y-8 pb-24" >
       <section className="space-y-6">
@@ -778,8 +821,6 @@ export default function UniversitySearchResultsPage() {
                 fitScore={result.fitScore}
                 tier={result.tier ?? undefined}
                 highlights={result.highlights}
-                isSelected={selectedForComparison.some((item) => item.id === result.id)}
-                onToggleSelect={() => handleToggleSelect(result)}
               />
             ))}
           </div>
@@ -799,21 +840,6 @@ export default function UniversitySearchResultsPage() {
         ) : null}
       </section>
 
-      <CompareBar
-        selectedItems={selectedForComparison}
-        onClear={() => setSelectedForComparison([])}
-        onRemove={(id) => setSelectedForComparison((prev) => prev.filter((item) => item.id !== id))}
-        onCompare={handleCompare}
-        maxItems={MAX_COMPARE_ITEMS}
-      />
-
-      <ComparisonModal
-        isOpen={isComparisonOpen}
-        onClose={() => setIsComparisonOpen(false)}
-        universities={selectedForComparison}
-        onRemove={(id) => setSelectedForComparison((prev) => prev.filter((i) => i.id !== id))}
-        maxItems={MAX_COMPARE_ITEMS}
-      />
     </div>
   );
 }

@@ -432,7 +432,6 @@ function ProgramHeaderCard({ uni, onRemove }: { uni: ProgramSearchResult; onRemo
                             fill
                             className="object-contain"
                             sizes="44px"
-                            unoptimized
                         />
                     </div>
                 ) : (

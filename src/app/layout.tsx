@@ -14,12 +14,14 @@ const outfit = Outfit({
   subsets: ['latin'],
   variable: '--font-outfit',
   display: 'swap',
+  adjustFontFallback: true,
 });
 
 const inter = Inter({
   subsets: ['latin'],
   variable: '--font-inter',
   display: 'swap',
+  adjustFontFallback: true,
 });
 
 export const viewport: Viewport = {
