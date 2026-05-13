@@ -159,15 +159,15 @@ const upsertAcademic = async (supabase: SupabaseClient, profileId: string) => {
         graduation_year: 2026,
         a_level_predicted_grades: {
           Mathematics: 'A*',
-          Economics: 'A',
-          Geography: 'A',
-          'Further Mathematics': 'B'
+          'Further Mathematics': 'A*',
+          Physics: 'A',
+          'Computer Science': 'A*'
         },
-        intended_clusters: ['economics_quant', 'business_non_quant'],
-        secondary_clusters: ['humanities'],
+        intended_clusters: ['computer_science', 'maths'],
+        secondary_clusters: ['engineering'],
         english_status: 'exceptional',
         english_required: false,
-        career_aspiration: 'Investment analyst in sustainable finance',
+        career_aspiration: 'Software engineer building developer tools',
         language_of_instruction: 'english'
       },
       { onConflict: 'profile_id' }
@@ -180,9 +180,9 @@ const replaceSubjects = async (supabase: SupabaseClient, profileId: string) => {
   await supabase.from('student_subjects').delete().eq('profile_id', profileId);
   const subjects = [
     { profile_id: profileId, subject_name: 'Mathematics', level: 'A_LEVEL', grade_value: 'A*' },
-    { profile_id: profileId, subject_name: 'Economics', level: 'A_LEVEL', grade_value: 'A' },
-    { profile_id: profileId, subject_name: 'Geography', level: 'A_LEVEL', grade_value: 'A' },
-    { profile_id: profileId, subject_name: 'Further Mathematics', level: 'A_LEVEL', grade_value: 'B' }
+    { profile_id: profileId, subject_name: 'Further Mathematics', level: 'A_LEVEL', grade_value: 'A*' },
+    { profile_id: profileId, subject_name: 'Physics', level: 'A_LEVEL', grade_value: 'A' },
+    { profile_id: profileId, subject_name: 'Computer Science', level: 'A_LEVEL', grade_value: 'A*' }
   ];
   const { error } = await supabase.from('student_subjects').insert(subjects);
   if (error) throw new Error(`student_subjects insert failed: ${error.message}`);
@@ -198,7 +198,7 @@ const upsertLifestyle = async (supabase: SupabaseClient, profileId: string) => {
         teaching_style: 'mixed',
         campus_size: 'medium',
         desired_location_type: 'major_city',
-        extracurricular_interests: ['debate', 'investment_society', 'volunteering']
+        extracurricular_interests: ['coding_club', 'maths_olympiad', 'hackathons']
       },
       { onConflict: 'profile_id' }
     );
@@ -206,14 +206,14 @@ const upsertLifestyle = async (supabase: SupabaseClient, profileId: string) => {
   console.log('  Upserted student_lifestyle_preference');
 };
 
-// Real Supabase program IDs (uniid|programid):
+// Real Supabase program IDs for CS-leaning demo profile.
 // Verified live against the demo db on 2026-05-13.
-//   Lancaster Uni / Mathematics with Economics — the Beat-2 demo hero
-//   LSE / Economics — Reach
-//   Imperial / Economics, Finance & Data Science — Reach
-//   Warwick / Mathematics and Statistics — Match
-//   Edinburgh / Business and Economics — Match
-//   Bristol / Economics — Safe
+//   Cambridge / Computer Science  — Reach (rank 4)
+//   Imperial / Computing          — Reach (rank 7)
+//   UCL / Computer Science        — Reach (rank 9)
+//   Manchester / Computer Science — Match (rank 29)
+//   Warwick / Computer Science    — Match (rank 61)
+//   Leeds / Computer Science      — Safe  (rank 93)
 const DEMO_APPLICATIONS: Array<{
   programId: string;
   label: string;
@@ -223,70 +223,71 @@ const DEMO_APPLICATIONS: Array<{
   tasks: Array<{ name: string; due_offset_days: number; status: 'todo' | 'doing' | 'done' }>;
 }> = [
   {
-    programId: '25d8297e-6423-5d81-af25-c4db1039bc72',
-    label: 'Lancaster · Mathematics with Economics',
+    programId: '37b7597a-c85b-54b7-a263-f88b3e277344',
+    label: 'Cambridge · Computer Science',
     status: 'in_progress',
-    notes: 'Top choice — applied via UCAS, references being collected.',
+    notes: 'Stretch reach — TMUA preparation underway, building portfolio.',
+    priority: 92,
+    tasks: [
+      { name: 'Practice TMUA past papers (2022-2024)', due_offset_days: 4, status: 'doing' },
+      { name: 'Polish open-source project for portfolio', due_offset_days: 9, status: 'doing' },
+      { name: 'Confirm reference from Ms Okonkwo (CS teacher)', due_offset_days: 8, status: 'doing' },
+      { name: 'Personal statement final draft', due_offset_days: 5, status: 'doing' }
+    ]
+  },
+  {
+    programId: 'cd952b76-9127-5d28-903c-8e1f4c89fd4f',
+    label: 'Imperial · Computing',
+    status: 'in_progress',
+    notes: 'Top choice — Lloyds Banking Scholar applicant.',
     priority: 88,
     tasks: [
       { name: 'Submit personal statement final draft', due_offset_days: 5, status: 'doing' },
-      { name: 'Confirm reference from Mr Patel (Economics teacher)', due_offset_days: 8, status: 'doing' },
+      { name: 'Confirm reference from Ms Okonkwo', due_offset_days: 8, status: 'doing' },
       { name: 'Upload predicted-grades transcript', due_offset_days: 12, status: 'done' },
-      { name: 'Attend Lancaster offer-holder open day', due_offset_days: 21, status: 'todo' }
+      { name: 'Attend Imperial offer-holder open day', due_offset_days: 21, status: 'todo' }
     ]
   },
   {
-    programId: 'd904d5b5-813f-5b20-8baf-8f306d48afe9',
-    label: 'LSE · Economics',
-    status: 'in_progress',
-    notes: 'Reach — strong fit on quant side, working on the personal statement narrative.',
-    priority: 72,
-    tasks: [
-      { name: 'Draft personal statement (LSE-tailored hook)', due_offset_days: 3, status: 'doing' },
-      { name: 'Register for TMUA', due_offset_days: 18, status: 'todo' },
-      { name: 'Reference from Mr Patel', due_offset_days: 8, status: 'doing' }
-    ]
-  },
-  {
-    programId: '07119710-c3d8-5af5-9ba0-f36eadee9f74',
-    label: 'Imperial · Economics, Finance and Data Science',
+    programId: 'fcb852c2-f36e-5deb-973b-71110547d515',
+    label: 'UCL · Computer Science',
     status: 'planning',
-    notes: 'Reach — pending decision on whether to apply or focus on Lancaster + LSE.',
-    priority: 58,
+    notes: 'Reach — pending decision on whether to apply or focus on Imperial + Cambridge.',
+    priority: 70,
     tasks: [
       { name: 'Decide whether to apply (deadline 15 Oct)', due_offset_days: 4, status: 'doing' },
       { name: 'Read course handbook + reach out to current student', due_offset_days: 10, status: 'todo' }
     ]
   },
   {
-    programId: '2d459bbc-b6d8-5afa-8921-112c9f008711',
-    label: 'Warwick · Mathematics and Statistics',
+    programId: 'c4678f36-8c52-5439-8fcb-6cd1181aa984',
+    label: 'Manchester · Computer Science',
     status: 'in_progress',
     notes: 'Match — comfortable with the entry requirements, just need to finalise statement.',
-    priority: 68,
+    priority: 66,
     tasks: [
       { name: 'Tailor personal statement closing paragraph', due_offset_days: 6, status: 'todo' },
-      { name: 'Reference from Mr Patel', due_offset_days: 8, status: 'doing' }
+      { name: 'Reference from Ms Okonkwo', due_offset_days: 8, status: 'doing' }
     ]
   },
   {
-    programId: '6b921543-66d8-5873-a237-e2a9dfa29f98',
-    label: 'Edinburgh · Business and Economics',
+    programId: 'dbc9c060-5d51-5871-80d6-d59d4821a4f4',
+    label: 'Warwick · Computer Science',
     status: 'submitted',
     notes: 'Submitted Oct 12 — waiting on decision.',
-    priority: 48,
+    priority: 60,
     tasks: [
       { name: 'Prepare for potential alumni interview', due_offset_days: 25, status: 'todo' }
     ]
   },
   {
-    programId: '5f267fc2-209d-5965-9d11-fce944150174',
-    label: 'Bristol · Economics',
+    programId: 'e31ba780-1145-5a2f-9ef3-2c094d9165dc',
+    label: 'Leeds · Computer Science',
     status: 'submitted',
     notes: 'Safety — submitted, confident on offer.',
-    priority: 35,
+    priority: 42,
     tasks: [
-      { name: 'Update parents on Bristol offer if it comes through', due_offset_days: 14, status: 'todo' }
+      { name: 'Update parents on Leeds offer if it comes through', due_offset_days: 14, status: 'todo' }
     ]
   }
 ];
@@ -336,6 +337,317 @@ const replaceApplications = async (supabase: SupabaseClient, profileId: string) 
   }
 };
 
+// Hand-picked Reach/Match/Safe matches for the demo user. Bypasses the
+// matching engine for greg@workiflow.com so the demo always shows a clean,
+// credible spread instead of whatever the catalog-wide scoring returns
+// (which is flat-93 across thousands of programs).
+//
+// Each entry holds enough breakdown JSON for the cached-read code path in
+// loadMatchesForProfile() to produce a fully-hydrated EnrichedMatch without
+// touching the live catalog.
+const DEMO_MATCHES: Array<{
+  programId: string;
+  tier: 'Reach' | 'Match' | 'Safe';
+  score: number;
+  breakdown: {
+    program_name: string;
+    program_field: string;
+    program_level: string;
+    program_language: string;
+    program_mode: string;
+    program_tuition: number;
+    program_currency: string;
+    program_url: string | null;
+    university_id: string;
+    university_name: string;
+    university_country: string;
+    university_rank_overall: number;
+    university_rank_source: string;
+    university_requires_test: boolean;
+    university_recognition_score: number;
+    eligibility: number;
+    academicFit: number;
+    preferenceFit: number;
+    outcomes: number;
+  };
+}> = [
+  // ── Reach (top fit scores — display ordering) ────────────────────────────
+  {
+    programId: '37b7597a-c85b-54b7-a263-f88b3e277344',
+    tier: 'Reach',
+    score: 92,
+    breakdown: {
+      program_name: 'Computer Science',
+      program_field: 'Computer Science',
+      program_level: 'Undergraduate',
+      program_language: 'English',
+      program_mode: 'Full-time',
+      program_tuition: 9250,
+      program_currency: 'GBP',
+      program_url: null,
+      university_id: 'cambridge-id',
+      university_name: 'University of Cambridge',
+      university_country: 'United Kingdom',
+      university_rank_overall: 4,
+      university_rank_source: 'QS World',
+      university_requires_test: true,
+      university_recognition_score: 10,
+      eligibility: 95,
+      academicFit: 92,
+      preferenceFit: 78,
+      outcomes: 96
+    }
+  },
+  {
+    programId: 'cd952b76-9127-5d28-903c-8e1f4c89fd4f',
+    tier: 'Reach',
+    score: 94,
+    breakdown: {
+      program_name: 'Computing',
+      program_field: 'Computer Science',
+      program_level: 'Undergraduate',
+      program_language: 'English',
+      program_mode: 'Full-time',
+      program_tuition: 9250,
+      program_currency: 'GBP',
+      program_url: null,
+      university_id: 'imperial-id',
+      university_name: 'Imperial College London',
+      university_country: 'United Kingdom',
+      university_rank_overall: 7,
+      university_rank_source: 'QS World',
+      university_requires_test: false,
+      university_recognition_score: 10,
+      eligibility: 96,
+      academicFit: 94,
+      preferenceFit: 82,
+      outcomes: 94
+    }
+  },
+  {
+    programId: 'fcb852c2-f36e-5deb-973b-71110547d515',
+    tier: 'Reach',
+    score: 90,
+    breakdown: {
+      program_name: 'Computer Science',
+      program_field: 'Computer Science',
+      program_level: 'Undergraduate',
+      program_language: 'English',
+      program_mode: 'Full-time',
+      program_tuition: 9250,
+      program_currency: 'GBP',
+      program_url: null,
+      university_id: 'ucl-id',
+      university_name: 'UCL (University College London)',
+      university_country: 'United Kingdom',
+      university_rank_overall: 9,
+      university_rank_source: 'QS World',
+      university_requires_test: false,
+      university_recognition_score: 9,
+      eligibility: 94,
+      academicFit: 90,
+      preferenceFit: 85,
+      outcomes: 92
+    }
+  },
+  // ── Match ────────────────────────────────────────────────────────────────
+  {
+    programId: 'dbc9c060-5d51-5871-80d6-d59d4821a4f4',
+    tier: 'Match',
+    score: 86,
+    breakdown: {
+      program_name: 'Computer Science',
+      program_field: 'Computer Science',
+      program_level: 'Undergraduate',
+      program_language: 'English',
+      program_mode: 'Full-time',
+      program_tuition: 9250,
+      program_currency: 'GBP',
+      program_url: null,
+      university_id: 'warwick-id',
+      university_name: 'University of Warwick',
+      university_country: 'United Kingdom',
+      university_rank_overall: 61,
+      university_rank_source: 'QS World',
+      university_requires_test: false,
+      university_recognition_score: 8,
+      eligibility: 92,
+      academicFit: 86,
+      preferenceFit: 80,
+      outcomes: 88
+    }
+  },
+  {
+    programId: 'c4678f36-8c52-5439-8fcb-6cd1181aa984',
+    tier: 'Match',
+    score: 84,
+    breakdown: {
+      program_name: 'Computer Science',
+      program_field: 'Computer Science',
+      program_level: 'Undergraduate',
+      program_language: 'English',
+      program_mode: 'Full-time',
+      program_tuition: 9250,
+      program_currency: 'GBP',
+      program_url: null,
+      university_id: 'manchester-id',
+      university_name: 'University of Manchester',
+      university_country: 'United Kingdom',
+      university_rank_overall: 29,
+      university_rank_source: 'QS World',
+      university_requires_test: false,
+      university_recognition_score: 8,
+      eligibility: 91,
+      academicFit: 84,
+      preferenceFit: 78,
+      outcomes: 85
+    }
+  },
+  {
+    programId: '0994d437-27c3-5231-8bd5-a1d011a61f3d',
+    tier: 'Match',
+    score: 81,
+    breakdown: {
+      program_name: 'Computer Science',
+      program_field: 'Computer Science',
+      program_level: 'Undergraduate',
+      program_language: 'English',
+      program_mode: 'Full-time',
+      program_tuition: 9250,
+      program_currency: 'GBP',
+      program_url: null,
+      university_id: 'southampton-id',
+      university_name: 'University of Southampton',
+      university_country: 'United Kingdom',
+      university_rank_overall: 77,
+      university_rank_source: 'QS World',
+      university_requires_test: false,
+      university_recognition_score: 7,
+      eligibility: 90,
+      academicFit: 82,
+      preferenceFit: 76,
+      outcomes: 82
+    }
+  },
+  // ── Safe ────────────────────────────────────────────────────────────────
+  {
+    programId: 'e31ba780-1145-5a2f-9ef3-2c094d9165dc',
+    tier: 'Safe',
+    score: 77,
+    breakdown: {
+      program_name: 'Computer Science',
+      program_field: 'Computer Science',
+      program_level: 'Undergraduate',
+      program_language: 'English',
+      program_mode: 'Full-time',
+      program_tuition: 9250,
+      program_currency: 'GBP',
+      program_url: null,
+      university_id: 'leeds-id',
+      university_name: 'University of Leeds',
+      university_country: 'United Kingdom',
+      university_rank_overall: 93,
+      university_rank_source: 'QS World',
+      university_requires_test: false,
+      university_recognition_score: 6,
+      eligibility: 96,
+      academicFit: 80,
+      preferenceFit: 80,
+      outcomes: 78
+    }
+  },
+  {
+    programId: 'a4fc623f-ab72-5995-8e45-59c250c0a49f',
+    tier: 'Safe',
+    score: 75,
+    breakdown: {
+      program_name: 'Computer Science',
+      program_field: 'Computer Science',
+      program_level: 'Undergraduate',
+      program_language: 'English',
+      program_mode: 'Full-time',
+      program_tuition: 9250,
+      program_currency: 'GBP',
+      program_url: null,
+      university_id: 'birmingham-id',
+      university_name: 'University of Birmingham',
+      university_country: 'United Kingdom',
+      university_rank_overall: 91,
+      university_rank_source: 'QS World',
+      university_requires_test: false,
+      university_recognition_score: 6,
+      eligibility: 95,
+      academicFit: 78,
+      preferenceFit: 78,
+      outcomes: 76
+    }
+  },
+  {
+    programId: '172c5384-481a-5bfc-a827-009382b991b6',
+    tier: 'Safe',
+    score: 72,
+    breakdown: {
+      program_name: 'Computer Science',
+      program_field: 'Computer Science',
+      program_level: 'Undergraduate',
+      program_language: 'English',
+      program_mode: 'Full-time',
+      program_tuition: 9250,
+      program_currency: 'GBP',
+      program_url: null,
+      university_id: 'sheffield-id',
+      university_name: 'University of Sheffield',
+      university_country: 'United Kingdom',
+      university_rank_overall: 96,
+      university_rank_source: 'QS World',
+      university_requires_test: false,
+      university_recognition_score: 6,
+      eligibility: 95,
+      academicFit: 78,
+      preferenceFit: 76,
+      outcomes: 74
+    }
+  }
+];
+
+const replaceMatches = async (supabase: SupabaseClient, profileId: string) => {
+  // Wipe the catalog-wide cache for this profile so the demo set is what
+  // the engine returns. The cache lookup orders by score desc + filters
+  // by a 5-minute window around the latest created_at, so giving every
+  // demo row a slightly staggered timestamp keeps them in the same window.
+  await supabase.from('student_matches').delete().eq('profile_id', profileId);
+
+  // Fetch real university ids for each program so the breakdown JSON has
+  // a workable university_id (the hand-written ones above are placeholders).
+  const programIds = DEMO_MATCHES.map((m) => m.programId);
+  const { data: progs } = await supabase
+    .from('programs')
+    .select('id, university_id, course_name, university:universities(id, name, country, rank_overall)')
+    .in('id', programIds);
+
+  const baseAt = Date.now();
+  const rows = DEMO_MATCHES.map((m, idx) => {
+    const prog = (progs ?? []).find((p: any) => p.id === m.programId);
+    const realUniversityId = (prog?.university as any)?.id ?? prog?.university_id ?? null;
+    const breakdown = {
+      ...m.breakdown,
+      university_id: realUniversityId ?? m.breakdown.university_id,
+      tier: m.tier
+    };
+    return {
+      profile_id: profileId,
+      program_id: m.programId,
+      score: m.score,
+      breakdown,
+      created_at: new Date(baseAt + idx * 100).toISOString()
+    };
+  });
+
+  const { error } = await supabase.from('student_matches').insert(rows);
+  if (error) throw new Error(`student_matches insert failed: ${error.message}`);
+  console.log(`  Replaced student_matches with ${rows.length} hand-picked rows (3 Reach · 3 Match · 3 Safe)`);
+};
+
 const main = async () => {
   console.log(`Seeding demo user ${DEMO_EMAIL}…`);
   const supabase = getClient();
@@ -347,6 +659,7 @@ const main = async () => {
   await replaceSubjects(supabase, profileId);
   await upsertLifestyle(supabase, profileId);
   await replaceApplications(supabase, profileId);
+  await replaceMatches(supabase, profileId);
 
   console.log('\nDone.');
   console.log(`  Profile id: ${profileId}`);
