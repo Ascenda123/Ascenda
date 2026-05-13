@@ -19,6 +19,8 @@ import {
 } from 'lucide-react';
 import type { CounsellorDocument, CounsellorDocStatus } from '@/lib/data/student-demo-data';
 import { useToast } from '@/components/ui/toast';
+import { useSupabase } from '@/hooks/useSupabase';
+import { insertNotification } from '@/lib/demo/help-request-client';
 
 type NudgeTarget = 'student' | 'teacher' | 'registrar';
 
@@ -70,9 +72,10 @@ export function CounsellorDocumentBoard({ documents }: CounsellorDocumentBoardPr
   const [statusFilter, setStatusFilter] = useState<FilterStatus>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [nudges, setNudges] = useState<NudgeState>({});
+  const [busy, setBusy] = useState<string | null>(null);
   const { showToast } = useToast();
+  const supabase = useSupabase();
 
-  // Load persisted nudge state on mount; persist on change.
   useEffect(() => {
     try {
       const raw = localStorage.getItem(NUDGE_STORAGE_KEY);
@@ -90,14 +93,52 @@ export function CounsellorDocumentBoard({ documents }: CounsellorDocumentBoardPr
     }
   }, [nudges]);
 
-  const handleNudge = (doc: CounsellorDocument, target: NudgeTarget) => {
-    setNudges((prev) => ({ ...prev, [doc.id]: { target, at: Date.now() } }));
-    const label = target === 'student' ? doc.studentName : target === 'teacher' ? 'the recommender' : 'the registrar';
-    showToast({
-      title: `Nudge sent to ${label}`,
-      description: `${doc.documentName} · ${doc.studentName}`,
-      variant: 'success'
-    });
+  // Counsellor nudges write a real notification to the student. For the
+  // demo, the student is the same auth user as the counsellor; the
+  // notification surfaces in the navbar bell after switching to student
+  // view, which makes the demo claim ("the chase happens through the
+  // platform") honest end-to-end.
+  const handleNudge = async (doc: CounsellorDocument, target: NudgeTarget) => {
+    if (busy) return;
+    setBusy(doc.id);
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData?.user?.id;
+      if (!userId) {
+        showToast({ title: 'Please sign in to send a nudge', variant: 'error' });
+        return;
+      }
+
+      const targetLabel =
+        target === 'student' ? doc.studentName : target === 'teacher' ? 'the recommender' : 'the registrar';
+      const askAsStudent =
+        target === 'student'
+          ? `Could you upload ${doc.documentName} when you have a sec?`
+          : `Could you check in with ${targetLabel} about ${doc.documentName}? It's outstanding.`;
+
+      await insertNotification(supabase, {
+        profile_id: userId,
+        kind: 'doc_nudge',
+        title:
+          target === 'student'
+            ? `Sarah is asking about ${doc.documentName}`
+            : `Sarah is following up on ${doc.documentName}`,
+        body: askAsStudent,
+        href: null
+      });
+
+      setNudges((prev) => ({ ...prev, [doc.id]: { target, at: Date.now() } }));
+      showToast({
+        title: `Nudge logged · ${targetLabel}`,
+        description: `${doc.documentName} · ${doc.studentName}`,
+        variant: 'success'
+      });
+    } catch (err) {
+      console.error('doc nudge failed', err);
+      showToast({ title: "Couldn't send nudge", variant: 'error' });
+    } finally {
+      setBusy(null);
+    }
   };
 
   const filtered = documents.filter((doc) => {
@@ -246,8 +287,9 @@ export function CounsellorDocumentBoard({ documents }: CounsellorDocumentBoardPr
                               key={target}
                               type="button"
                               onClick={() => handleNudge(doc, target)}
+                              disabled={busy === doc.id}
                               className={cn(
-                                'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium transition',
+                                'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium transition disabled:cursor-wait disabled:opacity-60',
                                 isActive
                                   ? 'border-sky-300/70 bg-sky-500/15 text-sky-700 dark:text-sky-300'
                                   : 'border-border/60 text-muted-foreground hover:border-primary/40 hover:bg-muted/60 hover:text-foreground'

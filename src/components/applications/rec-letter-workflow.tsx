@@ -5,6 +5,8 @@ import { motion } from 'framer-motion';
 import { Check, FileSignature, Mail, PenLine, Send, Upload } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/components/ui/toast';
+import { useSupabase } from '@/hooks/useSupabase';
+import { insertHelpRequest, insertNotification } from '@/lib/demo/help-request-client';
 import type { RecLetterRequest, RecLetterStatus } from '@/lib/data/student-demo-data';
 
 const REMIND_STORAGE_KEY = 'ascenda-letter-reminders';
@@ -78,7 +80,9 @@ function formatDate(iso: string) {
 export function RecLetterWorkflow({ letters }: RecLetterWorkflowProps) {
   const completedCount = letters.filter((l) => l.status === 'uploaded' || l.status === 'signed').length;
   const [reminders, setReminders] = useState<Record<string, number>>({});
+  const [busy, setBusy] = useState<string | null>(null);
   const { showToast } = useToast();
+  const supabase = useSupabase();
 
   useEffect(() => {
     try {
@@ -97,13 +101,70 @@ export function RecLetterWorkflow({ letters }: RecLetterWorkflowProps) {
     }
   }, [reminders]);
 
-  const handleRemind = (letter: RecLetterRequest) => {
-    setReminders((prev) => ({ ...prev, [letter.id]: Date.now() }));
-    showToast({
-      title: `Reminder sent to ${letter.teacherName}`,
-      description: 'They’ll get a nudge through the platform',
-      variant: 'success'
-    });
+  // Student-side "Remind teacher" creates a real help_request to the
+  // counsellor, asking Sarah to chase the recommender on Greg's behalf.
+  // This is the honest version of the demo claim: the chase happens
+  // through the platform, not out-of-band email.
+  const handleRemind = async (letter: RecLetterRequest) => {
+    if (busy) return;
+    setBusy(letter.id);
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData?.user?.id;
+      if (!userId) {
+        showToast({ title: 'Please sign in to send a request', variant: 'error' });
+        return;
+      }
+
+      const target = letter.universities[0] ?? 'one of my applications';
+      const subject = `Help chasing ${letter.teacherName} for ${target} reference`;
+      const body = [
+        `Hi Sarah,`,
+        '',
+        `${letter.teacherName} (${letter.subject} · ${letter.relationship}) is on my reference list for ${letter.universities.join(', ')} and the letter is still at the ${letter.status} stage.`,
+        letter.requestedDate
+          ? `I originally requested it on ${formatDate(letter.requestedDate)}.`
+          : `I asked them a little while ago.`,
+        '',
+        'Could you give them a quick nudge? I don’t want to keep pinging them myself.',
+        '',
+        'Thanks,',
+        'Greg'
+      ].join('\n');
+
+      const inserted = await insertHelpRequest(supabase, {
+        student_profile_id: userId,
+        application_id: letter.id,
+        university: target,
+        program: `${letter.teacherName} reference`,
+        subject,
+        body
+      });
+
+      try {
+        await insertNotification(supabase, {
+          profile_id: userId,
+          kind: 'help_request',
+          title: `Chase ${letter.teacherName} for ${target}`,
+          body: `${letter.teacherName} · ${letter.subject}`,
+          href: `/counsellor?help=${inserted.id}`
+        });
+      } catch (err) {
+        console.warn('rec-letter remind notify failed', err);
+      }
+
+      setReminders((prev) => ({ ...prev, [letter.id]: Date.now() }));
+      showToast({
+        title: `Sarah will follow up with ${letter.teacherName}`,
+        description: 'Tracked in your counsellor inbox',
+        variant: 'success'
+      });
+    } catch (err) {
+      console.error('rec-letter remind failed', err);
+      showToast({ title: "Couldn't send reminder", variant: 'error' });
+    } finally {
+      setBusy(null);
+    }
   };
 
   return (
@@ -214,22 +275,23 @@ export function RecLetterWorkflow({ letters }: RecLetterWorkflowProps) {
                 )}
               </div>
 
-              {/* Remind affordance — chase the teacher without leaving the app */}
+              {/* Remind affordance — ask Sarah to chase the recommender. */}
               {(letter.status === 'requested' || letter.status === 'writing') ? (
                 <div className="flex flex-wrap items-center gap-2 border-t border-border/40 pt-3">
                   {reminders[letter.id] ? (
                     <span className="inline-flex items-center gap-1.5 rounded-full border border-sky-200/60 bg-sky-500/10 px-3 py-1 text-[11px] font-semibold text-sky-700 dark:text-sky-300">
                       <Send className="h-3 w-3" aria-hidden />
-                      Reminder sent · {formatReminderAge(reminders[letter.id])}
+                      Sarah notified · {formatReminderAge(reminders[letter.id])}
                     </span>
                   ) : (
                     <button
                       type="button"
                       onClick={() => handleRemind(letter)}
-                      className="inline-flex items-center gap-1.5 rounded-full border border-border/60 px-3 py-1 text-[11px] font-semibold text-muted-foreground transition hover:-translate-y-0.5 hover:border-primary/40 hover:bg-muted/60 hover:text-foreground"
+                      disabled={busy === letter.id}
+                      className="inline-flex items-center gap-1.5 rounded-full border border-border/60 px-3 py-1 text-[11px] font-semibold text-muted-foreground transition hover:-translate-y-0.5 hover:border-primary/40 hover:bg-muted/60 hover:text-foreground disabled:cursor-wait disabled:opacity-60"
                     >
                       <Send className="h-3 w-3" aria-hidden />
-                      Remind {letter.teacherName.split(' ')[0]}
+                      {busy === letter.id ? 'Sending…' : `Ask Sarah to chase ${letter.teacherName.split(' ')[0]}`}
                     </button>
                   )}
                   <span className="ml-auto text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
