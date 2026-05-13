@@ -145,8 +145,7 @@ export const EXPLORE_SECTION_ITEMS: SectionNavItem[] = [
 export const PLANNER_SECTION_ITEMS: SectionNavItem[] = [
   { label: 'Applications', href: '/applications', exact: true },
   { label: 'Tasks', href: '/applications/tasks' },
-  { label: 'Documents', href: '/applications/documents' },
-  { label: 'Practice board', href: '/applications/sandbox' }
+  { label: 'Documents', href: '/applications/documents' }
 ];
 
 export const TOOLBOX_SECTION_ITEMS: SectionNavItem[] = [
