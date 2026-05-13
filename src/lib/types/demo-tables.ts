@@ -40,3 +40,47 @@ export type NotificationInsert = Pick<
   'profile_id' | 'kind' | 'title'
 > &
   Partial<Pick<Notification, 'body' | 'href'>>;
+
+export type HelpMessageAuthorRole = 'student' | 'counsellor';
+
+export interface HelpMessage {
+  id: string;
+  request_id: string;
+  author_profile_id: string;
+  author_role: HelpMessageAuthorRole;
+  body: string;
+  created_at: string;
+}
+
+export type HelpMessageInsert = Pick<HelpMessage, 'request_id' | 'author_profile_id' | 'author_role' | 'body'>;
+
+export interface HelpNote {
+  id: string;
+  request_id: string;
+  author_profile_id: string;
+  body: string;
+  created_at: string;
+}
+
+export type HelpNoteInsert = Pick<HelpNote, 'request_id' | 'author_profile_id' | 'body'>;
+
+export type HelpMeetingStatus = 'proposed' | 'confirmed' | 'cancelled' | 'completed';
+
+export interface HelpMeeting {
+  id: string;
+  request_id: string;
+  counsellor_profile_id: string;
+  student_profile_id: string;
+  title: string;
+  scheduled_for: string;
+  duration_minutes: number;
+  location: string | null;
+  status: HelpMeetingStatus;
+  created_at: string;
+}
+
+export type HelpMeetingInsert = Pick<
+  HelpMeeting,
+  'request_id' | 'counsellor_profile_id' | 'student_profile_id' | 'title' | 'scheduled_for'
+> &
+  Partial<Pick<HelpMeeting, 'duration_minutes' | 'location' | 'status'>>;

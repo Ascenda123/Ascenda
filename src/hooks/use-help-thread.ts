@@ -1,0 +1,237 @@
+'use client';
+
+import { useCallback, useEffect, useState } from 'react';
+import { useSupabase } from '@/hooks/useSupabase';
+import {
+  getHelpRequest,
+  insertHelpMeeting,
+  insertHelpMessage,
+  insertHelpNote,
+  insertNotification,
+  listHelpMeetings,
+  listHelpMessages,
+  listHelpNotes,
+  updateHelpRequestStatus
+} from '@/lib/demo/help-request-client';
+import type {
+  HelpMeeting,
+  HelpMessage,
+  HelpNote,
+  HelpRequest,
+  HelpRequestStatus
+} from '@/lib/types/demo-tables';
+
+export interface UseHelpThreadResult {
+  request: HelpRequest | null;
+  messages: HelpMessage[];
+  notes: HelpNote[];
+  meetings: HelpMeeting[];
+  loading: boolean;
+  reply: (body: string, authorRole: 'student' | 'counsellor') => Promise<void>;
+  addNote: (body: string) => Promise<void>;
+  proposeMeeting: (input: {
+    title: string;
+    scheduledFor: string;
+    durationMinutes?: number;
+    location?: string;
+  }) => Promise<void>;
+  setStatus: (status: HelpRequestStatus) => Promise<void>;
+}
+
+const POLL_MS = 4000;
+
+export const useHelpThread = (requestId: string | null): UseHelpThreadResult => {
+  const supabase = useSupabase();
+  const [request, setRequest] = useState<HelpRequest | null>(null);
+  const [messages, setMessages] = useState<HelpMessage[]>([]);
+  const [notes, setNotes] = useState<HelpNote[]>([]);
+  const [meetings, setMeetings] = useState<HelpMeeting[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [currentProfileId, setCurrentProfileId] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    supabase.auth.getUser().then(({ data }) => {
+      if (!cancelled) setCurrentProfileId(data?.user?.id ?? null);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [supabase]);
+
+  const refresh = useCallback(async () => {
+    if (!requestId) {
+      setRequest(null);
+      setMessages([]);
+      setNotes([]);
+      setMeetings([]);
+      return;
+    }
+    try {
+      const [r, m, n, mt] = await Promise.all([
+        getHelpRequest(supabase, requestId),
+        listHelpMessages(supabase, requestId),
+        listHelpNotes(supabase, requestId),
+        listHelpMeetings(supabase, requestId)
+      ]);
+      setRequest(r);
+      setMessages(m);
+      setNotes(n);
+      setMeetings(mt);
+    } catch (err) {
+      console.warn('useHelpThread: refresh failed', err);
+    }
+  }, [requestId, supabase]);
+
+  useEffect(() => {
+    if (!requestId) return;
+    let cancelled = false;
+    setLoading(true);
+    refresh().finally(() => {
+      if (!cancelled) setLoading(false);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [requestId, refresh]);
+
+  // Realtime + poll fallback while drawer is open.
+  useEffect(() => {
+    if (!requestId) return;
+    const channel = (supabase as any)
+      .channel(`help_thread:${requestId}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'help_messages', filter: `request_id=eq.${requestId}` },
+        () => refresh()
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'help_notes', filter: `request_id=eq.${requestId}` },
+        () => refresh()
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'help_meetings', filter: `request_id=eq.${requestId}` },
+        () => refresh()
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'help_requests', filter: `id=eq.${requestId}` },
+        () => refresh()
+      )
+      .subscribe();
+    const handle = window.setInterval(() => refresh(), POLL_MS);
+    return () => {
+      window.clearInterval(handle);
+      try {
+        (supabase as any).removeChannel(channel);
+      } catch {
+        // ignore
+      }
+    };
+  }, [requestId, refresh, supabase]);
+
+  const reply = useCallback(
+    async (body: string, authorRole: 'student' | 'counsellor') => {
+      if (!requestId || !currentProfileId || !request) return;
+      const trimmed = body.trim();
+      if (!trimmed) return;
+      await insertHelpMessage(supabase, {
+        request_id: requestId,
+        author_profile_id: currentProfileId,
+        author_role: authorRole,
+        body: trimmed
+      });
+      // Notify the other side. In demo, student and counsellor are the same
+      // auth user; the notification still surfaces in the bell post-flip.
+      try {
+        await insertNotification(supabase, {
+          profile_id: request.student_profile_id,
+          kind: authorRole === 'counsellor' ? 'help_reply_from_counsellor' : 'help_reply_from_student',
+          title:
+            authorRole === 'counsellor'
+              ? 'Sarah replied to your help request'
+              : 'Greg replied to a help request',
+          body: trimmed.slice(0, 120),
+          href: `/counsellor?help=${requestId}`
+        });
+      } catch (err) {
+        console.warn('reply notify failed', err);
+      }
+      await refresh();
+    },
+    [requestId, currentProfileId, request, supabase, refresh]
+  );
+
+  const addNote = useCallback(
+    async (body: string) => {
+      if (!requestId || !currentProfileId) return;
+      const trimmed = body.trim();
+      if (!trimmed) return;
+      await insertHelpNote(supabase, {
+        request_id: requestId,
+        author_profile_id: currentProfileId,
+        body: trimmed
+      });
+      await refresh();
+    },
+    [requestId, currentProfileId, supabase, refresh]
+  );
+
+  const proposeMeeting = useCallback(
+    async ({
+      title,
+      scheduledFor,
+      durationMinutes = 30,
+      location
+    }: {
+      title: string;
+      scheduledFor: string;
+      durationMinutes?: number;
+      location?: string;
+    }) => {
+      if (!requestId || !currentProfileId || !request) return;
+      await insertHelpMeeting(supabase, {
+        request_id: requestId,
+        counsellor_profile_id: currentProfileId,
+        student_profile_id: request.student_profile_id,
+        title,
+        scheduled_for: scheduledFor,
+        duration_minutes: durationMinutes,
+        location: location ?? null,
+        status: 'proposed'
+      });
+      try {
+        await insertNotification(supabase, {
+          profile_id: request.student_profile_id,
+          kind: 'help_meeting_proposed',
+          title: 'Sarah proposed a meeting',
+          body: `${title} · ${new Date(scheduledFor).toLocaleString('en-GB', {
+            weekday: 'short',
+            day: 'numeric',
+            month: 'short',
+            hour: '2-digit',
+            minute: '2-digit'
+          })}`,
+          href: `/counsellor?help=${requestId}`
+        });
+      } catch (err) {
+        console.warn('meeting notify failed', err);
+      }
+      await refresh();
+    },
+    [requestId, currentProfileId, request, supabase, refresh]
+  );
+
+  const setStatus = useCallback(
+    async (status: HelpRequestStatus) => {
+      if (!requestId) return;
+      await updateHelpRequestStatus(supabase, requestId, status);
+      await refresh();
+    },
+    [requestId, supabase, refresh]
+  );
+
+  return { request, messages, notes, meetings, loading, reply, addNote, proposeMeeting, setStatus };
+};

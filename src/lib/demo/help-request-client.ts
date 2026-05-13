@@ -5,6 +5,12 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type {
+  HelpMeeting,
+  HelpMeetingInsert,
+  HelpMessage,
+  HelpMessageInsert,
+  HelpNote,
+  HelpNoteInsert,
   HelpRequest,
   HelpRequestInsert,
   HelpRequestStatus,
@@ -75,4 +81,67 @@ export const markAllNotificationsRead = async (supabase: AnyClient, profileId: s
     .eq('profile_id', profileId)
     .is('read_at', null);
   if (error) throw error;
+};
+
+export const getHelpRequest = async (
+  supabase: AnyClient,
+  id: string
+): Promise<HelpRequest | null> => {
+  const { data, error } = await tbl(supabase, 'help_requests').select('*').eq('id', id).maybeSingle();
+  if (error) throw error;
+  return (data ?? null) as HelpRequest | null;
+};
+
+export const listHelpMessages = async (
+  supabase: AnyClient,
+  requestId: string
+): Promise<HelpMessage[]> => {
+  const { data, error } = await tbl(supabase, 'help_messages')
+    .select('*')
+    .eq('request_id', requestId)
+    .order('created_at', { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as HelpMessage[];
+};
+
+export const insertHelpMessage = async (supabase: AnyClient, row: HelpMessageInsert) => {
+  const { data, error } = await tbl(supabase, 'help_messages').insert(row).select('*').single();
+  if (error) throw error;
+  return data as HelpMessage;
+};
+
+export const listHelpNotes = async (
+  supabase: AnyClient,
+  requestId: string
+): Promise<HelpNote[]> => {
+  const { data, error } = await tbl(supabase, 'help_notes')
+    .select('*')
+    .eq('request_id', requestId)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as HelpNote[];
+};
+
+export const insertHelpNote = async (supabase: AnyClient, row: HelpNoteInsert) => {
+  const { data, error } = await tbl(supabase, 'help_notes').insert(row).select('*').single();
+  if (error) throw error;
+  return data as HelpNote;
+};
+
+export const listHelpMeetings = async (
+  supabase: AnyClient,
+  requestId: string
+): Promise<HelpMeeting[]> => {
+  const { data, error } = await tbl(supabase, 'help_meetings')
+    .select('*')
+    .eq('request_id', requestId)
+    .order('scheduled_for', { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as HelpMeeting[];
+};
+
+export const insertHelpMeeting = async (supabase: AnyClient, row: HelpMeetingInsert) => {
+  const { data, error } = await tbl(supabase, 'help_meetings').insert(row).select('*').single();
+  if (error) throw error;
+  return data as HelpMeeting;
 };

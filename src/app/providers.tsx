@@ -7,6 +7,7 @@ import { NextIntlClientProvider } from 'next-intl';
 import { usePathname } from 'next/navigation';
 import { trackEvent } from '@/lib/analytics';
 import { ToastProvider } from '@/components/ui/toast';
+import { HelpDrawerProvider } from '@/components/help/help-drawer-provider';
 
 interface ProvidersProps {
   children: ReactNode;
@@ -20,9 +21,11 @@ export const Providers = ({ children, messages }: ProvidersProps) => {
     <NextIntlClientProvider locale="en" messages={messages}>
       <QueryClientProvider client={client}>
         <ToastProvider>
-          {children}
-          <AnalyticsBridge />
-          {process.env.NODE_ENV === 'development' ? <ReactQueryDevtools initialIsOpen={false} /> : null}
+          <HelpDrawerProvider>
+            {children}
+            <AnalyticsBridge />
+            {process.env.NODE_ENV === 'development' ? <ReactQueryDevtools initialIsOpen={false} /> : null}
+          </HelpDrawerProvider>
         </ToastProvider>
       </QueryClientProvider>
     </NextIntlClientProvider>

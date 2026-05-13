@@ -6,7 +6,16 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, CheckCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useNotifications } from '@/hooks/use-notifications';
+import { useHelpDrawer } from '@/components/help/help-drawer-provider';
 import type { Notification } from '@/lib/types/demo-tables';
+
+const HELP_HREF_RX = /[?&]help=([0-9a-fA-F-]{36})/;
+
+const extractHelpRequestId = (href?: string | null): string | null => {
+  if (!href) return null;
+  const match = href.match(HELP_HREF_RX);
+  return match?.[1] ?? null;
+};
 
 const KIND_TONE: Record<string, string> = {
   help_request: 'bg-violet-500/10 text-violet-700 dark:text-violet-300',
@@ -28,6 +37,7 @@ const formatRelative = (iso: string): string => {
 
 export const NotificationBell = ({ className }: { className?: string }) => {
   const { items, unreadCount, markRead, markAllRead } = useNotifications();
+  const { openRequest } = useHelpDrawer();
   const [open, setOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement | null>(null);
 
@@ -46,6 +56,13 @@ export const NotificationBell = ({ className }: { className?: string }) => {
   const handleItemClick = (notif: Notification) => {
     if (!notif.read_at) markRead(notif.id);
     setOpen(false);
+    // If the notification points at a specific help_request, open the
+    // drawer rather than navigating to a list page. Drawer renders the
+    // full thread + reply/notes/meeting actions.
+    const helpId = extractHelpRequestId(notif.href);
+    if (helpId) {
+      openRequest(helpId);
+    }
   };
 
   return (
@@ -143,9 +160,10 @@ export const NotificationBell = ({ className }: { className?: string }) => {
                         </div>
                       </div>
                     );
+                    const helpId = extractHelpRequestId(notif.href);
                     return (
                       <li key={notif.id}>
-                        {notif.href ? (
+                        {notif.href && !helpId ? (
                           <Link href={notif.href} onClick={() => handleItemClick(notif)}>
                             {content}
                           </Link>
