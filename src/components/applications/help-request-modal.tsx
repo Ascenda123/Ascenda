@@ -6,37 +6,77 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/toast';
 import { useSupabase } from '@/hooks/useSupabase';
-import { draftMessageForApplication } from '@/lib/demo/help-request-drafts';
 import { insertHelpRequest, insertNotification } from '@/lib/demo/help-request-client';
-import type { SandboxApplication, RequirementRow } from '@/lib/data/student-demo-data';
+
+// Generic context shape — works for any caller (priority board item, rec letter,
+// application detail row). Keep this small; if the modal needs more it should
+// fetch it from the DB on open rather than thread props through every call site.
+export interface HelpRequestModalApp {
+  id: string;
+  university: string;
+  program: string;
+  progress?: number;
+  nextDeadline?: string;
+  tasksRemaining?: number;
+  platform?: string;
+}
 
 interface HelpRequestModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  app: SandboxApplication;
-  requirement?: RequirementRow;
+  app: HelpRequestModalApp | null;
 }
 
-export function HelpRequestModal({ open, onOpenChange, app, requirement }: HelpRequestModalProps) {
+const COUNSELLOR_FIRST_NAME = 'Sarah';
+
+const draftFor = (app: HelpRequestModalApp): { subject: string; body: string } => {
+  const subject = `Help with my ${app.university} application`;
+  const progressLine =
+    typeof app.progress === 'number' && app.progress > 0
+      ? `I'm about ${app.progress}% through the requirements`
+      : "I'm just getting started";
+  const tasksLine =
+    typeof app.tasksRemaining === 'number' && app.tasksRemaining > 0
+      ? ` and have ${app.tasksRemaining} open task${app.tasksRemaining === 1 ? '' : 's'}`
+      : '';
+  const deadlineLine = app.nextDeadline
+    ? `My next deadline is ${app.nextDeadline}.`
+    : "There's no hard deadline yet, but I'd like to stay ahead of it.";
+
+  const lines = [
+    `Hi ${COUNSELLOR_FIRST_NAME},`,
+    '',
+    `I'm working on my ${app.university} application (${app.program}). ${progressLine}${tasksLine}.`,
+    deadlineLine,
+    '',
+    "Could we book a 15-minute call this week to talk it through? I'd like to focus on the personal statement and reference timing.",
+    '',
+    'Thanks,',
+    'Greg'
+  ];
+
+  return { subject, body: lines.join('\n') };
+};
+
+export function HelpRequestModal({ open, onOpenChange, app }: HelpRequestModalProps) {
   const supabase = useSupabase();
   const { showToast } = useToast();
 
-  const initialDraft = useMemo(
-    () => draftMessageForApplication(app, requirement),
-    [app, requirement]
-  );
+  const initialDraft = useMemo(() => (app ? draftFor(app) : { subject: '', body: '' }), [app]);
 
   const [subject, setSubject] = useState(initialDraft.subject);
   const [body, setBody] = useState(initialDraft.body);
   const [submitting, setSubmitting] = useState(false);
 
-  // Re-seed when the dialog reopens for a different app
   useEffect(() => {
-    if (open) {
-      setSubject(initialDraft.subject);
-      setBody(initialDraft.body);
+    if (open && app) {
+      const next = draftFor(app);
+      setSubject(next.subject);
+      setBody(next.body);
     }
-  }, [open, initialDraft.subject, initialDraft.body]);
+  }, [open, app]);
+
+  if (!app) return null;
 
   const handleSubmit = async () => {
     if (submitting) return;
@@ -58,22 +98,18 @@ export function HelpRequestModal({ open, onOpenChange, app, requirement }: HelpR
         body: body.trim() || initialDraft.body
       });
 
-      // Also fan out a notification to the same profile so the counsellor-side
-      // bell lights up after the user flips views. In the demo, student and
-      // counsellor are the same Supabase user.
       try {
         await insertNotification(supabase, {
           profile_id: userId,
           kind: 'help_request',
           title: `New help request from Greg`,
           body: `${app.university} · ${app.program}`,
-          href: '/counsellor'
+          href: `/counsellor?help=${inserted.id}`
         });
       } catch (notifError) {
         console.warn('notification insert failed', notifError);
       }
 
-      // Stash the inserted id so the counsellor-side widget can highlight it.
       try {
         sessionStorage.setItem('ascenda-last-help-request-id', inserted.id);
       } catch {
@@ -115,8 +151,12 @@ export function HelpRequestModal({ open, onOpenChange, app, requirement }: HelpR
             </p>
             <p className="mt-1 text-sm font-medium text-foreground">{app.university}</p>
             <p className="text-xs text-muted-foreground">
-              {app.program} · {app.platform}
-              {requirement ? ` · ${requirement.progress}% complete` : null}
+              {app.program}
+              {app.platform ? ` · ${app.platform}` : null}
+              {typeof app.progress === 'number' ? ` · ${app.progress}% fit` : null}
+              {typeof app.tasksRemaining === 'number' && app.tasksRemaining > 0
+                ? ` · ${app.tasksRemaining} open task${app.tasksRemaining === 1 ? '' : 's'}`
+                : null}
             </p>
           </div>
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { ListPlus } from 'lucide-react';
+import { ListPlus, Sparkles } from 'lucide-react';
 import { EmptyState } from '@/components/ui/empty-state';
 import { cn } from '@/lib/utils';
 import { PRIORITY_VISUAL, PRIORITY_LABEL } from '@/lib/theme/categories';
@@ -16,6 +16,11 @@ export interface PriorityItem {
   nextDeadline?: string;
   tasksRemaining: number;
   scholarshipFocus?: string;
+}
+
+export interface PriorityBoardProps {
+  items: PriorityItem[];
+  onRequestHelp?: (item: PriorityItem) => void;
 }
 
 const STATUS_TONE = {
@@ -36,7 +41,7 @@ const boardCard = {
   show: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.45, ease: 'easeOut' as const } }
 };
 
-export const ApplicationPriorityBoard = ({ items }: { items: PriorityItem[] }) => {
+export const ApplicationPriorityBoard = ({ items, onRequestHelp }: PriorityBoardProps) => {
   if (items.length === 0) {
     return (
       <EmptyState
@@ -133,6 +138,16 @@ export const ApplicationPriorityBoard = ({ items }: { items: PriorityItem[] }) =
                   <span className="surface-chip text-[11px] uppercase tracking-[0.2em]">
                     {item.scholarshipFocus}
                   </span>
+                ) : null}
+                {onRequestHelp ? (
+                  <button
+                    type="button"
+                    onClick={() => onRequestHelp(item)}
+                    className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-violet-300/60 bg-violet-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-violet-700 transition hover:-translate-y-0.5 hover:bg-violet-500/15 dark:text-violet-300"
+                  >
+                    <Sparkles className="h-3 w-3" aria-hidden />
+                    Need help
+                  </button>
                 ) : null}
               </div>
             </motion.article>
