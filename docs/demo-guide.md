@@ -69,7 +69,7 @@ You'll mostly stay on the desktop, sharing your full browser window. Don't switc
 **Say:**
 > "Once their profile is set, this is what they see. The headline here is the compatibility score for each course. We run their profile against entry requirements and university characteristics — fit is decomposable, they can see why a course scored what it did. As they explore, the system auto-categorises shortlisted courses as Reach, Match, or Safe — I know it's a framework you're already using with them."
 
-**Click:** **Lancaster University · Mathematics with Economics** card. If you can't find it on the matches grid, type "Lancaster Maths" into the search bar at the top of `/university-search/search`.
+**Click:** **Imperial College London · Computing** card (top of the matches grid). If you can't find it, type "Imperial Computing" into the search bar at the top of `/university-search/search`. The other reach picks — Cambridge CS and UCL CS — are equally good fallbacks.
 
 **Show:** The consolidated course page — modules, entry requirements, employment, salary, cost of living, teaching style.
 
@@ -82,7 +82,7 @@ You'll mostly stay on the desktop, sharing your full browser window. Don't switc
 
 **Show:**
 - The PageHero summary at the top
-- The **Application priorities** board (6 cards: Lancaster, LSE, Imperial, Warwick, Edinburgh, Bristol)
+- The **Application priorities** board (6 cards: Cambridge CS, Imperial Computing, UCL CS, Manchester CS, Warwick CS, Leeds CS)
 - "Today's focus" section below
 
 **Say:**
@@ -97,9 +97,9 @@ You'll mostly stay on the desktop, sharing your full browser window. Don't switc
 **Say:**
 > "Now here's something I want to show you live. Imagine a student is stuck — they need help on their application. Rather than emailing you or trying to book a meeting blindly, they click this."
 
-**Click:** The violet **Need help** pill at the bottom-right of the **Lancaster** priority card.
+**Click:** The violet **Need help** pill at the bottom-right of the **Cambridge · Computer Science** priority card (top-left of the priorities board).
 
-**Show:** The modal opens. Subject is pre-filled ("Help with my Lancaster University application"). Body references the fit %, open tasks, deadline. "AI draft · edit before sending" label visible top-right of the textarea.
+**Show:** The modal opens. Subject is pre-filled ("Help with my University of Cambridge application"). Body references the fit %, open tasks, deadline. "AI draft · edit before sending" label visible top-right of the textarea.
 
 **Say:**
 > "The platform knows what they're working on, what stage they're at, and pre-fills a structured request. AI-drafted, student edits it before sending."
@@ -284,7 +284,7 @@ You'll mostly stay on the desktop, sharing your full browser window. Don't switc
 | **Faculty view pill** isn't in the navbar | Refresh the page once. Cache primes on first auth call. |
 | **Send to counsellor** does nothing | Open browser console (Cmd-Opt-I). If "row level security" errors, the migrations didn't take — fall back to talking through the screenshots in the deck. |
 | **Bell stays at zero** after Send | Wait 5 seconds. Realtime fires within 1s but if it misses, the 4-second poll catches it. |
-| **Lancaster course page** loads blank or 404s | Fall back to **LSE Economics** (`/course/d904d5b5-813f-5b20-8baf-8f306d48afe9`) or **Imperial · Economics, Finance and Data Science** (`/course/07119710-c3d8-5af5-9ba0-f36eadee9f74`). |
+| **Imperial Computing course page** loads blank or 404s | Fall back to **Cambridge Computer Science** (`/course/37b7597a-c85b-54b7-a263-f88b3e277344`) or **UCL Computer Science** (`/course/fcb852c2-f36e-5deb-973b-71110547d515`). |
 | **Drawer feels laggy** when typing in reply box | Realtime is doing too much. Close and re-open the drawer — debounces the subscription. |
 | **Preview URL totally down** | Switch to the second pre-logged-in browser tab. If that's also down, share screenshots from the deck and continue talking. |
 | **Sarah asks about Gmail/Calendar integration depth** | "Real OAuth integration is on the roadmap. What you saw on screen today is the connection point — when those go live, this drawer schedules into your real calendar." Don't promise dates. |
