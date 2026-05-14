@@ -24,9 +24,12 @@ export type HelpRequestInsert = Pick<
 > &
   Partial<Pick<HelpRequest, 'application_id' | 'university' | 'program' | 'status'>>;
 
+export type NotificationAudience = 'student' | 'counsellor';
+
 export interface Notification {
   id: string;
   profile_id: string;
+  audience: NotificationAudience;
   kind: string;
   title: string;
   body: string | null;
@@ -39,7 +42,7 @@ export type NotificationInsert = Pick<
   Notification,
   'profile_id' | 'kind' | 'title'
 > &
-  Partial<Pick<Notification, 'body' | 'href'>>;
+  Partial<Pick<Notification, 'audience' | 'body' | 'href'>>;
 
 export type HelpMessageAuthorRole = 'student' | 'counsellor';
 

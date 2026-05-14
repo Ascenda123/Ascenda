@@ -219,11 +219,16 @@ export function HelpThreadDrawer({ open, requestId, side, onClose }: HelpThreadD
             <div className="flex gap-1 border-b border-border/60 px-3 py-2 text-xs font-semibold">
               {(['thread', 'notes', 'meeting'] as const).map((key) => {
                 const isActive = tab === key;
+                // Don't surface the notes count to the student — notes are
+                // counsellor-private and the count alone would leak existence.
+                const notesLabel = isCounsellor && notes.length
+                  ? `Notes · ${notes.length}`
+                  : 'Notes';
                 const label =
                   key === 'thread'
                     ? `Thread${messages.length ? ` · ${messages.length}` : ''}`
                     : key === 'notes'
-                      ? `Notes${notes.length ? ` · ${notes.length}` : ''}`
+                      ? notesLabel
                       : `Meeting${meetings.length ? ` · ${meetings.length}` : ''}`;
                 return (
                   <button
@@ -451,30 +456,32 @@ function NotesView({
           Notes are private to the counsellor — visible to Sarah, not to you.
         </p>
       )}
-      <div className="space-y-2">
-        {notes.length === 0 ? (
-          <p className="rounded-2xl border border-dashed border-border/60 bg-muted/20 p-3 text-sm text-muted-foreground">
-            No notes yet.
-          </p>
-        ) : (
-          notes.map((n) => (
-            <article
-              key={n.id}
-              className="rounded-2xl border border-border/60 bg-card/40 p-3 text-sm text-foreground/90"
-            >
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-                  Counsellor note
-                </span>
-                <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-                  {formatRelative(n.created_at)}
-                </span>
-              </div>
-              <p className="mt-1 whitespace-pre-line">{n.body}</p>
-            </article>
-          ))
-        )}
-      </div>
+      {isCounsellor ? (
+        <div className="space-y-2">
+          {notes.length === 0 ? (
+            <p className="rounded-2xl border border-dashed border-border/60 bg-muted/20 p-3 text-sm text-muted-foreground">
+              No notes yet.
+            </p>
+          ) : (
+            notes.map((n) => (
+              <article
+                key={n.id}
+                className="rounded-2xl border border-border/60 bg-card/40 p-3 text-sm text-foreground/90"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                    Counsellor note
+                  </span>
+                  <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                    {formatRelative(n.created_at)}
+                  </span>
+                </div>
+                <p className="mt-1 whitespace-pre-line">{n.body}</p>
+              </article>
+            ))
+          )}
+        </div>
+      ) : null}
     </div>
   );
 }

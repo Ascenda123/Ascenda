@@ -159,18 +159,24 @@ export const useHelpThread = (requestId: string | null): UseHelpThreadResult => 
         author_role: authorRole,
         body: trimmed
       });
-      // Notify the other side. In demo, student and counsellor are the same
-      // auth user; the notification still surfaces in the bell post-flip.
+      // Notify the OTHER side. Counsellor reply → student inbox.
+      // Student reply → counsellor inbox. In the single-user demo, the
+      // profile_id is the same for both — the audience tag is what keeps
+      // the two inboxes separate.
       try {
+        const targetAudience = authorRole === 'counsellor' ? 'student' : 'counsellor';
+        const targetHref =
+          targetAudience === 'counsellor' ? `/counsellor?help=${requestId}` : `/applications?help=${requestId}`;
         await insertNotification(supabase, {
           profile_id: request.student_profile_id,
+          audience: targetAudience,
           kind: authorRole === 'counsellor' ? 'help_reply_from_counsellor' : 'help_reply_from_student',
           title:
             authorRole === 'counsellor'
               ? 'Sarah replied to your help request'
               : 'Greg replied to a help request',
           body: trimmed.slice(0, 120),
-          href: `/counsellor?help=${requestId}`
+          href: targetHref
         });
       } catch (err) {
         console.warn('reply notify failed', err);
@@ -221,6 +227,7 @@ export const useHelpThread = (requestId: string | null): UseHelpThreadResult => 
       try {
         await insertNotification(supabase, {
           profile_id: request.student_profile_id,
+          audience: 'student',
           kind: 'help_meeting_proposed',
           title: 'Sarah proposed a meeting',
           body: `${title} · ${new Date(scheduledFor).toLocaleString('en-GB', {
@@ -230,7 +237,7 @@ export const useHelpThread = (requestId: string | null): UseHelpThreadResult => 
             hour: '2-digit',
             minute: '2-digit'
           })}`,
-          href: `/counsellor?help=${requestId}`
+          href: `/applications?help=${requestId}`
         });
       } catch (err) {
         console.warn('meeting notify failed', err);

@@ -15,6 +15,7 @@ import type {
   HelpRequestInsert,
   HelpRequestStatus,
   Notification,
+  NotificationAudience,
   NotificationInsert
 } from '@/lib/types/demo-tables';
 
@@ -57,11 +58,13 @@ export const updateHelpRequestStatus = async (
 export const listNotifications = async (
   supabase: AnyClient,
   profileId: string,
+  audience: NotificationAudience,
   limit = 20
 ): Promise<Notification[]> => {
   const { data, error } = await tbl(supabase, 'notifications')
     .select('*')
     .eq('profile_id', profileId)
+    .eq('audience', audience)
     .order('created_at', { ascending: false })
     .limit(limit);
   if (error) throw error;
@@ -75,10 +78,15 @@ export const markNotificationRead = async (supabase: AnyClient, id: string) => {
   if (error) throw error;
 };
 
-export const markAllNotificationsRead = async (supabase: AnyClient, profileId: string) => {
+export const markAllNotificationsRead = async (
+  supabase: AnyClient,
+  profileId: string,
+  audience: NotificationAudience
+) => {
   const { error } = await tbl(supabase, 'notifications')
     .update({ read_at: new Date().toISOString() })
     .eq('profile_id', profileId)
+    .eq('audience', audience)
     .is('read_at', null);
   if (error) throw error;
 };

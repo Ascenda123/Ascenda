@@ -76,7 +76,18 @@ You'll mostly stay on the desktop, sharing your full browser window. Don't switc
 **Say:**
 > "When they click into a course, they see one consolidated page. The thing this replaces is thirty browser tabs across thin, inconsistent university websites that a student may have open for one course. A lot of students miss a lot of context because information is so fragmented — hard to be confident in their research without putting in extensive effort."
 
-#### 2c · Application tracker (2 min)
+#### 2c · Toolbox (45 sec)
+
+**Click:** Top nav → **Toolbox**.
+
+**Show:** The four tools on the page — Requirements Checker, Chances Calculator, Essay Workshop, Deadline Timeline.
+
+**Say:**
+> "Before they get to applications, we give them the tools to actually do the work — check entry requirements, run their odds with a what-if grade slider, draft personal statements with platform-specific limits, and see every deadline in one place. They don't just match. They get scaffolding to execute."
+
+**Don't click into any tool.** Brief tour only — the audience will get the idea.
+
+#### 2d · Application tracker (1.5 min) — *the pivot is coming*
 
 **Click:** Top nav → **Applications**.
 
@@ -86,7 +97,7 @@ You'll mostly stay on the desktop, sharing your full browser window. Don't switc
 - **All applications** — clean list of all 6 applications, in-progress first, submitted at the bottom
 
 **Say:**
-> "Per university, students see what's needed, what's done, what's outstanding. The page leads with the three most urgent things across all their applications — so they always know what to do today — and below that, the full list of every application they're tracking with status, tier, and progress."
+> "And this is where everything comes together. Per university, students see what's needed, what's done, what's outstanding. The page leads with the three most urgent things across all their applications — so they always know what to do today — and below that, the full list of every application they're tracking with status, tier, and progress."
 
 ---
 

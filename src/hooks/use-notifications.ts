@@ -1,13 +1,14 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { useSupabase } from '@/hooks/useSupabase';
 import {
   listNotifications,
   markAllNotificationsRead,
   markNotificationRead
 } from '@/lib/demo/help-request-client';
-import type { Notification } from '@/lib/types/demo-tables';
+import type { Notification, NotificationAudience } from '@/lib/types/demo-tables';
 
 // Aggressive poll while realtime hasn't confirmed subscription (cold start,
 // flaky network). Once realtime says SUBSCRIBED the interval relaxes — we
@@ -25,8 +26,16 @@ export interface UseNotificationsResult {
   refresh: () => Promise<void>;
 }
 
+// Derive which inbox audience to show from the current route. /counsellor/*
+// = counsellor inbox; everything else = student inbox. Lets a single user
+// (the demo's greg@workiflow.com) hold two clean inboxes without auth changes.
+const audienceForPath = (pathname: string | null): NotificationAudience =>
+  pathname?.startsWith('/counsellor') ? 'counsellor' : 'student';
+
 export const useNotifications = (): UseNotificationsResult => {
   const supabase = useSupabase();
+  const pathname = usePathname();
+  const audience = audienceForPath(pathname);
   const [items, setItems] = useState<Notification[]>([]);
   const [profileId, setProfileId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -35,12 +44,12 @@ export const useNotifications = (): UseNotificationsResult => {
   const refresh = useCallback(async () => {
     if (!profileId) return;
     try {
-      const next = await listNotifications(supabase, profileId, 25);
+      const next = await listNotifications(supabase, profileId, audience, 25);
       setItems(next);
     } catch (err) {
       console.warn('useNotifications: refresh failed', err);
     }
-  }, [supabase, profileId]);
+  }, [supabase, profileId, audience]);
 
   // Resolve current profile id once.
   useEffect(() => {
@@ -54,7 +63,8 @@ export const useNotifications = (): UseNotificationsResult => {
     };
   }, [supabase]);
 
-  // Initial load.
+  // Initial load. Re-runs whenever audience changes (i.e. the user
+  // flipped to the other side).
   useEffect(() => {
     if (!profileId) {
       setLoading(false);
@@ -62,7 +72,7 @@ export const useNotifications = (): UseNotificationsResult => {
     }
     let cancelled = false;
     setLoading(true);
-    listNotifications(supabase, profileId, 25)
+    listNotifications(supabase, profileId, audience, 25)
       .then((rows) => {
         if (!cancelled) setItems(rows);
       })
@@ -73,7 +83,7 @@ export const useNotifications = (): UseNotificationsResult => {
     return () => {
       cancelled = true;
     };
-  }, [supabase, profileId]);
+  }, [supabase, profileId, audience]);
 
   // Realtime: subscribe to inserts for this profile. Poll interval starts
   // fast (1.5s) and relaxes to 10s once realtime confirms SUBSCRIBED, so
@@ -92,7 +102,7 @@ export const useNotifications = (): UseNotificationsResult => {
     startPoll(POLL_MS_FAST);
 
     const channel = (supabase as any)
-      .channel(`notif:${profileId}`)
+      .channel(`notif:${profileId}:${audience}`)
       .on(
         'postgres_changes',
         {
@@ -102,6 +112,10 @@ export const useNotifications = (): UseNotificationsResult => {
           filter: `profile_id=eq.${profileId}`
         },
         (payload: { new: Notification }) => {
+          // Realtime filter can only match one column; double-check audience
+          // here so we don't surface counsellor inbox items on the student
+          // side and vice versa.
+          if (payload.new.audience !== audience) return;
           setItems((prev) => {
             if (prev.some((row) => row.id === payload.new.id)) return prev;
             return [payload.new, ...prev].slice(0, 25);
@@ -117,6 +131,7 @@ export const useNotifications = (): UseNotificationsResult => {
           filter: `profile_id=eq.${profileId}`
         },
         (payload: { new: Notification }) => {
+          if (payload.new.audience !== audience) return;
           setItems((prev) =>
             prev.map((row) => (row.id === payload.new.id ? payload.new : row))
           );
@@ -140,7 +155,7 @@ export const useNotifications = (): UseNotificationsResult => {
         // ignore
       }
     };
-  }, [supabase, profileId, refresh]);
+  }, [supabase, profileId, audience, refresh]);
 
   const markRead = useCallback(
     async (id: string) => {
@@ -159,13 +174,13 @@ export const useNotifications = (): UseNotificationsResult => {
   const markAllRead = useCallback(async () => {
     if (!profileId) return;
     try {
-      await markAllNotificationsRead(supabase, profileId);
+      await markAllNotificationsRead(supabase, profileId, audience);
       const now = new Date().toISOString();
       setItems((prev) => prev.map((row) => (row.read_at ? row : { ...row, read_at: now })));
     } catch (err) {
       console.warn('useNotifications: markAllRead failed', err);
     }
-  }, [supabase, profileId]);
+  }, [supabase, profileId, audience]);
 
   const unreadCount = items.filter((row) => !row.read_at).length;
 
