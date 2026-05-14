@@ -69,7 +69,7 @@ You'll mostly stay on the desktop, sharing your full browser window. Don't switc
 **Say:**
 > "Once their profile is set, this is what they see. The headline here is the compatibility score for each course. We run their profile against entry requirements and university characteristics — fit is decomposable, they can see why a course scored what it did. As they explore, the system auto-categorises shortlisted courses as Reach, Match, or Safe — I know it's a framework you're already using with them."
 
-**Click:** **Imperial College London · Computing** card (top of the matches grid). If you can't find it, type "Imperial Computing" into the search bar at the top of `/university-search/search`. The other reach picks — Cambridge CS and UCL CS — are equally good fallbacks.
+**Click:** **University of Cambridge · Computer Science** card (top three of the matches grid). It has the richest course-page content of the demo set. If you can't find it, type "Cambridge Computer Science" into the search bar at the top of `/university-search/search`. Imperial Computing and UCL Computer Science are equally good fallbacks.
 
 **Show:** The consolidated course page — modules, entry requirements, employment, salary, cost of living, teaching style.
 
@@ -284,7 +284,7 @@ You'll mostly stay on the desktop, sharing your full browser window. Don't switc
 | **Faculty view pill** isn't in the navbar | Refresh the page once. Cache primes on first auth call. |
 | **Send to counsellor** does nothing | Open browser console (Cmd-Opt-I). If "row level security" errors, the migrations didn't take — fall back to talking through the screenshots in the deck. |
 | **Bell stays at zero** after Send | Wait 5 seconds. Realtime fires within 1s but if it misses, the 4-second poll catches it. |
-| **Imperial Computing course page** loads blank or 404s | Fall back to **Cambridge Computer Science** (`/course/37b7597a-c85b-54b7-a263-f88b3e277344`) or **UCL Computer Science** (`/course/fcb852c2-f36e-5deb-973b-71110547d515`). |
+| **Cambridge CS course page** loads blank or 404s | Fall back to **Imperial Computing** (`/course/cd952b76-9127-5d28-903c-8e1f4c89fd4f`) or **UCL Computer Science** (`/course/fcb852c2-f36e-5deb-973b-71110547d515`). |
 | **Drawer feels laggy** when typing in reply box | Realtime is doing too much. Close and re-open the drawer — debounces the subscription. |
 | **Production URL totally down** | Switch to the second pre-logged-in browser tab. If that's also down, share screenshots from the deck and continue talking. |
 | **Sarah asks about Gmail/Calendar integration depth** | "Real OAuth integration is on the roadmap. What you saw on screen today is the connection point — when those go live, this drawer schedules into your real calendar." Don't promise dates. |

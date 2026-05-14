@@ -34,6 +34,12 @@ export const Navbar = () => {
   }, []);
 
   const handleSignOut = async () => {
+    // Confirm before signing out — the button sits a click away from the
+    // bell and theme toggle, so accidental clicks during a demo would
+    // dump us to the login screen with no easy recovery.
+    if (typeof window !== 'undefined' && !window.confirm('Sign out of Ascenda?')) {
+      return;
+    }
     await supabase.auth.signOut();
     router.refresh();
     router.push('/login');

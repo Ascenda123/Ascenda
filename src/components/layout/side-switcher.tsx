@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { ArrowLeftRight, Briefcase, GraduationCap } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -23,6 +24,12 @@ export const SideSwitcher = ({ className }: { className?: string }) => {
   const currentMode = modeForPath(pathname);
   const nextMode: Mode = currentMode === 'student' ? 'counsellor' : 'student';
   const nextPath = nextMode === 'counsellor' ? '/counsellor' : '/dashboard';
+
+  // Warm the next page's chunk + RSC payload so the flip moment in the
+  // demo lands instantly rather than triggering a cold server-render.
+  useEffect(() => {
+    router.prefetch(nextPath);
+  }, [router, nextPath]);
   const NextIcon = nextMode === 'counsellor' ? Briefcase : GraduationCap;
   const nextLabel = nextMode === 'counsellor' ? 'Faculty view' : 'Student view';
   const accent =

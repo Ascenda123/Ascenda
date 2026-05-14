@@ -9,7 +9,12 @@ import {
 } from '@/lib/demo/help-request-client';
 import type { Notification } from '@/lib/types/demo-tables';
 
-const POLL_MS = 4000;
+// Aggressive poll while realtime hasn't confirmed subscription (cold start,
+// flaky network). Once realtime says SUBSCRIBED the interval relaxes — we
+// only need a safety net at that point. Numbers tuned for the live demo:
+// 1.5s feels near-instant when realtime is missing, 10s is cheap insurance.
+const POLL_MS_FAST = 1500;
+const POLL_MS_SLOW = 10000;
 
 export interface UseNotificationsResult {
   items: Notification[];
@@ -70,10 +75,21 @@ export const useNotifications = (): UseNotificationsResult => {
     };
   }, [supabase, profileId]);
 
-  // Realtime: subscribe to inserts for this profile. Fallback to polling
-  // if the subscription doesn't go live within 3s.
+  // Realtime: subscribe to inserts for this profile. Poll interval starts
+  // fast (1.5s) and relaxes to 10s once realtime confirms SUBSCRIBED, so
+  // the demo flip-moment is never gated on realtime succeeding.
   useEffect(() => {
     if (!profileId) return;
+
+    let pollHandle: number | null = null;
+    const startPoll = (intervalMs: number) => {
+      if (pollHandle !== null) window.clearInterval(pollHandle);
+      pollHandle = window.setInterval(() => {
+        refresh();
+      }, intervalMs);
+    };
+
+    startPoll(POLL_MS_FAST);
 
     const channel = (supabase as any)
       .channel(`notif:${profileId}`)
@@ -109,17 +125,15 @@ export const useNotifications = (): UseNotificationsResult => {
       .subscribe((status: string) => {
         if (status === 'SUBSCRIBED') {
           realtimeOkRef.current = true;
+          startPoll(POLL_MS_SLOW);
+        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+          realtimeOkRef.current = false;
+          startPoll(POLL_MS_FAST);
         }
       });
 
-    // Polling fallback — runs unconditionally but cheaply. If realtime is up,
-    // the poll is just a safety net for events the subscription missed.
-    const pollHandle = window.setInterval(() => {
-      refresh();
-    }, POLL_MS);
-
     return () => {
-      window.clearInterval(pollHandle);
+      if (pollHandle !== null) window.clearInterval(pollHandle);
       try {
         (supabase as any).removeChannel(channel);
       } catch {

@@ -38,7 +38,9 @@ export interface UseHelpThreadResult {
   setStatus: (status: HelpRequestStatus) => Promise<void>;
 }
 
-const POLL_MS = 4000;
+// See use-notifications.ts for the rationale on the two-speed poll.
+const POLL_MS_FAST = 1500;
+const POLL_MS_SLOW = 10000;
 
 export const useHelpThread = (requestId: string | null): UseHelpThreadResult => {
   const supabase = useSupabase();
@@ -95,9 +97,18 @@ export const useHelpThread = (requestId: string | null): UseHelpThreadResult => 
     };
   }, [requestId, refresh]);
 
-  // Realtime + poll fallback while drawer is open.
+  // Realtime + adaptive poll fallback while drawer is open. Same
+  // two-speed scheme as the other live hooks.
   useEffect(() => {
     if (!requestId) return;
+
+    let pollHandle: number | null = null;
+    const startPoll = (intervalMs: number) => {
+      if (pollHandle !== null) window.clearInterval(pollHandle);
+      pollHandle = window.setInterval(() => refresh(), intervalMs);
+    };
+    startPoll(POLL_MS_FAST);
+
     const channel = (supabase as any)
       .channel(`help_thread:${requestId}`)
       .on(
@@ -120,10 +131,15 @@ export const useHelpThread = (requestId: string | null): UseHelpThreadResult => 
         { event: '*', schema: 'public', table: 'help_requests', filter: `id=eq.${requestId}` },
         () => refresh()
       )
-      .subscribe();
-    const handle = window.setInterval(() => refresh(), POLL_MS);
+      .subscribe((status: string) => {
+        if (status === 'SUBSCRIBED') startPoll(POLL_MS_SLOW);
+        else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+          startPoll(POLL_MS_FAST);
+        }
+      });
+
     return () => {
-      window.clearInterval(handle);
+      if (pollHandle !== null) window.clearInterval(pollHandle);
       try {
         (supabase as any).removeChannel(channel);
       } catch {
