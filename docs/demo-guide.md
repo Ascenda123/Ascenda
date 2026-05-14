@@ -81,12 +81,12 @@ You'll mostly stay on the desktop, sharing your full browser window. Don't switc
 **Click:** Top nav → **Applications**.
 
 **Show:**
-- The PageHero summary at the top
-- The **Application priorities** board (6 cards: Cambridge CS, Imperial Computing, UCL CS, Manchester CS, Warwick CS, Leeds CS)
-- "Today's focus" section below
+- The PageHero summary at the top — "X days until your next deadline"
+- **What's next** — the top 3 most urgent tasks across all applications, each tied to a specific university
+- **All applications** — clean list of all 6 applications, in-progress first, submitted at the bottom
 
 **Say:**
-> "And this is the application tracker. Per university, students see what's needed, what's done, what's outstanding — tests, transcripts, references, personal statement, deadlines. The priority board surfaces what to tackle first, weighted by fit, scholarship intensity, and deadline pressure."
+> "Per university, students see what's needed, what's done, what's outstanding. The page leads with the three most urgent things across all their applications — so they always know what to do today — and below that, the full list of every application they're tracking with status, tier, and progress."
 
 ---
 
@@ -97,7 +97,7 @@ You'll mostly stay on the desktop, sharing your full browser window. Don't switc
 **Say:**
 > "Now here's something I want to show you live. Imagine a student is stuck — they need help on their application. Rather than emailing you or trying to book a meeting blindly, they click this."
 
-**Click:** The violet **Need help** pill at the bottom-right of the **Cambridge · Computer Science** priority card (top-left of the priorities board).
+**Click:** The violet **Need help** button next to the **Cambridge** entry in the "What's next" list (it'll be the top item — earliest deadline).
 
 **Show:** The modal opens. Subject is pre-filled ("Help with my University of Cambridge application"). Body references the fit %, open tasks, deadline. "AI draft · edit before sending" label visible top-right of the textarea.
 
