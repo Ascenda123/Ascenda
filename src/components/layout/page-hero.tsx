@@ -100,8 +100,7 @@ export const PageHero = ({
   return (
     <motion.section
       className={cn(
-        'surface-card surface-card--static text-foreground overflow-hidden',
-        isStudent && 'sm:p-8',
+        'surface-card surface-card--static text-foreground overflow-hidden !p-4 sm:!p-5',
         className
       )}
       variants={containerVariants}
@@ -121,15 +120,15 @@ export const PageHero = ({
         </>
       )}
 
-      <div className="relative flex flex-col gap-4">
+      <div className="relative flex flex-col gap-2">
         {breadcrumbs ? (
-          <motion.div className="mb-2" variants={fadeUp}>
+          <motion.div className="mb-1" variants={fadeUp}>
             {breadcrumbs}
           </motion.div>
         ) : null}
 
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <motion.div className="space-y-3" variants={containerVariants}>
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <motion.div className="space-y-2" variants={containerVariants}>
             {eyebrow ? (
               <motion.p
                 className={cn(
@@ -143,9 +142,9 @@ export const PageHero = ({
                 {eyebrow}
               </motion.p>
             ) : null}
-            <motion.div className="space-y-2" variants={fadeUp}>
+            <motion.div className="space-y-1.5" variants={fadeUp}>
               {isStudent ? (
-                <div className="inline-flex items-center gap-2 rounded-full border border-primary/15 bg-primary/5 px-3 py-1 text-[11px] font-medium text-primary/80">
+                <div className="inline-flex items-center gap-2 rounded-full border border-primary/15 bg-primary/5 px-2.5 py-0.5 text-[10px] font-medium text-primary/80">
                   <span>{resolvedAccent}</span>
                   {highlight ? (
                     <>
@@ -155,7 +154,7 @@ export const PageHero = ({
                   ) : null}
                 </div>
               ) : (
-                <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.4em] text-primary/70">
+                <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.4em] text-primary/70">
                   <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
                   <span>{resolvedAccent}</span>
                   {highlight ? <span className="text-foreground font-bold">{highlight}</span> : null}
@@ -165,8 +164,8 @@ export const PageHero = ({
                 className={cn(
                   'font-semibold text-foreground',
                   isStudent
-                    ? 'text-[26px] leading-tight md:text-[34px]'
-                    : 'text-[22px] leading-snug md:text-[28px]'
+                    ? 'text-[20px] leading-tight md:text-[26px]'
+                    : 'text-[17px] leading-snug md:text-[21px]'
                 )}
               >
                 {title}
@@ -174,7 +173,7 @@ export const PageHero = ({
               <p
                 className={cn(
                   'text-muted-foreground',
-                  isStudent ? 'max-w-xl text-sm sm:text-base leading-relaxed' : 'max-w-xl text-xs sm:text-sm'
+                  isStudent ? 'max-w-xl text-xs sm:text-sm leading-relaxed' : 'max-w-xl text-[11px] sm:text-xs'
                 )}
               >
                 {description}
@@ -187,7 +186,7 @@ export const PageHero = ({
             ) : null}
           </motion.div>
           {stats && stats.length > 0 ? (
-            <div className="border-t border-border/70 pt-3 sm:pt-4 md:border-l md:border-t-0 md:pl-4">
+            <div className="border-t border-border/70 pt-2 sm:pt-3 md:border-l md:border-t-0 md:pl-4">
               <motion.div
                 className={cn(
                   'grid gap-2 sm:gap-3 md:grid-cols-[repeat(auto-fit,minmax(160px,1fr))]',
@@ -214,7 +213,7 @@ export const PageHero = ({
                   <motion.div
                     key={stat.label}
                     className={cn(
-                      'min-w-0 rounded-xl sm:rounded-2xl border border-border bg-background px-3 py-2 sm:px-5 sm:py-3 text-center shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md hover:border-primary/20 sm:text-left'
+                      'min-w-0 rounded-xl border border-border bg-background px-3 py-1.5 sm:px-4 sm:py-2 text-center shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md hover:border-primary/20 sm:text-left'
                     )}
                     variants={statVariants}
                   >
@@ -222,8 +221,8 @@ export const PageHero = ({
                       className={cn(
                         'font-semibold text-foreground',
                         isNumeric
-                          ? 'tabular-nums truncate text-base sm:text-2xl'
-                          : 'text-sm leading-tight sm:text-lg break-words'
+                          ? 'tabular-nums truncate text-sm sm:text-lg'
+                          : 'text-xs leading-tight sm:text-base break-words'
                       )}
                       title={stat.value}
                     >

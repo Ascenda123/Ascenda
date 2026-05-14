@@ -8,7 +8,6 @@ import { buildStepCompletion, type ProfileRecordGroup } from '@/lib/profile/comp
 import { PageHero } from '@/components/layout/page-hero';
 import { Button } from '@/components/ui/button';
 import { Breadcrumbs } from '@/components/ui/breadcrumbs';
-import { SectionNav } from '@/components/layout/section-nav';
 import { ProfileProgressCard } from './_components/profile-progress-card';
 import { Compass, GraduationCap, MapPin, Target } from 'lucide-react';
 import { AnimatedSection, AnimatedGrid, AnimatedGridItem } from '@/components/layout/animated-section';
@@ -135,7 +134,6 @@ export default async function ProfilePage() {
     .slice(0, 2)
     .map((test) => `${test.test_type}${test.status ? ` • ${test.status}` : ''}`);
   const admissionsLabel = admissionsSummary.length ? admissionsSummary.join(', ') : 'No tests recorded';
-  const profileNavItems = [{ label: 'Overview', href: '/profile', exact: true }];
   const outcomeHints = [
     primaryClusters.length === 0
       ? { title: 'Set intended subjects', detail: 'Improves programme relevance and admissions test guidance.' }
@@ -155,7 +153,6 @@ export default async function ProfilePage() {
 
   return (
     <DashboardShell>
-      <SectionNav items={profileNavItems} />
       <PageHero
         tone="student"
         eyebrow="Your profile"
