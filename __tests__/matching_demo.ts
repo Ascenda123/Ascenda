@@ -247,3 +247,7 @@ function runDemo() {
 }
 
 runDemo();
+
+test('matching demo runs without throwing', () => {
+  expect(() => runDemo()).not.toThrow();
+});
