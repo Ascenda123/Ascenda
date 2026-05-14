@@ -43,6 +43,8 @@ const completionData = DUMMY_STUDENTS.map((s) => ({
 
 const totalMatches = DUMMY_STUDENTS.reduce((acc, s) => acc + s.matches.length, 0);
 const totalApps = DUMMY_STUDENTS.reduce((acc, s) => acc + s.applications.length, 0);
+const totalSubmittedApps = DUMMY_STUDENTS.reduce((acc, s) => acc + s.applications.filter((a) => a.status === 'submitted').length, 0);
+const totalReachMatches = DUMMY_STUDENTS.reduce((acc, s) => acc + s.matches.filter((m) => m.tier === 'Reach').length, 0);
 
 const WIDGET_ICON_MAP: Record<AnalyticsWidgetId, typeof BarChart2> = {
   programmeSplit: PieChart,
@@ -477,7 +479,7 @@ function InsightsContent({ onInsightClick }: { onInsightClick: (key: string) => 
     {
       key: 'submission_rate',
       label: 'Submission rate',
-      value: `${Math.round((stats.appFunnel.submitted / (totalApps || 1)) * 100)}%`,
+      value: `${Math.round((totalSubmittedApps / (totalApps || 1)) * 100)}%`,
       detail: 'of all applications have been submitted',
       color: 'text-emerald-600',
       bg: 'bg-emerald-500/10',
@@ -497,8 +499,8 @@ function InsightsContent({ onInsightClick }: { onInsightClick: (key: string) => 
     {
       key: 'reach_apps',
       label: 'Reach applications',
-      value: `${stats.matchTiers.reach}`,
-      detail: 'matches are Reach-tier — worth monitoring closely',
+      value: `${totalReachMatches}`,
+      detail: 'Reach-tier matches across cohort — worth monitoring closely',
       color: 'text-rose-600',
       bg: 'bg-rose-500/10',
       border: 'border-rose-200/50 dark:border-rose-500/20',

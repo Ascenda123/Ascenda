@@ -80,7 +80,7 @@ export const MatchDistribution = ({ tiers, activeTier, onSelectTier, onNavigateT
         })}
       </div>
 
-      <p className="text-center text-xs text-muted-foreground">{total} total matches across cohort</p>
+      <p className="text-center text-xs text-muted-foreground">{total} students with matches</p>
     </div>
   );
 };

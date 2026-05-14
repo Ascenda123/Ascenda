@@ -636,16 +636,16 @@ export const getCohortStats = () => {
     })
   ).length;
 
-  const matchCounts = DUMMY_STUDENTS.flatMap((s) => s.matches);
-  const reachCount = matchCounts.filter((m) => m.tier === 'Reach').length;
-  const matchCount = matchCounts.filter((m) => m.tier === 'Match').length;
-  const safeCount = matchCounts.filter((m) => m.tier === 'Safe').length;
+  // Count students (not raw match/app objects) so widget numbers match
+  // what the "View →" filter shows in the student roster.
+  const reachCount = DUMMY_STUDENTS.filter((s) => s.matches.some((m) => m.tier === 'Reach')).length;
+  const matchCount = DUMMY_STUDENTS.filter((s) => s.matches.some((m) => m.tier === 'Match')).length;
+  const safeCount = DUMMY_STUDENTS.filter((s) => s.matches.some((m) => m.tier === 'Safe')).length;
 
-  const appStatuses = DUMMY_STUDENTS.flatMap((s) => s.applications);
-  const planningCount = appStatuses.filter((a) => a.status === 'planning').length;
-  const inProgressCount = appStatuses.filter((a) => a.status === 'in_progress').length;
-  const submittedCount = appStatuses.filter((a) => a.status === 'submitted').length;
-  const decisionCount = appStatuses.filter((a) => a.status === 'decision').length;
+  const planningCount = DUMMY_STUDENTS.filter((s) => s.applications.some((a) => a.status === 'planning')).length;
+  const inProgressCount = DUMMY_STUDENTS.filter((s) => s.applications.some((a) => a.status === 'in_progress')).length;
+  const submittedCount = DUMMY_STUDENTS.filter((s) => s.applications.some((a) => a.status === 'submitted')).length;
+  const decisionCount = DUMMY_STUDENTS.filter((s) => s.applications.some((a) => a.status === 'decision')).length;
 
   const ibCount = DUMMY_STUDENTS.filter((s) => s.academic.programmeType === 'IB').length;
   const aLevelCount = DUMMY_STUDENTS.filter((s) => s.academic.programmeType === 'A_LEVEL').length;
