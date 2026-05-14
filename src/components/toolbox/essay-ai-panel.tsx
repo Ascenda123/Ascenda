@@ -101,7 +101,6 @@ export function EssayAIPanel({ essay, platform, selectedBlocks, allBlocks, onIns
     setResult('');
     setError(null);
     setActiveAction(action);
-    setShowBlockPicker(false);
 
     try {
       // Build rich student context from all available data
