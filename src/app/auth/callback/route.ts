@@ -4,7 +4,7 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr';
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const code = searchParams.get('code');
-  const next = searchParams.get('next') ?? '/role-select';
+  const next = searchParams.get('next') ?? '/dashboard';
 
   if (code) {
     const response = NextResponse.redirect(new URL(next, req.url));

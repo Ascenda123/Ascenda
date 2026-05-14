@@ -76,7 +76,7 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
   };
 
   const onboardingRedirectUrl = buildAuthCallbackUrl('/profile/wizard');
-  const authCallbackUrl = buildAuthCallbackUrl();
+  const authCallbackUrl = buildAuthCallbackUrl('/dashboard');
 
   const determineRedirectTarget = async (userId?: string | null) => {
     if (!userId) {
