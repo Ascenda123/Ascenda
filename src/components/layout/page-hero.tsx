@@ -97,107 +97,138 @@ export const PageHero = ({
 }: PageHeroProps) => {
   const isStudent = tone === 'student';
   const resolvedAccent = accent ?? (isStudent ? 'Today' : 'Live focus');
+  const hasMeta = Boolean(eyebrow) || Boolean(highlight) || Boolean(resolvedAccent);
+
   return (
     <motion.section
       className={cn(
-        'surface-card surface-card--static text-foreground overflow-hidden !py-3 !px-4 sm:!py-3.5 sm:!px-5',
+        'surface-card surface-card--static text-foreground overflow-hidden !py-4 !px-5 sm:!py-5 sm:!px-6',
         className
       )}
       variants={containerVariants}
       initial="hidden"
       animate="show"
     >
-      <div className="relative flex flex-col gap-1.5">
+      <div className="relative flex flex-col gap-3">
         {breadcrumbs ? (
           <motion.div variants={fadeUp}>
             {breadcrumbs}
           </motion.div>
         ) : null}
 
-        <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-          <motion.div className="space-y-1" variants={containerVariants}>
-            <motion.div className="flex flex-wrap items-center gap-2" variants={fadeUp}>
-              {isStudent ? (
-                <div className="inline-flex items-center gap-1.5 rounded-full border border-primary/15 bg-primary/5 px-2 py-0.5 text-[10px] font-medium text-primary/80">
-                  <span>{resolvedAccent}</span>
-                  {highlight ? (
-                    <>
-                      <span className="text-muted-foreground/60">·</span>
-                      <span className="font-semibold text-foreground">{highlight}</span>
-                    </>
-                  ) : null}
-                </div>
-              ) : (
-                <div className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/5 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.4em] text-primary/70">
-                  <span className="h-1 w-1 rounded-full bg-primary animate-pulse" />
-                  <span>{resolvedAccent}</span>
-                  {highlight ? <span className="text-foreground font-bold">{highlight}</span> : null}
-                </div>
-              )}
-              {eyebrow ? (
-                <span className="text-[10px] text-muted-foreground font-medium">{eyebrow}</span>
-              ) : null}
-            </motion.div>
-            <motion.div variants={fadeUp}>
+        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between md:gap-6">
+          {/* Left: identity */}
+          <motion.div className="min-w-0 flex-1 space-y-2" variants={containerVariants}>
+            {hasMeta ? (
+              <motion.div
+                className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px]"
+                variants={fadeUp}
+              >
+                {eyebrow ? (
+                  <span className="font-semibold uppercase tracking-[0.2em] text-muted-foreground/80">
+                    {eyebrow}
+                  </span>
+                ) : null}
+                {eyebrow && (resolvedAccent || highlight) ? (
+                  <span aria-hidden className="text-muted-foreground/40">·</span>
+                ) : null}
+                {resolvedAccent ? (
+                  <span
+                    className={cn(
+                      'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1',
+                      isStudent
+                        ? 'bg-primary/8 text-primary/80'
+                        : 'bg-primary/8 text-primary/80'
+                    )}
+                  >
+                    {!isStudent ? (
+                      <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                    ) : null}
+                    <span className="font-semibold">{resolvedAccent}</span>
+                    {highlight ? (
+                      <>
+                        <span aria-hidden className="text-primary/40">·</span>
+                        <span className="font-medium text-foreground/90">{highlight}</span>
+                      </>
+                    ) : null}
+                  </span>
+                ) : null}
+              </motion.div>
+            ) : null}
+
+            <motion.div variants={fadeUp} className="space-y-1.5">
               <h1
                 className={cn(
-                  'font-semibold text-foreground leading-snug',
-                  isStudent ? 'text-[17px] md:text-[19px]' : 'text-[15px] md:text-[17px]'
+                  'font-semibold tracking-tight text-foreground leading-tight',
+                  'text-xl sm:text-2xl'
                 )}
               >
                 {title}
               </h1>
-              <p className="mt-0.5 max-w-xl text-[11px] text-muted-foreground leading-snug">
+              <p className="max-w-2xl text-sm text-muted-foreground leading-relaxed">
                 {description}
               </p>
             </motion.div>
+
             {actions ? (
-              <motion.div className="flex flex-wrap gap-1.5 pt-0.5" variants={fadeUp}>
+              <motion.div className="flex flex-wrap gap-2 pt-1" variants={fadeUp}>
                 {actions}
               </motion.div>
             ) : null}
           </motion.div>
+
+          {/* Right: stats */}
           {stats && stats.length > 0 ? (
-            <div className="border-t border-border/60 pt-2 md:border-l md:border-t-0 md:pl-4 md:shrink-0">
-              <motion.div
-                className={cn(
-                  'flex gap-2',
-                  stats.length >= 4 ? 'flex-wrap' : 'flex-row'
-                )}
-                variants={statsContainerVariants}
-                initial="hidden"
-                animate="show"
-              >
-                {stats.map((stat) => {
-                  const isNumeric = /^[-$£€¥]?\s*[\d,]+(?:\.\d+)?\s*[%a-zA-Z]{0,3}\s*$/.test(stat.value.trim());
-                  return (
+            <motion.div
+              className={cn(
+                'grid gap-2.5 md:shrink-0',
+                stats.length === 1
+                  ? 'grid-cols-1'
+                  : stats.length === 2
+                    ? 'grid-cols-2'
+                    : stats.length === 3
+                      ? 'grid-cols-3'
+                      : 'grid-cols-2 sm:grid-cols-4'
+              )}
+              variants={statsContainerVariants}
+              initial="hidden"
+              animate="show"
+            >
+              {stats.map((stat) => {
+                const isNumeric = /^[-$£€¥]?\s*[\d,]+(?:\.\d+)?\s*[%a-zA-Z]{0,3}\s*$/.test(stat.value.trim());
+                return (
                   <motion.div
                     key={stat.label}
-                    className="min-w-0 rounded-lg border border-border bg-background px-3 py-1.5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md hover:border-primary/20"
+                    className="min-w-[88px] rounded-xl border border-border/70 bg-background/60 px-3 py-2"
                     variants={statVariants}
                   >
                     <p
                       className={cn(
-                        'font-semibold text-foreground leading-tight',
-                        isNumeric ? 'tabular-nums truncate text-sm' : 'text-xs break-words'
+                        'font-semibold text-foreground leading-none',
+                        isNumeric ? 'tabular-nums text-lg' : 'text-sm break-words'
                       )}
                       title={stat.value}
                     >
                       <AnimatedNumber value={stat.value} />
                     </p>
-                    <p className="text-[10px] text-muted-foreground font-medium truncate" title={stat.label}>
+                    <p
+                      className="mt-1 text-[11px] font-medium text-muted-foreground truncate"
+                      title={stat.label}
+                    >
                       {stat.label}
                     </p>
                     {stat.detail ? (
-                      <p className="text-[10px] text-muted-foreground truncate" title={stat.detail}>
+                      <p
+                        className="mt-0.5 text-[10px] text-muted-foreground/70 truncate"
+                        title={stat.detail}
+                      >
                         {stat.detail}
                       </p>
                     ) : null}
                   </motion.div>
-                  );
-                })}
-              </motion.div>
-            </div>
+                );
+              })}
+            </motion.div>
           ) : null}
         </div>
       </div>
