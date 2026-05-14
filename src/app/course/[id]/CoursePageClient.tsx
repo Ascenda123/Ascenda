@@ -778,7 +778,7 @@ export function CoursePageClient({ params, initialData }: { params: { id: string
     { id: 'curriculum', label: 'Curriculum', icon: Layers },
     { id: 'requirements', label: 'Requirements', icon: ListChecks },
     { id: 'assessment', label: 'Assessment', icon: ShieldCheck },
-    { id: 'campus', label: 'Campus and\nCity Life', icon: Landmark },
+    { id: 'campus', label: 'Campus & City Life', icon: Landmark },
     { id: 'career', label: 'Career', icon: GraduationCap },
     { id: 'costs', label: 'Costs', icon: Wallet },
   ];
@@ -898,26 +898,32 @@ export function CoursePageClient({ params, initialData }: { params: { id: string
             {/* Sticky Tabs Navigation */}
             <div className="sticky top-0 z-20 border-b border-border/40 bg-background/80 backdrop-blur-md">
               <div className="w-full px-4 sm:px-6 lg:px-10">
-                <div className="flex gap-1 overflow-x-auto py-2 no-scrollbar">
-                  {TABS.map((tab) => {
-                    const isActive = activeTab === tab.id;
-                    const Icon = tab.icon;
-                    return (
-                      <button
-                        key={tab.id}
-                        onClick={() => setActiveTab(tab.id)}
-                        className={cn(
-                          'flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium transition-all whitespace-normal text-center min-w-[12rem] max-w-[14rem]',
-                          isActive
-                            ? 'bg-primary text-primary-foreground shadow-md'
-                            : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                        )}
-                      >
-                        <Icon className="h-4 w-4" />
-                        <span className="whitespace-pre-line leading-tight">{tab.label}</span>
-                      </button>
-                    );
-                  })}
+                <div className="relative">
+                  <div className="flex gap-1 overflow-x-auto py-2 no-scrollbar">
+                    {TABS.map((tab) => {
+                      const isActive = activeTab === tab.id;
+                      const Icon = tab.icon;
+                      // Shorten multi-line labels for the tab button
+                      const shortLabel = tab.label.replace('\n', ' ');
+                      return (
+                        <button
+                          key={tab.id}
+                          onClick={() => setActiveTab(tab.id)}
+                          className={cn(
+                            'flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition-all whitespace-nowrap',
+                            isActive
+                              ? 'bg-primary text-primary-foreground shadow-md'
+                              : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                          )}
+                        >
+                          <Icon className="h-3.5 w-3.5 shrink-0" />
+                          {shortLabel}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {/* Right-edge gradient hint so users know more tabs exist */}
+                  <div className="pointer-events-none absolute right-0 top-0 h-full w-12 bg-gradient-to-l from-background/80 to-transparent" />
                 </div>
               </div>
             </div>
