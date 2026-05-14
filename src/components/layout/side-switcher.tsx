@@ -12,7 +12,7 @@ type Mode = 'student' | 'counsellor';
 const modeForPath = (pathname: string | null): Mode =>
   pathname?.startsWith('/counsellor') ? 'counsellor' : 'student';
 
-export const SideSwitcher = ({ className }: { className?: string }) => {
+export const SideSwitcher = ({ className, collapsed }: { className?: string; collapsed?: boolean }) => {
   const pathname = usePathname();
   const router = useRouter();
   const isDemo = useIsDemoUser();
@@ -49,20 +49,42 @@ export const SideSwitcher = ({ className }: { className?: string }) => {
     router.push(nextPath);
   };
 
+  if (collapsed) {
+    return (
+      <button
+        type="button"
+        onClick={handleSwitch}
+        title={nextLabel}
+        aria-label={nextLabel}
+        className={cn(
+          'group flex h-9 w-full items-center justify-center rounded-lg text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
+          nextMode === 'counsellor'
+            ? 'text-violet-600 hover:bg-violet-500/10 dark:text-violet-300'
+            : 'text-sky-600 hover:bg-sky-500/10 dark:text-sky-300',
+          className
+        )}
+      >
+        <NextIcon className="h-4 w-4 shrink-0" aria-hidden />
+      </button>
+    );
+  }
+
   return (
     <button
       type="button"
       onClick={handleSwitch}
-      title={`Switch to ${nextLabel.toLowerCase()}`}
+      title={nextLabel}
       className={cn(
-        'group inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-all backdrop-blur-sm hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
-        accent,
+        'group flex h-9 w-full items-center gap-3 rounded-lg px-3 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
+        nextMode === 'counsellor'
+          ? 'text-violet-600 hover:bg-violet-500/10 dark:text-violet-300'
+          : 'text-sky-600 hover:bg-sky-500/10 dark:text-sky-300',
         className
       )}
     >
-      <NextIcon className="h-3.5 w-3.5 shrink-0" aria-hidden />
-      <span className="hidden sm:inline">{nextLabel}</span>
-      <ArrowLeftRight className="h-3 w-3 shrink-0 opacity-60 group-hover:opacity-100" aria-hidden />
+      <NextIcon className="h-4 w-4 shrink-0" aria-hidden />
+      <span className="truncate">{nextLabel}</span>
+      <ArrowLeftRight className="h-3 w-3 shrink-0 opacity-40 group-hover:opacity-100 ml-auto" aria-hidden />
     </button>
   );
 };
