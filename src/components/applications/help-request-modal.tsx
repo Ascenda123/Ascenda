@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/toast';
 import { useSupabase } from '@/hooks/useSupabase';
-import { insertHelpRequest, insertNotification } from '@/lib/demo/help-request-client';
+import { insertHelpRequest } from '@/lib/demo/help-request-client';
 
 // Generic context shape — works for any caller (priority board item, rec letter,
 // application detail row). Keep this small; if the modal needs more it should
@@ -97,23 +97,6 @@ export function HelpRequestModal({ open, onOpenChange, app }: HelpRequestModalPr
         subject: subject.trim() || initialDraft.subject,
         body: body.trim() || initialDraft.body
       });
-
-      // Fan out a notification so the counsellor-side bell lights up after
-      // the user flips views. In the demo, student and counsellor are the
-      // same Supabase user; in production a DB trigger could replace this
-      // (and dedupe by row id). For now the client write is the source of
-      // truth — without it the demo's flip moment shows an empty bell.
-      try {
-        await insertNotification(supabase, {
-          profile_id: userId,
-          kind: 'help_request',
-          title: 'New help request from Greg',
-          body: `${app.university} · ${app.program}`,
-          href: `/counsellor?help=${inserted.id}`
-        });
-      } catch (notifError) {
-        console.warn('notification insert failed', notifError);
-      }
 
       try {
         sessionStorage.setItem('ascenda-last-help-request-id', inserted.id);
