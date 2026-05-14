@@ -7,14 +7,14 @@
 
 | | |
 |---|---|
-| **Preview URL** | https://ascenda-git-feat-applications-work-cxz5mw6fk2-6983s-projects.vercel.app |
+| **URL** | https://ascenda-ashy.vercel.app |
 | **Login** | `greg@workiflow.com` / `AscendaDemo!2026` |
 | **Browser** | Chrome, clean profile (no extensions), full screen, 100% zoom |
 | **Backup** | A second tab pre-logged-in. If the first session drops, switch tabs and keep talking. |
 
 **Pre-flight (run once Saturday morning):**
 
-1. Open the preview URL → sign in → land on `/dashboard`
+1. Open the URL → sign in → land on `/dashboard`
 2. Check the **navbar has a violet "Faculty view" pill** (top-right, next to the bell). If missing, hard refresh once.
 3. **Reset demo state** so the bell starts empty. Paste this in the [Supabase SQL editor](https://supabase.com/dashboard/project/alpkbobbasxvubogkark/sql/new):
    ```sql
@@ -286,7 +286,7 @@ You'll mostly stay on the desktop, sharing your full browser window. Don't switc
 | **Bell stays at zero** after Send | Wait 5 seconds. Realtime fires within 1s but if it misses, the 4-second poll catches it. |
 | **Imperial Computing course page** loads blank or 404s | Fall back to **Cambridge Computer Science** (`/course/37b7597a-c85b-54b7-a263-f88b3e277344`) or **UCL Computer Science** (`/course/fcb852c2-f36e-5deb-973b-71110547d515`). |
 | **Drawer feels laggy** when typing in reply box | Realtime is doing too much. Close and re-open the drawer — debounces the subscription. |
-| **Preview URL totally down** | Switch to the second pre-logged-in browser tab. If that's also down, share screenshots from the deck and continue talking. |
+| **Production URL totally down** | Switch to the second pre-logged-in browser tab. If that's also down, share screenshots from the deck and continue talking. |
 | **Sarah asks about Gmail/Calendar integration depth** | "Real OAuth integration is on the roadmap. What you saw on screen today is the connection point — when those go live, this drawer schedules into your real calendar." Don't promise dates. |
 | **Sarah asks "is this really AI?"** for the request draft | "It's a templated draft today that fills in from the student's context. The full LLM version is in flight — same input, richer language." |
 
@@ -301,7 +301,7 @@ We made these calls during build. You'll know to deliver them in voiceover:
 | Gmail/Calendar/Outlook integration tiles | Removed entirely | Beat 8 covers this in voiceover. Tiles would have shown fake email addresses — misleading. |
 | Per-application detail page | Help button on every priority-board card on `/applications` instead | Cleaner — keeps the user on the priorities view. |
 | "Nudge teacher" really emails the teacher | Writes a real notification to the student instead | "The nudge is logged through the platform — when we wire SMTP, the same click sends the email." |
-| The student practice board | Hidden from nav | Not part of the demo narrative. |
+| The student practice board | Removed entirely (route and component deleted) | Not part of the demo narrative. |
 
 ---
 
