@@ -69,9 +69,9 @@ export const Navbar = () => {
             {navItems.map((link) => (
               <NavLink key={link.href} item={link} />
             ))}
+            <SideSwitcher />
           </nav>
           <div className="flex items-center gap-2">
-            <SideSwitcher className="hidden sm:inline-flex" />
             <CommandPaletteTrigger />
             <CommandPaletteIconTrigger />
             <NotificationBell />
