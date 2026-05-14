@@ -36,7 +36,6 @@ export type MatchComputationResult = {
 const PROGRAM_PAGE_SIZE = 500;
 const PROGRAM_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 const PROGRAM_CACHE_WINDOW_MS = 5 * 60 * 1000;
-const DEMO_PROFILE_EMAIL = 'greg@workiflow.com';
 const DEMO_TIER1_UNIVERSITY_KEYWORDS = [
   'london school of economics',
   'university of oxford',
@@ -44,22 +43,6 @@ const DEMO_TIER1_UNIVERSITY_KEYWORDS = [
   'imperial college london',
   'university college london'
 ];
-
-const isDemoProfile = async (supabase: Client, profileId: string) => {
-  const { data, error } = await supabase
-    .from('student_personal_information')
-    .select('email')
-    .eq('profile_id', profileId)
-    .maybeSingle();
-
-  if (error) {
-    console.warn('Failed to load profile email for demo tiering check', error);
-    return false;
-  }
-
-  const email = data?.email?.trim().toLowerCase();
-  return email === DEMO_PROFILE_EMAIL;
-};
 
 const assignDemoTierMix = (matches: EnrichedMatch[]): EnrichedMatch[] => {
   if (matches.length < 3) return matches;

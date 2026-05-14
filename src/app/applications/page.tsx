@@ -5,7 +5,8 @@ import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { DashboardShell } from '@/components/layout/shell';
 import { DeadlineTimeline } from '@/components/dashboard/deadline-timeline';
 import { DocumentUploader } from '@/components/applications/document-uploader';
-import { ApplicationPriorityBoard, type PriorityItem } from '@/components/applications/application-priority-board';
+import { type PriorityItem } from '@/components/applications/application-priority-board';
+import { PriorityBoardWithHelp } from '@/components/applications/priority-board-with-help';
 import { RequirementTracker, type RequirementItem } from '@/components/applications/requirement-tracker';
 import dynamic from 'next/dynamic';
 const PlannerCalendar = dynamic(
@@ -332,7 +333,7 @@ export default async function ApplicationsPage() {
 
       <div className="space-y-6 sm:space-y-8">
         {/* Priority — what to focus on this week */}
-        <ApplicationPriorityBoard items={priorityItems} />
+        <PriorityBoardWithHelp items={priorityItems} />
 
         {/* Now — what's open right now (tasks, deadlines, updates) */}
         <section className="space-y-4">

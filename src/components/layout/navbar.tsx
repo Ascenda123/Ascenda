@@ -14,6 +14,8 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useSupabase } from '@/hooks/useSupabase';
 import { Button } from '../ui/button';
 import { CommandPaletteIconTrigger, CommandPaletteTrigger } from './command-palette';
+import { SideSwitcher } from './side-switcher';
+import { NotificationBell } from '@/components/notifications/notification-bell';
 
 export const Navbar = () => {
   const role = useUserRole();
@@ -63,8 +65,10 @@ export const Navbar = () => {
             ))}
           </nav>
           <div className="flex items-center gap-2">
+            <SideSwitcher className="hidden sm:inline-flex" />
             <CommandPaletteTrigger />
             <CommandPaletteIconTrigger />
+            <NotificationBell />
             <ThemeToggle compact />
             <Button
               variant="ghost"

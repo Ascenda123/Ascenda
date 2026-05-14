@@ -38,8 +38,14 @@ export const WIDGET_CONFIGS: WidgetConfig[] = [
 const STORAGE_KEY = 'ascenda-counsellor-widgets';
 const STORAGE_KEY_ORDER = 'ascenda-counsellor-widgets-order';
 const STORAGE_KEY_SIZES = 'ascenda-counsellor-widgets-sizes';
+const STORAGE_VERSION_KEY = 'ascenda-counsellor-widgets-v';
+// Bump when the DEFAULT_VISIBLE / DEFAULT_SIZES shape changes — first load
+// after the bump clears old prefs so the new defaults take effect once.
+const STORAGE_VERSION = '2';
 // Overview keeps a focused triage set; deeper analytics live on /counsellor/analytics.
-const DEFAULT_VISIBLE: WidgetId[] = ['alerts', 'deadlines', 'activity'];
+// At-risk students are already surfaced in the dedicated panel above the grid;
+// the 'alerts' widget would duplicate it, so it's hidden by default.
+const DEFAULT_VISIBLE: WidgetId[] = ['deadlines', 'activity'];
 const DEFAULT_SIZES: Record<WidgetId, 'normal' | 'wide'> = {
   alerts: 'normal', funnel: 'normal', matchDist: 'normal',
   deadlines: 'normal', activity: 'normal', cohortBreakdown: 'wide', topStudents: 'normal'
@@ -110,6 +116,18 @@ export const WidgetGrid = ({ children }: WidgetGridProps) => {
   const dragId = useRef<WidgetId | null>(null);
 
   useEffect(() => {
+    // One-shot migration: clear old prefs if the storage version is behind.
+    try {
+      const storedVersion = localStorage.getItem(STORAGE_VERSION_KEY);
+      if (storedVersion !== STORAGE_VERSION) {
+        localStorage.removeItem(STORAGE_KEY);
+        localStorage.removeItem(STORAGE_KEY_ORDER);
+        localStorage.removeItem(STORAGE_KEY_SIZES);
+        localStorage.setItem(STORAGE_VERSION_KEY, STORAGE_VERSION);
+      }
+    } catch {
+      // ignore
+    }
     setVisibleWidgets(loadPrefs());
     setOrder(loadOrder());
     setSizes(loadSizes());

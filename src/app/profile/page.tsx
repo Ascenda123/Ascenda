@@ -14,6 +14,8 @@ import { Compass, GraduationCap, MapPin, Target } from 'lucide-react';
 import { AnimatedSection, AnimatedGrid, AnimatedGridItem } from '@/components/layout/animated-section';
 import { PROFILE_SECTION_VISUAL, COMPLETION_VISUAL, classifyCompletion } from '@/lib/theme/categories';
 import { cn } from '@/lib/utils';
+import { summarisePathwayStatus } from '@/lib/profile/pathway-status';
+import { PathwayStatusPill } from '@/components/profile/pathway-status-pill';
 
 export const metadata: Metadata = {
   title: 'Profile'
@@ -58,6 +60,11 @@ export default async function ProfilePage() {
     .select('*')
     .eq('profile_id', user?.id ?? '')
     .single();
+
+  const pathwayInsight = summarisePathwayStatus(
+    (scores?.eligibility_flags as string[] | null) ?? null,
+    (scores?.readiness_flags as string[] | null) ?? null
+  );
 
   const recordGroup: ProfileRecordGroup = {
     personal: personal ?? null,
@@ -215,6 +222,15 @@ export default async function ProfilePage() {
               </p>
             </div>
           </div>
+          <div className="mt-4">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+              Pathway status
+            </p>
+            <div className="mt-2">
+              <PathwayStatusPill insight={pathwayInsight} />
+            </div>
+          </div>
+
           <div className="mt-4">
             <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Intended subjects</p>
             <div className="mt-2 flex flex-wrap gap-2">
