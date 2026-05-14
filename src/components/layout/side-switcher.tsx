@@ -18,18 +18,21 @@ export const SideSwitcher = ({ className }: { className?: string }) => {
   const isDemo = useIsDemoUser();
   const role = useUserRole();
 
-  // Demo + admin only. Hide for real students and counsellors in production.
-  if (!isDemo && role !== 'admin') return null;
-
   const currentMode = modeForPath(pathname);
   const nextMode: Mode = currentMode === 'student' ? 'counsellor' : 'student';
   const nextPath = nextMode === 'counsellor' ? '/counsellor' : '/dashboard';
 
   // Warm the next page's chunk + RSC payload so the flip moment in the
   // demo lands instantly rather than triggering a cold server-render.
+  // Runs unconditionally to satisfy hook rules — cheap when the
+  // component will ultimately render null.
   useEffect(() => {
     router.prefetch(nextPath);
   }, [router, nextPath]);
+
+  // Demo + admin only. Hide for real students and counsellors in production.
+  if (!isDemo && role !== 'admin') return null;
+
   const NextIcon = nextMode === 'counsellor' ? Briefcase : GraduationCap;
   const nextLabel = nextMode === 'counsellor' ? 'Faculty view' : 'Student view';
   const accent =
