@@ -7,7 +7,9 @@ export async function GET(req: NextRequest) {
   const next = searchParams.get('next') ?? '/dashboard';
 
   if (code) {
-    const response = NextResponse.redirect(new URL(next, req.url));
+    const redirectUrl = new URL(next, req.url);
+    redirectUrl.searchParams.set('auth_fresh', '1');
+    const response = NextResponse.redirect(redirectUrl);
 
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,

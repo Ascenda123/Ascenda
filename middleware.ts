@@ -143,14 +143,20 @@ export async function middleware(req: NextRequest) {
   }
 
   if (user && isProtected && !pathname.startsWith('/profile') && !pathname.startsWith('/counsellor') && !pathname.startsWith('/role-select')) {
-    const needsOnboarding = await getOnboardingStatus(res);
-    if (needsOnboarding) {
-      const redirectUrl = req.nextUrl.clone();
-      redirectUrl.pathname = '/profile/wizard';
-      redirectUrl.searchParams.set('onboarding', 'true');
-      const redirectResponse = NextResponse.redirect(redirectUrl);
-      applyCookies(res, redirectResponse);
-      return redirectResponse;
+    // Skip the onboarding check on the very first request after OAuth callback —
+    // the session cookie has just been written and downstream DB reads can race.
+    // Let the page render; the next request will hit the onboarding check normally.
+    const isFreshAuth = req.nextUrl.searchParams.get('auth_fresh') === '1';
+    if (!isFreshAuth) {
+      const needsOnboarding = await getOnboardingStatus(res);
+      if (needsOnboarding) {
+        const redirectUrl = req.nextUrl.clone();
+        redirectUrl.pathname = '/profile/wizard';
+        redirectUrl.searchParams.set('onboarding', 'true');
+        const redirectResponse = NextResponse.redirect(redirectUrl);
+        applyCookies(res, redirectResponse);
+        return redirectResponse;
+      }
     }
   }
 

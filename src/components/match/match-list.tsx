@@ -20,7 +20,7 @@ interface MatchListProps {
   matches: EnrichedMatch[];
 }
 
-const TIER_ORDER: MatchTier[] = ['Reach', 'Match', 'Safe'];
+const TIER_ORDER: MatchTier[] = ['Match', 'Safe', 'Reach'];
 const TIER_DESCRIPTIONS: Record<MatchTier, string> = MATCHES_TEXT.tierDescriptions;
 
 const INITIAL_PER_TIER = 6;
