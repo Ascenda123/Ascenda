@@ -5,6 +5,7 @@ import {
   CalendarClock,
   ClipboardCheck,
   FileText,
+  Inbox,
   LayoutDashboard,
   Search,
   Settings,
@@ -21,7 +22,7 @@ export type NavItem = {
   icon: LucideIcon;
   exact?: boolean;
   matchers?: Array<(pathname: string) => boolean>;
-  segment: 'home' | 'explore' | 'planner' | 'scholarships' | 'profile' | 'toolbox' | 'admin' | 'counsellor';
+  segment: 'home' | 'explore' | 'planner' | 'inbox' | 'scholarships' | 'profile' | 'toolbox' | 'admin' | 'counsellor';
 };
 
 export type SectionNavItem = {
@@ -57,6 +58,12 @@ export const NAV_ITEMS: NavItem[] = [
     icon: ClipboardCheck,
     segment: 'planner',
     matchers: [(pathname) => pathname.startsWith('/applications')]
+  },
+  {
+    label: 'Inbox',
+    href: '/inbox',
+    icon: Inbox,
+    segment: 'inbox'
   },
   {
     label: 'Scholarships',

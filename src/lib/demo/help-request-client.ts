@@ -43,6 +43,45 @@ export const listOpenHelpRequests = async (supabase: AnyClient): Promise<HelpReq
   return (data ?? []) as HelpRequest[];
 };
 
+// Inbox uses this — pulls every conversation the student is part of, including
+// resolved ones. The student-side inbox doesn't filter by status; it shows the
+// full history with read/unread state surfaced separately.
+export const listInboxRequests = async (
+  supabase: AnyClient,
+  profileId: string
+): Promise<HelpRequest[]> => {
+  const { data, error } = await tbl(supabase, 'help_requests')
+    .select('*')
+    .eq('student_profile_id', profileId)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as HelpRequest[];
+};
+
+// Returns request_id -> unread notification count for the student inbox.
+// We derive this from notifications.href ('/inbox?help=<id>') rather than a
+// separate column so the schema stays the same; only the inbox UI cares.
+export const listUnreadByRequest = async (
+  supabase: AnyClient,
+  profileId: string
+): Promise<Map<string, number>> => {
+  const { data, error } = await tbl(supabase, 'notifications')
+    .select('href')
+    .eq('profile_id', profileId)
+    .eq('audience', 'student')
+    .is('read_at', null);
+  if (error) throw error;
+  const map = new Map<string, number>();
+  for (const row of (data ?? []) as { href: string | null }[]) {
+    if (!row.href) continue;
+    const m = row.href.match(/[?&]help=([0-9a-f-]+)/i);
+    if (!m) continue;
+    const id = m[1];
+    map.set(id, (map.get(id) ?? 0) + 1);
+  }
+  return map;
+};
+
 export const updateHelpRequestStatus = async (
   supabase: AnyClient,
   id: string,

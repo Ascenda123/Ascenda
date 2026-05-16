@@ -14,7 +14,8 @@ const PROTECTED_PREFIXES = [
   '/shortlist',
   '/scholarships',
   '/counsellor',
-  '/role-select'
+  '/role-select',
+  '/inbox'
 ];
 
 export async function middleware(req: NextRequest) {
@@ -164,5 +165,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/(dashboard|profile|matches|applications|admin|university-search|course|shortlist|scholarships|counsellor|role-select)(.*)', '/login', '/signup']
+  matcher: ['/(dashboard|profile|matches|applications|admin|university-search|course|shortlist|scholarships|counsellor|role-select|inbox)(.*)', '/login', '/signup']
 };
