@@ -1,8 +1,9 @@
 'use client';
 
-import { AlertTriangle, CheckCircle2, Info, Mail } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { CounsellorStudent, MatchTier } from '@/lib/data/counsellor-dummy-data';
+import { MessageStudentButton } from './message-student-button';
 
 interface PortfolioBalanceProps {
   student: CounsellorStudent;
@@ -124,13 +125,15 @@ export const PortfolioBalance = ({ student }: PortfolioBalanceProps) => {
         </div>
 
         {showNudge && (
-          <a
-            href={`mailto:${student.personal.email}?subject=${encodeURIComponent('Let’s review your application list')}&body=${encodeURIComponent(`Hi ${student.personal.firstName},\n\nI was reviewing your application portfolio and wanted to flag a few things. Could we book a quick call this week?\n\nBest,`)}`}
-            className="flex shrink-0 items-center gap-2 self-start rounded-full border border-border bg-background px-4 py-2 text-xs font-semibold text-foreground transition hover:-translate-y-0.5 hover:bg-muted/60"
-          >
-            <Mail className="h-3.5 w-3.5" />
-            Nudge {student.personal.firstName}
-          </a>
+          <MessageStudentButton
+            student={{
+              id: student.id,
+              firstName: student.personal.firstName,
+              lastName: student.personal.lastName
+            }}
+            reason="portfolio_balance"
+            variant="nudge"
+          />
         )}
       </div>
 
