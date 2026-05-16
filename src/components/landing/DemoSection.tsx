@@ -13,7 +13,7 @@ import { DemoPreview } from './DemoPreview';
 export function DemoSection() {
     const shouldReduceMotion = useReducedMotion();
     const supabase = useSupabase();
-    const [tryHref, setTryHref] = useState('/signup');
+    const [tryHref, setTryHref] = useState('/login');
 
     useEffect(() => {
         const checkAuth = async () => {

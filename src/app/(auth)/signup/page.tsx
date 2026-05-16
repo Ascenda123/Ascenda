@@ -11,7 +11,7 @@ export default function SignupPage() {
     <div className="space-y-6">
       <div className="space-y-1">
         <h1 className="font-heading text-2xl font-semibold">Create your account</h1>
-        <p className="text-sm text-muted-foreground">Get started with Ascenda — it takes about 30 seconds.</p>
+        <p className="text-sm text-muted-foreground">Pick a password and we&apos;ll have you set up in 30 seconds.</p>
       </div>
       <AuthForm mode="signup" />
       <p className="text-center text-sm text-muted-foreground">

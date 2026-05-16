@@ -38,6 +38,5 @@ export async function GET(req: NextRequest) {
     console.error('Auth callback code exchange failed:', error.message);
   }
 
-  // If no code or exchange failed, redirect to login
   return NextResponse.redirect(new URL('/login', req.url));
 }

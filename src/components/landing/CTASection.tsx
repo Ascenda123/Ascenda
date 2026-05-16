@@ -12,7 +12,7 @@ import { RETURNING_USER_STORAGE_KEY } from '@/lib/constants';
 export function CTASection() {
     const shouldReduceMotion = useReducedMotion();
     const supabase = useSupabase();
-    const [ctaHref, setCtaHref] = useState('/signup');
+    const [ctaHref, setCtaHref] = useState('/login');
 
     useEffect(() => {
         const checkAuth = async () => {
