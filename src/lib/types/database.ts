@@ -76,6 +76,20 @@ export type Database = {
             foreignKeyName: "application_tasks_program_id_fkey"
             columns: ["program_id"]
             isOneToOne: false
+            referencedRelation: "course_scoring_v1"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "application_tasks_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "course_scoring_v1"
+            referencedColumns: ["program_id"]
+          },
+          {
+            foreignKeyName: "application_tasks_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
             referencedRelation: "programs"
             referencedColumns: ["id"]
           },
@@ -124,10 +138,260 @@ export type Database = {
             foreignKeyName: "applications_program_id_fkey"
             columns: ["program_id"]
             isOneToOne: false
+            referencedRelation: "course_scoring_v1"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "applications_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "course_scoring_v1"
+            referencedColumns: ["program_id"]
+          },
+          {
+            foreignKeyName: "applications_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
             referencedRelation: "programs"
             referencedColumns: ["id"]
           },
         ]
+      }
+      archive_raw_courses: {
+        Row: {
+          a_level_min_numeric: number | null
+          additional_entry_requirements: string | null
+          additional_fee_info: string | null
+          assessment_methods: string | null
+          average_salary_after_15m: string | null
+          campus: string | null
+          contextual_admissions: string | null
+          course_name: string
+          course_summary: string | null
+          created_at: string
+          currency: string | null
+          duration: string | null
+          duration_years: number | null
+          employment_after_course: string | null
+          english_requirements: string | null
+          entry_requirements_overview: string | null
+          field: string | null
+          historic_entry_grades: string | null
+          id: string
+          intake_months: string[] | null
+          language: string | null
+          level: string | null
+          metadata: Json | null
+          min_alevel: string | null
+          min_ib: string | null
+          mode: string | null
+          modules: string | null
+          name: string | null
+          open_days: string | null
+          provider_apply_url: string | null
+          provider_course_url: string | null
+          start_date: string | null
+          student_outcomes: string | null
+          student_satisfaction: string | null
+          study_level: string | null
+          subject_requirements: string | null
+          subsequent_year_entry_requirements: string | null
+          tuition: number | null
+          tuition_fees_home: string | null
+          tuition_fees_international: string | null
+          ucas_code: string | null
+          ucas_points: string | null
+          university_id: string
+          url: string | null
+        }
+        Insert: {
+          a_level_min_numeric?: number | null
+          additional_entry_requirements?: string | null
+          additional_fee_info?: string | null
+          assessment_methods?: string | null
+          average_salary_after_15m?: string | null
+          campus?: string | null
+          contextual_admissions?: string | null
+          course_name: string
+          course_summary?: string | null
+          created_at?: string
+          currency?: string | null
+          duration?: string | null
+          duration_years?: number | null
+          employment_after_course?: string | null
+          english_requirements?: string | null
+          entry_requirements_overview?: string | null
+          field?: string | null
+          historic_entry_grades?: string | null
+          id?: string
+          intake_months?: string[] | null
+          language?: string | null
+          level?: string | null
+          metadata?: Json | null
+          min_alevel?: string | null
+          min_ib?: string | null
+          mode?: string | null
+          modules?: string | null
+          name?: string | null
+          open_days?: string | null
+          provider_apply_url?: string | null
+          provider_course_url?: string | null
+          start_date?: string | null
+          student_outcomes?: string | null
+          student_satisfaction?: string | null
+          study_level?: string | null
+          subject_requirements?: string | null
+          subsequent_year_entry_requirements?: string | null
+          tuition?: number | null
+          tuition_fees_home?: string | null
+          tuition_fees_international?: string | null
+          ucas_code?: string | null
+          ucas_points?: string | null
+          university_id: string
+          url?: string | null
+        }
+        Update: {
+          a_level_min_numeric?: number | null
+          additional_entry_requirements?: string | null
+          additional_fee_info?: string | null
+          assessment_methods?: string | null
+          average_salary_after_15m?: string | null
+          campus?: string | null
+          contextual_admissions?: string | null
+          course_name?: string
+          course_summary?: string | null
+          created_at?: string
+          currency?: string | null
+          duration?: string | null
+          duration_years?: number | null
+          employment_after_course?: string | null
+          english_requirements?: string | null
+          entry_requirements_overview?: string | null
+          field?: string | null
+          historic_entry_grades?: string | null
+          id?: string
+          intake_months?: string[] | null
+          language?: string | null
+          level?: string | null
+          metadata?: Json | null
+          min_alevel?: string | null
+          min_ib?: string | null
+          mode?: string | null
+          modules?: string | null
+          name?: string | null
+          open_days?: string | null
+          provider_apply_url?: string | null
+          provider_course_url?: string | null
+          start_date?: string | null
+          student_outcomes?: string | null
+          student_satisfaction?: string | null
+          study_level?: string | null
+          subject_requirements?: string | null
+          subsequent_year_entry_requirements?: string | null
+          tuition?: number | null
+          tuition_fees_home?: string | null
+          tuition_fees_international?: string | null
+          ucas_code?: string | null
+          ucas_points?: string | null
+          university_id?: string
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "programs_university_id_fkey"
+            columns: ["university_id"]
+            isOneToOne: false
+            referencedRelation: "archive_raw_universities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      archive_raw_universities: {
+        Row: {
+          acceptance_rate: number | null
+          city: string | null
+          country: string
+          created_at: string
+          currency: string | null
+          id: string
+          intl_tuition_high: number | null
+          intl_tuition_low: number | null
+          metadata: Json | null
+          name: string
+          rank_overall: number | null
+          rank_source: string | null
+          region: string | null
+          requires_test: boolean | null
+          website: string | null
+        }
+        Insert: {
+          acceptance_rate?: number | null
+          city?: string | null
+          country: string
+          created_at?: string
+          currency?: string | null
+          id?: string
+          intl_tuition_high?: number | null
+          intl_tuition_low?: number | null
+          metadata?: Json | null
+          name: string
+          rank_overall?: number | null
+          rank_source?: string | null
+          region?: string | null
+          requires_test?: boolean | null
+          website?: string | null
+        }
+        Update: {
+          acceptance_rate?: number | null
+          city?: string | null
+          country?: string
+          created_at?: string
+          currency?: string | null
+          id?: string
+          intl_tuition_high?: number | null
+          intl_tuition_low?: number | null
+          metadata?: Json | null
+          name?: string
+          rank_overall?: number | null
+          rank_source?: string | null
+          region?: string | null
+          requires_test?: boolean | null
+          website?: string | null
+        }
+        Relationships: []
+      }
+      cities: {
+        Row: {
+          average_rent_outside_campus_gbp_per_month: number | null
+          cost_of_life: Database["public"]["Enums"]["cost_of_life_enum"] | null
+          country: string
+          created_at: string
+          id: string
+          name: string
+          region: string | null
+          updated_at: string
+        }
+        Insert: {
+          average_rent_outside_campus_gbp_per_month?: number | null
+          cost_of_life?: Database["public"]["Enums"]["cost_of_life_enum"] | null
+          country: string
+          created_at?: string
+          id?: string
+          name: string
+          region?: string | null
+          updated_at?: string
+        }
+        Update: {
+          average_rent_outside_campus_gbp_per_month?: number | null
+          cost_of_life?: Database["public"]["Enums"]["cost_of_life_enum"] | null
+          country?: string
+          created_at?: string
+          id?: string
+          name?: string
+          region?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       deadlines: {
         Row: {
@@ -164,6 +428,20 @@ export type Database = {
           timezone?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "deadlines_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "course_scoring_v1"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "deadlines_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "course_scoring_v1"
+            referencedColumns: ["program_id"]
+          },
           {
             foreignKeyName: "deadlines_program_id_fkey"
             columns: ["program_id"]
@@ -211,6 +489,245 @@ export type Database = {
             columns: ["application_id"]
             isOneToOne: false
             referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      help_meetings: {
+        Row: {
+          counsellor_profile_id: string
+          created_at: string
+          duration_minutes: number
+          id: string
+          location: string | null
+          request_id: string
+          scheduled_for: string
+          status: string
+          student_profile_id: string
+          title: string
+        }
+        Insert: {
+          counsellor_profile_id: string
+          created_at?: string
+          duration_minutes?: number
+          id?: string
+          location?: string | null
+          request_id: string
+          scheduled_for: string
+          status?: string
+          student_profile_id: string
+          title: string
+        }
+        Update: {
+          counsellor_profile_id?: string
+          created_at?: string
+          duration_minutes?: number
+          id?: string
+          location?: string | null
+          request_id?: string
+          scheduled_for?: string
+          status?: string
+          student_profile_id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "help_meetings_counsellor_profile_id_fkey"
+            columns: ["counsellor_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "help_meetings_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "help_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "help_meetings_student_profile_id_fkey"
+            columns: ["student_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      help_messages: {
+        Row: {
+          author_profile_id: string
+          author_role: string
+          body: string
+          created_at: string
+          id: string
+          request_id: string
+        }
+        Insert: {
+          author_profile_id: string
+          author_role: string
+          body: string
+          created_at?: string
+          id?: string
+          request_id: string
+        }
+        Update: {
+          author_profile_id?: string
+          author_role?: string
+          body?: string
+          created_at?: string
+          id?: string
+          request_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "help_messages_author_profile_id_fkey"
+            columns: ["author_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "help_messages_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "help_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      help_notes: {
+        Row: {
+          author_profile_id: string
+          body: string
+          created_at: string
+          id: string
+          request_id: string
+        }
+        Insert: {
+          author_profile_id: string
+          body: string
+          created_at?: string
+          id?: string
+          request_id: string
+        }
+        Update: {
+          author_profile_id?: string
+          body?: string
+          created_at?: string
+          id?: string
+          request_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "help_notes_author_profile_id_fkey"
+            columns: ["author_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "help_notes_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "help_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      help_requests: {
+        Row: {
+          accepted_at: string | null
+          application_id: string | null
+          body: string
+          created_at: string
+          id: string
+          initiated_by: string
+          program: string | null
+          resolved_at: string | null
+          status: string
+          student_profile_id: string
+          subject: string
+          university: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          application_id?: string | null
+          body: string
+          created_at?: string
+          id?: string
+          initiated_by?: string
+          program?: string | null
+          resolved_at?: string | null
+          status?: string
+          student_profile_id: string
+          subject: string
+          university?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          application_id?: string | null
+          body?: string
+          created_at?: string
+          id?: string
+          initiated_by?: string
+          program?: string | null
+          resolved_at?: string | null
+          status?: string
+          student_profile_id?: string
+          subject?: string
+          university?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "help_requests_student_profile_id_fkey"
+            columns: ["student_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          audience: string
+          body: string | null
+          created_at: string
+          href: string | null
+          id: string
+          kind: string
+          profile_id: string
+          read_at: string | null
+          title: string
+        }
+        Insert: {
+          audience?: string
+          body?: string | null
+          created_at?: string
+          href?: string | null
+          id?: string
+          kind: string
+          profile_id: string
+          read_at?: string | null
+          title: string
+        }
+        Update: {
+          audience?: string
+          body?: string | null
+          created_at?: string
+          href?: string | null
+          id?: string
+          kind?: string
+          profile_id?: string
+          read_at?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -284,6 +801,20 @@ export type Database = {
             foreignKeyName: "program_requirements_program_id_fkey"
             columns: ["program_id"]
             isOneToOne: true
+            referencedRelation: "course_scoring_v1"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "program_requirements_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: true
+            referencedRelation: "course_scoring_v1"
+            referencedColumns: ["program_id"]
+          },
+          {
+            foreignKeyName: "program_requirements_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: true
             referencedRelation: "programs"
             referencedColumns: ["id"]
           },
@@ -291,13 +822,21 @@ export type Database = {
       }
       programs: {
         Row: {
+          a_level_min_numeric: number | null
           additional_entry_requirements: string | null
           additional_fee_info: string | null
+          admission_test: string | null
           assessment_methods: string | null
+          average_rent_outside_campus_gbp_per_month_override: number | null
           average_salary_after_15m: string | null
+          average_starting_salary_gbp_override: number | null
           campus: string | null
           contextual_admissions: string | null
+          cost_of_life_override:
+            | Database["public"]["Enums"]["cost_of_life_enum"]
+            | null
           course_name: string
+          course_online_page: string | null
           course_summary: string | null
           created_at: string
           currency: string | null
@@ -305,44 +844,72 @@ export type Database = {
           duration_years: number | null
           employment_after_course: string | null
           english_requirements: string | null
+          english_score_requirement: string | null
           entry_requirements_overview: string | null
           field: string | null
+          gender_ratio_pct: number | null
           historic_entry_grades: string | null
           id: string
           intake_months: string[] | null
+          intake_size: number | null
+          international_students_ratio_pct_override: number | null
+          interview: string | null
           language: string | null
           level: string | null
           metadata: Json | null
+          min_a_level_score: string | null
           min_alevel: string | null
           min_ib: string | null
+          min_ib_score: number | null
           mode: string | null
           modules: string | null
           name: string | null
+          nss_score_pct_override: number | null
           open_days: string | null
+          placement_year: boolean | null
+          placement_year_detail: string | null
+          preferred_subjects: string | null
+          preferred_subjects_json: Json | null
           provider_apply_url: string | null
           provider_course_url: string | null
           start_date: string | null
+          student_dorm_cost_gbp_per_year_override: number | null
           student_outcomes: string | null
           student_satisfaction: string | null
+          student_to_staff_ratio_override: number | null
+          study_abroad_option: string | null
           study_level: string | null
           subject_requirements: string | null
           subsequent_year_entry_requirements: string | null
+          top_industries: string | null
           tuition: number | null
           tuition_fees_home: string | null
           tuition_fees_international: string | null
           ucas_code: string | null
+          ucas_deadline: string | null
           ucas_points: string | null
           university_id: string
+          university_life_override: string | null
+          updated_at: string
           url: string | null
+          yearly_international_tuition_fee_gbp: number | null
         }
         Insert: {
+          a_level_min_numeric?: number | null
           additional_entry_requirements?: string | null
           additional_fee_info?: string | null
+          admission_test?: string | null
           assessment_methods?: string | null
+          average_rent_outside_campus_gbp_per_month_override?: number | null
           average_salary_after_15m?: string | null
+          average_starting_salary_gbp_override?: number | null
           campus?: string | null
           contextual_admissions?: string | null
+          cost_of_life_override?:
+            | Database["public"]["Enums"]["cost_of_life_enum"]
+            | null
           course_name: string
+          course_online_page?: string | null
           course_summary?: string | null
           created_at?: string
           currency?: string | null
@@ -350,44 +917,72 @@ export type Database = {
           duration_years?: number | null
           employment_after_course?: string | null
           english_requirements?: string | null
+          english_score_requirement?: string | null
           entry_requirements_overview?: string | null
           field?: string | null
+          gender_ratio_pct?: number | null
           historic_entry_grades?: string | null
           id?: string
           intake_months?: string[] | null
+          intake_size?: number | null
+          international_students_ratio_pct_override?: number | null
+          interview?: string | null
           language?: string | null
           level?: string | null
           metadata?: Json | null
+          min_a_level_score?: string | null
           min_alevel?: string | null
           min_ib?: string | null
+          min_ib_score?: number | null
           mode?: string | null
           modules?: string | null
           name?: string | null
+          nss_score_pct_override?: number | null
           open_days?: string | null
+          placement_year?: boolean | null
+          placement_year_detail?: string | null
+          preferred_subjects?: string | null
+          preferred_subjects_json?: Json | null
           provider_apply_url?: string | null
           provider_course_url?: string | null
           start_date?: string | null
+          student_dorm_cost_gbp_per_year_override?: number | null
           student_outcomes?: string | null
           student_satisfaction?: string | null
+          student_to_staff_ratio_override?: number | null
+          study_abroad_option?: string | null
           study_level?: string | null
           subject_requirements?: string | null
           subsequent_year_entry_requirements?: string | null
+          top_industries?: string | null
           tuition?: number | null
           tuition_fees_home?: string | null
           tuition_fees_international?: string | null
           ucas_code?: string | null
+          ucas_deadline?: string | null
           ucas_points?: string | null
           university_id: string
+          university_life_override?: string | null
+          updated_at?: string
           url?: string | null
+          yearly_international_tuition_fee_gbp?: number | null
         }
         Update: {
+          a_level_min_numeric?: number | null
           additional_entry_requirements?: string | null
           additional_fee_info?: string | null
+          admission_test?: string | null
           assessment_methods?: string | null
+          average_rent_outside_campus_gbp_per_month_override?: number | null
           average_salary_after_15m?: string | null
+          average_starting_salary_gbp_override?: number | null
           campus?: string | null
           contextual_admissions?: string | null
+          cost_of_life_override?:
+            | Database["public"]["Enums"]["cost_of_life_enum"]
+            | null
           course_name?: string
+          course_online_page?: string | null
           course_summary?: string | null
           created_at?: string
           currency?: string | null
@@ -395,39 +990,59 @@ export type Database = {
           duration_years?: number | null
           employment_after_course?: string | null
           english_requirements?: string | null
+          english_score_requirement?: string | null
           entry_requirements_overview?: string | null
           field?: string | null
+          gender_ratio_pct?: number | null
           historic_entry_grades?: string | null
           id?: string
           intake_months?: string[] | null
+          intake_size?: number | null
+          international_students_ratio_pct_override?: number | null
+          interview?: string | null
           language?: string | null
           level?: string | null
           metadata?: Json | null
+          min_a_level_score?: string | null
           min_alevel?: string | null
           min_ib?: string | null
+          min_ib_score?: number | null
           mode?: string | null
           modules?: string | null
           name?: string | null
+          nss_score_pct_override?: number | null
           open_days?: string | null
+          placement_year?: boolean | null
+          placement_year_detail?: string | null
+          preferred_subjects?: string | null
+          preferred_subjects_json?: Json | null
           provider_apply_url?: string | null
           provider_course_url?: string | null
           start_date?: string | null
+          student_dorm_cost_gbp_per_year_override?: number | null
           student_outcomes?: string | null
           student_satisfaction?: string | null
+          student_to_staff_ratio_override?: number | null
+          study_abroad_option?: string | null
           study_level?: string | null
           subject_requirements?: string | null
           subsequent_year_entry_requirements?: string | null
+          top_industries?: string | null
           tuition?: number | null
           tuition_fees_home?: string | null
           tuition_fees_international?: string | null
           ucas_code?: string | null
+          ucas_deadline?: string | null
           ucas_points?: string | null
           university_id?: string
+          university_life_override?: string | null
+          updated_at?: string
           url?: string | null
+          yearly_international_tuition_fee_gbp?: number | null
         }
         Relationships: [
           {
-            foreignKeyName: "programs_university_id_fkey"
+            foreignKeyName: "programs_v2_university_id_fkey"
             columns: ["university_id"]
             isOneToOne: false
             referencedRelation: "universities"
@@ -625,43 +1240,70 @@ export type Database = {
       }
       student_lifestyle_preference: {
         Row: {
+          act_score: number | null
+          ambition_statement: string | null
           campus_size:
             | Database["public"]["Enums"]["campus_size_preference"]
             | null
+          commitment_level: string | null
           desired_location_type:
             | Database["public"]["Enums"]["location_type"]
             | null
           extracurricular_interests: string[] | null
+          intl_experience: string[] | null
+          key_activities: string[] | null
+          leadership_roles: string[] | null
           other_extracurriculars: string | null
           profile_id: string
+          sat_score: number | null
           teaching_style: Database["public"]["Enums"]["teaching_style"] | null
           updated_at: string
+          work_experience: boolean | null
+          work_experience_summary: string | null
         }
         Insert: {
+          act_score?: number | null
+          ambition_statement?: string | null
           campus_size?:
             | Database["public"]["Enums"]["campus_size_preference"]
             | null
+          commitment_level?: string | null
           desired_location_type?:
             | Database["public"]["Enums"]["location_type"]
             | null
           extracurricular_interests?: string[] | null
+          intl_experience?: string[] | null
+          key_activities?: string[] | null
+          leadership_roles?: string[] | null
           other_extracurriculars?: string | null
           profile_id: string
+          sat_score?: number | null
           teaching_style?: Database["public"]["Enums"]["teaching_style"] | null
           updated_at?: string
+          work_experience?: boolean | null
+          work_experience_summary?: string | null
         }
         Update: {
+          act_score?: number | null
+          ambition_statement?: string | null
           campus_size?:
             | Database["public"]["Enums"]["campus_size_preference"]
             | null
+          commitment_level?: string | null
           desired_location_type?:
             | Database["public"]["Enums"]["location_type"]
             | null
           extracurricular_interests?: string[] | null
+          intl_experience?: string[] | null
+          key_activities?: string[] | null
+          leadership_roles?: string[] | null
           other_extracurriculars?: string | null
           profile_id?: string
+          sat_score?: number | null
           teaching_style?: Database["public"]["Enums"]["teaching_style"] | null
           updated_at?: string
+          work_experience?: boolean | null
+          work_experience_summary?: string | null
         }
         Relationships: [
           {
@@ -705,6 +1347,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_matches_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "course_scoring_v1"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "student_matches_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "course_scoring_v1"
+            referencedColumns: ["program_id"]
           },
           {
             foreignKeyName: "student_matches_program_id_fkey"
@@ -844,63 +1500,212 @@ export type Database = {
       universities: {
         Row: {
           acceptance_rate: number | null
+          acceptance_rate_pct: number | null
+          average_rent_outside_campus_gbp_per_month_override: number | null
+          average_starting_salary_gbp: number | null
           city: string | null
+          city_id: string | null
+          city_life: string | null
+          climate: string | null
+          cost_of_life_override:
+            | Database["public"]["Enums"]["cost_of_life_enum"]
+            | null
           country: string
           created_at: string
+          cultural_social_environment: string | null
           currency: string | null
+          graduate_employment_rate_pct: number | null
+          guardian_rank: number | null
           id: string
+          international_students_ratio_pct: number | null
           intl_tuition_high: number | null
           intl_tuition_low: number | null
           metadata: Json | null
           name: string
+          nss_score_pct: number | null
+          number_of_students: number | null
+          qs_uk_rank: number | null
           rank_overall: number | null
           rank_source: string | null
+          recognition_score: number | null
           region: string | null
           requires_test: boolean | null
+          safety_index: string | null
+          student_dorm_cost_gbp_per_year: number | null
+          student_to_staff_ratio: number | null
+          times_sunday_rank: number | null
+          transport_accessibility: string | null
+          university_life: string | null
+          updated_at: string
           website: string | null
         }
         Insert: {
           acceptance_rate?: number | null
+          acceptance_rate_pct?: number | null
+          average_rent_outside_campus_gbp_per_month_override?: number | null
+          average_starting_salary_gbp?: number | null
           city?: string | null
+          city_id?: string | null
+          city_life?: string | null
+          climate?: string | null
+          cost_of_life_override?:
+            | Database["public"]["Enums"]["cost_of_life_enum"]
+            | null
           country: string
           created_at?: string
+          cultural_social_environment?: string | null
           currency?: string | null
+          graduate_employment_rate_pct?: number | null
+          guardian_rank?: number | null
           id?: string
+          international_students_ratio_pct?: number | null
           intl_tuition_high?: number | null
           intl_tuition_low?: number | null
           metadata?: Json | null
           name: string
+          nss_score_pct?: number | null
+          number_of_students?: number | null
+          qs_uk_rank?: number | null
           rank_overall?: number | null
           rank_source?: string | null
+          recognition_score?: number | null
           region?: string | null
           requires_test?: boolean | null
+          safety_index?: string | null
+          student_dorm_cost_gbp_per_year?: number | null
+          student_to_staff_ratio?: number | null
+          times_sunday_rank?: number | null
+          transport_accessibility?: string | null
+          university_life?: string | null
+          updated_at?: string
           website?: string | null
         }
         Update: {
           acceptance_rate?: number | null
+          acceptance_rate_pct?: number | null
+          average_rent_outside_campus_gbp_per_month_override?: number | null
+          average_starting_salary_gbp?: number | null
           city?: string | null
+          city_id?: string | null
+          city_life?: string | null
+          climate?: string | null
+          cost_of_life_override?:
+            | Database["public"]["Enums"]["cost_of_life_enum"]
+            | null
           country?: string
           created_at?: string
+          cultural_social_environment?: string | null
           currency?: string | null
+          graduate_employment_rate_pct?: number | null
+          guardian_rank?: number | null
           id?: string
+          international_students_ratio_pct?: number | null
           intl_tuition_high?: number | null
           intl_tuition_low?: number | null
           metadata?: Json | null
           name?: string
+          nss_score_pct?: number | null
+          number_of_students?: number | null
+          qs_uk_rank?: number | null
           rank_overall?: number | null
           rank_source?: string | null
+          recognition_score?: number | null
           region?: string | null
           requires_test?: boolean | null
+          safety_index?: string | null
+          student_dorm_cost_gbp_per_year?: number | null
+          student_to_staff_ratio?: number | null
+          times_sunday_rank?: number | null
+          transport_accessibility?: string | null
+          university_life?: string | null
+          updated_at?: string
           website?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "universities_v2_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "cities"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
-      [_ in never]: never
+      course_scoring_v1: {
+        Row: {
+          a_level_min_numeric: number | null
+          acceptance_rate_pct: number | null
+          admission_test: string | null
+          average_rent_outside_campus_gbp_per_month: number | null
+          average_starting_salary_gbp: number | null
+          city: string | null
+          city_life: string | null
+          climate: string | null
+          cost_of_life: Database["public"]["Enums"]["cost_of_life_enum"] | null
+          course: string | null
+          course_id: string | null
+          course_online_page: string | null
+          course_selectivity_score: number | null
+          course_tier: number | null
+          cultural_social_environment: string | null
+          degree_type: string | null
+          duration: string | null
+          english_score_requirement: string | null
+          field_of_study: string | null
+          gender_ratio_pct: number | null
+          graduate_employment_rate_pct: number | null
+          intake_size: number | null
+          international_students_ratio_pct: number | null
+          interview: string | null
+          level: string | null
+          min_a_level_score: string | null
+          min_ib_score: number | null
+          nss_score_pct: number | null
+          number_of_students: number | null
+          placement_year: boolean | null
+          placement_year_detail: string | null
+          preferred_subjects: string | null
+          program_currency: string | null
+          program_id: string | null
+          program_language: string | null
+          program_mode: string | null
+          program_tuition: number | null
+          program_url: string | null
+          safety_index: string | null
+          student_dorm_cost_gbp_per_year: number | null
+          student_to_staff_ratio: number | null
+          study_abroad_option: string | null
+          top_industries: string | null
+          total_course_score: number | null
+          transport_accessibility: string | null
+          ucas_code: string | null
+          ucas_deadline: string | null
+          university: string | null
+          university_country: string | null
+          university_id: string | null
+          university_life: string | null
+          university_rank_overall: number | null
+          university_rank_source: string | null
+          university_requires_test: boolean | null
+          university_score: number | null
+          yearly_international_tuition_fee_gbp: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "programs_v2_university_id_fkey"
+            columns: ["university_id"]
+            isOneToOne: false
+            referencedRelation: "universities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       auth_role: { Args: never; Returns: string }
+      safe_int: { Args: { input: string; max_len?: number }; Returns: number }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
     }
@@ -931,6 +1736,7 @@ export type Database = {
       campus_size_preference: "small" | "medium" | "large" | "no_preference"
       campus_type: "urban" | "suburban" | "rural" | "online"
       checklist_status: "todo" | "doing" | "done"
+      cost_of_life_enum: "HIGH" | "MEDIUM" | "LOW"
       delivery_type: "in_person" | "online" | "hybrid"
       english_status:
         | "met"
@@ -973,511 +1779,6 @@ export type Database = {
       source_health: "ok" | "stale" | "error"
       subject_level: "HL" | "SL" | "A_LEVEL"
       teaching_style: "academic" | "practical" | "mixed"
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
-  storage: {
-    Tables: {
-      buckets: {
-        Row: {
-          allowed_mime_types: string[] | null
-          avif_autodetection: boolean | null
-          created_at: string | null
-          file_size_limit: number | null
-          id: string
-          name: string
-          owner: string | null
-          owner_id: string | null
-          public: boolean | null
-          type: Database["storage"]["Enums"]["buckettype"]
-          updated_at: string | null
-        }
-        Insert: {
-          allowed_mime_types?: string[] | null
-          avif_autodetection?: boolean | null
-          created_at?: string | null
-          file_size_limit?: number | null
-          id: string
-          name: string
-          owner?: string | null
-          owner_id?: string | null
-          public?: boolean | null
-          type?: Database["storage"]["Enums"]["buckettype"]
-          updated_at?: string | null
-        }
-        Update: {
-          allowed_mime_types?: string[] | null
-          avif_autodetection?: boolean | null
-          created_at?: string | null
-          file_size_limit?: number | null
-          id?: string
-          name?: string
-          owner?: string | null
-          owner_id?: string | null
-          public?: boolean | null
-          type?: Database["storage"]["Enums"]["buckettype"]
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      buckets_analytics: {
-        Row: {
-          created_at: string
-          deleted_at: string | null
-          format: string
-          id: string
-          name: string
-          type: Database["storage"]["Enums"]["buckettype"]
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          deleted_at?: string | null
-          format?: string
-          id?: string
-          name: string
-          type?: Database["storage"]["Enums"]["buckettype"]
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          deleted_at?: string | null
-          format?: string
-          id?: string
-          name?: string
-          type?: Database["storage"]["Enums"]["buckettype"]
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      buckets_vectors: {
-        Row: {
-          created_at: string
-          id: string
-          type: Database["storage"]["Enums"]["buckettype"]
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          id: string
-          type?: Database["storage"]["Enums"]["buckettype"]
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          type?: Database["storage"]["Enums"]["buckettype"]
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      migrations: {
-        Row: {
-          executed_at: string | null
-          hash: string
-          id: number
-          name: string
-        }
-        Insert: {
-          executed_at?: string | null
-          hash: string
-          id: number
-          name: string
-        }
-        Update: {
-          executed_at?: string | null
-          hash?: string
-          id?: number
-          name?: string
-        }
-        Relationships: []
-      }
-      objects: {
-        Row: {
-          bucket_id: string | null
-          created_at: string | null
-          id: string
-          last_accessed_at: string | null
-          level: number | null
-          metadata: Json | null
-          name: string | null
-          owner: string | null
-          owner_id: string | null
-          path_tokens: string[] | null
-          updated_at: string | null
-          user_metadata: Json | null
-          version: string | null
-        }
-        Insert: {
-          bucket_id?: string | null
-          created_at?: string | null
-          id?: string
-          last_accessed_at?: string | null
-          level?: number | null
-          metadata?: Json | null
-          name?: string | null
-          owner?: string | null
-          owner_id?: string | null
-          path_tokens?: string[] | null
-          updated_at?: string | null
-          user_metadata?: Json | null
-          version?: string | null
-        }
-        Update: {
-          bucket_id?: string | null
-          created_at?: string | null
-          id?: string
-          last_accessed_at?: string | null
-          level?: number | null
-          metadata?: Json | null
-          name?: string | null
-          owner?: string | null
-          owner_id?: string | null
-          path_tokens?: string[] | null
-          updated_at?: string | null
-          user_metadata?: Json | null
-          version?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "objects_bucketId_fkey"
-            columns: ["bucket_id"]
-            isOneToOne: false
-            referencedRelation: "buckets"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      prefixes: {
-        Row: {
-          bucket_id: string
-          created_at: string | null
-          level: number
-          name: string
-          updated_at: string | null
-        }
-        Insert: {
-          bucket_id: string
-          created_at?: string | null
-          level?: number
-          name: string
-          updated_at?: string | null
-        }
-        Update: {
-          bucket_id?: string
-          created_at?: string | null
-          level?: number
-          name?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "prefixes_bucketId_fkey"
-            columns: ["bucket_id"]
-            isOneToOne: false
-            referencedRelation: "buckets"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      s3_multipart_uploads: {
-        Row: {
-          bucket_id: string
-          created_at: string
-          id: string
-          in_progress_size: number
-          key: string
-          owner_id: string | null
-          upload_signature: string
-          user_metadata: Json | null
-          version: string
-        }
-        Insert: {
-          bucket_id: string
-          created_at?: string
-          id: string
-          in_progress_size?: number
-          key: string
-          owner_id?: string | null
-          upload_signature: string
-          user_metadata?: Json | null
-          version: string
-        }
-        Update: {
-          bucket_id?: string
-          created_at?: string
-          id?: string
-          in_progress_size?: number
-          key?: string
-          owner_id?: string | null
-          upload_signature?: string
-          user_metadata?: Json | null
-          version?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "s3_multipart_uploads_bucket_id_fkey"
-            columns: ["bucket_id"]
-            isOneToOne: false
-            referencedRelation: "buckets"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      s3_multipart_uploads_parts: {
-        Row: {
-          bucket_id: string
-          created_at: string
-          etag: string
-          id: string
-          key: string
-          owner_id: string | null
-          part_number: number
-          size: number
-          upload_id: string
-          version: string
-        }
-        Insert: {
-          bucket_id: string
-          created_at?: string
-          etag: string
-          id?: string
-          key: string
-          owner_id?: string | null
-          part_number: number
-          size?: number
-          upload_id: string
-          version: string
-        }
-        Update: {
-          bucket_id?: string
-          created_at?: string
-          etag?: string
-          id?: string
-          key?: string
-          owner_id?: string | null
-          part_number?: number
-          size?: number
-          upload_id?: string
-          version?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "s3_multipart_uploads_parts_bucket_id_fkey"
-            columns: ["bucket_id"]
-            isOneToOne: false
-            referencedRelation: "buckets"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "s3_multipart_uploads_parts_upload_id_fkey"
-            columns: ["upload_id"]
-            isOneToOne: false
-            referencedRelation: "s3_multipart_uploads"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      vector_indexes: {
-        Row: {
-          bucket_id: string
-          created_at: string
-          data_type: string
-          dimension: number
-          distance_metric: string
-          id: string
-          metadata_configuration: Json | null
-          name: string
-          updated_at: string
-        }
-        Insert: {
-          bucket_id: string
-          created_at?: string
-          data_type: string
-          dimension: number
-          distance_metric: string
-          id?: string
-          metadata_configuration?: Json | null
-          name: string
-          updated_at?: string
-        }
-        Update: {
-          bucket_id?: string
-          created_at?: string
-          data_type?: string
-          dimension?: number
-          distance_metric?: string
-          id?: string
-          metadata_configuration?: Json | null
-          name?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "vector_indexes_bucket_id_fkey"
-            columns: ["bucket_id"]
-            isOneToOne: false
-            referencedRelation: "buckets_vectors"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      add_prefixes: {
-        Args: { _bucket_id: string; _name: string }
-        Returns: undefined
-      }
-      can_insert_object: {
-        Args: { bucketid: string; metadata: Json; name: string; owner: string }
-        Returns: undefined
-      }
-      delete_leaf_prefixes: {
-        Args: { bucket_ids: string[]; names: string[] }
-        Returns: undefined
-      }
-      delete_prefix: {
-        Args: { _bucket_id: string; _name: string }
-        Returns: boolean
-      }
-      extension: { Args: { name: string }; Returns: string }
-      filename: { Args: { name: string }; Returns: string }
-      foldername: { Args: { name: string }; Returns: string[] }
-      get_level: { Args: { name: string }; Returns: number }
-      get_prefix: { Args: { name: string }; Returns: string }
-      get_prefixes: { Args: { name: string }; Returns: string[] }
-      get_size_by_bucket: {
-        Args: never
-        Returns: {
-          bucket_id: string
-          size: number
-        }[]
-      }
-      list_multipart_uploads_with_delimiter: {
-        Args: {
-          bucket_id: string
-          delimiter_param: string
-          max_keys?: number
-          next_key_token?: string
-          next_upload_token?: string
-          prefix_param: string
-        }
-        Returns: {
-          created_at: string
-          id: string
-          key: string
-        }[]
-      }
-      list_objects_with_delimiter: {
-        Args: {
-          bucket_id: string
-          delimiter_param: string
-          max_keys?: number
-          next_token?: string
-          prefix_param: string
-          start_after?: string
-        }
-        Returns: {
-          id: string
-          metadata: Json
-          name: string
-          updated_at: string
-        }[]
-      }
-      lock_top_prefixes: {
-        Args: { bucket_ids: string[]; names: string[] }
-        Returns: undefined
-      }
-      operation: { Args: never; Returns: string }
-      search: {
-        Args: {
-          bucketname: string
-          levels?: number
-          limits?: number
-          offsets?: number
-          prefix: string
-          search?: string
-          sortcolumn?: string
-          sortorder?: string
-        }
-        Returns: {
-          created_at: string
-          id: string
-          last_accessed_at: string
-          metadata: Json
-          name: string
-          updated_at: string
-        }[]
-      }
-      search_legacy_v1: {
-        Args: {
-          bucketname: string
-          levels?: number
-          limits?: number
-          offsets?: number
-          prefix: string
-          search?: string
-          sortcolumn?: string
-          sortorder?: string
-        }
-        Returns: {
-          created_at: string
-          id: string
-          last_accessed_at: string
-          metadata: Json
-          name: string
-          updated_at: string
-        }[]
-      }
-      search_v1_optimised: {
-        Args: {
-          bucketname: string
-          levels?: number
-          limits?: number
-          offsets?: number
-          prefix: string
-          search?: string
-          sortcolumn?: string
-          sortorder?: string
-        }
-        Returns: {
-          created_at: string
-          id: string
-          last_accessed_at: string
-          metadata: Json
-          name: string
-          updated_at: string
-        }[]
-      }
-      search_v2: {
-        Args: {
-          bucket_name: string
-          levels?: number
-          limits?: number
-          prefix: string
-          sort_column?: string
-          sort_column_after?: string
-          sort_order?: string
-          start_after?: string
-        }
-        Returns: {
-          created_at: string
-          id: string
-          key: string
-          last_accessed_at: string
-          metadata: Json
-          name: string
-          updated_at: string
-        }[]
-      }
-    }
-    Enums: {
-      buckettype: "STANDARD" | "ANALYTICS" | "VECTOR"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1634,6 +1935,7 @@ export const Constants = {
       campus_size_preference: ["small", "medium", "large", "no_preference"],
       campus_type: ["urban", "suburban", "rural", "online"],
       checklist_status: ["todo", "doing", "done"],
+      cost_of_life_enum: ["HIGH", "MEDIUM", "LOW"],
       delivery_type: ["in_person", "online", "hybrid"],
       english_status: [
         "met",
@@ -1680,11 +1982,6 @@ export const Constants = {
       source_health: ["ok", "stale", "error"],
       subject_level: ["HL", "SL", "A_LEVEL"],
       teaching_style: ["academic", "practical", "mixed"],
-    },
-  },
-  storage: {
-    Enums: {
-      buckettype: ["STANDARD", "ANALYTICS", "VECTOR"],
     },
   },
 } as const

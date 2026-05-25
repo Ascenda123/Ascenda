@@ -254,7 +254,16 @@ const buildStudentPayload = (params: {
       desired_location_type: params.lifestyle?.desired_location_type ?? null,
       campus_size: params.lifestyle?.campus_size ?? null,
       extracurricular_interests: params.lifestyle?.extracurricular_interests ?? [],
-      other_extracurriculars: params.lifestyle?.other_extracurriculars ?? null
+      other_extracurriculars: params.lifestyle?.other_extracurriculars ?? null,
+      leadership_roles: params.lifestyle?.leadership_roles ?? [],
+      commitment_level: params.lifestyle?.commitment_level ?? null,
+      key_activities: params.lifestyle?.key_activities ?? [],
+      sat_score: params.lifestyle?.sat_score ?? null,
+      act_score: params.lifestyle?.act_score ?? null,
+      intl_experience: params.lifestyle?.intl_experience ?? [],
+      work_experience: params.lifestyle?.work_experience ?? null,
+      work_experience_summary: params.lifestyle?.work_experience_summary ?? null,
+      ambition_statement: params.lifestyle?.ambition_statement ?? null
     }
   };
 };

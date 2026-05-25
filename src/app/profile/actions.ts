@@ -103,7 +103,17 @@ export const saveStudentIntake = async (payload: StudentProfilePayload) => {
       desired_location_type: lifestyle_preference.desired_location_type,
       campus_size: lifestyle_preference.campus_size,
       extracurricular_interests: lifestyle_preference.extracurricular_interests,
-      other_extracurriculars: lifestyle_preference.other_extracurriculars
+      other_extracurriculars: lifestyle_preference.other_extracurriculars,
+      // Activities & ambitions
+      leadership_roles: lifestyle_preference.leadership_roles,
+      commitment_level: lifestyle_preference.commitment_level,
+      key_activities: lifestyle_preference.key_activities,
+      sat_score: lifestyle_preference.sat_score,
+      act_score: lifestyle_preference.act_score,
+      intl_experience: lifestyle_preference.intl_experience,
+      work_experience: lifestyle_preference.work_experience,
+      work_experience_summary: lifestyle_preference.work_experience_summary,
+      ambition_statement: lifestyle_preference.ambition_statement
     });
     if (lifestyleError) {
       throw new Error(lifestyleError.message);

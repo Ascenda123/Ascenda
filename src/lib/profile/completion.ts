@@ -41,6 +41,8 @@ export const buildStepCompletion = ({
       (academicInput?.intended_clusters ?? []).length > 0
   ),
   academic_details: Boolean(subjectCount > 0 && academicInput?.english_required !== null && academicInput?.english_required !== undefined),
+  // Activities step is always considered "touched" once lifestyle row exists (all optional)
+  activities_ambitions: Boolean(lifestyle),
   lifestyle_preferences: Boolean(lifestyle)
 });
 

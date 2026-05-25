@@ -47,7 +47,16 @@ const basePayload: StudentProfilePayload = {
     desired_location_type: 'london',
     campus_size: 'medium',
     extracurricular_interests: ['Sports/fitness'],
-    other_extracurriculars: null
+    other_extracurriculars: null,
+    leadership_roles: [],
+    commitment_level: null,
+    key_activities: [],
+    sat_score: null,
+    act_score: null,
+    intl_experience: [],
+    work_experience: null,
+    work_experience_summary: null,
+    ambition_statement: null
   }
 };
 

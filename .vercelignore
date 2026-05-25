@@ -1,0 +1,9 @@
+# Ignore nested repo assets and large import files not needed for deployment
+Ascenda/
+supabase/imports/
+supabase/.temp/
+
+# Local caches and hidden folders
+.next/
+node_modules/
+.DS_Store

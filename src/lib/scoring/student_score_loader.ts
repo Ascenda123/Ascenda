@@ -100,7 +100,16 @@ export const buildStudentProfilePayload = async (
       desired_location_type: lifestyleResponse.data?.desired_location_type ?? null,
       campus_size: lifestyleResponse.data?.campus_size ?? null,
       extracurricular_interests: lifestyleResponse.data?.extracurricular_interests ?? [],
-      other_extracurriculars: lifestyleResponse.data?.other_extracurriculars ?? null
+      other_extracurriculars: lifestyleResponse.data?.other_extracurriculars ?? null,
+      leadership_roles: lifestyleResponse.data?.leadership_roles ?? [],
+      commitment_level: lifestyleResponse.data?.commitment_level ?? null,
+      key_activities: lifestyleResponse.data?.key_activities ?? [],
+      sat_score: lifestyleResponse.data?.sat_score ?? null,
+      act_score: lifestyleResponse.data?.act_score ?? null,
+      intl_experience: lifestyleResponse.data?.intl_experience ?? [],
+      work_experience: lifestyleResponse.data?.work_experience ?? null,
+      work_experience_summary: lifestyleResponse.data?.work_experience_summary ?? null,
+      ambition_statement: lifestyleResponse.data?.ambition_statement ?? null
     }
   };
 

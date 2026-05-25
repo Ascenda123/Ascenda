@@ -75,5 +75,15 @@ export type StudentProfilePayload = {
     campus_size: 'small' | 'medium' | 'large' | 'no_preference' | null;
     extracurricular_interests: string[];
     other_extracurriculars: string | null;
+    // Activities & ambitions (step 4)
+    leadership_roles: string[];
+    commitment_level: string | null;
+    key_activities: string[];
+    sat_score: number | null;
+    act_score: number | null;
+    intl_experience: string[];
+    work_experience: boolean | null;
+    work_experience_summary: string | null;
+    ambition_statement: string | null;
   };
 };
