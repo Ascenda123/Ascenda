@@ -6,6 +6,7 @@ import type {
   StudentProfilePayload,
   StudentSubject
 } from '@/lib/profile/intake-types';
+import { calculateActivitiesScore, type ActivitiesBreakdown } from './activities_scoring';
 
 type SubjectRule = {
   subject: string;
@@ -27,6 +28,7 @@ export type ScoreBreakdown = {
   ib_hl_strength: number;
   ee_relevance_bonus: number;
   tests_and_english: number;
+  activities: ActivitiesBreakdown;
   total_score: number;
   student_band: StudentBand;
 };
@@ -609,6 +611,8 @@ export const scoreStudentProfile = (payload: StudentProfilePayload): StudentScor
     academic_input.english_score_overall
   );
 
+  const activitiesBreakdown = calculateActivitiesScore(payload.lifestyle_preference);
+
   const totalRaw =
     preferredAlignment +
     rigourScore +
@@ -616,7 +620,8 @@ export const scoreStudentProfile = (payload: StudentProfilePayload): StudentScor
     academicPerformance +
     ibHlStrength +
     eeRelevanceBonus +
-    testsAndEnglish.score;
+    testsAndEnglish.score +
+    activitiesBreakdown.total;
   const totalScore = Math.min(200, Math.round(totalRaw));
   const band = mapBand(totalScore);
 
@@ -631,6 +636,7 @@ export const scoreStudentProfile = (payload: StudentProfilePayload): StudentScor
     ib_hl_strength: Math.round(ibHlStrength),
     ee_relevance_bonus: Math.round(eeRelevanceBonus),
     tests_and_english: Math.round(testsAndEnglish.score),
+    activities: activitiesBreakdown,
     total_score: totalScore,
     student_band: band
   };
