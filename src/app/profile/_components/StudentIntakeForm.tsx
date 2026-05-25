@@ -335,13 +335,13 @@ const STEP_META: Record<number, { title: string; subtitle: string }> = {
   6: { title: 'Review & confirm', subtitle: 'Everything looks right? Hit submit and we\'ll run your matches.' },
 };
 
-const STEP_ICONS = [
-  <User key="1" className="w-4 h-4" />,
-  <GraduationCap key="2" className="w-4 h-4" />,
-  <Sparkles key="3" className="w-4 h-4" />,
-  <Trophy key="4" className="w-4 h-4" />,
-  <Heart key="5" className="w-4 h-4" />,
-  <Check key="6" className="w-4 h-4" />,
+const STEP_ICON_NODES = [
+  (i: number) => <User key={i} className="w-4 h-4" />,
+  (i: number) => <GraduationCap key={i} className="w-4 h-4" />,
+  (i: number) => <Sparkles key={i} className="w-4 h-4" />,
+  (i: number) => <Trophy key={i} className="w-4 h-4" />,
+  (i: number) => <Heart key={i} className="w-4 h-4" />,
+  (i: number) => <Check key={i} className="w-4 h-4" />,
 ];
 
 // ─── Main component ───────────────────────────────────────────────────────────
@@ -957,7 +957,7 @@ export const StudentIntakeForm = ({
                         : done ? 'bg-emerald-500/15 text-emerald-600'
                           : 'bg-muted text-muted-foreground'
                     )}>
-                      {done ? <Check className="w-3.5 h-3.5" /> : STEP_ICONS[i]}
+                      {done ? <Check className="w-3.5 h-3.5" /> : (STEP_ICON_NODES[i]?.(i) ?? null)}
                     </span>
                     <span className="hidden sm:block text-[9px] font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">
                       {n <= PROFILE_STEPS.length ? PROFILE_STEPS[i].title : 'Review'}
@@ -1289,9 +1289,6 @@ export const StudentIntakeForm = ({
                                 onChange={(e) => updateSubject(i, 'subject_name', e.target.value)}
                                 placeholder="Subject name"
                               />
-                              <datalist id="subject-options">
-                                {SUBJECT_OPTIONS.map((s) => <option key={s} value={s} />)}
-                              </datalist>
                             </div>
                             <FieldError msg={errors[`academic_input.subject_list.${i}.subject_name`]} />
                           </div>
