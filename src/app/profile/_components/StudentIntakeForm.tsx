@@ -307,20 +307,80 @@ function Chip({
       disabled={disabled}
       onClick={onClick}
       className={cn(
-        'group relative flex flex-col items-start gap-0.5 rounded-xl border px-4 py-3 text-left text-sm font-medium transition-all duration-150',
+        'group flex flex-col items-start gap-0.5 rounded-xl border px-4 py-3 text-left text-sm font-medium transition-all duration-150',
         selected
           ? 'bg-primary/8 border-primary text-primary shadow-sm'
           : 'bg-background border-border text-foreground hover:border-primary/40 hover:bg-muted/50',
         disabled && !selected && 'opacity-40 cursor-not-allowed hover:border-border hover:bg-background'
       )}
     >
-      {selected && <Check className="absolute right-3 top-3 w-3.5 h-3.5 text-primary" />}
-      <span className="flex items-center gap-1.5">
-        {emoji ? <span>{emoji}</span> : null}
-        {label}
+      <span className="flex w-full items-center justify-between gap-2">
+        <span className="flex items-center gap-1.5">
+          {emoji ? <span>{emoji}</span> : null}
+          {label}
+        </span>
+        {selected && <Check className="w-3.5 h-3.5 text-primary shrink-0" />}
       </span>
       {description ? <span className="text-[11px] text-muted-foreground font-normal leading-snug">{description}</span> : null}
     </button>
+  );
+}
+
+/** Searchable subject combobox */
+function SubjectCombobox({
+  value, onChange, error
+}: { value: string; onChange: (v: string) => void; error?: string }) {
+  const [query, setQuery] = useState(value);
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => { setQuery(value); }, [value]);
+
+  const filtered = useMemo(() => {
+    if (!query.trim()) return SUBJECT_OPTIONS.slice(0, 8);
+    const q = query.toLowerCase();
+    return SUBJECT_OPTIONS.filter((s) => s.toLowerCase().includes(q)).slice(0, 8);
+  }, [query]);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  return (
+    <div ref={ref} className="relative">
+      <div className="relative">
+        <input
+          type="text"
+          autoComplete="off"
+          className={cn(inputCls, 'pr-9', error && 'border-destructive')}
+          value={query}
+          placeholder="Subject name"
+          onChange={(e) => { setQuery(e.target.value); onChange(e.target.value); setOpen(true); }}
+          onFocus={() => setOpen(true)}
+        />
+        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+      </div>
+      {open && filtered.length > 0 && (
+        <ul className="absolute z-50 mt-1 w-full rounded-xl border border-border bg-background shadow-lg overflow-hidden max-h-52 overflow-y-auto">
+          {filtered.map((s) => (
+            <li key={s}>
+              <button
+                type="button"
+                className="w-full text-left px-4 py-2.5 text-sm hover:bg-muted/60 transition-colors"
+                onMouseDown={() => { onChange(s); setQuery(s); setOpen(false); }}
+              >
+                {s}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      {error && <FieldError msg={error} />}
+    </div>
   );
 }
 
@@ -335,14 +395,6 @@ const STEP_META: Record<number, { title: string; subtitle: string }> = {
   6: { title: 'Review & confirm', subtitle: 'Everything looks right? Hit submit and we\'ll run your matches.' },
 };
 
-const STEP_ICON_NODES = [
-  (i: number) => <User key={i} className="w-4 h-4" />,
-  (i: number) => <GraduationCap key={i} className="w-4 h-4" />,
-  (i: number) => <Sparkles key={i} className="w-4 h-4" />,
-  (i: number) => <Trophy key={i} className="w-4 h-4" />,
-  (i: number) => <Heart key={i} className="w-4 h-4" />,
-  (i: number) => <Check key={i} className="w-4 h-4" />,
-];
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
@@ -357,7 +409,7 @@ export const StudentIntakeForm = ({
   const [currentStep, setCurrentStep] = useState(initialStep);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [isSaving, startTransition] = useTransition();
-  const [isRedirecting, setIsRedirecting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [programmeType, setProgrammeType] = useState<ProgrammeType | ''>('');
   const [nationalities, setNationalities] = useState<string[]>(['']);
@@ -385,7 +437,7 @@ export const StudentIntakeForm = ({
   });
 
   const [lifestylePreference, setLifestylePreference] = useState({
-    teaching_style: '', desired_location_type: '', campus_size: '',
+    teaching_style: '', desired_location_type: [] as string[], campus_size: '',
     extracurricular_interests: [] as string[], other_extracurriculars: '',
   });
 
@@ -398,7 +450,6 @@ export const StudentIntakeForm = ({
     intl_experience: [] as string[],
     work_experience: null as boolean | null,
     work_experience_summary: '',
-    ambition_statement: '',
   });
 
   useEffect(() => {
@@ -462,8 +513,14 @@ export const StudentIntakeForm = ({
     setEnglishScoreOverall(
       ai.english_score_overall !== null && ai.english_score_overall !== undefined ? String(ai.english_score_overall) : ''
     );
+    const storedLoc = lp.desired_location_type ?? '';
+    // Migrate legacy 'london' → 'capital_city'; split comma-sep multi-select
+    const locArray = storedLoc
+      ? storedLoc.split(',').map((s) => s.trim() === 'london' ? 'capital_city' : s.trim()).filter(Boolean)
+      : [];
     setLifestylePreference({
-      teaching_style: lp.teaching_style ?? '', desired_location_type: lp.desired_location_type ?? '',
+      teaching_style: lp.teaching_style ?? '',
+      desired_location_type: locArray,
       campus_size: lp.campus_size ?? '',
       extracurricular_interests: lp.extracurricular_interests ?? [],
       other_extracurriculars: lp.other_extracurriculars ?? '',
@@ -477,7 +534,6 @@ export const StudentIntakeForm = ({
       intl_experience: lp.intl_experience ?? [],
       work_experience: lp.work_experience ?? null,
       work_experience_summary: lp.work_experience_summary ?? '',
-      ambition_statement: lp.ambition_statement ?? '',
     });
   }, []);
 
@@ -557,6 +613,20 @@ export const StudentIntakeForm = ({
     return [...list, value];
   };
 
+  const toggleLocationPreference = (value: string) => {
+    setLifestylePreference((prev) => {
+      const cur = prev.desired_location_type;
+      if (value === 'no_preference') {
+        return { ...prev, desired_location_type: cur.includes('no_preference') ? [] : ['no_preference'] };
+      }
+      const withoutNone = cur.filter((v) => v !== 'no_preference');
+      if (withoutNone.includes(value)) {
+        return { ...prev, desired_location_type: withoutNone.filter((v) => v !== value) };
+      }
+      return { ...prev, desired_location_type: [...withoutNone, value] };
+    });
+  };
+
   const toggleAdmissionsTest = (testType: AdmissionsTestType) => {
     setAdmissionsTests((prev) => {
       if (testType === 'NONE') return [{ test_type: 'NONE', status: 'missing', score_numeric: '', percentile: '' }];
@@ -587,6 +657,15 @@ export const StudentIntakeForm = ({
     const n = Number(v);
     return Number.isFinite(n) ? n : null;
   }, []);
+
+  // Dynamic IB total from subject grades (sum of numeric grades 1–7)
+  const ibSubjectSum = useMemo(() => {
+    if (programmeType !== 'IB') return null;
+    return subjects.reduce((acc, s) => {
+      const g = parseNumber(s.grade_value);
+      return g !== null && g >= 1 && g <= 7 ? acc + g : acc;
+    }, 0);
+  }, [programmeType, subjects, parseNumber]);
 
   const formattedNationalities = useMemo(
     () => nationalities.map((n) => n.trim()).filter(Boolean), [nationalities]
@@ -646,7 +725,7 @@ export const StudentIntakeForm = ({
         secondary_clusters: academicInput.secondary_clusters,
         career_aspiration: academicInput.career_aspiration.trim() || null,
         subject_list: subjectList,
-        ib_total_points: programmeType === 'IB' ? parseNumber(academicInput.ib_total_points) : null,
+        ib_total_points: programmeType === 'IB' ? ibSubjectSum : null,
         ib_core_points: programmeType === 'IB' ? parseNumber(academicInput.ib_core_points) : null,
         ib_tok_grade: programmeType === 'IB' && academicInput.ib_tok_grade
           ? (academicInput.ib_tok_grade as StudentProfilePayload['academic_input']['ib_tok_grade']) : null,
@@ -666,7 +745,12 @@ export const StudentIntakeForm = ({
       },
       lifestyle_preference: {
         teaching_style: lifestylePreference.teaching_style ? (lifestylePreference.teaching_style as StudentProfilePayload['lifestyle_preference']['teaching_style']) : null,
-        desired_location_type: lifestylePreference.desired_location_type ? (lifestylePreference.desired_location_type as StudentProfilePayload['lifestyle_preference']['desired_location_type']) : null,
+        desired_location_type: (() => {
+          const arr = lifestylePreference.desired_location_type;
+          if (!arr || arr.length === 0) return null;
+          // Store comma-separated; scoring treats multi-select same as no_preference
+          return arr.join(',') as StudentProfilePayload['lifestyle_preference']['desired_location_type'];
+        })(),
         campus_size: lifestylePreference.campus_size ? (lifestylePreference.campus_size as StudentProfilePayload['lifestyle_preference']['campus_size']) : null,
         extracurricular_interests: lifestylePreference.extracurricular_interests,
         other_extracurriculars: lifestylePreference.other_extracurriculars.trim() || null,
@@ -678,13 +762,13 @@ export const StudentIntakeForm = ({
         intl_experience: activities.intl_experience,
         work_experience: activities.work_experience,
         work_experience_summary: activities.work_experience_summary.trim() || null,
-        ambition_statement: activities.ambition_statement.trim() || null,
+        ambition_statement: null,
       },
     };
   }, [
     subjects, programmeType, parseNumber, admissionsTests, personalInfo,
     formattedNationalities, academicInput, englishRequired, englishTestType,
-    englishStatus, showEnglishScore, englishScoreOverall, lifestylePreference, activities,
+    englishStatus, showEnglishScore, englishScoreOverall, lifestylePreference, activities, ibSubjectSum,
   ]);
 
   // ── Validation ────────────────────────────────────────────────────────────
@@ -737,9 +821,6 @@ export const StudentIntakeForm = ({
     validateSubjects(e);
     if (programmeType === 'IB') {
       if (!academicInput.ib_math_pathway) e['academic_input.ib_math_pathway'] = 'Maths pathway required.';
-      const tp = parseNumber(academicInput.ib_total_points);
-      if (tp === null) e['academic_input.ib_total_points'] = 'Predicted total is required.';
-      else if (tp < 24 || tp > 45) e['academic_input.ib_total_points'] = 'Enter a value between 24 and 45.';
       const cp = parseNumber(academicInput.ib_core_points);
       if (cp !== null && (cp < 0 || cp > 3)) e['academic_input.ib_core_points'] = '0–3 only.';
       if (academicInput.ee_summary && academicInput.ee_summary.length > 350)
@@ -814,9 +895,8 @@ export const StudentIntakeForm = ({
       try {
         const result = await saveStudentIntake(payload);
         if (!result?.success) { setStatusMessage(result?.message ?? 'Save failed.'); return; }
-        setStatusMessage('Saved! Redirecting…');
-        setIsRedirecting(true);
-        setTimeout(() => { window.location.href = '/matches'; }, 1200);
+        setStatusMessage('Profile saved! Your matches are ready.');
+        setSubmitted(true);
       } catch (err) {
         setStatusMessage(err instanceof Error ? err.message : 'Save failed.');
       }
@@ -836,7 +916,7 @@ export const StudentIntakeForm = ({
     2: Object.keys(validateStep2()).length === 0,
     3: Object.keys(validateStep3()).length === 0,
     4: activities.leadership_roles.length > 0 || !!activities.commitment_level || activities.key_activities.length > 0,
-    5: !!lifestylePreference.teaching_style || !!lifestylePreference.desired_location_type || !!lifestylePreference.campus_size,
+    5: !!lifestylePreference.teaching_style || lifestylePreference.desired_location_type.length > 0 || !!lifestylePreference.campus_size,
     6: false,
   }), [validateStep1, validateStep2, validateStep3, activities, lifestylePreference]);
 
@@ -933,39 +1013,8 @@ export const StudentIntakeForm = ({
         {/* ── Main content ── */}
         <div ref={contentTopRef} className="flex-1 min-w-0">
 
-          {/* Top bar: step dots + theme toggle */}
-          <div className="mb-6 flex items-center gap-3">
-            <div className="flex-1 flex items-center gap-1.5 overflow-x-auto pb-0.5">
-              {Array.from({ length: TOTAL_STEPS }).map((_, i) => {
-                const n = i + 1;
-                const active = n === currentStep;
-                const done = stepCompletion[n] && n !== currentStep;
-                return (
-                  <button
-                    key={n}
-                    type="button"
-                    onClick={() => goToStep(n)}
-                    title={n <= PROFILE_STEPS.length ? PROFILE_STEPS[i].title : 'Review'}
-                    className={cn(
-                      'flex flex-col items-center gap-1 transition-all duration-150',
-                      active ? 'opacity-100' : 'opacity-60 hover:opacity-90'
-                    )}
-                  >
-                    <span className={cn(
-                      'flex h-7 w-7 items-center justify-center rounded-lg text-xs font-bold transition-all',
-                      active ? 'bg-primary text-primary-foreground shadow-sm'
-                        : done ? 'bg-emerald-500/15 text-emerald-600'
-                          : 'bg-muted text-muted-foreground'
-                    )}>
-                      {done ? <Check className="w-3.5 h-3.5" /> : (STEP_ICON_NODES[i]?.(i) ?? null)}
-                    </span>
-                    <span className="hidden sm:block text-[9px] font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">
-                      {n <= PROFILE_STEPS.length ? PROFILE_STEPS[i].title : 'Review'}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
+          {/* Theme toggle */}
+          <div className="mb-4 flex justify-end">
             <ThemeToggle compact />
           </div>
 
@@ -1281,16 +1330,11 @@ export const StudentIntakeForm = ({
                         <div key={i} className="md:grid md:grid-cols-12 md:gap-3 space-y-2 md:space-y-0 md:items-start">
                           <div className="md:col-span-5">
                             <label className="md:hidden text-xs font-medium text-muted-foreground mb-1 block">Subject</label>
-                            <div className="relative">
-                              <input
-                                list="subject-options"
-                                className={cn(inputCls, errors[`academic_input.subject_list.${i}.subject_name`] && 'border-destructive')}
-                                value={subj.subject_name}
-                                onChange={(e) => updateSubject(i, 'subject_name', e.target.value)}
-                                placeholder="Subject name"
-                              />
-                            </div>
-                            <FieldError msg={errors[`academic_input.subject_list.${i}.subject_name`]} />
+                            <SubjectCombobox
+                              value={subj.subject_name}
+                              onChange={(v) => updateSubject(i, 'subject_name', v)}
+                              error={errors[`academic_input.subject_list.${i}.subject_name`]}
+                            />
                           </div>
                           <div className="md:col-span-3">
                             <label className="md:hidden text-xs font-medium text-muted-foreground mb-1 block">Level</label>
@@ -1329,6 +1373,26 @@ export const StudentIntakeForm = ({
                     </div>
                     <FieldError msg={errors['academic_input.subject_list']} />
                     <FieldError msg={errors['academic_input.subject_list.hl']} />
+
+                    {/* IB auto-calculated total */}
+                    {programmeType === 'IB' && ibSubjectSum !== null ? (
+                      <div className="mt-1 flex items-center gap-2 rounded-xl bg-primary/5 border border-primary/15 px-4 py-3">
+                        <span className="text-xs text-muted-foreground font-medium">Predicted from subjects:</span>
+                        <span className={cn(
+                          'text-sm font-bold',
+                          ibSubjectSum >= 35 ? 'text-emerald-600' : ibSubjectSum >= 28 ? 'text-amber-600' : 'text-foreground'
+                        )}>
+                          {ibSubjectSum}/42
+                        </span>
+                        {academicInput.ib_core_points ? (
+                          <span className="text-xs text-muted-foreground">
+                            + {academicInput.ib_core_points} core = <strong>{ibSubjectSum + (Number(academicInput.ib_core_points) || 0)}</strong>/45
+                          </span>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">points (add core points below for total)</span>
+                        )}
+                      </div>
+                    ) : null}
                   </SectionCard>
 
                   {/* IB extras */}
@@ -1347,14 +1411,6 @@ export const StudentIntakeForm = ({
                         <FieldError msg={errors['academic_input.ib_math_pathway']} />
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <label className="space-y-1.5">
-                          <span className="text-sm font-medium">Predicted total points</span>
-                          <input type="number" min={24} max={45} className={cn(inputCls, errors['academic_input.ib_total_points'] && 'border-destructive')}
-                            value={academicInput.ib_total_points}
-                            onChange={(e) => updateAcademicInput('ib_total_points', e.target.value)}
-                            placeholder="24–45" />
-                          <FieldError msg={errors['academic_input.ib_total_points']} />
-                        </label>
                         <label className="space-y-1.5">
                           <span className="text-sm font-medium text-muted-foreground">Core points <span className="text-xs">(optional)</span></span>
                           <input type="number" min={0} max={3} className={inputCls}
@@ -1500,6 +1556,31 @@ export const StudentIntakeForm = ({
                       ))}
                     </SectionCard>
                   ) : null}
+
+                  {/* SAT / ACT — optional, for international applications */}
+                  <SectionCard>
+                    <SectionTitle
+                      label="SAT / ACT scores"
+                      hint="Optional — only relevant if applying to US-style programmes."
+                      why="US universities use SAT/ACT scores in admissions. We use this to flag eligibility and score fit."
+                    />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <label className="space-y-1.5">
+                        <span className="text-sm font-medium text-muted-foreground">SAT score <span className="text-xs">(400–1600, optional)</span></span>
+                        <input type="number" min={400} max={1600} className={inputCls}
+                          value={activities.sat_score}
+                          onChange={(e) => setActivities((prev) => ({ ...prev, sat_score: e.target.value }))}
+                          placeholder="e.g. 1450" />
+                      </label>
+                      <label className="space-y-1.5">
+                        <span className="text-sm font-medium text-muted-foreground">ACT score <span className="text-xs">(1–36, optional)</span></span>
+                        <input type="number" min={1} max={36} className={inputCls}
+                          value={activities.act_score}
+                          onChange={(e) => setActivities((prev) => ({ ...prev, act_score: e.target.value }))}
+                          placeholder="e.g. 32" />
+                      </label>
+                    </div>
+                  </SectionCard>
                 </section>
               ) : null}
 
@@ -1525,7 +1606,7 @@ export const StudentIntakeForm = ({
 
                   {/* Commitment level */}
                   <SectionCard>
-                    <SectionTitle label="How committed are you outside class?" hint="Honest answers give better matches." />
+                    <SectionTitle label="What best describes your life outside class?" hint={"There's no wrong answer — this helps us find programmes that fit your vibe."} />
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       {COMMITMENT_OPTIONS.map((opt) => (
                         <Chip key={opt.value} label={opt.label} description={opt.desc}
@@ -1549,31 +1630,6 @@ export const StudentIntakeForm = ({
                             ...prev, key_activities: toggleMulti(prev.key_activities, opt, 5)
                           }))} />
                       ))}
-                    </div>
-                  </SectionCard>
-
-                  {/* International tests (SAT / ACT) */}
-                  <SectionCard>
-                    <SectionTitle
-                      label="SAT / ACT scores"
-                      hint="Optional — relevant if applying to US universities."
-                      why="US universities use SAT/ACT scores in admissions. We use this to flag eligibility and score fit."
-                    />
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <label className="space-y-1.5">
-                        <span className="text-sm font-medium text-muted-foreground">SAT score <span className="text-xs">(400–1600)</span></span>
-                        <input type="number" min={400} max={1600} className={inputCls}
-                          value={activities.sat_score}
-                          onChange={(e) => setActivities((prev) => ({ ...prev, sat_score: e.target.value }))}
-                          placeholder="e.g. 1450" />
-                      </label>
-                      <label className="space-y-1.5">
-                        <span className="text-sm font-medium text-muted-foreground">ACT score <span className="text-xs">(1–36)</span></span>
-                        <input type="number" min={1} max={36} className={inputCls}
-                          value={activities.act_score}
-                          onChange={(e) => setActivities((prev) => ({ ...prev, act_score: e.target.value }))}
-                          placeholder="e.g. 32" />
-                      </label>
                     </div>
                   </SectionCard>
 
@@ -1615,16 +1671,6 @@ export const StudentIntakeForm = ({
                     ) : null}
                   </SectionCard>
 
-                  {/* Ambition statement */}
-                  <label className="space-y-1.5 block">
-                    <span className="text-sm font-medium text-muted-foreground">
-                      What do you want to achieve in 10 years? <span className="text-xs">(optional, one sentence)</span>
-                    </span>
-                    <input type="text" className={inputCls}
-                      value={activities.ambition_statement}
-                      onChange={(e) => setActivities((prev) => ({ ...prev, ambition_statement: e.target.value }))}
-                      placeholder="e.g. Build a tech startup that solves climate change." />
-                  </label>
                 </section>
               ) : null}
 
@@ -1649,17 +1695,18 @@ export const StudentIntakeForm = ({
 
                   <div className="space-y-2">
                     <p className="text-sm font-medium">Preferred location type</p>
+                    <p className="text-xs text-muted-foreground">Select as many as you like. Choosing multiple is fine — it won&apos;t affect your score.</p>
                     <div className="flex flex-wrap gap-2">
                       {[
-                        { value: 'london', label: '🏙 London' },
+                        { value: 'capital_city', label: '🏙 Capital city' },
                         { value: 'major_city', label: '🌆 Major city' },
                         { value: 'smaller_city', label: '🏘 Smaller city' },
-                        { value: 'suburban', label: '🌿 Suburban' },
+                        { value: 'suburban', label: '🌿 Suburban / campus' },
                         { value: 'no_preference', label: 'No preference' },
                       ].map((opt) => (
                         <Chip key={opt.value} label={opt.label}
-                          selected={lifestylePreference.desired_location_type === opt.value}
-                          onClick={() => updateLifestylePreference('desired_location_type', opt.value)} />
+                          selected={lifestylePreference.desired_location_type.includes(opt.value)}
+                          onClick={() => toggleLocationPreference(opt.value)} />
                       ))}
                     </div>
                   </div>
@@ -1765,13 +1812,23 @@ export const StudentIntakeForm = ({
                     </div>
                   </SectionCard>
 
-                  {/* Status */}
+                  {/* Status + CTA */}
                   {statusMessage ? (
                     <div className={cn(
                       'rounded-xl px-4 py-3 text-sm font-medium',
-                      isRedirecting ? 'bg-emerald-500/10 text-emerald-600' : 'bg-muted text-muted-foreground'
+                      submitted ? 'bg-emerald-500/10 text-emerald-600' : 'bg-muted text-muted-foreground'
                     )}>
                       {statusMessage}
+                    </div>
+                  ) : null}
+                  {submitted ? (
+                    <div className="flex justify-center pt-2">
+                      <a
+                        href="/matches"
+                        className="inline-flex items-center gap-2 rounded-xl bg-primary px-8 py-3 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 transition-all"
+                      >
+                        Get me to my matches →
+                      </a>
                     </div>
                   ) : null}
                 </section>
@@ -1797,20 +1854,16 @@ export const StudentIntakeForm = ({
             ) : (
               <Button
                 type="submit" size="sm"
-                disabled={isSaving || isRedirecting}
+                disabled={isSaving || submitted}
                 className="gap-1.5 px-6"
               >
-                {isSaving ? 'Saving…' : isRedirecting ? 'Done! ✓' : 'Submit & see matches'}
+                {isSaving ? 'Saving…' : submitted ? 'Saved ✓' : 'Submit & see matches'}
               </Button>
             )}
           </div>
         </div>
       </div>
 
-      {/* Hidden datalists */}
-      <datalist id="subject-options">
-        {SUBJECT_OPTIONS.map((s) => <option key={s} value={s} />)}
-      </datalist>
     </form>
   );
 };

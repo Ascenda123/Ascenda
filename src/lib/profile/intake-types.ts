@@ -71,7 +71,7 @@ export type StudentProfilePayload = {
   };
   lifestyle_preference: {
     teaching_style: 'academic' | 'practical' | 'mixed' | null;
-    desired_location_type: 'london' | 'major_city' | 'smaller_city' | 'suburban' | 'no_preference' | null;
+    desired_location_type: string | null;
     campus_size: 'small' | 'medium' | 'large' | 'no_preference' | null;
     extracurricular_interests: string[];
     other_extracurriculars: string | null;

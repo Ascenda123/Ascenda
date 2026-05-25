@@ -5,7 +5,6 @@ import { StudentIntakeForm } from '../_components/StudentIntakeForm';
 import { PROFILE_STEPS, type StepCompletionMap } from '@/lib/profile/steps';
 import { buildStepCompletion, isProfileComplete, type ProfileRecordGroup } from '@/lib/profile/completion';
 import { AnimatedBlobBanner } from '@/components/animated-blob-banner';
-import { StepRoadmap } from '../_components/StepRoadmap';
 import { Button } from '@/components/ui/button';
 import { buildStudentProfilePayload } from '@/lib/scoring/student_score_loader';
 import { PageHero } from '@/components/layout/page-hero';
@@ -116,8 +115,6 @@ export default async function ProfileWizardPage({ searchParams }: ProfileWizardP
           ]}
         />
 
-        {/* Step roadmap */}
-        <StepRoadmap steps={PROFILE_STEPS} stepCompletion={stepCompletion} initialStep={initialStep} />
         <div className="surface-card surface-card--static rounded-[28px] p-6">
           <StudentIntakeForm initialStep={initialStep} initialPayload={initialPayload} />
         </div>

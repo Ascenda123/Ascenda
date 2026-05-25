@@ -100,7 +100,7 @@ export const saveStudentIntake = async (payload: StudentProfilePayload) => {
     const { error: lifestyleError } = await supabase.from('student_lifestyle_preference').upsert({
       profile_id: userId,
       teaching_style: lifestyle_preference.teaching_style,
-      desired_location_type: lifestyle_preference.desired_location_type,
+      desired_location_type: lifestyle_preference.desired_location_type as any,
       campus_size: lifestyle_preference.campus_size,
       extracurricular_interests: lifestyle_preference.extracurricular_interests,
       other_extracurriculars: lifestyle_preference.other_extracurriculars,
