@@ -1606,7 +1606,7 @@ export const StudentIntakeForm = ({
 
                   {/* Commitment level */}
                   <SectionCard>
-                    <SectionTitle label="What best describes your life outside class?" hint={"There's no wrong answer — this helps us find programmes that fit your vibe."} />
+                    <SectionTitle label="How involved are you with extracurriculars outside of class?" hint="No pressure — this helps us calibrate your profile." />
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       {COMMITMENT_OPTIONS.map((opt) => (
                         <Chip key={opt.value} label={opt.label} description={opt.desc}
@@ -1857,7 +1857,7 @@ export const StudentIntakeForm = ({
                 disabled={isSaving || submitted}
                 className="gap-1.5 px-6"
               >
-                {isSaving ? 'Saving…' : submitted ? 'Saved ✓' : 'Submit & see matches'}
+                {submitted ? 'Profile saved ✓' : isSaving ? 'Saving…' : 'Submit & see matches'}
               </Button>
             )}
           </div>
