@@ -20,7 +20,7 @@ import { saveStudentIntake } from '../actions';
 
 type SubjectRowState = {
   subject_name: string;
-  level: 'HL' | 'SL' | 'A_LEVEL';
+  level: 'HL' | 'SL' | 'A_LEVEL' | 'AP';
   grade_value: string;
 };
 type AdmissionsRowState = {
@@ -136,6 +136,24 @@ const LEADERSHIP_OPTIONS = [
   'Head Boy / Girl', 'Class President', 'Team Captain', 'Prefect',
   'Club Founder', 'Student Council', 'Community Leader', 'None',
 ];
+
+const ACTIVITY_CATEGORIES = [
+  'Sport', 'Music', 'Drama / Theatre', 'Debate / Model UN',
+  'Community Service', 'Academic Competition', 'Science Competition',
+  'Entrepreneurship', 'Art / Design', 'Writing / Journalism',
+  'Coding / Hackathon', 'Research Project', 'Other',
+] as const;
+
+const ACTIVITY_LEVELS = ['School', 'Regional', 'National', 'International'] as const;
+const ACTIVITY_DURATIONS = ['< 1 year', '1–2 years', '3–4 years', '5+ years'] as const;
+
+type ActivityRowState = {
+  localId: string;
+  category: string;
+  level: string;
+  duration: string;
+  highlight: string;
+};
 
 const COMMITMENT_OPTIONS = [
   { value: 'light', label: 'Light', desc: 'A few activities, casual involvement' },
@@ -450,7 +468,21 @@ export const StudentIntakeForm = ({
     intl_experience: [] as string[],
     work_experience: null as boolean | null,
     work_experience_summary: '',
+    ambition_statement: '',
+    epq_subject: '',
+    epq_title: '',
   });
+
+  const [activityRows, setActivityRows] = useState<ActivityRowState[]>([]);
+
+  const addActivityRow = () => setActivityRows((prev) => [
+    ...prev,
+    { localId: Math.random().toString(36).slice(2), category: '', level: '', duration: '', highlight: '' }
+  ]);
+  const removeActivityRow = (localId: string) =>
+    setActivityRows((prev) => prev.filter((r) => r.localId !== localId));
+  const updateActivityRow = (localId: string, key: keyof Omit<ActivityRowState, 'localId'>, value: string) =>
+    setActivityRows((prev) => prev.map((r) => r.localId === localId ? { ...r, [key]: value } : r));
 
   useEffect(() => {
     if (typeof Intl !== 'undefined' && typeof Intl.DateTimeFormat === 'function') {
@@ -534,7 +566,19 @@ export const StudentIntakeForm = ({
       intl_experience: lp.intl_experience ?? [],
       work_experience: lp.work_experience ?? null,
       work_experience_summary: lp.work_experience_summary ?? '',
+      ambition_statement: lp.ambition_statement ?? '',
+      epq_subject: (lp as any).epq_subject ?? '',
+      epq_title: (lp as any).epq_title ?? '',
     });
+    setActivityRows(
+      (payload.activities_list ?? []).map((a) => ({
+        localId: a.id ?? Math.random().toString(36).slice(2),
+        category: a.category ?? '',
+        level: a.level ?? '',
+        duration: a.duration ?? '',
+        highlight: a.highlight ?? '',
+      }))
+    );
   }, []);
 
   useEffect(() => {
@@ -756,19 +800,39 @@ export const StudentIntakeForm = ({
         other_extracurriculars: lifestylePreference.other_extracurriculars.trim() || null,
         leadership_roles: activities.leadership_roles,
         commitment_level: activities.commitment_level || null,
-        key_activities: activities.key_activities,
+        // Derive legacy key_activities from structured rows for backward-compat scoring
+        key_activities: activityRows.length > 0
+          ? [...new Set(activityRows.map((r) => r.category).filter(Boolean))]
+          : activities.key_activities,
         sat_score: parseNumber(activities.sat_score),
         act_score: parseNumber(activities.act_score),
-        intl_experience: activities.intl_experience,
+        // Derive intl_experience from activity levels for backward-compat scoring
+        intl_experience: activityRows.some((r) => r.level === 'National' || r.level === 'International')
+          ? ['International competition']
+          : activities.intl_experience,
         work_experience: activities.work_experience,
         work_experience_summary: activities.work_experience_summary.trim() || null,
-        ambition_statement: null,
-      },
+        ambition_statement: activities.ambition_statement.trim() || null,
+        epq_subject: (programmeType === 'A_LEVEL' || programmeType === 'ACT')
+          ? activities.epq_subject.trim() || null : null,
+        epq_title: (programmeType === 'A_LEVEL' || programmeType === 'ACT')
+          ? activities.epq_title.trim() || null : null,
+      } as StudentProfilePayload['lifestyle_preference'],
+      activities_list: activityRows
+        .filter((r) => r.category)
+        .map((r, i) => ({
+          category: r.category,
+          level: (r.level || null) as any,
+          duration: (r.duration || null) as any,
+          highlight: r.highlight.trim() || null,
+          sort_order: i,
+        })),
     };
   }, [
     subjects, programmeType, parseNumber, admissionsTests, personalInfo,
     formattedNationalities, academicInput, englishRequired, englishTestType,
-    englishStatus, showEnglishScore, englishScoreOverall, lifestylePreference, activities, ibSubjectSum,
+    englishStatus, showEnglishScore, englishScoreOverall, lifestylePreference,
+    activities, activityRows, ibSubjectSum,
   ]);
 
   // ── Validation ────────────────────────────────────────────────────────────
@@ -1557,6 +1621,33 @@ export const StudentIntakeForm = ({
                     </SectionCard>
                   ) : null}
 
+                  {/* EPQ / Extended Project — A-level only */}
+                  {(programmeType === 'A_LEVEL' || programmeType === 'ACT') ? (
+                    <SectionCard>
+                      <SectionTitle
+                        label="Extended Project (EPQ)"
+                        hint="Optional — if you've written an EPQ or equivalent independent research project."
+                        why="Universities value self-directed research. A relevant EPQ can strengthen your application for competitive programmes."
+                      />
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <label className="space-y-1.5">
+                          <span className="text-sm font-medium text-muted-foreground">Subject area <span className="text-xs">(optional)</span></span>
+                          <input type="text" className={inputCls}
+                            value={activities.epq_subject}
+                            onChange={(e) => setActivities((prev) => ({ ...prev, epq_subject: e.target.value }))}
+                            placeholder="e.g. Biology, Economics, History" />
+                        </label>
+                        <label className="space-y-1.5">
+                          <span className="text-sm font-medium text-muted-foreground">Project title <span className="text-xs">(optional)</span></span>
+                          <input type="text" className={inputCls}
+                            value={activities.epq_title}
+                            onChange={(e) => setActivities((prev) => ({ ...prev, epq_title: e.target.value }))}
+                            placeholder="e.g. To what extent does microfinance reduce poverty?" />
+                        </label>
+                      </div>
+                    </SectionCard>
+                  ) : null}
+
                   {/* SAT / ACT — optional, for international applications */}
                   <SectionCard>
                     <SectionTitle
@@ -1587,7 +1678,8 @@ export const StudentIntakeForm = ({
               {/* ═══ STEP 4 — Activities & ambitions ═════════════════════════ */}
               {currentStep === 4 ? (
                 <section className="space-y-5">
-                  {/* Leadership */}
+
+                  {/* ── Leadership ─────────────────────────────────────────── */}
                   <SectionCard>
                     <SectionTitle label="Leadership roles" hint="Select all that apply — or none." />
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -1604,9 +1696,9 @@ export const StudentIntakeForm = ({
                     </div>
                   </SectionCard>
 
-                  {/* Commitment level */}
+                  {/* ── Overall involvement ───────────────────────────────── */}
                   <SectionCard>
-                    <SectionTitle label="How involved are you with extracurriculars outside of class?" hint="No pressure — this helps us calibrate your profile." />
+                    <SectionTitle label="Overall involvement level" hint="Across everything — sport, competitions, clubs, volunteering." />
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       {COMMITMENT_OPTIONS.map((opt) => (
                         <Chip key={opt.value} label={opt.label} description={opt.desc}
@@ -1618,41 +1710,100 @@ export const StudentIntakeForm = ({
                     </div>
                   </SectionCard>
 
-                  {/* Key activities */}
+                  {/* ── Activity entries ──────────────────────────────────── */}
                   <SectionCard>
-                    <SectionTitle label="Key activities" hint="Pick up to 5 that best represent you." />
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                      {KEY_ACTIVITIES_OPTIONS.map((opt) => (
-                        <Chip key={opt} label={opt}
-                          selected={activities.key_activities.includes(opt)}
-                          disabled={!activities.key_activities.includes(opt) && activities.key_activities.length >= 5}
-                          onClick={() => setActivities((prev) => ({
-                            ...prev, key_activities: toggleMulti(prev.key_activities, opt, 5)
-                          }))} />
+                    <SectionTitle
+                      label="Your activities"
+                      hint="Add each activity separately — you can include sport, competitions, volunteering, music, anything significant."
+                      why="Universities look at depth, level, and achievement — not just a list of hobbies. The more specific you are, the better your counsellor can support you."
+                    />
+
+                    {activityRows.length === 0 && (
+                      <p className="text-sm text-muted-foreground">No activities added yet. Hit the button below to start.</p>
+                    )}
+
+                    <div className="space-y-3">
+                      {activityRows.map((row) => (
+                        <div key={row.localId} className="rounded-xl border border-border/70 bg-background p-4 space-y-3">
+                          {/* Row header: category + delete */}
+                          <div className="flex items-start gap-2">
+                            <div className="flex-1">
+                              <p className="text-xs font-semibold text-muted-foreground mb-1.5">Activity type</p>
+                              <div className="flex flex-wrap gap-1.5">
+                                {ACTIVITY_CATEGORIES.map((cat) => (
+                                  <Chip key={cat} label={cat}
+                                    selected={row.category === cat}
+                                    onClick={() => updateActivityRow(row.localId, 'category', row.category === cat ? '' : cat)} />
+                                ))}
+                              </div>
+                            </div>
+                            <button type="button"
+                              className="mt-0.5 p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors flex-shrink-0"
+                              onClick={() => removeActivityRow(row.localId)}
+                              aria-label="Remove activity">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                            </button>
+                          </div>
+
+                          {/* Level + Duration */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                              <p className="text-xs font-semibold text-muted-foreground mb-1.5">Highest level reached</p>
+                              <div className="flex flex-wrap gap-1.5">
+                                {ACTIVITY_LEVELS.map((lvl) => (
+                                  <Chip key={lvl} label={lvl}
+                                    selected={row.level === lvl}
+                                    onClick={() => updateActivityRow(row.localId, 'level', row.level === lvl ? '' : lvl)} />
+                                ))}
+                              </div>
+                            </div>
+                            <div>
+                              <p className="text-xs font-semibold text-muted-foreground mb-1.5">Duration</p>
+                              <div className="flex flex-wrap gap-1.5">
+                                {ACTIVITY_DURATIONS.map((dur) => (
+                                  <Chip key={dur} label={dur}
+                                    selected={row.duration === dur}
+                                    onClick={() => updateActivityRow(row.localId, 'duration', row.duration === dur ? '' : dur)} />
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Highlight */}
+                          <label className="block space-y-1">
+                            <span className="text-xs font-semibold text-muted-foreground">
+                              {row.category === 'Academic Competition' || row.category === 'Science Competition'
+                                ? 'Result / award'
+                                : 'Key achievement or highlight'}
+                              <span className="font-normal ml-1">(optional)</span>
+                            </span>
+                            <input type="text" maxLength={150} className={inputCls}
+                              value={row.highlight}
+                              onChange={(e) => updateActivityRow(row.localId, 'highlight', e.target.value)}
+                              placeholder={
+                                row.category === 'Academic Competition' ? 'e.g. 2nd place, Bangkok Economics Essay Competition'
+                                : row.category === 'Sport' ? 'e.g. FOBISIA Games champion 3 years, national tournament finalist'
+                                : row.category === 'Music' ? 'e.g. Grade 8 distinction, orchestra principal'
+                                : 'e.g. Best delegate award, 3 years running'
+                              } />
+                          </label>
+                        </div>
                       ))}
                     </div>
+
+                    {activityRows.length < 10 && (
+                      <button type="button"
+                        className="mt-1 flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+                        onClick={addActivityRow}>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        Add activity
+                      </button>
+                    )}
                   </SectionCard>
 
-                  {/* International experience */}
+                  {/* ── Work experience ───────────────────────────────────── */}
                   <SectionCard>
-                    <SectionTitle label="International experience" hint="Select any that apply." />
-                    <div className="flex flex-wrap gap-2">
-                      {INTL_EXPERIENCE_OPTIONS.map((opt) => (
-                        <Chip key={opt} label={opt}
-                          selected={activities.intl_experience.includes(opt)}
-                          onClick={() => setActivities((prev) => ({
-                            ...prev,
-                            intl_experience: opt === 'None'
-                              ? (prev.intl_experience.includes('None') ? [] : ['None'])
-                              : toggleMulti(prev.intl_experience.filter((r) => r !== 'None'), opt)
-                          }))} />
-                      ))}
-                    </div>
-                  </SectionCard>
-
-                  {/* Work experience */}
-                  <SectionCard>
-                    <SectionTitle label="Work experience or internships" hint="Any relevant experience outside school." />
+                    <SectionTitle label="Work experience or internships" hint="Any paid or unpaid work outside school." />
                     <div className="flex gap-2">
                       {[{ value: true, label: 'Yes' }, { value: false, label: 'No' }].map((opt) => (
                         <Chip key={String(opt.value)} label={opt.label}
@@ -1669,6 +1820,19 @@ export const StudentIntakeForm = ({
                           placeholder="e.g. Summer internship at a law firm, 2 months" />
                       </label>
                     ) : null}
+                  </SectionCard>
+
+                  {/* ── Ambition statement ────────────────────────────────── */}
+                  <SectionCard>
+                    <SectionTitle
+                      label="Where do you want to go?"
+                      hint="Optional — 2–3 sentences on your goals or what drives you."
+                      why="Your counsellor uses this to give more targeted guidance and personalise your programme shortlist."
+                    />
+                    <textarea rows={3} className={cn(inputCls, 'h-auto py-3 resize-none')}
+                      value={activities.ambition_statement}
+                      onChange={(e) => setActivities((prev) => ({ ...prev, ambition_statement: e.target.value }))}
+                      placeholder="e.g. I want to study biomedical sciences and eventually research treatments for autoimmune diseases. I'm particularly interested in universities with strong research output and lab access for undergraduates." />
                   </SectionCard>
 
                 </section>

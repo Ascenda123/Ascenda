@@ -263,8 +263,11 @@ const buildStudentPayload = (params: {
       intl_experience: params.lifestyle?.intl_experience ?? [],
       work_experience: params.lifestyle?.work_experience ?? null,
       work_experience_summary: params.lifestyle?.work_experience_summary ?? null,
-      ambition_statement: params.lifestyle?.ambition_statement ?? null
-    }
+      ambition_statement: params.lifestyle?.ambition_statement ?? null,
+      epq_subject: (params.lifestyle as any)?.epq_subject ?? null,
+      epq_title: (params.lifestyle as any)?.epq_title ?? null,
+    },
+    activities_list: (params as any).activities_list ?? [],
   };
 };
 

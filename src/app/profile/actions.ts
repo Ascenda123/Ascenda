@@ -68,7 +68,9 @@ export const saveStudentIntake = async (payload: StudentProfilePayload) => {
 
     const { error: academicError } = await supabase.from('student_academic_input').upsert({
       profile_id: userId,
-      programme_type: academic_input.programme_type,
+      // ACT is a new programme_type not yet in the DB schema — store as A_LEVEL
+      // for now until a migration adds the enum value.
+      programme_type: (academic_input.programme_type === 'ACT' ? 'A_LEVEL' : academic_input.programme_type) as any,
       school_name: academic_input.school_name,
       school_country: academic_input.school_country,
       school_city: academic_input.school_city,
@@ -97,7 +99,7 @@ export const saveStudentIntake = async (payload: StudentProfilePayload) => {
       throw new Error(academicError.message);
     }
 
-    const { error: lifestyleError } = await supabase.from('student_lifestyle_preference').upsert({
+    const { error: lifestyleError } = await (supabase as any).from('student_lifestyle_preference').upsert({
       profile_id: userId,
       teaching_style: lifestyle_preference.teaching_style,
       desired_location_type: lifestyle_preference.desired_location_type as any,
@@ -113,10 +115,34 @@ export const saveStudentIntake = async (payload: StudentProfilePayload) => {
       intl_experience: lifestyle_preference.intl_experience,
       work_experience: lifestyle_preference.work_experience,
       work_experience_summary: lifestyle_preference.work_experience_summary,
-      ambition_statement: lifestyle_preference.ambition_statement
+      ambition_statement: lifestyle_preference.ambition_statement,
+      epq_subject: (lifestyle_preference as any).epq_subject ?? null,
+      epq_title: (lifestyle_preference as any).epq_title ?? null,
     });
     if (lifestyleError) {
       throw new Error(lifestyleError.message);
+    }
+
+    // Save structured activity entries (delete-then-insert like subjects)
+    const { error: activitiesDeleteError } = await (supabase as any)
+      .from('student_activities').delete().eq('profile_id', userId);
+    if (activitiesDeleteError) {
+      throw new Error(activitiesDeleteError.message);
+    }
+    if (payload.activities_list && payload.activities_list.length > 0) {
+      const activityRows = payload.activities_list.map((a, i) => ({
+        profile_id: userId,
+        category: a.category,
+        level: a.level ?? null,
+        duration: a.duration ?? null,
+        highlight: a.highlight ?? null,
+        sort_order: a.sort_order ?? i,
+      }));
+      const { error: activitiesInsertError } = await (supabase as any)
+        .from('student_activities').insert(activityRows);
+      if (activitiesInsertError) {
+        throw new Error(activitiesInsertError.message);
+      }
     }
 
     const { error: subjectDeleteError } = await supabase.from('student_subjects').delete().eq('profile_id', userId);
@@ -127,7 +153,8 @@ export const saveStudentIntake = async (payload: StudentProfilePayload) => {
       const subjectRows = academic_input.subject_list.map((subject) => ({
         profile_id: userId,
         subject_name: subject.subject_name,
-        level: subject.level,
+        // AP is a new level not yet in the DB schema — store as A_LEVEL for now.
+        level: (subject.level === 'AP' ? 'A_LEVEL' : subject.level) as any,
         grade_value: subject.grade_value === null ? null : String(subject.grade_value)
       }));
       const { error: subjectInsertError } = await supabase.from('student_subjects').insert(subjectRows);

@@ -589,13 +589,27 @@ const calculateALevelProjectBonus = (
   if (!cluster) return 0;
   const rule = EE_RELEVANCE_RULES[cluster];
   if (!rule) return 0;
-  const summary = payload.lifestyle_preference.work_experience_summary;
-  if (!summary) return 0;
-  const content = summary.toLowerCase();
-  const hasDirect = rule.direct.some((keyword) => content.includes(keyword));
-  if (hasDirect) return 5;
-  const hasRelated = rule.related.some((keyword) => content.includes(keyword));
-  return hasRelated ? 3 : 0;
+
+  // Check EPQ first (more academically rigorous than work experience summary)
+  const epqContent = [payload.lifestyle_preference.epq_subject, payload.lifestyle_preference.epq_title]
+    .filter(Boolean).join(' ').toLowerCase();
+  if (epqContent) {
+    if (rule.direct.some((kw) => epqContent.includes(kw))) return 5;
+    if (rule.related.some((kw) => epqContent.includes(kw))) return 3;
+  }
+
+  // Fall back to work experience / activity highlight summary
+  const highlights = (payload.activities_list ?? [])
+    .map((a) => a.highlight ?? '')
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase();
+  const summary = payload.lifestyle_preference.work_experience_summary ?? '';
+  const content = (highlights + ' ' + summary).trim().toLowerCase();
+  if (!content) return 0;
+  if (rule.direct.some((kw) => content.includes(kw))) return 5;
+  if (rule.related.some((kw) => content.includes(kw))) return 3;
+  return 0;
 };
 
 const calculateTestsAndEnglish = (
@@ -739,7 +753,7 @@ export const scoreStudentProfile = (payload: StudentProfilePayload): StudentScor
     academic_input.english_score_overall
   );
 
-  const activitiesBreakdown = calculateActivitiesScore(payload.lifestyle_preference);
+  const activitiesBreakdown = calculateActivitiesScore(payload.lifestyle_preference, payload.activities_list);
 
   const totalRaw =
     preferredAlignment +

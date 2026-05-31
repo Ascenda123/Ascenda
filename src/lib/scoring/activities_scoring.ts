@@ -76,7 +76,8 @@ const keyActivitiesPoints = (count: number): number => {
 // ── Main function ─────────────────────────────────────────────────────────────
 
 export const calculateActivitiesScore = (
-  lifestyle: StudentProfilePayload['lifestyle_preference']
+  lifestyle: StudentProfilePayload['lifestyle_preference'],
+  activitiesList?: StudentProfilePayload['activities_list']
 ): ActivitiesBreakdown => {
   // 1. Commitment level
   const commitment =
@@ -92,15 +93,22 @@ export const calculateActivitiesScore = (
       ? ACTIVITIES_WEIGHTS.leadership_any
       : 0;
 
-  // 3. Key activities (count of selected items)
-  const actCount = (lifestyle.key_activities ?? []).length;
+  // 3. Key activities: use structured list if available, fall back to legacy flat array
+  const structuredCount = activitiesList?.length ?? 0;
+  const legacyCount = (lifestyle.key_activities ?? []).length;
+  const actCount = structuredCount > 0 ? structuredCount : legacyCount;
   const key_activities = keyActivitiesPoints(actCount);
 
-  // 4. International experience (any non-None entry)
-  const hasIntl = (lifestyle.intl_experience ?? []).some(
+  // 4. International experience: check structured list levels first, then legacy array
+  const hasIntlFromList = (activitiesList ?? []).some(
+    (a) => a.level === 'National' || a.level === 'International'
+  );
+  const hasIntlFromLegacy = (lifestyle.intl_experience ?? []).some(
     (e) => e !== 'None' && e !== ''
   );
-  const intl_experience = hasIntl ? ACTIVITIES_WEIGHTS.intl_experience : 0;
+  const intl_experience = (hasIntlFromList || hasIntlFromLegacy)
+    ? ACTIVITIES_WEIGHTS.intl_experience
+    : 0;
 
   // 5. Work / internship experience
   const work_experience = lifestyle.work_experience

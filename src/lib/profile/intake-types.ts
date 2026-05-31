@@ -28,6 +28,18 @@ export type StudentAdmissionsTest = {
   percentile: number | null;
 };
 
+export type ActivityLevel = 'School' | 'Regional' | 'National' | 'International';
+export type ActivityDuration = '< 1 year' | '1–2 years' | '3–4 years' | '5+ years';
+
+export type StudentActivity = {
+  id?: string;
+  category: string;
+  level: ActivityLevel | null;
+  duration: ActivityDuration | null;
+  highlight: string | null;
+  sort_order: number;
+};
+
 export type StudentProfilePayload = {
   personal_information: {
     first_name: string;
@@ -85,5 +97,10 @@ export type StudentProfilePayload = {
     work_experience: boolean | null;
     work_experience_summary: string | null;
     ambition_statement: string | null;
+    // EPQ / Extended Project (A-level equivalent of IB EE)
+    epq_subject: string | null;
+    epq_title: string | null;
   };
+  // Structured per-activity entries (replaces flat key_activities[])
+  activities_list: StudentActivity[];
 };
