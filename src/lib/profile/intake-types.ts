@@ -1,4 +1,4 @@
-export type ProgrammeType = 'IB' | 'A_LEVEL';
+export type ProgrammeType = 'IB' | 'A_LEVEL' | 'ACT';
 export type IntendedCluster =
   | 'computer_science'
   | 'maths'
@@ -17,7 +17,7 @@ export type AdmissionsStatus = 'taken' | 'booked' | 'missing';
 
 export type StudentSubject = {
   subject_name: string;
-  level: 'HL' | 'SL' | 'A_LEVEL';
+  level: 'HL' | 'SL' | 'A_LEVEL' | 'AP';
   grade_value: number | string | null;
 };
 
