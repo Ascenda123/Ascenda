@@ -18,18 +18,29 @@ export const buildStudentProfilePayload = async (
     academicResponse,
     subjectsResponse,
     testsResponse,
-    lifestyleResponse
+    lifestyleResponse,
+    activitiesResponse
   ] = await Promise.all([
     supabase.from('student_personal_information').select('*').eq('profile_id', profileId).maybeSingle(),
     supabase.from('student_academic_input').select('*').eq('profile_id', profileId).maybeSingle(),
     supabase.from('student_subjects').select('*').eq('profile_id', profileId),
     supabase.from('student_admissions_tests').select('*').eq('profile_id', profileId),
-    supabase.from('student_lifestyle_preference').select('*').eq('profile_id', profileId).maybeSingle()
+    supabase.from('student_lifestyle_preference').select('*').eq('profile_id', profileId).maybeSingle(),
+    (supabase as any).from('student_activities').select('*').eq('profile_id', profileId).order('sort_order')
   ]);
 
   if (personalResponse.error || academicResponse.error || subjectsResponse.error || testsResponse.error || lifestyleResponse.error) {
     throw new Error('Failed to load student intake records');
   }
+
+  const activitiesList = ((activitiesResponse as any)?.data ?? []).map((a: any) => ({
+    id: a.id,
+    category: a.category ?? '',
+    level: a.level ?? null,
+    duration: a.duration ?? null,
+    highlight: a.highlight ?? null,
+    sort_order: a.sort_order ?? 0,
+  }));
 
   const personal = personalResponse.data;
   const academic = academicResponse.data;
@@ -100,8 +111,20 @@ export const buildStudentProfilePayload = async (
       desired_location_type: lifestyleResponse.data?.desired_location_type ?? null,
       campus_size: lifestyleResponse.data?.campus_size ?? null,
       extracurricular_interests: lifestyleResponse.data?.extracurricular_interests ?? [],
-      other_extracurriculars: lifestyleResponse.data?.other_extracurriculars ?? null
-    }
+      other_extracurriculars: lifestyleResponse.data?.other_extracurriculars ?? null,
+      leadership_roles: lifestyleResponse.data?.leadership_roles ?? [],
+      commitment_level: lifestyleResponse.data?.commitment_level ?? null,
+      key_activities: lifestyleResponse.data?.key_activities ?? [],
+      sat_score: lifestyleResponse.data?.sat_score ?? null,
+      act_score: lifestyleResponse.data?.act_score ?? null,
+      intl_experience: lifestyleResponse.data?.intl_experience ?? [],
+      work_experience: lifestyleResponse.data?.work_experience ?? null,
+      work_experience_summary: lifestyleResponse.data?.work_experience_summary ?? null,
+      ambition_statement: lifestyleResponse.data?.ambition_statement ?? null,
+      epq_subject: (lifestyleResponse.data as any)?.epq_subject ?? null,
+      epq_title: (lifestyleResponse.data as any)?.epq_title ?? null,
+    },
+    activities_list: activitiesList,
   };
 
   return payload;

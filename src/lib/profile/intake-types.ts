@@ -1,4 +1,4 @@
-export type ProgrammeType = 'IB' | 'A_LEVEL';
+export type ProgrammeType = 'IB' | 'A_LEVEL' | 'ACT';
 export type IntendedCluster =
   | 'computer_science'
   | 'maths'
@@ -17,7 +17,7 @@ export type AdmissionsStatus = 'taken' | 'booked' | 'missing';
 
 export type StudentSubject = {
   subject_name: string;
-  level: 'HL' | 'SL' | 'A_LEVEL';
+  level: 'HL' | 'SL' | 'A_LEVEL' | 'AP';
   grade_value: number | string | null;
 };
 
@@ -26,6 +26,18 @@ export type StudentAdmissionsTest = {
   status: AdmissionsStatus;
   score_numeric: number | null;
   percentile: number | null;
+};
+
+export type ActivityLevel = 'School' | 'Regional' | 'National' | 'International';
+export type ActivityDuration = '< 1 year' | '1–2 years' | '3–4 years' | '5+ years';
+
+export type StudentActivity = {
+  id?: string;
+  category: string;
+  level: ActivityLevel | null;
+  duration: ActivityDuration | null;
+  highlight: string | null;
+  sort_order: number;
 };
 
 export type StudentProfilePayload = {
@@ -71,9 +83,24 @@ export type StudentProfilePayload = {
   };
   lifestyle_preference: {
     teaching_style: 'academic' | 'practical' | 'mixed' | null;
-    desired_location_type: 'london' | 'major_city' | 'smaller_city' | 'suburban' | 'no_preference' | null;
+    desired_location_type: string | null;
     campus_size: 'small' | 'medium' | 'large' | 'no_preference' | null;
     extracurricular_interests: string[];
     other_extracurriculars: string | null;
+    // Activities & ambitions (step 4)
+    leadership_roles: string[];
+    commitment_level: string | null;
+    key_activities: string[];
+    sat_score: number | null;
+    act_score: number | null;
+    intl_experience: string[];
+    work_experience: boolean | null;
+    work_experience_summary: string | null;
+    ambition_statement: string | null;
+    // EPQ / Extended Project (A-level equivalent of IB EE)
+    epq_subject: string | null;
+    epq_title: string | null;
   };
+  // Structured per-activity entries (replaces flat key_activities[])
+  activities_list: StudentActivity[];
 };

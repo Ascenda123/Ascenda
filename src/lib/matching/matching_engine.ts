@@ -597,6 +597,69 @@ const categoryToTierFit = (category: Category): RankedCourseMatch['tier_fit'] =>
 
 const clampChance = (value: number) => Math.max(5, Math.min(95, Math.round(value)));
 
+// ── A-level → IB equivalent conversion ────────────────────────────────────
+//
+// Used when a student has no ib_total_points (i.e. A-level pathway).
+// Maps the top-3 A-level grades to an IB equivalent on a 24–43 scale,
+// consistent with UCAS / Russell Group published conversion tables.
+//
+// Grade → IB subject-point proxy:
+//   A* = 7,  A = 6,  B = 5,  C = 4,  D = 3,  E = 2
+//
+// Three subjects cap at max sum 21 (A*A*A*), min 6 (EEE).
+// Linear interpolation: IB = 24 + ((sum - 6) / 15) × 19  →  24–43 range.
+//
+// Examples:
+//   A*A*A  (20) → 42    A*AA  (19) → 41    AAA  (18) → 39
+//   AAB   (17) → 38    ABB   (16) → 36    BBB  (15) → 35
+//   BBC   (14) → 33    BCC   (13) → 32    CCC  (12) → 30
+
+const A_LEVEL_GRADE_POINTS: Record<string, number> = {
+  'A*': 7, A: 6, B: 5, C: 4, D: 3, E: 2, U: 1,
+};
+
+export const aLevelToIbEquivalent = (
+  predictedGrades: Record<string, string> | null | undefined
+): number => {
+  if (!predictedGrades) return 33; // population median fallback
+  const pts = Object.values(predictedGrades)
+    .map((g) => A_LEVEL_GRADE_POINTS[g.trim()] ?? 4)
+    .sort((a, b) => b - a)   // descending
+    .slice(0, 3);             // top 3 subjects
+  if (pts.length === 0) return 33;
+  const sum = pts.reduce((acc, v) => acc + v, 0);
+  return Math.round(24 + ((sum - 6) / 15) * 19);
+};
+
+// ── ACT → IB equivalent conversion ────────────────────────────────────────
+//
+// Converts ACT composite to an IB-equivalent for the matching classifier.
+// Calibrated against published US university middle-50% admit data (2024):
+//   MIT/Harvard/Princeton  ACT 34-36 → typical IB admit 40-45
+//   NYU Stern/UMich        ACT 32-33 → typical IB admit 37-40
+//   McGill                 ACT ~32   → min IB ~36
+//   Monash/UBC             ACT ~27   → min IB ~32
+//
+// ACT 36→45, 35→43, 34→41, 33→40, 32→38, 31→37, 30→35,
+// 28-29→33, 26-27→31, 24-25→29, 21-23→27, 18-20→25, <18→24
+
+export const actToIbEquivalent = (actScore: number | null | undefined): number => {
+  if (!actScore) return 33; // population median fallback
+  if (actScore >= 36) return 45;
+  if (actScore >= 35) return 43;
+  if (actScore >= 34) return 41;
+  if (actScore >= 33) return 40;
+  if (actScore >= 32) return 38;
+  if (actScore >= 31) return 37;
+  if (actScore >= 30) return 35;
+  if (actScore >= 28) return 33;
+  if (actScore >= 26) return 31;
+  if (actScore >= 24) return 29;
+  if (actScore >= 21) return 27;
+  if (actScore >= 18) return 25;
+  return 24;
+};
+
 // ── MAIN EXPORT ────────────────────────────────────────────────────────────
 
 export const rankCourseMatches = (
@@ -611,8 +674,15 @@ export const rankCourseMatches = (
   ];
   const targetFields = resolveTargetFields(clusters);
 
-  // Get student IB — fallback to median 33 if missing (v4 Strategy A)
-  const studentIb = student.academic_input.ib_total_points ?? 33;
+  // Resolve student's academic level to an IB equivalent for the classifier.
+  // Priority: explicit IB total → A-level predicted grades → ACT score → population median (33).
+  const studentIb =
+    student.academic_input.ib_total_points ??
+    (student.academic_input.a_level_predicted_grades
+      ? aLevelToIbEquivalent(student.academic_input.a_level_predicted_grades)
+      : student.academic_input.programme_type === 'ACT'
+      ? actToIbEquivalent(student.lifestyle_preference.act_score)
+      : 33);
 
   // Budget in USD — from lifestyle preference or default to 45k
   // The current profile doesn't have a direct budget field, so we

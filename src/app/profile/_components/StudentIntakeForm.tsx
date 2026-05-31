@@ -2,50 +2,50 @@
 
 import { type FormEvent, useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, ChevronRight, ChevronLeft, Globe, GraduationCap, User, Heart, Settings, Layout, Search, Sparkles, Send, GraduationCap as School, Moon, Sun, Pencil, Trash2, PlusCircle } from 'lucide-react';
+import {
+  Check, ChevronDown, ChevronRight, ChevronLeft, GraduationCap, User, Heart, Sparkles,
+  Trash2, PlusCircle, Trophy, Globe2, Briefcase, Info, X
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme/theme-toggle';
 import { PROFILE_STEPS } from '@/lib/profile/steps';
 import { cn } from '@/lib/utils';
 import type {
-  AdmissionsStatus,
-  AdmissionsTestType,
-  EnglishStatus,
-  EnglishTestType,
-  IntendedCluster,
-  ProgrammeType,
-  StudentAdmissionsTest,
-  StudentProfilePayload,
-  StudentSubject
+  AdmissionsStatus, AdmissionsTestType, EnglishStatus, EnglishTestType,
+  IntendedCluster, ProgrammeType, StudentAdmissionsTest, StudentProfilePayload, StudentSubject
 } from '@/lib/profile/intake-types';
 import { saveStudentIntake } from '../actions';
 
+// ─── Types ───────────────────────────────────────────────────────────────────
+
 type SubjectRowState = {
   subject_name: string;
-  level: 'HL' | 'SL' | 'A_LEVEL';
+  level: 'HL' | 'SL' | 'A_LEVEL' | 'AP';
   grade_value: string;
 };
-
 type AdmissionsRowState = {
   test_type: AdmissionsTestType;
   status: AdmissionsStatus | '';
   score_numeric: string;
   percentile: string;
 };
-
 type EnglishRequiredState = 'yes' | 'no' | 'not_sure' | '';
 
-const CLUSTER_OPTIONS: { value: IntendedCluster; label: string }[] = [
-  { value: 'computer_science', label: 'Computer science' },
-  { value: 'maths', label: 'Mathematics' },
-  { value: 'engineering', label: 'Engineering' },
-  { value: 'life_sciences_biochem', label: 'Life sciences & biochem' },
-  { value: 'medicine_dentistry', label: 'Medicine & dentistry' },
-  { value: 'economics_quant', label: 'Economics (quant)' },
-  { value: 'business_non_quant', label: 'Business (non-quant)' },
-  { value: 'law', label: 'Law' },
-  { value: 'humanities', label: 'Humanities' },
-  { value: 'creative', label: 'Creative' }
+// ─── Constants ────────────────────────────────────────────────────────────────
+
+const TOTAL_STEPS = PROFILE_STEPS.length + 1; // +1 for Review
+
+const CLUSTER_OPTIONS: { value: IntendedCluster; label: string; emoji: string }[] = [
+  { value: 'computer_science', label: 'Computer science', emoji: '💻' },
+  { value: 'maths', label: 'Mathematics', emoji: '📐' },
+  { value: 'engineering', label: 'Engineering', emoji: '⚙️' },
+  { value: 'life_sciences_biochem', label: 'Life sciences & biochem', emoji: '🧬' },
+  { value: 'medicine_dentistry', label: 'Medicine & dentistry', emoji: '🩺' },
+  { value: 'economics_quant', label: 'Economics (quant)', emoji: '📊' },
+  { value: 'business_non_quant', label: 'Business (non-quant)', emoji: '🏢' },
+  { value: 'law', label: 'Law', emoji: '⚖️' },
+  { value: 'humanities', label: 'Humanities', emoji: '📚' },
+  { value: 'creative', label: 'Creative arts', emoji: '🎨' },
 ];
 
 const COUNTRY_OPTIONS: string[] = (() => {
@@ -64,25 +64,21 @@ const COUNTRY_OPTIONS: string[] = (() => {
     'Mauritania', 'Mauritius', 'Mexico', 'Micronesia', 'Moldova', 'Monaco', 'Mongolia', 'Montenegro', 'Morocco', 'Mozambique',
     'Myanmar', 'Namibia', 'Nauru', 'Nepal', 'Netherlands', 'New Zealand', 'Nicaragua', 'Niger', 'Nigeria', 'North Korea',
     'North Macedonia', 'Norway', 'Oman', 'Pakistan', 'Palau', 'Palestine', 'Panama', 'Papua New Guinea', 'Paraguay', 'Peru',
-    'Philippines', 'Poland', 'Portugal', 'Qatar', 'Romania', 'Russia', 'Rwanda', 'Saint Kitts and Nevis', 'Saint Lucia', 'Saint Vincent and the Grenadines',
-    'Samoa', 'San Marino', 'Sao Tome and Principe', 'Saudi Arabia', 'Senegal', 'Serbia', 'Seychelles', 'Sierra Leone', 'Singapore', 'Slovakia',
-    'Slovenia', 'Solomon Islands', 'Somalia', 'South Africa', 'South Korea', 'South Sudan', 'Spain', 'Sri Lanka', 'Sudan', 'Suriname',
-    'Sweden', 'Switzerland', 'Syria', 'Taiwan', 'Tajikistan', 'Tanzania', 'Thailand', 'Togo', 'Tonga', 'Trinidad and Tobago',
-    'Tunisia', 'Turkey', 'Turkmenistan', 'Tuvalu', 'Uganda', 'Ukraine', 'United Arab Emirates', 'United Kingdom', 'United States', 'Uruguay',
-    'Uzbekistan', 'Vanuatu', 'Vatican City', 'Venezuela', 'Vietnam', 'Yemen', 'Zambia', 'Zimbabwe'
+    'Philippines', 'Poland', 'Portugal', 'Qatar', 'Romania', 'Russia', 'Rwanda', 'Saint Kitts and Nevis', 'Saint Lucia',
+    'Saint Vincent and the Grenadines', 'Samoa', 'San Marino', 'Sao Tome and Principe', 'Saudi Arabia', 'Senegal', 'Serbia',
+    'Seychelles', 'Sierra Leone', 'Singapore', 'Slovakia', 'Slovenia', 'Solomon Islands', 'Somalia', 'South Africa',
+    'South Korea', 'South Sudan', 'Spain', 'Sri Lanka', 'Sudan', 'Suriname', 'Sweden', 'Switzerland', 'Syria', 'Taiwan',
+    'Tajikistan', 'Tanzania', 'Thailand', 'Togo', 'Tonga', 'Trinidad and Tobago', 'Tunisia', 'Turkey', 'Turkmenistan',
+    'Tuvalu', 'Uganda', 'Ukraine', 'United Arab Emirates', 'United Kingdom', 'United States', 'Uruguay',
+    'Uzbekistan', 'Vanuatu', 'Vatican City', 'Venezuela', 'Vietnam', 'Yemen', 'Zambia', 'Zimbabwe',
   ];
   if (typeof Intl?.supportedValuesOf === 'function' && typeof Intl.DisplayNames === 'function') {
     try {
       const displayNames = new Intl.DisplayNames(['en'], { type: 'region' });
-      const codes = (Intl as any).supportedValuesOf('region').filter((code: string) => /^[A-Z]{2}$/.test(code));
-      const names = codes
-        .map((code: string) => displayNames.of(code) ?? '')
-        .filter(Boolean)
-        .sort((a: string, b: string) => a.localeCompare(b));
+      const codes = (Intl as any).supportedValuesOf('region').filter((c: string) => /^[A-Z]{2}$/.test(c));
+      const names = codes.map((c: string) => displayNames.of(c) ?? '').filter(Boolean).sort((a: string, b: string) => a.localeCompare(b));
       if (names.length > 100) return names;
-    } catch {
-      // fall through to fallback
-    }
+    } catch { /* fall through */ }
   }
   return fallback;
 })();
@@ -90,47 +86,25 @@ const COUNTRY_OPTIONS: string[] = (() => {
 const SCHOOL_TYPE_OPTIONS = [
   { value: 'international_school', label: 'International school' },
   { value: 'local_private', label: 'Local private' },
-  { value: 'state_public', label: 'State/public' },
+  { value: 'state_public', label: 'State / public' },
   { value: 'boarding', label: 'Boarding' },
-  { value: 'other', label: 'Other' }
+  { value: 'other', label: 'Other' },
 ];
 
 const SUBJECT_OPTIONS = [
-  'Mathematics',
-  'Further Mathematics',
-  'Physics',
-  'Chemistry',
-  'Biology',
-  'Computer Science',
-  'Economics',
-  'Business',
-  'Accounting',
-  'Psychology',
-  'English Literature',
-  'English Language',
-  'History',
-  'Geography',
-  'Government & Politics',
-  'Philosophy',
-  'Sociology',
-  'Art & Design',
-  'Design Technology',
-  'Music',
-  'Theatre Studies',
-  'Media Studies',
-  'Modern Languages',
-  'Classical Studies',
-  'Sports Science',
-  'Environmental Systems',
-  'Other'
+  'Mathematics', 'Further Mathematics', 'Physics', 'Chemistry', 'Biology', 'Computer Science',
+  'Economics', 'Business', 'Accounting', 'Psychology', 'English Literature', 'English Language',
+  'History', 'Geography', 'Government & Politics', 'Philosophy', 'Sociology', 'Art & Design',
+  'Design Technology', 'Music', 'Theatre Studies', 'Media Studies', 'Modern Languages',
+  'Classical Studies', 'Sports Science', 'Environmental Systems', 'Other',
 ];
 
 const ENGLISH_TEST_OPTIONS: { value: EnglishTestType; label: string }[] = [
   { value: 'IELTS', label: 'IELTS' },
   { value: 'TOEFL', label: 'TOEFL' },
   { value: 'DUOLINGO', label: 'Duolingo' },
-  { value: 'WAIVER', label: 'Waiver' },
-  { value: 'NONE', label: 'None' }
+  { value: 'WAIVER', label: 'Waiver / exempt' },
+  { value: 'NONE', label: 'None yet' },
 ];
 
 const ENGLISH_STATUS_OPTIONS: { value: EnglishStatus; label: string }[] = [
@@ -138,8 +112,8 @@ const ENGLISH_STATUS_OPTIONS: { value: EnglishStatus; label: string }[] = [
   { value: 'met', label: 'Met' },
   { value: 'exceeds', label: 'Exceeds' },
   { value: 'exceptional', label: 'Exceptional' },
-  { value: 'missing', label: 'Missing' },
-  { value: 'failed', label: 'Failed' }
+  { value: 'missing', label: 'Not started' },
+  { value: 'failed', label: 'Below req.' },
 ];
 
 const ADMISSIONS_TEST_OPTIONS: { value: AdmissionsTestType; label: string }[] = [
@@ -150,19 +124,52 @@ const ADMISSIONS_TEST_OPTIONS: { value: AdmissionsTestType; label: string }[] = 
   { value: 'STEP', label: 'STEP' },
   { value: 'ESAT', label: 'ESAT' },
   { value: 'TSA', label: 'TSA' },
-  { value: 'NONE', label: 'None' }
+  { value: 'NONE', label: 'None' },
 ];
 
 const EXTRACURRICULAR_OPTIONS = [
-  'Sports/fitness',
-  'Student societies',
-  'Volunteering',
-  'Entrepreneurship',
-  'Arts/music',
-  'Debate/public speaking',
-  'Gaming/esports',
-  'Cultural clubs',
-  'Other'
+  'Sports / fitness', 'Student societies', 'Volunteering', 'Entrepreneurship',
+  'Arts / music', 'Debate / public speaking', 'Gaming / esports', 'Cultural clubs', 'Other',
+];
+
+const LEADERSHIP_OPTIONS = [
+  'Head Boy / Girl', 'Class President', 'Team Captain', 'Prefect',
+  'Club Founder', 'Student Council', 'Community Leader', 'None',
+];
+
+const ACTIVITY_CATEGORIES = [
+  'Sport', 'Music', 'Drama / Theatre', 'Debate / Model UN',
+  'Community Service', 'Academic Competition', 'Science Competition',
+  'Entrepreneurship', 'Art / Design', 'Writing / Journalism',
+  'Coding / Hackathon', 'Research Project', 'Other',
+] as const;
+
+const ACTIVITY_LEVELS = ['School', 'Regional', 'National', 'International'] as const;
+const ACTIVITY_DURATIONS = ['< 1 year', '1–2 years', '3–4 years', '5+ years'] as const;
+
+type ActivityRowState = {
+  localId: string;
+  category: string;
+  level: string;
+  duration: string;
+  highlight: string;
+};
+
+const COMMITMENT_OPTIONS = [
+  { value: 'light', label: 'Light', desc: 'A few activities, casual involvement' },
+  { value: 'moderate', label: 'Moderate', desc: '1–2 serious activities, regular commitment' },
+  { value: 'deep', label: 'Deep', desc: 'Competitive level or school-wide recognition' },
+  { value: 'exceptional', label: 'Exceptional', desc: 'National awards, publications, or elite-level' },
+];
+
+const KEY_ACTIVITIES_OPTIONS = [
+  'Sport (competitive)', 'Music (Grade 5+)', 'Drama / theatre', 'Debate / Model UN',
+  'Community service', 'Science competition', 'Entrepreneurship', 'Art / design',
+  'Writing / journalism', 'Coding / hackathons', 'Research project', 'Other',
+];
+
+const INTL_EXPERIENCE_OPTIONS = [
+  'Study abroad', 'Exchange programme', 'International competition', 'Gap year travel', 'None',
 ];
 
 const GRADUATION_YEARS = (() => {
@@ -173,27 +180,241 @@ const GRADUATION_YEARS = (() => {
 const IB_GRADES = ['A', 'B', 'C', 'D', 'E'] as const;
 const A_LEVEL_GRADES = ['A*', 'A', 'B', 'C', 'D', 'E', 'U'] as const;
 
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
 const buildEmptySubject = (programmeType: ProgrammeType | ''): SubjectRowState => ({
   subject_name: '',
   level: programmeType === 'IB' ? 'HL' : 'A_LEVEL',
-  grade_value: ''
+  grade_value: '',
 });
 
 const buildDefaultSubjects = (programmeType: ProgrammeType | ''): SubjectRowState[] => {
   if (programmeType === 'IB') {
-    return Array.from({ length: 6 }, (_, index) => ({
-      subject_name: '',
-      level: index < 3 ? 'HL' : 'SL',
-      grade_value: ''
-    }));
+    return Array.from({ length: 6 }, (_, i) => ({ subject_name: '', level: i < 3 ? 'HL' : 'SL', grade_value: '' }));
   }
   return Array.from({ length: 3 }, () => buildEmptySubject('A_LEVEL'));
 };
 
-const getMaxSubjects = (programmeType: ProgrammeType | '') =>
-  programmeType === 'A_LEVEL' ? 4 : 6;
+const getMaxSubjects = (programmeType: ProgrammeType | '') => programmeType === 'A_LEVEL' ? 4 : 6;
 
-const clusterLabelMap = new Map(CLUSTER_OPTIONS.map((option) => [option.value, option.label]));
+const clusterLabelMap = new Map(CLUSTER_OPTIONS.map((o) => [o.value, o.label]));
+
+// ─── Reusable field components ────────────────────────────────────────────────
+
+const inputCls = 'flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-0 transition-all duration-150';
+const selectCls = inputCls + ' cursor-pointer';
+
+function FieldError({ msg }: { msg?: string }) {
+  if (!msg) return null;
+  return <p className="mt-1 text-xs text-destructive font-medium">{msg}</p>;
+}
+
+function SectionCard({ children, className }: { children: React.ReactNode; className?: string }) {
+  return (
+    <div className={cn('rounded-2xl border border-border/60 bg-muted/20 p-5 space-y-5', className)}>
+      {children}
+    </div>
+  );
+}
+
+function SectionTitle({ label, hint, why }: { label: string; hint?: string; why?: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="flex items-start justify-between gap-3">
+      <div>
+        <p className="font-semibold text-foreground text-sm">{label}</p>
+        {hint ? <p className="text-xs text-muted-foreground mt-0.5">{hint}</p> : null}
+      </div>
+      {why ? (
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors shrink-0 mt-0.5"
+        >
+          <Info className="w-3.5 h-3.5" />
+          Why we ask
+          {open ? <X className="w-3 h-3" /> : null}
+        </button>
+      ) : null}
+      {open && why ? (
+        <div className="absolute right-0 mt-6 w-56 text-xs bg-popover border border-border rounded-xl p-3 shadow-lg z-10 text-muted-foreground leading-relaxed">
+          {why}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+/** Searchable country combobox — replaces <input list="..."> */
+function CountryCombobox({
+  value, onChange, placeholder, error, id
+}: { value: string; onChange: (v: string) => void; placeholder?: string; error?: string; id?: string }) {
+  const [query, setQuery] = useState(value);
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  // Keep display in sync when value changes externally (hydration)
+  useEffect(() => { setQuery(value); }, [value]);
+
+  const filtered = useMemo(() => {
+    if (!query.trim()) return COUNTRY_OPTIONS.slice(0, 8);
+    const q = query.toLowerCase();
+    return COUNTRY_OPTIONS.filter((c) => c.toLowerCase().includes(q)).slice(0, 8);
+  }, [query]);
+
+  // Close on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const select = (country: string) => {
+    onChange(country);
+    setQuery(country);
+    setOpen(false);
+  };
+
+  return (
+    <div ref={ref} className="relative">
+      <div className="relative">
+        <input
+          id={id}
+          type="text"
+          autoComplete="off"
+          className={cn(inputCls, 'pr-9', error && 'border-destructive')}
+          value={query}
+          placeholder={placeholder ?? 'Search country…'}
+          onChange={(e) => { setQuery(e.target.value); onChange(e.target.value); setOpen(true); }}
+          onFocus={() => setOpen(true)}
+        />
+        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+      </div>
+      {open && filtered.length > 0 && (
+        <ul className="absolute z-50 mt-1 w-full rounded-xl border border-border bg-background shadow-lg overflow-hidden max-h-52 overflow-y-auto">
+          {filtered.map((c) => (
+            <li key={c}>
+              <button
+                type="button"
+                className="w-full text-left px-4 py-2.5 text-sm hover:bg-muted/60 transition-colors"
+                onMouseDown={() => select(c)}
+              >
+                {c}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      {error && <FieldError msg={error} />}
+    </div>
+  );
+}
+
+/** Chip toggle button — used for radio/multi-select chip groups */
+function Chip({
+  label, selected, onClick, disabled, emoji, description
+}: {
+  label: string; selected: boolean; onClick: () => void;
+  disabled?: boolean; emoji?: string; description?: string;
+}) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onClick}
+      className={cn(
+        'group flex flex-col items-start gap-0.5 rounded-xl border px-4 py-3 text-left text-sm font-medium transition-all duration-150',
+        selected
+          ? 'bg-primary/8 border-primary text-primary shadow-sm'
+          : 'bg-background border-border text-foreground hover:border-primary/40 hover:bg-muted/50',
+        disabled && !selected && 'opacity-40 cursor-not-allowed hover:border-border hover:bg-background'
+      )}
+    >
+      <span className="flex w-full items-center justify-between gap-2">
+        <span className="flex items-center gap-1.5">
+          {emoji ? <span>{emoji}</span> : null}
+          {label}
+        </span>
+        {selected && <Check className="w-3.5 h-3.5 text-primary shrink-0" />}
+      </span>
+      {description ? <span className="text-[11px] text-muted-foreground font-normal leading-snug">{description}</span> : null}
+    </button>
+  );
+}
+
+/** Searchable subject combobox */
+function SubjectCombobox({
+  value, onChange, error
+}: { value: string; onChange: (v: string) => void; error?: string }) {
+  const [query, setQuery] = useState(value);
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => { setQuery(value); }, [value]);
+
+  const filtered = useMemo(() => {
+    if (!query.trim()) return SUBJECT_OPTIONS.slice(0, 8);
+    const q = query.toLowerCase();
+    return SUBJECT_OPTIONS.filter((s) => s.toLowerCase().includes(q)).slice(0, 8);
+  }, [query]);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  return (
+    <div ref={ref} className="relative">
+      <div className="relative">
+        <input
+          type="text"
+          autoComplete="off"
+          className={cn(inputCls, 'pr-9', error && 'border-destructive')}
+          value={query}
+          placeholder="Subject name"
+          onChange={(e) => { setQuery(e.target.value); onChange(e.target.value); setOpen(true); }}
+          onFocus={() => setOpen(true)}
+        />
+        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+      </div>
+      {open && filtered.length > 0 && (
+        <ul className="absolute z-50 mt-1 w-full rounded-xl border border-border bg-background shadow-lg overflow-hidden max-h-52 overflow-y-auto">
+          {filtered.map((s) => (
+            <li key={s}>
+              <button
+                type="button"
+                className="w-full text-left px-4 py-2.5 text-sm hover:bg-muted/60 transition-colors"
+                onMouseDown={() => { onChange(s); setQuery(s); setOpen(false); }}
+              >
+                {s}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      {error && <FieldError msg={error} />}
+    </div>
+  );
+}
+
+// ─── Step header copy ─────────────────────────────────────────────────────────
+
+const STEP_META: Record<number, { title: string; subtitle: string }> = {
+  1: { title: 'Who are you?', subtitle: 'The basics — name, nationality, and where you live.' },
+  2: { title: 'Your studies', subtitle: 'What you\'re taking, where you study, and what you want to pursue.' },
+  3: { title: 'Grades & tests', subtitle: 'The more detail here, the sharper your matches.' },
+  4: { title: 'Activities & ambitions', subtitle: 'Beyond grades — what you do and where you\'re headed.' },
+  5: { title: 'Life at university', subtitle: 'Your preferences for campus life, teaching style, and environment.' },
+  6: { title: 'Review & confirm', subtitle: 'Everything looks right? Hit submit and we\'ll run your matches.' },
+};
+
+
+// ─── Main component ───────────────────────────────────────────────────────────
 
 export const StudentIntakeForm = ({
   initialStep = 1,
@@ -206,7 +427,7 @@ export const StudentIntakeForm = ({
   const [currentStep, setCurrentStep] = useState(initialStep);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [isSaving, startTransition] = useTransition();
-  const [isRedirecting, setIsRedirecting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [programmeType, setProgrammeType] = useState<ProgrammeType | ''>('');
   const [nationalities, setNationalities] = useState<string[]>(['']);
@@ -219,158 +440,155 @@ export const StudentIntakeForm = ({
   const hasHydratedRef = useRef(false);
   const skipProgrammeResetRef = useRef(false);
 
-  useEffect(() => {
-    if (typeof Intl !== 'undefined' && typeof Intl.DateTimeFormat === 'function') {
-      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      if (tz) {
-        setPersonalInfo(prev => ({ ...prev, time_zone: tz }));
-      }
-    }
-  }, []);
-
   const [personalInfo, setPersonalInfo] = useState({
-    first_name: '',
-    last_name: '',
-    email: '',
-    age: '',
-    gender: '',
-    resident_country: '',
-    current_location_city: '',
-    time_zone: ''
+    first_name: '', last_name: '', email: '', age: '', gender: '',
+    resident_country: '', current_location_city: '', time_zone: '',
   });
 
   const [academicInput, setAcademicInput] = useState({
-    school_name: '',
-    school_country: '',
-    school_city: '',
-    school_type: '',
-    graduation_year: '',
-    desired_start_date: '',
-    intended_clusters: [] as IntendedCluster[],
-    secondary_clusters: [] as IntendedCluster[],
+    school_name: '', school_country: '', school_city: '', school_type: '',
+    graduation_year: '', desired_start_date: '',
+    intended_clusters: [] as IntendedCluster[], secondary_clusters: [] as IntendedCluster[],
     career_aspiration: '',
-    ib_total_points: '',
-    ib_core_points: '',
-    ib_tok_grade: '',
-    ib_ee_grade: '',
-    ib_math_pathway: '',
-    ee_subject: '',
-    ee_title: '',
-    ee_summary: ''
+    ib_total_points: '', ib_core_points: '', ib_tok_grade: '', ib_ee_grade: '', ib_math_pathway: '',
+    ee_subject: '', ee_title: '', ee_summary: '',
   });
 
   const [lifestylePreference, setLifestylePreference] = useState({
-    teaching_style: '',
-    desired_location_type: '',
-    campus_size: '',
-    extracurricular_interests: [] as string[],
-    other_extracurriculars: ''
+    teaching_style: '', desired_location_type: [] as string[], campus_size: '',
+    extracurricular_interests: [] as string[], other_extracurriculars: '',
   });
 
+  const [activities, setActivities] = useState({
+    leadership_roles: [] as string[],
+    commitment_level: '',
+    key_activities: [] as string[],
+    sat_score: '',
+    act_score: '',
+    intl_experience: [] as string[],
+    work_experience: null as boolean | null,
+    work_experience_summary: '',
+    ambition_statement: '',
+    epq_subject: '',
+    epq_title: '',
+  });
+
+  const [activityRows, setActivityRows] = useState<ActivityRowState[]>([]);
+
+  const addActivityRow = () => setActivityRows((prev) => [
+    ...prev,
+    { localId: Math.random().toString(36).slice(2), category: '', level: '', duration: '', highlight: '' }
+  ]);
+  const removeActivityRow = (localId: string) =>
+    setActivityRows((prev) => prev.filter((r) => r.localId !== localId));
+  const updateActivityRow = (localId: string, key: keyof Omit<ActivityRowState, 'localId'>, value: string) =>
+    setActivityRows((prev) => prev.map((r) => r.localId === localId ? { ...r, [key]: value } : r));
+
+  useEffect(() => {
+    if (typeof Intl !== 'undefined' && typeof Intl.DateTimeFormat === 'function') {
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      if (tz) setPersonalInfo((prev) => ({ ...prev, time_zone: tz }));
+    }
+  }, []);
+
   const applyPayload = useCallback((payload: StudentProfilePayload) => {
-    const { personal_information, academic_input, lifestyle_preference } = payload;
+    const { personal_information: pi, academic_input: ai, lifestyle_preference: lp } = payload;
     skipProgrammeResetRef.current = true;
-    setProgrammeType(academic_input.programme_type ?? '');
+    setProgrammeType(ai.programme_type ?? '');
     setPersonalInfo({
-      first_name: personal_information.first_name ?? '',
-      last_name: personal_information.last_name ?? '',
-      email: personal_information.email ?? '',
-      age: personal_information.age !== null && personal_information.age !== undefined ? String(personal_information.age) : '',
-      gender: personal_information.gender ?? '',
-      resident_country: personal_information.resident_country ?? '',
-      current_location_city: personal_information.current_location_city ?? '',
-      time_zone: personal_information.time_zone ?? ''
+      first_name: pi.first_name ?? '', last_name: pi.last_name ?? '', email: pi.email ?? '',
+      age: pi.age !== null && pi.age !== undefined ? String(pi.age) : '',
+      gender: pi.gender ?? '', resident_country: pi.resident_country ?? '',
+      current_location_city: pi.current_location_city ?? '', time_zone: pi.time_zone ?? '',
     });
     setNationalities(
-      personal_information.nationality
-        ? personal_information.nationality
-          .split(',')
-          .map((item) => item.trim())
-          .filter(Boolean)
-        : ['']
+      pi.nationality ? pi.nationality.split(',').map((s) => s.trim()).filter(Boolean) : ['']
     );
     setAcademicInput({
-      school_name: academic_input.school_name ?? '',
-      school_country: academic_input.school_country ?? '',
-      school_city: academic_input.school_city ?? '',
-      school_type: academic_input.school_type ?? '',
-      graduation_year: academic_input.graduation_year ? String(academic_input.graduation_year) : '',
-      desired_start_date: academic_input.desired_start_date ?? '',
-      intended_clusters: academic_input.intended_clusters ?? [],
-      secondary_clusters: academic_input.secondary_clusters ?? [],
-      career_aspiration: academic_input.career_aspiration ?? '',
-      ib_total_points: academic_input.ib_total_points !== null && academic_input.ib_total_points !== undefined ? String(academic_input.ib_total_points) : '',
-      ib_core_points: academic_input.ib_core_points !== null && academic_input.ib_core_points !== undefined ? String(academic_input.ib_core_points) : '',
-      ib_tok_grade: academic_input.ib_tok_grade ?? '',
-      ib_ee_grade: academic_input.ib_ee_grade ?? '',
-      ib_math_pathway: academic_input.ib_math_pathway ?? '',
-      ee_subject: academic_input.ee_subject ?? '',
-      ee_title: academic_input.ee_title ?? '',
-      ee_summary: academic_input.ee_summary ?? ''
+      school_name: ai.school_name ?? '', school_country: ai.school_country ?? '',
+      school_city: ai.school_city ?? '', school_type: ai.school_type ?? '',
+      graduation_year: ai.graduation_year ? String(ai.graduation_year) : '',
+      desired_start_date: ai.desired_start_date ?? '',
+      intended_clusters: ai.intended_clusters ?? [], secondary_clusters: ai.secondary_clusters ?? [],
+      career_aspiration: ai.career_aspiration ?? '',
+      ib_total_points: ai.ib_total_points !== null && ai.ib_total_points !== undefined ? String(ai.ib_total_points) : '',
+      ib_core_points: ai.ib_core_points !== null && ai.ib_core_points !== undefined ? String(ai.ib_core_points) : '',
+      ib_tok_grade: ai.ib_tok_grade ?? '', ib_ee_grade: ai.ib_ee_grade ?? '',
+      ib_math_pathway: ai.ib_math_pathway ?? '',
+      ee_subject: ai.ee_subject ?? '', ee_title: ai.ee_title ?? '', ee_summary: ai.ee_summary ?? '',
     });
     setSubjects(() => {
-      const programme = academic_input.programme_type ?? '';
-      const max = getMaxSubjects(programme);
-      const minRows = programme === 'IB' ? 6 : 3;
-      const base = academic_input.subject_list ?? [];
-      const mapped = base.slice(0, max).map((subject) => ({
-        subject_name: subject.subject_name ?? '',
-        level: subject.level ?? (programme === 'IB' ? 'HL' : 'A_LEVEL'),
-        grade_value:
-          typeof subject.grade_value === 'number'
-            ? String(subject.grade_value)
-            : subject.grade_value ?? ''
+      const prog = ai.programme_type ?? '';
+      const max = getMaxSubjects(prog);
+      const minRows = prog === 'IB' ? 6 : 3;
+      const base = ai.subject_list ?? [];
+      const mapped = base.slice(0, max).map((s) => ({
+        subject_name: s.subject_name ?? '',
+        level: s.level ?? (prog === 'IB' ? 'HL' : 'A_LEVEL'),
+        grade_value: typeof s.grade_value === 'number' ? String(s.grade_value) : s.grade_value ?? '',
       }));
-      while (mapped.length < minRows) {
-        mapped.push(buildEmptySubject(programme));
-      }
+      while (mapped.length < minRows) mapped.push(buildEmptySubject(prog));
       return mapped;
     });
     setAdmissionsTests(
-      (academic_input.admissions_tests ?? []).map((test) => ({
-        test_type: test.test_type,
-        status: test.status,
-        score_numeric: test.score_numeric !== null && test.score_numeric !== undefined ? String(test.score_numeric) : '',
-        percentile: test.percentile !== null && test.percentile !== undefined ? String(test.percentile) : ''
+      (ai.admissions_tests ?? []).map((t) => ({
+        test_type: t.test_type, status: t.status,
+        score_numeric: t.score_numeric !== null && t.score_numeric !== undefined ? String(t.score_numeric) : '',
+        percentile: t.percentile !== null && t.percentile !== undefined ? String(t.percentile) : '',
       }))
     );
     setEnglishRequired(
-      academic_input.english_required === true ? 'yes' : academic_input.english_required === false ? 'no' : 'not_sure'
+      ai.english_required === true ? 'yes' : ai.english_required === false ? 'no' : 'not_sure'
     );
-    setEnglishTestType(academic_input.english_test_type ?? 'NONE');
-    setEnglishStatus(academic_input.english_status ?? 'missing');
+    setEnglishTestType(ai.english_test_type ?? 'NONE');
+    setEnglishStatus(ai.english_status ?? 'missing');
     setEnglishScoreOverall(
-      academic_input.english_score_overall !== null && academic_input.english_score_overall !== undefined
-        ? String(academic_input.english_score_overall)
-        : ''
+      ai.english_score_overall !== null && ai.english_score_overall !== undefined ? String(ai.english_score_overall) : ''
     );
+    const storedLoc = lp.desired_location_type ?? '';
+    // Migrate legacy 'london' → 'capital_city'; split comma-sep multi-select
+    const locArray = storedLoc
+      ? storedLoc.split(',').map((s) => s.trim() === 'london' ? 'capital_city' : s.trim()).filter(Boolean)
+      : [];
     setLifestylePreference({
-      teaching_style: lifestyle_preference.teaching_style ?? '',
-      desired_location_type: lifestyle_preference.desired_location_type ?? '',
-      campus_size: lifestyle_preference.campus_size ?? '',
-      extracurricular_interests: lifestyle_preference.extracurricular_interests ?? [],
-      other_extracurriculars: lifestyle_preference.other_extracurriculars ?? ''
+      teaching_style: lp.teaching_style ?? '',
+      desired_location_type: locArray,
+      campus_size: lp.campus_size ?? '',
+      extracurricular_interests: lp.extracurricular_interests ?? [],
+      other_extracurriculars: lp.other_extracurriculars ?? '',
     });
+    setActivities({
+      leadership_roles: lp.leadership_roles ?? [],
+      commitment_level: lp.commitment_level ?? '',
+      key_activities: lp.key_activities ?? [],
+      sat_score: lp.sat_score !== null && lp.sat_score !== undefined ? String(lp.sat_score) : '',
+      act_score: lp.act_score !== null && lp.act_score !== undefined ? String(lp.act_score) : '',
+      intl_experience: lp.intl_experience ?? [],
+      work_experience: lp.work_experience ?? null,
+      work_experience_summary: lp.work_experience_summary ?? '',
+      ambition_statement: lp.ambition_statement ?? '',
+      epq_subject: (lp as any).epq_subject ?? '',
+      epq_title: (lp as any).epq_title ?? '',
+    });
+    setActivityRows(
+      (payload.activities_list ?? []).map((a) => ({
+        localId: a.id ?? Math.random().toString(36).slice(2),
+        category: a.category ?? '',
+        level: a.level ?? '',
+        duration: a.duration ?? '',
+        highlight: a.highlight ?? '',
+      }))
+    );
   }, []);
 
   useEffect(() => {
     if (!programmeType) return;
-    if (skipProgrammeResetRef.current) {
-      skipProgrammeResetRef.current = false;
-      return;
-    }
+    if (skipProgrammeResetRef.current) { skipProgrammeResetRef.current = false; return; }
     setSubjects(buildDefaultSubjects(programmeType));
     if (programmeType === 'A_LEVEL') {
       setAcademicInput((prev) => ({
-        ...prev,
-        ib_math_pathway: '',
-        ib_total_points: '',
-        ib_core_points: '',
-        ib_tok_grade: '',
-        ib_ee_grade: '',
-        ee_subject: '',
-        ee_title: '',
-        ee_summary: ''
+        ...prev, ib_math_pathway: '', ib_total_points: '', ib_core_points: '',
+        ib_tok_grade: '', ib_ee_grade: '', ee_subject: '', ee_title: '', ee_summary: '',
       }));
     }
   }, [programmeType]);
@@ -383,180 +601,146 @@ export const StudentIntakeForm = ({
 
   useEffect(() => {
     if (englishRequired === 'no') {
-      setEnglishTestType('WAIVER');
-      setEnglishStatus('met');
-      setEnglishScoreOverall('');
-      return;
+      setEnglishTestType('WAIVER'); setEnglishStatus('met'); setEnglishScoreOverall(''); return;
     }
-    if (englishRequired === 'yes' || englishRequired === 'not_sure') {
-      if (englishTestType === 'WAIVER') {
-        setEnglishTestType('NONE');
-      }
+    if ((englishRequired === 'yes' || englishRequired === 'not_sure') && englishTestType === 'WAIVER') {
+      setEnglishTestType('NONE');
     }
   }, [englishRequired, englishTestType]);
 
   useEffect(() => {
     const wantsLaw = academicInput.intended_clusters.includes('law');
-    const wantsMedicine = academicInput.intended_clusters.includes('medicine_dentistry');
-    const alreadyNone = admissionsTests.some((test) => test.test_type === 'NONE');
+    const wantsMed = academicInput.intended_clusters.includes('medicine_dentistry');
+    const alreadyNone = admissionsTests.some((t) => t.test_type === 'NONE');
     if (alreadyNone) return;
-
     setAdmissionsTests((prev) => {
       const next = [...prev];
-      if (wantsLaw && !next.some((test) => test.test_type === 'LNAT')) {
+      if (wantsLaw && !next.some((t) => t.test_type === 'LNAT'))
         next.push({ test_type: 'LNAT', status: '', score_numeric: '', percentile: '' });
-      }
-      if (wantsMedicine && !next.some((test) => test.test_type === 'UCAT')) {
+      if (wantsMed && !next.some((t) => t.test_type === 'UCAT'))
         next.push({ test_type: 'UCAT', status: '', score_numeric: '', percentile: '' });
-      }
       return next;
     });
   }, [academicInput.intended_clusters, admissionsTests]);
 
-  const showEnglishScore =
-    englishRequired !== 'no' && (englishTestType === 'IELTS' || englishTestType === 'TOEFL' || englishTestType === 'DUOLINGO');
-
+  const showEnglishScore = englishRequired !== 'no' && ['IELTS', 'TOEFL', 'DUOLINGO'].includes(englishTestType);
   const showAdmissionsTests =
-    academicInput.intended_clusters.some((cluster) =>
-      ['law', 'medicine_dentistry', 'maths', 'engineering', 'computer_science', 'economics_quant'].includes(cluster)
+    academicInput.intended_clusters.some((c) =>
+      ['law', 'medicine_dentistry', 'maths', 'engineering', 'computer_science', 'economics_quant'].includes(c)
     ) || admissionsTests.length > 0;
 
-  const updatePersonalInfo = (key: keyof typeof personalInfo, value: string) => {
+  // ── State updaters ────────────────────────────────────────────────────────
+
+  const updatePersonalInfo = (key: keyof typeof personalInfo, value: string) =>
     setPersonalInfo((prev) => ({ ...prev, [key]: value }));
-  };
-
-  const updateAcademicInput = (key: keyof typeof academicInput, value: string) => {
+  const updateAcademicInput = (key: keyof typeof academicInput, value: string) =>
     setAcademicInput((prev) => ({ ...prev, [key]: value }));
-  };
-
-  const updateLifestylePreference = (key: keyof typeof lifestylePreference, value: string | string[]) => {
+  const updateLifestylePreference = (key: keyof typeof lifestylePreference, value: string | string[]) =>
     setLifestylePreference((prev) => ({ ...prev, [key]: value }));
-  };
 
   const toggleCluster = (value: IntendedCluster, target: 'intended_clusters' | 'secondary_clusters') => {
     setAcademicInput((prev) => {
       if (target === 'intended_clusters') {
         return { ...prev, intended_clusters: prev.intended_clusters.includes(value) ? [] : [value] };
       }
-      const current = new Set(prev.secondary_clusters);
-      if (current.has(value)) {
-        current.delete(value);
-        return { ...prev, secondary_clusters: Array.from(current) };
-      }
-      if (current.size >= 2) {
-        return prev;
-      }
-      current.add(value);
-      return { ...prev, secondary_clusters: Array.from(current) };
+      const cur = new Set(prev.secondary_clusters);
+      if (cur.has(value)) { cur.delete(value); return { ...prev, secondary_clusters: Array.from(cur) }; }
+      if (cur.size >= 2) return prev;
+      cur.add(value);
+      return { ...prev, secondary_clusters: Array.from(cur) };
     });
   };
 
-  const toggleExtracurricular = (value: string) => {
+  const toggleMulti = (list: string[], value: string, max?: number): string[] => {
+    if (list.includes(value)) return list.filter((v) => v !== value);
+    if (max && list.length >= max) return list;
+    return [...list, value];
+  };
+
+  const toggleLocationPreference = (value: string) => {
     setLifestylePreference((prev) => {
-      const current = new Set(prev.extracurricular_interests);
-      if (current.has(value)) {
-        current.delete(value);
-      } else {
-        current.add(value);
+      const cur = prev.desired_location_type;
+      if (value === 'no_preference') {
+        return { ...prev, desired_location_type: cur.includes('no_preference') ? [] : ['no_preference'] };
       }
-      return { ...prev, extracurricular_interests: Array.from(current) };
+      const withoutNone = cur.filter((v) => v !== 'no_preference');
+      if (withoutNone.includes(value)) {
+        return { ...prev, desired_location_type: withoutNone.filter((v) => v !== value) };
+      }
+      return { ...prev, desired_location_type: [...withoutNone, value] };
     });
-  };
-
-  const updateSubject = (index: number, key: keyof SubjectRowState, value: string) => {
-    setSubjects((prev) => {
-      const next = [...prev];
-      next[index] = { ...next[index], [key]: value };
-      return next;
-    });
-  };
-
-  const addSubject = () => {
-    const max = getMaxSubjects(programmeType);
-    setSubjects((prev) => (prev.length >= max ? prev : [...prev, buildEmptySubject(programmeType)]));
-  };
-
-  const removeSubject = (index: number) => {
-    setSubjects((prev) => prev.filter((_, rowIndex) => rowIndex !== index));
   };
 
   const toggleAdmissionsTest = (testType: AdmissionsTestType) => {
     setAdmissionsTests((prev) => {
-      if (testType === 'NONE') {
-        return [{ test_type: 'NONE', status: 'missing', score_numeric: '', percentile: '' }];
-      }
-      const withoutNone = prev.filter((test) => test.test_type !== 'NONE');
-      const exists = withoutNone.some((test) => test.test_type === testType);
-      if (exists) {
-        return withoutNone.filter((test) => test.test_type !== testType);
-      }
+      if (testType === 'NONE') return [{ test_type: 'NONE', status: 'missing', score_numeric: '', percentile: '' }];
+      const withoutNone = prev.filter((t) => t.test_type !== 'NONE');
+      if (withoutNone.some((t) => t.test_type === testType))
+        return withoutNone.filter((t) => t.test_type !== testType);
       return [...withoutNone, { test_type: testType, status: '', score_numeric: '', percentile: '' }];
     });
   };
+  const updateAdmissionsTest = (index: number, key: keyof AdmissionsRowState, value: string) =>
+    setAdmissionsTests((prev) => { const next = [...prev]; next[index] = { ...next[index], [key]: value }; return next; });
 
-  const updateAdmissionsTest = (index: number, key: keyof AdmissionsRowState, value: string) => {
-    setAdmissionsTests((prev) => {
-      const next = [...prev];
-      next[index] = { ...next[index], [key]: value };
-      return next;
-    });
-  };
+  const addNationality = () => setNationalities((prev) => [...prev, '']);
+  const updateNationality = (i: number, v: string) =>
+    setNationalities((prev) => { const next = [...prev]; next[i] = v; return next; });
+  const removeNationality = (i: number) =>
+    setNationalities((prev) => prev.filter((_, idx) => idx !== i));
 
-  const addNationality = () => {
-    setNationalities((prev) => [...prev, '']);
-  };
+  const updateSubject = (i: number, key: keyof SubjectRowState, value: string) =>
+    setSubjects((prev) => { const next = [...prev]; next[i] = { ...next[i], [key]: value }; return next; });
+  const addSubject = () =>
+    setSubjects((prev) => prev.length >= getMaxSubjects(programmeType) ? prev : [...prev, buildEmptySubject(programmeType)]);
+  const removeSubject = (i: number) =>
+    setSubjects((prev) => prev.filter((_, idx) => idx !== i));
 
-  const updateNationality = (index: number, value: string) => {
-    setNationalities((prev) => {
-      const next = [...prev];
-      next[index] = value;
-      return next;
-    });
-  };
-
-  const removeNationality = (index: number) => {
-    setNationalities((prev) => prev.filter((_, rowIndex) => rowIndex !== index));
-  };
-
-  const parseNumber = useCallback((value: string) => {
-    if (!value.trim()) return null;
-    const parsed = Number(value);
-    return Number.isFinite(parsed) ? parsed : null;
+  const parseNumber = useCallback((v: string) => {
+    if (!v.trim()) return null;
+    const n = Number(v);
+    return Number.isFinite(n) ? n : null;
   }, []);
 
+  // Dynamic IB total from subject grades (sum of numeric grades 1–7)
+  const ibSubjectSum = useMemo(() => {
+    if (programmeType !== 'IB') return null;
+    return subjects.reduce((acc, s) => {
+      const g = parseNumber(s.grade_value);
+      return g !== null && g >= 1 && g <= 7 ? acc + g : acc;
+    }, 0);
+  }, [programmeType, subjects, parseNumber]);
+
   const formattedNationalities = useMemo(
-    () => nationalities.map((item) => item.trim()).filter(Boolean),
-    [nationalities]
+    () => nationalities.map((n) => n.trim()).filter(Boolean), [nationalities]
   );
 
+  // ── Build payload ─────────────────────────────────────────────────────────
+
   const buildPayload = useCallback((): StudentProfilePayload => {
-    const subjectList: StudentSubject[] = subjects.map((subject) => ({
-      subject_name: subject.subject_name.trim(),
-      level: subject.level,
-      grade_value:
-        programmeType === 'IB'
-          ? parseNumber(subject.grade_value)
-          : subject.grade_value.trim()
-            ? subject.grade_value.trim()
-            : null
+    const subjectList: StudentSubject[] = subjects.map((s) => ({
+      subject_name: s.subject_name.trim(),
+      level: s.level,
+      grade_value: programmeType === 'IB'
+        ? parseNumber(s.grade_value)
+        : s.grade_value.trim() ? s.grade_value.trim() : null,
     }));
 
-    const aLevelPredicted =
-      programmeType === 'A_LEVEL'
-        ? Object.fromEntries(
-          subjectList
-            .filter((subject) => typeof subject.grade_value === 'string' && subject.subject_name)
-            .map((subject) => [subject.subject_name, subject.grade_value as 'A*' | 'A' | 'B' | 'C' | 'D' | 'E' | 'U'])
-        )
-        : null;
+    const aLevelPredicted = programmeType === 'A_LEVEL'
+      ? Object.fromEntries(
+        subjectList
+          .filter((s) => typeof s.grade_value === 'string' && s.subject_name)
+          .map((s) => [s.subject_name, s.grade_value as 'A*' | 'A' | 'B' | 'C' | 'D' | 'E' | 'U'])
+      )
+      : null;
 
     const admissionsPayload: StudentAdmissionsTest[] = admissionsTests
-      .filter((test) => test.test_type !== 'NONE')
-      .map((test) => ({
-        test_type: test.test_type,
-        status: (test.status || 'missing') as AdmissionsStatus,
-        score_numeric: parseNumber(test.score_numeric),
-        percentile: parseNumber(test.percentile)
+      .filter((t) => t.test_type !== 'NONE')
+      .map((t) => ({
+        test_type: t.test_type,
+        status: (t.status || 'missing') as AdmissionsStatus,
+        score_numeric: parseNumber(t.score_numeric),
+        percentile: parseNumber(t.percentile),
       }));
 
     return {
@@ -570,16 +754,14 @@ export const StudentIntakeForm = ({
         gender: personalInfo.gender ? (personalInfo.gender as StudentProfilePayload['personal_information']['gender']) : null,
         resident_country: personalInfo.resident_country.trim(),
         current_location_city: personalInfo.current_location_city.trim() || null,
-        time_zone: personalInfo.time_zone.trim() || null
+        time_zone: personalInfo.time_zone.trim() || null,
       },
       academic_input: {
         programme_type: programmeType as ProgrammeType,
         school_name: academicInput.school_name.trim(),
         school_country: academicInput.school_country.trim(),
         school_city: academicInput.school_city.trim() || null,
-        school_type: academicInput.school_type
-          ? (academicInput.school_type as StudentProfilePayload['academic_input']['school_type'])
-          : null,
+        school_type: academicInput.school_type ? (academicInput.school_type as StudentProfilePayload['academic_input']['school_type']) : null,
         language_of_instruction: null,
         graduation_year: Number(academicInput.graduation_year),
         desired_start_date: academicInput.desired_start_date || null,
@@ -587,17 +769,14 @@ export const StudentIntakeForm = ({
         secondary_clusters: academicInput.secondary_clusters,
         career_aspiration: academicInput.career_aspiration.trim() || null,
         subject_list: subjectList,
-        ib_total_points: programmeType === 'IB' ? parseNumber(academicInput.ib_total_points) : null,
+        ib_total_points: programmeType === 'IB' ? ibSubjectSum : null,
         ib_core_points: programmeType === 'IB' ? parseNumber(academicInput.ib_core_points) : null,
         ib_tok_grade: programmeType === 'IB' && academicInput.ib_tok_grade
-          ? (academicInput.ib_tok_grade as StudentProfilePayload['academic_input']['ib_tok_grade'])
-          : null,
+          ? (academicInput.ib_tok_grade as StudentProfilePayload['academic_input']['ib_tok_grade']) : null,
         ib_ee_grade: programmeType === 'IB' && academicInput.ib_ee_grade
-          ? (academicInput.ib_ee_grade as StudentProfilePayload['academic_input']['ib_ee_grade'])
-          : null,
+          ? (academicInput.ib_ee_grade as StudentProfilePayload['academic_input']['ib_ee_grade']) : null,
         ib_math_pathway: programmeType === 'IB' && academicInput.ib_math_pathway
-          ? (academicInput.ib_math_pathway as StudentProfilePayload['academic_input']['ib_math_pathway'])
-          : null,
+          ? (academicInput.ib_math_pathway as StudentProfilePayload['academic_input']['ib_math_pathway']) : null,
         ee_subject: programmeType === 'IB' ? academicInput.ee_subject.trim() || null : null,
         ee_title: programmeType === 'IB' ? academicInput.ee_title.trim() || null : null,
         ee_summary: programmeType === 'IB' ? academicInput.ee_summary.trim() || null : null,
@@ -606,1577 +785,1249 @@ export const StudentIntakeForm = ({
         english_test_type: englishTestType,
         english_status: englishStatus,
         english_score_overall: showEnglishScore ? parseNumber(englishScoreOverall) : null,
-        admissions_tests: admissionsPayload
+        admissions_tests: admissionsPayload,
       },
       lifestyle_preference: {
-        teaching_style: lifestylePreference.teaching_style
-          ? (lifestylePreference.teaching_style as StudentProfilePayload['lifestyle_preference']['teaching_style'])
-          : null,
-        desired_location_type: lifestylePreference.desired_location_type
-          ? (lifestylePreference.desired_location_type as StudentProfilePayload['lifestyle_preference']['desired_location_type'])
-          : null,
-        campus_size: lifestylePreference.campus_size
-          ? (lifestylePreference.campus_size as StudentProfilePayload['lifestyle_preference']['campus_size'])
-          : null,
+        teaching_style: lifestylePreference.teaching_style ? (lifestylePreference.teaching_style as StudentProfilePayload['lifestyle_preference']['teaching_style']) : null,
+        desired_location_type: (() => {
+          const arr = lifestylePreference.desired_location_type;
+          if (!arr || arr.length === 0) return null;
+          // Store comma-separated; scoring treats multi-select same as no_preference
+          return arr.join(',') as StudentProfilePayload['lifestyle_preference']['desired_location_type'];
+        })(),
+        campus_size: lifestylePreference.campus_size ? (lifestylePreference.campus_size as StudentProfilePayload['lifestyle_preference']['campus_size']) : null,
         extracurricular_interests: lifestylePreference.extracurricular_interests,
-        other_extracurriculars: lifestylePreference.other_extracurriculars.trim() || null
-      }
+        other_extracurriculars: lifestylePreference.other_extracurriculars.trim() || null,
+        leadership_roles: activities.leadership_roles,
+        commitment_level: activities.commitment_level || null,
+        // Derive legacy key_activities from structured rows for backward-compat scoring
+        key_activities: activityRows.length > 0
+          ? [...new Set(activityRows.map((r) => r.category).filter(Boolean))]
+          : activities.key_activities,
+        sat_score: parseNumber(activities.sat_score),
+        act_score: parseNumber(activities.act_score),
+        // Derive intl_experience from activity levels for backward-compat scoring
+        intl_experience: activityRows.some((r) => r.level === 'National' || r.level === 'International')
+          ? ['International competition']
+          : activities.intl_experience,
+        work_experience: activities.work_experience,
+        work_experience_summary: activities.work_experience_summary.trim() || null,
+        ambition_statement: activities.ambition_statement.trim() || null,
+        epq_subject: (programmeType === 'A_LEVEL' || programmeType === 'ACT')
+          ? activities.epq_subject.trim() || null : null,
+        epq_title: (programmeType === 'A_LEVEL' || programmeType === 'ACT')
+          ? activities.epq_title.trim() || null : null,
+      } as StudentProfilePayload['lifestyle_preference'],
+      activities_list: activityRows
+        .filter((r) => r.category)
+        .map((r, i) => ({
+          category: r.category,
+          level: (r.level || null) as any,
+          duration: (r.duration || null) as any,
+          highlight: r.highlight.trim() || null,
+          sort_order: i,
+        })),
     };
   }, [
     subjects, programmeType, parseNumber, admissionsTests, personalInfo,
     formattedNationalities, academicInput, englishRequired, englishTestType,
-    englishStatus, showEnglishScore, englishScoreOverall, lifestylePreference
+    englishStatus, showEnglishScore, englishScoreOverall, lifestylePreference,
+    activities, activityRows, ibSubjectSum,
   ]);
 
+  // ── Validation ────────────────────────────────────────────────────────────
+
   const validateStep1 = useCallback(() => {
-    const nextErrors: Record<string, string> = {};
-    if (!personalInfo.first_name.trim()) nextErrors['personal_information.first_name'] = 'First name is required.';
-    if (!personalInfo.last_name.trim()) nextErrors['personal_information.last_name'] = 'Last name is required.';
-    if (!personalInfo.email.trim()) {
-      nextErrors['personal_information.email'] = 'Email is required.';
-    } else if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(personalInfo.email.trim())) {
-      nextErrors['personal_information.email'] = 'Enter a valid email address.';
-    }
-    if (!formattedNationalities.length) nextErrors['personal_information.nationality'] = 'Add at least one nationality.';
-    if (!personalInfo.resident_country.trim()) nextErrors['personal_information.resident_country'] = 'Country of residence is required.';
-    return nextErrors;
-  }, [personalInfo.first_name, personalInfo.last_name, personalInfo.email, formattedNationalities, personalInfo.resident_country]);
+    const e: Record<string, string> = {};
+    if (!personalInfo.first_name.trim()) e['personal_information.first_name'] = 'First name is required.';
+    if (!personalInfo.last_name.trim()) e['personal_information.last_name'] = 'Last name is required.';
+    if (!personalInfo.email.trim()) e['personal_information.email'] = 'Email is required.';
+    else if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(personalInfo.email.trim()))
+      e['personal_information.email'] = 'Enter a valid email.';
+    if (!formattedNationalities.length) e['personal_information.nationality'] = 'Add at least one nationality.';
+    if (!personalInfo.resident_country.trim()) e['personal_information.resident_country'] = 'Country of residence is required.';
+    return e;
+  }, [personalInfo, formattedNationalities]);
 
   const validateStep2 = useCallback(() => {
-    const nextErrors: Record<string, string> = {};
-    if (!programmeType) nextErrors['academic_input.programme_type'] = 'Select IB or A-levels.';
-    if (!academicInput.school_name.trim()) nextErrors['academic_input.school_name'] = 'School name is required.';
-    if (!academicInput.school_country.trim()) nextErrors['academic_input.school_country'] = 'School country is required.';
-    if (!academicInput.graduation_year) nextErrors['academic_input.graduation_year'] = 'Graduation year is required.';
-    if (!academicInput.intended_clusters.length) nextErrors['academic_input.intended_clusters'] = 'Select at least one subject cluster.';
-    return nextErrors;
-  }, [programmeType, academicInput.school_name, academicInput.school_country, academicInput.graduation_year, academicInput.intended_clusters]);
+    const e: Record<string, string> = {};
+    if (!programmeType) e['academic_input.programme_type'] = 'Select IB or A-levels.';
+    if (!academicInput.school_name.trim()) e['academic_input.school_name'] = 'School name is required.';
+    if (!academicInput.school_country.trim()) e['academic_input.school_country'] = 'School country is required.';
+    if (!academicInput.graduation_year) e['academic_input.graduation_year'] = 'Graduation year is required.';
+    if (!academicInput.intended_clusters.length) e['academic_input.intended_clusters'] = 'Select at least one subject area.';
+    return e;
+  }, [programmeType, academicInput]);
 
-  const validateSubjects = useCallback((nextErrors: Record<string, string>) => {
-    const filledSubjects = subjects.filter((subject) => subject.subject_name.trim());
+  const validateSubjects = useCallback((e: Record<string, string>) => {
+    const filled = subjects.filter((s) => s.subject_name.trim());
     if (programmeType === 'IB') {
-      if (filledSubjects.length !== 6) {
-        nextErrors['academic_input.subject_list'] = 'IB requires exactly 6 subjects.';
-      }
-      const hlCount = filledSubjects.filter((subject) => subject.level === 'HL').length;
-      if (hlCount !== 3) {
-        nextErrors['academic_input.subject_list.hl'] = 'IB requires 3 Higher Level subjects.';
-      }
+      if (filled.length !== 6) e['academic_input.subject_list'] = 'IB requires exactly 6 subjects.';
+      if (filled.filter((s) => s.level === 'HL').length !== 3)
+        e['academic_input.subject_list.hl'] = 'IB requires 3 Higher Level subjects.';
     }
     if (programmeType === 'A_LEVEL') {
-      if (filledSubjects.length < 3) {
-        nextErrors['academic_input.subject_list'] = 'A-levels require at least 3 subjects.';
-      }
-      if (filledSubjects.length > 6) {
-        nextErrors['academic_input.subject_list'] = 'A-levels are limited to 6 subjects.';
-      }
+      if (filled.length < 3) e['academic_input.subject_list'] = 'A-levels require at least 3 subjects.';
+      if (filled.length > 6) e['academic_input.subject_list'] = 'A-levels are limited to 6 subjects.';
     }
-
-    subjects.forEach((subject, index) => {
-      if (!subject.subject_name.trim()) {
-        nextErrors[`academic_input.subject_list.${index}.subject_name`] = 'Subject is required.';
-      }
-      if (!subject.grade_value.trim()) {
-        nextErrors[`academic_input.subject_list.${index}.grade_value`] = 'Grade is required.';
-      } else if (programmeType === 'IB') {
-        const gradeValue = parseNumber(subject.grade_value);
-        if (gradeValue === null || gradeValue < 1 || gradeValue > 7) {
-          nextErrors[`academic_input.subject_list.${index}.grade_value`] = 'Enter a grade between 1 and 7.';
-        }
+    subjects.forEach((s, i) => {
+      if (!s.subject_name.trim()) e[`academic_input.subject_list.${i}.subject_name`] = 'Subject is required.';
+      if (!s.grade_value.trim()) e[`academic_input.subject_list.${i}.grade_value`] = 'Grade is required.';
+      else if (programmeType === 'IB') {
+        const g = parseNumber(s.grade_value);
+        if (g === null || g < 1 || g > 7) e[`academic_input.subject_list.${i}.grade_value`] = '1–7 only.';
       }
     });
   }, [subjects, programmeType, parseNumber]);
 
   const validateStep3 = useCallback(() => {
-    const nextErrors: Record<string, string> = {};
-    validateSubjects(nextErrors);
+    const e: Record<string, string> = {};
+    validateSubjects(e);
     if (programmeType === 'IB') {
-      if (!academicInput.ib_math_pathway) nextErrors['academic_input.ib_math_pathway'] = 'Maths pathway is required.';
-      const totalPoints = parseNumber(academicInput.ib_total_points);
-      if (totalPoints === null) {
-        nextErrors['academic_input.ib_total_points'] = 'Predicted total points are required.';
-      } else if (totalPoints < 24 || totalPoints > 45) {
-        nextErrors['academic_input.ib_total_points'] = 'Enter a total between 24 and 45.';
-      }
-      const corePoints = parseNumber(academicInput.ib_core_points);
-      if (corePoints !== null && (corePoints < 0 || corePoints > 3)) {
-        nextErrors['academic_input.ib_core_points'] = 'Core points must be between 0 and 3.';
-      }
-      if (academicInput.ee_summary && academicInput.ee_summary.length > 350) {
-        nextErrors['academic_input.ee_summary'] = 'Summary should be under 350 characters.';
-      }
+      if (!academicInput.ib_math_pathway) e['academic_input.ib_math_pathway'] = 'Maths pathway required.';
+      const cp = parseNumber(academicInput.ib_core_points);
+      if (cp !== null && (cp < 0 || cp > 3)) e['academic_input.ib_core_points'] = '0–3 only.';
+      if (academicInput.ee_summary && academicInput.ee_summary.length > 350)
+        e['academic_input.ee_summary'] = 'Under 350 characters.';
     }
-
-    if (!englishRequired) {
-      nextErrors['academic_input.english_required'] = 'Select an option.';
-    }
+    if (!englishRequired) e['academic_input.english_required'] = 'Select an option.';
     if (englishRequired !== 'no') {
-      if (!englishTestType) nextErrors['academic_input.english_test_type'] = 'Select a test type.';
-      if (!englishStatus) nextErrors['academic_input.english_status'] = 'Select a test status.';
+      if (!englishTestType) e['academic_input.english_test_type'] = 'Select a test type.';
+      if (!englishStatus) e['academic_input.english_status'] = 'Select a status.';
     }
-    admissionsTests.forEach((test, index) => {
-      if (test.test_type === 'NONE') return;
-      if (!test.status) {
-        nextErrors[`academic_input.admissions_tests.${index}.status`] = 'Select a status.';
-      }
+    admissionsTests.forEach((t, i) => {
+      if (t.test_type === 'NONE') return;
+      if (!t.status) e[`academic_input.admissions_tests.${i}.status`] = 'Select a status.';
     });
-
-    return nextErrors;
+    return e;
   }, [validateSubjects, programmeType, academicInput, parseNumber, englishRequired, englishTestType, englishStatus, admissionsTests]);
 
-  const validateStep4 = useCallback(() => {
-    return {} as Record<string, string>;
-  }, []);
+  // Steps 4 & 5 are optional
+  const validateStep4 = useCallback(() => ({} as Record<string, string>), []);
+  const validateStep5 = useCallback(() => ({} as Record<string, string>), []);
 
   const validateCurrentStep = () => {
     switch (currentStep) {
-      case 1:
-        return validateStep1();
-      case 2:
-        return validateStep2();
-      case 3:
-        return validateStep3();
-      case 4:
-        return validateStep4();
-      case 5:
-        return {};
-      default:
-        return {};
+      case 1: return validateStep1();
+      case 2: return validateStep2();
+      case 3: return validateStep3();
+      case 4: return validateStep4();
+      case 5: return validateStep5();
+      default: return {};
     }
   };
+
+  // ── Navigation ────────────────────────────────────────────────────────────
 
   const goNext = () => {
     const nextErrors = validateCurrentStep();
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
-    setCurrentStep((prev) => Math.min(5, prev + 1));
+    setCurrentStep((prev) => Math.min(TOTAL_STEPS, prev + 1));
   };
 
-  const goToStep = (targetStep: number) => {
-    if (targetStep === currentStep) return;
-    // For better UX, we allow moving back freely. 
-    // Moving forward still requires validation to maintain data integrity.
-    if (targetStep < currentStep) {
-      setCurrentStep(targetStep);
-      return;
-    }
+  const goBack = () => setCurrentStep((prev) => Math.max(1, prev - 1));
 
-    // Validate current step before allowing forward movement
+  const goToStep = (target: number) => {
+    if (target === currentStep) return;
+    if (target < currentStep) { setCurrentStep(target); return; }
     const nextErrors = validateCurrentStep();
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
-
-    setCurrentStep(Math.min(5, Math.max(1, targetStep)));
+    setCurrentStep(Math.min(TOTAL_STEPS, Math.max(1, target)));
   };
 
   const restoreSavedProfile = () => {
     if (!initialPayload) return;
-    setErrors({});
-    setCurrentStep(1);
-    setStatusMessage('Restored your last submission.');
+    setErrors({}); setCurrentStep(1); setStatusMessage('Restored last saved progress.');
     applyPayload(initialPayload);
   };
 
   const handleFinalSubmit = useCallback(() => {
-    const step1Errors = validateStep1();
-    const step2Errors = validateStep2();
-    const step3Errors = validateStep3();
-    const step4Errors = validateStep4();
-    const nextErrors = { ...step1Errors, ...step2Errors, ...step3Errors, ...step4Errors };
-    setErrors(nextErrors);
-
-    if (Object.keys(nextErrors).length > 0) {
-      if (Object.keys(step1Errors).length > 0) {
-        setCurrentStep(1);
-      } else if (Object.keys(step2Errors).length > 0) {
-        setCurrentStep(2);
-      } else if (Object.keys(step3Errors).length > 0) {
-        setCurrentStep(3);
-      } else {
-        setCurrentStep(4);
-      }
+    const s1 = validateStep1(); const s2 = validateStep2(); const s3 = validateStep3();
+    const allErrors = { ...s1, ...s2, ...s3 };
+    setErrors(allErrors);
+    if (Object.keys(allErrors).length > 0) {
+      if (Object.keys(s1).length > 0) setCurrentStep(1);
+      else if (Object.keys(s2).length > 0) setCurrentStep(2);
+      else setCurrentStep(3);
       return;
     }
-
     const payload = buildPayload();
-    setStatusMessage('Saving profile...');
-
+    setStatusMessage('Saving…');
     startTransition(async () => {
       try {
         const result = await saveStudentIntake(payload);
-        if (!result?.success) {
-          setStatusMessage(result?.message ?? 'Save failed.');
-          return;
-        }
-        setStatusMessage('Profile saved successfully! Redirecting...');
-        setIsRedirecting(true);
-        // Use window.location for a harder redirect to clear any middleware/router stuckness
-        setTimeout(() => {
-          window.location.href = '/matches';
-        }, 1200);
-      } catch (error) {
-        const message = error instanceof Error ? error.message : 'Save failed.';
-        setStatusMessage(message);
+        if (!result?.success) { setStatusMessage(result?.message ?? 'Save failed.'); return; }
+        setStatusMessage('Profile saved! Your matches are ready.');
+        setSubmitted(true);
+      } catch (err) {
+        setStatusMessage(err instanceof Error ? err.message : 'Save failed.');
       }
     });
-  }, [
-    validateStep1, validateStep2, validateStep3, validateStep4,
-    buildPayload
-  ]);
+  }, [validateStep1, validateStep2, validateStep3, buildPayload]);
 
-  const goBack = () => {
-    setCurrentStep((prev) => Math.max(1, prev - 1));
-  };
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); handleFinalSubmit(); };
 
   useEffect(() => {
-    contentTopRef.current?.scrollIntoView({ behavior: 'auto', block: 'start' });
+    contentTopRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, [currentStep]);
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    handleFinalSubmit();
-  };
+  // ── Step completion (for sidebar indicators) ──────────────────────────────
 
-  const stepItems = useMemo(
-    () => [
-      ...PROFILE_STEPS.map((step, index) => ({ step: index + 1, label: step.title })),
-      { step: 5, label: 'Review' }
-    ],
-    []
-  );
+  const stepCompletion = useMemo<Record<number, boolean>>(() => ({
+    1: Object.keys(validateStep1()).length === 0,
+    2: Object.keys(validateStep2()).length === 0,
+    3: Object.keys(validateStep3()).length === 0,
+    4: activities.leadership_roles.length > 0 || !!activities.commitment_level || activities.key_activities.length > 0,
+    5: !!lifestylePreference.teaching_style || lifestylePreference.desired_location_type.length > 0 || !!lifestylePreference.campus_size,
+    6: false,
+  }), [validateStep1, validateStep2, validateStep3, activities, lifestylePreference]);
 
-  const stepCompletion = useMemo<Record<number, boolean>>(() => {
-    const step1Complete = Object.keys(validateStep1()).length === 0;
-    const step2Complete = Object.keys(validateStep2()).length === 0;
-    const step3Complete = Object.keys(validateStep3()).length === 0;
-    const step4Complete =
-      !!lifestylePreference.teaching_style ||
-      !!lifestylePreference.desired_location_type ||
-      !!lifestylePreference.campus_size ||
-      lifestylePreference.extracurricular_interests.length > 0 ||
-      !!lifestylePreference.other_extracurriculars.trim();
-    return {
-      1: step1Complete,
-      2: step2Complete,
-      3: step3Complete,
-      4: step4Complete,
-      5: step1Complete && step2Complete && step3Complete && step4Complete
-    };
-  }, [validateStep1, validateStep2, validateStep3, lifestylePreference.teaching_style, lifestylePreference.desired_location_type, lifestylePreference.campus_size, lifestylePreference.extracurricular_interests.length, lifestylePreference.other_extracurriculars]);
+  const progressPct = Math.round(((currentStep - 1) / TOTAL_STEPS) * 100);
 
-  const progressLabel = `Step ${currentStep} of 5`;
-  const currentStepLabel = stepItems.find((item) => item.step === currentStep)?.label ?? 'Profile';
-  const englishRequiredLabel =
-    englishRequired === 'yes'
-      ? 'Yes'
-      : englishRequired === 'no'
-        ? 'No'
-        : englishRequired === 'not_sure'
-          ? 'Not sure'
-          : '';
-
-  const fadeInUp = {
-    initial: { opacity: 0, y: 20 },
-    animate: { opacity: 1, y: 0 },
-    exit: { opacity: 0, y: -20 },
-    transition: { duration: 0.4, ease: "easeOut" }
-  };
-
-  const staggerContainer = {
-    animate: {
-      transition: {
-        staggerChildren: 0.1
-      }
-    }
-  };
-
-  const renderStepIcon = (step: number) => {
-    switch (step) {
-      case 1: return <User className="w-4 h-4" />;
-      case 2: return <GraduationCap className="w-4 h-4" />;
-      case 3: return <Layout className="w-4 h-4" />;
-      case 4: return <Heart className="w-4 h-4" />;
-      case 5: return <Check className="w-4 h-4" />;
-      default: return null;
-    }
-  };
+  // ─── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <form className="relative font-sans" style={{ fontFamily: 'var(--font-outfit), sans-serif' }} onSubmit={handleSubmit}>
-      <div className="flex flex-col lg:flex-row gap-8">
-        <aside className="w-full lg:w-72 lg:sticky lg:top-24 h-fit">
-          <div className="surface-card p-6 bg-background/60 backdrop-blur-xl rounded-[28px] border-border/50 shadow-2xl">
-            <div className="mb-8">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                <p className="text-[10px] uppercase tracking-[0.3em] text-foreground/50 font-bold">{progressLabel}</p>
+    <form className="relative font-sans" onSubmit={handleSubmit}>
+      <div className="flex flex-col lg:flex-row gap-6">
+
+        {/* ── Sidebar ── */}
+        <aside className="w-full lg:w-64 lg:sticky lg:top-24 h-fit shrink-0">
+          <div className="rounded-2xl border border-border/60 bg-background p-4 space-y-1 shadow-sm">
+            {/* Progress bar */}
+            <div className="mb-4 px-1">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Progress</span>
+                <span className="text-[10px] font-bold text-primary">{progressPct}%</span>
               </div>
-              <h3 className="text-2xl font-bold tracking-tight mb-1">Your Journey</h3>
-              <p className="text-xs text-muted-foreground font-medium">{currentStepLabel}</p>
+              <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+                <motion.div
+                  className="h-full rounded-full bg-primary"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${progressPct}%` }}
+                  transition={{ duration: 0.4 }}
+                />
+              </div>
             </div>
 
-            <div className="space-y-3">
-              {stepItems.map((item) => (
+            {PROFILE_STEPS.map((step, idx) => {
+              const stepNum = idx + 1;
+              const isCurrent = stepNum === currentStep;
+              const isDone = stepCompletion[stepNum];
+              return (
                 <button
-                  key={item.step}
+                  key={step.key}
                   type="button"
+                  onClick={() => goToStep(stepNum)}
                   className={cn(
-                    "w-full group relative flex items-center gap-4 p-3.5 rounded-2xl transition-all duration-300",
-                    item.step === currentStep
-                      ? "bg-primary/10 border border-primary/20 text-primary shadow-sm"
-                      : "hover:bg-muted/50 border border-transparent text-foreground/60 hover:text-foreground",
-                    stepCompletion[item.step] && item.step !== currentStep && "text-success/80"
+                    'w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-150 text-sm',
+                    isCurrent
+                      ? 'bg-primary/8 text-primary font-semibold'
+                      : isDone
+                        ? 'text-emerald-600 hover:bg-muted/50'
+                        : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
                   )}
-                  onClick={() => goToStep(item.step)}
                 >
-                  <div className={cn(
-                    "flex items-center justify-center w-9 h-9 rounded-xl transition-all duration-300",
-                    item.step === currentStep
-                      ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-110"
-                      : stepCompletion[item.step]
-                        ? "bg-success/15 text-success"
-                        : "bg-muted/80 text-foreground/40 group-hover:bg-muted group-hover:text-foreground/70"
+                  <span className={cn(
+                    'flex h-6 w-6 items-center justify-center rounded-lg text-[11px] font-bold shrink-0',
+                    isCurrent ? 'bg-primary text-primary-foreground'
+                      : isDone ? 'bg-emerald-500/15 text-emerald-600'
+                        : 'bg-muted text-muted-foreground'
                   )}>
-                    {stepCompletion[item.step] && item.step !== currentStep ? <Check className="w-4 h-4" /> : renderStepIcon(item.step)}
-                  </div>
-                  <div className="flex flex-col items-start overflow-hidden">
-                    <span className="text-xs font-medium whitespace-nowrap">{item.label}</span>
-                  </div>
-                  {item.step === currentStep && (
-                    <motion.div
-                      layoutId="active-nav-indicator"
-                      className="absolute right-3 w-1.5 h-1.5 rounded-full bg-primary"
-                    />
-                  )}
+                    {isDone && !isCurrent ? <Check className="w-3 h-3" /> : stepNum}
+                  </span>
+                  <span className="truncate">{step.title}</span>
                 </button>
-              ))}
-            </div>
+              );
+            })}
 
-            {initialPayload && (
+            {/* Review */}
+            <button
+              type="button"
+              onClick={() => goToStep(TOTAL_STEPS)}
+              className={cn(
+                'w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-150 text-sm',
+                currentStep === TOTAL_STEPS
+                  ? 'bg-primary/8 text-primary font-semibold'
+                  : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+              )}
+            >
+              <span className={cn(
+                'flex h-6 w-6 items-center justify-center rounded-lg text-[11px] font-bold shrink-0',
+                currentStep === TOTAL_STEPS ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+              )}>
+                <Check className="w-3 h-3" />
+              </span>
+              <span className="truncate">Review</span>
+            </button>
+
+            {initialPayload ? (
               <button
                 type="button"
-                className="w-full mt-8 py-3.5 px-4 rounded-2xl bg-muted/50 hover:bg-muted border border-border/50 text-xs font-bold transition-all duration-200 text-foreground/70 hover:text-foreground"
                 onClick={restoreSavedProfile}
+                className="w-full mt-2 py-2 px-3 rounded-xl text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all"
               >
-                Restore Last Progress
+                Restore last save
               </button>
-            )}
-
+            ) : null}
           </div>
         </aside>
 
+        {/* ── Main content ── */}
         <div ref={contentTopRef} className="flex-1 min-w-0">
-          {/* Top Horizontal Navigation */}
-          <div className="mb-8 flex items-center gap-4">
-            <nav className="flex-1 min-w-0 flex items-center justify-between gap-2 p-2 bg-muted/30 rounded-2xl border border-border/50 overflow-x-auto scrollbar-hide">
-              {stepItems.map((item) => (
-                <button
-                  key={`top-nav-${item.step}`}
-                  onClick={() => goToStep(item.step)}
-                  className={cn(
-                    "flex-1 min-w-[40px] h-10 rounded-xl flex items-center justify-center transition-all duration-200",
-                    item.step === currentStep
-                      ? "bg-primary text-white shadow-lg shadow-primary/20"
-                      : stepCompletion[item.step]
-                        ? "bg-success/20 text-success"
-                        : "text-foreground/40 hover:bg-muted"
-                  )}
-                >
-                  {stepCompletion[item.step] && item.step !== currentStep ? <Check className="w-4 h-4" /> : renderStepIcon(item.step)}
-                </button>
-              ))}
-            </nav>
+
+          {/* Theme toggle */}
+          <div className="mb-4 flex justify-end">
             <ThemeToggle compact />
           </div>
 
-          <div className="mb-10 lg:mb-12">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-[10px] font-semibold text-primary uppercase tracking-widest mb-4">
-              <Sparkles className="w-3 h-3" />
-              <span>Step {currentStep} Profile Wizard</span>
-            </div>
-            <h2 className="text-3xl md:text-4xl font-semibold mb-3">Let&apos;s personalize your experience</h2>
-            <p className="text-muted-foreground text-sm max-w-xl">
-              Tell us a bit about yourself so we can tailor our UK admissions guidance and match you with the best-fit programs.
-            </p>
+          {/* Per-step heading */}
+          <div className="mb-6">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={`heading-${currentStep}`}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.2 }}
+              >
+                <h2 className="text-xl md:text-2xl font-bold tracking-tight text-foreground">
+                  {STEP_META[currentStep]?.title}
+                </h2>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  {STEP_META[currentStep]?.subtitle}
+                </p>
+              </motion.div>
+            </AnimatePresence>
           </div>
 
+          {/* Step content */}
           <AnimatePresence mode="wait">
             <motion.div
               key={currentStep}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              variants={fadeInUp}
-              className="space-y-8"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -16 }}
+              transition={{ duration: 0.25, ease: 'easeOut' }}
+              className="space-y-6"
             >
 
+              {/* ═══ STEP 1 — Personal info ═══════════════════════════════════ */}
               {currentStep === 1 ? (
-                <section className="space-y-6 lg:space-y-8">
-                  <h3>Personal information</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <label className="space-y-2 flex flex-col">
-                      <span>First name</span>
+                <section className="space-y-5">
+                  {/* Name + email */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <label className="space-y-1.5">
+                      <span className="text-sm font-medium">First name</span>
                       <input
-                        type="text"
-                        className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
+                        type="text" className={cn(inputCls, errors['personal_information.first_name'] && 'border-destructive')}
                         value={personalInfo.first_name}
-                        onChange={(event) => updatePersonalInfo('first_name', event.target.value)}
+                        onChange={(e) => updatePersonalInfo('first_name', e.target.value)}
+                        placeholder="Alex"
                       />
-                      {errors['personal_information.first_name'] ? <em>{errors['personal_information.first_name']}</em> : null}
+                      <FieldError msg={errors['personal_information.first_name']} />
                     </label>
-                    <label className="space-y-2 flex flex-col">
-                      <span>Last name</span>
+                    <label className="space-y-1.5">
+                      <span className="text-sm font-medium">Last name</span>
                       <input
-                        type="text"
-                        className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
+                        type="text" className={cn(inputCls, errors['personal_information.last_name'] && 'border-destructive')}
                         value={personalInfo.last_name}
-                        onChange={(event) => updatePersonalInfo('last_name', event.target.value)}
+                        onChange={(e) => updatePersonalInfo('last_name', e.target.value)}
+                        placeholder="Smith"
                       />
-                      {errors['personal_information.last_name'] ? <em>{errors['personal_information.last_name']}</em> : null}
-                    </label>
-                    <label className="space-y-2 flex flex-col">
-                      <span>Email</span>
-                      <input
-                        type="email"
-                        className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
-                        value={personalInfo.email}
-                        onChange={(event) => updatePersonalInfo('email', event.target.value)}
-                      />
-                      {errors['personal_information.email'] ? <em>{errors['personal_information.email']}</em> : null}
+                      <FieldError msg={errors['personal_information.last_name']} />
                     </label>
                   </div>
+                  <label className="space-y-1.5 block">
+                    <span className="text-sm font-medium">Email</span>
+                    <input
+                      type="email" className={cn(inputCls, errors['personal_information.email'] && 'border-destructive')}
+                      value={personalInfo.email}
+                      onChange={(e) => updatePersonalInfo('email', e.target.value)}
+                      placeholder="alex@school.com"
+                    />
+                    <FieldError msg={errors['personal_information.email']} />
+                  </label>
 
-                  <div className="p-6 rounded-2xl border border-border/50 bg-muted/30 backdrop-blur-sm space-y-6">
-                    <div className="flex justify-between items-start gap-3">
+                  {/* Nationality */}
+                  <SectionCard>
+                    <div className="flex items-start justify-between gap-3">
                       <div>
-                        <span className="text-base font-semibold text-foreground">Nationality</span>
-                        <p className="text-xs text-muted-foreground mt-1">Add more than one if needed.</p>
+                        <p className="text-sm font-semibold text-foreground">Nationality</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">Add more than one if applicable.</p>
                       </div>
-                      <button type="button" className="text-xs font-semibold text-primary hover:text-primary/80 transition-colors uppercase tracking-wider bg-transparent border-none cursor-pointer" onClick={addNationality}>
-                        Add another
+                      <button type="button" onClick={addNationality}
+                        className="text-xs font-semibold text-primary hover:text-primary/80 transition-colors">
+                        + Add another
                       </button>
                     </div>
-                    {nationalities.map((value, index) => (
-                      <div key={`nationality-${index}`} className="flex gap-3 items-center">
-                        <input
-                          list="country-options"
-                          className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
-                          value={value}
-                          onChange={(event) => updateNationality(index, event.target.value)}
-                          placeholder="Select nationality"
-                        />
-                        {nationalities.length > 1 ? (
-                          <button type="button" className="text-xs font-semibold text-primary hover:text-primary/80 transition-colors uppercase tracking-wider bg-transparent border-none cursor-pointer" onClick={() => removeNationality(index)}>
-                            Remove
-                          </button>
-                        ) : null}
-                      </div>
-                    ))}
-                    {errors['personal_information.nationality'] ? <em>{errors['personal_information.nationality']}</em> : null}
+                    <div className="space-y-3">
+                      {nationalities.map((val, i) => (
+                        <div key={i} className="flex gap-2 items-center">
+                          <div className="flex-1">
+                            <CountryCombobox
+                              value={val}
+                              onChange={(v) => updateNationality(i, v)}
+                              placeholder="Search nationality…"
+                              error={i === 0 ? errors['personal_information.nationality'] : undefined}
+                            />
+                          </div>
+                          {nationalities.length > 1 && (
+                            <button type="button" onClick={() => removeNationality(i)}
+                              className="p-2 text-muted-foreground hover:text-destructive transition-colors rounded-lg">
+                              <X className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </SectionCard>
+
+                  {/* Country of residence + City + Age + Gender */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <label className="space-y-1.5 block">
+                      <span className="text-sm font-medium">Country of residence</span>
+                      <CountryCombobox
+                        value={personalInfo.resident_country}
+                        onChange={(v) => updatePersonalInfo('resident_country', v)}
+                        placeholder="Search country…"
+                        error={errors['personal_information.resident_country']}
+                      />
+                    </label>
+                    <label className="space-y-1.5">
+                      <span className="text-sm font-medium text-muted-foreground">City <span className="text-xs">(optional)</span></span>
+                      <input
+                        type="text" className={inputCls}
+                        value={personalInfo.current_location_city}
+                        onChange={(e) => updatePersonalInfo('current_location_city', e.target.value)}
+                        placeholder="London"
+                      />
+                    </label>
+                    <label className="space-y-1.5">
+                      <span className="text-sm font-medium text-muted-foreground">Age <span className="text-xs">(optional)</span></span>
+                      <input
+                        type="number" min={10} max={60} className={inputCls}
+                        value={personalInfo.age}
+                        onChange={(e) => updatePersonalInfo('age', e.target.value)}
+                        placeholder="17"
+                      />
+                    </label>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <label className="space-y-2 flex flex-col">
-                      <span>Age (optional)</span>
-                      <input
-                        type="number"
-                        min={10}
-                        max={60}
-                        className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
-                        value={personalInfo.age}
-                        onChange={(event) => updatePersonalInfo('age', event.target.value)}
-                      />
-                    </label>
-                    <div className="space-y-2 flex flex-col">
-                      <span>Gender (optional)</span>
-                      <div className="flex flex-wrap gap-3">
-                        {[
-                          { value: 'female', label: 'Female' },
-                          { value: 'male', label: 'Male' },
-                          { value: 'non_binary', label: 'Non-binary' },
-                          { value: 'prefer_not_to_say', label: 'Prefer not to say' }
-                        ].map((option) => (
-                          <label
-                            key={option.value}
-                            className={cn(
-                              "relative flex items-center gap-3 p-4 rounded-xl border transition-all duration-200 cursor-pointer",
-                              personalInfo.gender === option.value
-                                ? "bg-primary/5 border-primary ring-1 ring-primary/20"
-                                : "bg-card border-border hover:border-primary/50 hover:bg-muted/50"
-                            )}
-                          >
-                            <input
-                              type="radio"
-                              name="gender"
-                              className="accent-primary h-4 w-4"
-                              value={option.value}
-                              checked={personalInfo.gender === option.value}
-                              onChange={(event) => updatePersonalInfo('gender', event.target.value)}
-                            />
-                            <span className="text-sm font-medium">{option.label}</span>
-                          </label>
-                        ))}
-                      </div>
+                  {/* Gender */}
+                  <div className="space-y-2">
+                    <span className="text-sm font-medium text-muted-foreground">Gender <span className="text-xs">(optional)</span></span>
+                    <div className="flex flex-wrap gap-2">
+                      {[
+                        { value: 'female', label: 'Female' },
+                        { value: 'male', label: 'Male' },
+                        { value: 'non_binary', label: 'Non-binary' },
+                        { value: 'prefer_not_to_say', label: 'Prefer not to say' },
+                      ].map((opt) => (
+                        <Chip
+                          key={opt.value} label={opt.label}
+                          selected={personalInfo.gender === opt.value}
+                          onClick={() => updatePersonalInfo('gender', personalInfo.gender === opt.value ? '' : opt.value)}
+                        />
+                      ))}
                     </div>
-                    <label className="space-y-2 flex flex-col">
-                      <span>Country of residence</span>
-                      <input
-                        list="country-options"
-                        className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
-                        value={personalInfo.resident_country}
-                        onChange={(event) => updatePersonalInfo('resident_country', event.target.value)}
-                      />
-                      {errors['personal_information.resident_country'] ? (
-                        <em>{errors['personal_information.resident_country']}</em>
-                      ) : null}
-                    </label>
-                    <label className="space-y-2 flex flex-col">
-                      <span>Current city (optional)</span>
-                      <input
-                        type="text"
-                        className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
-                        value={personalInfo.current_location_city}
-                        onChange={(event) => updatePersonalInfo('current_location_city', event.target.value)}
-                      />
-                    </label>
                   </div>
                 </section>
               ) : null}
 
+              {/* ═══ STEP 2 — Your studies ════════════════════════════════════ */}
               {currentStep === 2 ? (
-                <section className="space-y-6 lg:space-y-8">
-                  <h3>Academic input</h3>
-                  <div className="space-y-2 flex flex-col">
-                    <span>Which qualification are you taking?</span>
-                    <div className="flex flex-wrap gap-3">
-                      {[
-                        { value: 'IB', label: 'IB Diploma' },
-                        { value: 'A_LEVEL', label: 'A-levels' }
-                      ].map((option) => (
-                        <label
-                          key={option.value}
-                          className={cn(
-                            "relative flex items-center gap-3 p-4 rounded-xl border transition-all duration-200 cursor-pointer",
-                            programmeType === option.value
-                              ? "bg-primary/5 border-primary ring-1 ring-primary/20"
-                              : "bg-card border-border hover:border-primary/50 hover:bg-muted/50"
-                          )}
-                        >
-                          <input
-                            type="radio"
-                            name="programme_type"
-                            className="accent-primary h-4 w-4"
-                            value={option.value}
-                            checked={programmeType === option.value}
-                            onChange={(event) => setProgrammeType(event.target.value as ProgrammeType)}
-                          />
-                          <span className="text-sm font-medium">{option.label}</span>
-                        </label>
+                <section className="space-y-5">
+                  {/* Programme type */}
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">Which qualification are you taking?</p>
+                    <div className="flex flex-wrap gap-2">
+                      {[{ value: 'IB', label: 'IB Diploma' }, { value: 'A_LEVEL', label: 'A-levels' }].map((opt) => (
+                        <Chip
+                          key={opt.value} label={opt.label}
+                          selected={programmeType === opt.value}
+                          onClick={() => setProgrammeType(opt.value as ProgrammeType)}
+                        />
                       ))}
                     </div>
-                    {errors['academic_input.programme_type'] ? <em>{errors['academic_input.programme_type']}</em> : null}
+                    <FieldError msg={errors['academic_input.programme_type']} />
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <label className="space-y-2 flex flex-col">
-                      <span>School name</span>
+                  {/* School */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <label className="space-y-1.5">
+                      <span className="text-sm font-medium">School name</span>
                       <input
-                        type="text"
-                        className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
+                        type="text" className={cn(inputCls, errors['academic_input.school_name'] && 'border-destructive')}
                         value={academicInput.school_name}
-                        onChange={(event) => updateAcademicInput('school_name', event.target.value)}
+                        onChange={(e) => updateAcademicInput('school_name', e.target.value)}
+                        placeholder="Lycée International"
                       />
-                      {errors['academic_input.school_name'] ? <em>{errors['academic_input.school_name']}</em> : null}
+                      <FieldError msg={errors['academic_input.school_name']} />
                     </label>
-                    <label className="space-y-2 flex flex-col">
-                      <span>School country</span>
-                      <input
-                        list="country-options"
-                        className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
+                    <label className="space-y-1.5 block">
+                      <span className="text-sm font-medium">School country</span>
+                      <CountryCombobox
                         value={academicInput.school_country}
-                        onChange={(event) => updateAcademicInput('school_country', event.target.value)}
+                        onChange={(v) => updateAcademicInput('school_country', v)}
+                        error={errors['academic_input.school_country']}
                       />
-                      {errors['academic_input.school_country'] ? <em>{errors['academic_input.school_country']}</em> : null}
                     </label>
-                    <label className="space-y-2 flex flex-col">
-                      <span>School city (optional)</span>
+                    <label className="space-y-1.5">
+                      <span className="text-sm font-medium text-muted-foreground">School city <span className="text-xs">(optional)</span></span>
                       <input
-                        type="text"
-                        className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
+                        type="text" className={inputCls}
                         value={academicInput.school_city}
-                        onChange={(event) => updateAcademicInput('school_city', event.target.value)}
+                        onChange={(e) => updateAcademicInput('school_city', e.target.value)}
                       />
                     </label>
-                    <label className="space-y-2 flex flex-col">
-                      <span>School type (optional)</span>
-                      <select
-                        className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
-                        value={academicInput.school_type}
-                        onChange={(event) => updateAcademicInput('school_type', event.target.value)}
-                      >
-                        <option value="">Select</option>
-                        {SCHOOL_TYPE_OPTIONS.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
+                    <label className="space-y-1.5">
+                      <span className="text-sm font-medium text-muted-foreground">School type <span className="text-xs">(optional)</span></span>
+                      <select className={selectCls} value={academicInput.school_type}
+                        onChange={(e) => updateAcademicInput('school_type', e.target.value)}>
+                        <option value="">Select…</option>
+                        {SCHOOL_TYPE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                       </select>
                     </label>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <label className="space-y-2 flex flex-col">
-                      <span>Graduation year</span>
-                      <select
-                        className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <label className="space-y-1.5">
+                      <span className="text-sm font-medium">Graduation year</span>
+                      <select className={cn(selectCls, errors['academic_input.graduation_year'] && 'border-destructive')}
                         value={academicInput.graduation_year}
-                        onChange={(event) => updateAcademicInput('graduation_year', event.target.value)}
-                      >
-                        <option value="">Select</option>
-                        {GRADUATION_YEARS.map((year) => (
-                          <option key={year} value={year}>
-                            {year}
-                          </option>
-                        ))}
+                        onChange={(e) => updateAcademicInput('graduation_year', e.target.value)}>
+                        <option value="">Select…</option>
+                        {GRADUATION_YEARS.map((y) => <option key={y} value={y}>{y}</option>)}
                       </select>
-                      {errors['academic_input.graduation_year'] ? <em>{errors['academic_input.graduation_year']}</em> : null}
+                      <FieldError msg={errors['academic_input.graduation_year']} />
                     </label>
-                    <label className="space-y-2 flex flex-col">
-                      <span>Desired UK start date (optional)</span>
+                    <label className="space-y-1.5">
+                      <span className="text-sm font-medium text-muted-foreground">Preferred start date <span className="text-xs">(optional)</span></span>
                       <input
-                        type="date"
-                        className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
+                        type="date" className={inputCls}
                         value={academicInput.desired_start_date}
-                        onChange={(event) => updateAcademicInput('desired_start_date', event.target.value)}
+                        onChange={(e) => updateAcademicInput('desired_start_date', e.target.value)}
                       />
                     </label>
                   </div>
 
-                  <div className="p-6 rounded-2xl border border-border/50 bg-muted/30 backdrop-blur-sm space-y-6">
-                    <div className="flex justify-between items-start gap-3">
-                      <div>
-                        <span className="text-base font-semibold text-foreground">What do you want to study?</span>
-                        <p className="text-xs text-muted-foreground mt-1">Select one primary focus.</p>
-                      </div>
-                      <span className="text-xs underline cursor-help text-foreground/60" title="We use this to shortlist the most relevant programmes.">
-                        Why we ask this
-                      </span>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {CLUSTER_OPTIONS.map((option) => (
-                        <label
-                          key={option.value}
-                          className={cn(
-                            "relative flex items-center gap-3 p-4 rounded-xl border transition-all duration-200 cursor-pointer",
-                            academicInput.intended_clusters.includes(option.value)
-                              ? "bg-primary/5 border-primary ring-1 ring-primary/20"
-                              : "bg-card border-border hover:border-primary/50 hover:bg-muted/50",
-                            !academicInput.intended_clusters.includes(option.value) &&
-                            academicInput.intended_clusters.length >= 1 &&
-                            "opacity-50 cursor-not-allowed hover:border-border hover:bg-card"
-                          )}
-                        >
-                          <input
-                            type="checkbox"
-                            className="accent-primary h-4 w-4"
-                            checked={academicInput.intended_clusters.includes(option.value)}
-                            disabled={
-                              !academicInput.intended_clusters.includes(option.value) &&
-                              academicInput.intended_clusters.length >= 1
-                            }
-                            onChange={() => toggleCluster(option.value, 'intended_clusters')}
-                          />
-                          <span className="text-sm font-medium">{option.label}</span>
-                        </label>
+                  {/* Subject clusters */}
+                  <SectionCard>
+                    <SectionTitle
+                      label="What do you want to study?"
+                      hint="Select your primary focus area."
+                      why="We use this to shortlist the most relevant programmes and weight your eligibility scores."
+                    />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {CLUSTER_OPTIONS.map((opt) => (
+                        <Chip
+                          key={opt.value} label={opt.label} emoji={opt.emoji}
+                          selected={academicInput.intended_clusters.includes(opt.value)}
+                          disabled={!academicInput.intended_clusters.includes(opt.value) && academicInput.intended_clusters.length >= 1}
+                          onClick={() => toggleCluster(opt.value, 'intended_clusters')}
+                        />
                       ))}
                     </div>
-                    {errors['academic_input.intended_clusters'] ? <em>{errors['academic_input.intended_clusters']}</em> : null}
-                  </div>
+                    <FieldError msg={errors['academic_input.intended_clusters']} />
+                  </SectionCard>
 
-                  <div className="p-6 rounded-2xl border border-border/50 bg-muted/30 backdrop-blur-sm space-y-6">
-                    <div className="flex justify-between items-start gap-3">
-                      <div>
-                        <span className="text-base font-semibold text-foreground">Any secondary interests? (optional)</span>
-                        <p className="text-xs text-muted-foreground mt-1">Choose up to two.</p>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {CLUSTER_OPTIONS.map((option) => (
-                        <label
-                          key={`secondary-${option.value}`}
-                          className={cn(
-                            "relative flex items-center gap-3 p-4 rounded-xl border transition-all duration-200 cursor-pointer",
-                            academicInput.secondary_clusters.includes(option.value)
-                              ? "bg-primary/5 border-primary ring-1 ring-primary/20"
-                              : "bg-card border-border hover:border-primary/50 hover:bg-muted/50",
-                            !academicInput.secondary_clusters.includes(option.value) &&
-                            academicInput.secondary_clusters.length >= 2 &&
-                            "opacity-50 cursor-not-allowed hover:border-border hover:bg-card"
-                          )}
-                        >
-                          <input
-                            type="checkbox"
-                            className="accent-primary h-4 w-4"
-                            checked={academicInput.secondary_clusters.includes(option.value)}
-                            disabled={
-                              !academicInput.secondary_clusters.includes(option.value) &&
-                              academicInput.secondary_clusters.length >= 2
-                            }
-                            onChange={() => toggleCluster(option.value, 'secondary_clusters')}
-                          />
-                          <span className="text-sm font-medium">{option.label}</span>
-                        </label>
+                  <SectionCard>
+                    <SectionTitle label="Secondary interests" hint="Up to two — used to broaden your match pool." />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {CLUSTER_OPTIONS.map((opt) => (
+                        <Chip
+                          key={`sec-${opt.value}`} label={opt.label} emoji={opt.emoji}
+                          selected={academicInput.secondary_clusters.includes(opt.value)}
+                          disabled={!academicInput.secondary_clusters.includes(opt.value) && academicInput.secondary_clusters.length >= 2}
+                          onClick={() => toggleCluster(opt.value, 'secondary_clusters')}
+                        />
                       ))}
                     </div>
-                  </div>
+                  </SectionCard>
 
-                  <label className="space-y-2 flex flex-col">
-                    <span>Career aspiration (optional)</span>
+                  <label className="space-y-1.5 block">
+                    <span className="text-sm font-medium text-muted-foreground">Career aspiration <span className="text-xs">(optional)</span></span>
                     <input
-                      type="text"
-                      className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
-                      placeholder="Investment banking, Software engineer"
+                      type="text" className={inputCls}
+                      placeholder="Investment banker, software engineer, doctor…"
                       value={academicInput.career_aspiration}
-                      onChange={(event) => updateAcademicInput('career_aspiration', event.target.value)}
+                      onChange={(e) => updateAcademicInput('career_aspiration', e.target.value)}
                     />
                   </label>
                 </section>
               ) : null}
 
+              {/* ═══ STEP 3 — Grades & tests ══════════════════════════════════ */}
               {currentStep === 3 ? (
-                <section className="space-y-6 lg:space-y-8">
-                  <h3>Academic details</h3>
-
-                  <div className="p-6 rounded-2xl border border-border/50 bg-muted/30 backdrop-blur-sm space-y-6">
-                    <div className="flex justify-between items-start gap-3">
-                      <div>
-                        <span className="text-base font-semibold text-foreground">Your subjects and predicted grades</span>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {programmeType === 'A_LEVEL'
-                            ? 'A-Levels: 3 subjects standard, up to 4 if you take an additional one.'
-                            : 'IB requires exactly 6 subjects with 3 HL.'}
-                        </p>
-                      </div>
+                <section className="space-y-5">
+                  {/* Subjects */}
+                  <SectionCard>
+                    <div className="flex items-center justify-between gap-3">
+                      <SectionTitle
+                        label="Subjects & predicted grades"
+                        hint={programmeType === 'A_LEVEL'
+                          ? 'Minimum 3, maximum 4 A-levels.'
+                          : 'IB: exactly 6 subjects with 3 HL.'}
+                      />
                       <button
                         type="button"
                         disabled={subjects.length >= getMaxSubjects(programmeType)}
-                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary/10 text-primary hover:bg-primary/20 transition-all duration-200 text-xs font-bold uppercase tracking-wider border-none cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                         onClick={addSubject}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/8 text-primary text-xs font-semibold hover:bg-primary/15 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                       >
-                        <PlusCircle className="w-4 h-4" />
-                        Add subject
+                        <PlusCircle className="w-3.5 h-3.5" />
+                        Add
                       </button>
                     </div>
 
-                    <div className="subject-grid space-y-4">
-                      {/* Desktop Header */}
-                      <div className="hidden md:grid md:grid-cols-12 gap-6 px-6 py-2">
-                        <div className="md:col-span-5 text-[10px] uppercase tracking-[0.2em] font-bold text-foreground/40">Subject</div>
-                        <div className="md:col-span-3 text-[10px] uppercase tracking-[0.2em] font-bold text-foreground/40">Level</div>
-                        <div className="md:col-span-3 text-[10px] uppercase tracking-[0.2em] font-bold text-foreground/40">Predicted Grade</div>
-                        <div className="md:col-span-1"></div>
-                      </div>
-                      {subjects.map((subject, index) => (
-                        <div key={`subject-${index}`} className="subject-row">
+                    {/* Column headers */}
+                    <div className="hidden md:grid md:grid-cols-12 gap-3 px-1 pb-1">
+                      <div className="md:col-span-5 text-[10px] uppercase tracking-widest font-semibold text-muted-foreground">Subject</div>
+                      <div className="md:col-span-3 text-[10px] uppercase tracking-widest font-semibold text-muted-foreground">Level</div>
+                      <div className="md:col-span-3 text-[10px] uppercase tracking-widest font-semibold text-muted-foreground">Grade</div>
+                    </div>
+
+                    <div className="space-y-3">
+                      {subjects.map((subj, i) => (
+                        <div key={i} className="md:grid md:grid-cols-12 md:gap-3 space-y-2 md:space-y-0 md:items-start">
                           <div className="md:col-span-5">
-                            <label className="md:hidden">Subject</label>
-                            <input
-                              list="subject-options"
-                              className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
-                              value={subject.subject_name}
-                              onChange={(event) => updateSubject(index, 'subject_name', event.target.value)}
-                              placeholder="Enter subject name"
+                            <label className="md:hidden text-xs font-medium text-muted-foreground mb-1 block">Subject</label>
+                            <SubjectCombobox
+                              value={subj.subject_name}
+                              onChange={(v) => updateSubject(i, 'subject_name', v)}
+                              error={errors[`academic_input.subject_list.${i}.subject_name`]}
                             />
-                            {errors[`academic_input.subject_list.${index}.subject_name`] ? (
-                              <em className="text-destructive mt-1 block">{errors[`academic_input.subject_list.${index}.subject_name`]}</em>
-                            ) : null}
                           </div>
                           <div className="md:col-span-3">
-                            <label className="md:hidden">Level</label>
+                            <label className="md:hidden text-xs font-medium text-muted-foreground mb-1 block">Level</label>
                             <select
-                              className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 transition-all duration-200"
-                              value={subject.level}
-                              onChange={(event) => updateSubject(index, 'level', event.target.value)}
+                              className={selectCls}
+                              value={subj.level}
+                              onChange={(e) => updateSubject(i, 'level', e.target.value)}
                               disabled={programmeType === 'A_LEVEL'}
                             >
-                              {programmeType === 'IB' ? (
-                                <>
-                                  <option value="HL">HL</option>
-                                  <option value="SL">SL</option>
-                                </>
-                              ) : (
-                                <option value="A_LEVEL">A-level</option>
-                              )}
+                              {programmeType === 'IB'
+                                ? <><option value="HL">HL</option><option value="SL">SL</option></>
+                                : <option value="A_LEVEL">A-level</option>}
                             </select>
                           </div>
                           <div className="md:col-span-3">
-                            <label className="md:hidden">Predicted grade</label>
-                            {programmeType === 'IB' ? (
-                              <input
-                                type="number"
-                                min={1}
-                                max={7}
-                                className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 transition-all duration-200"
-                                value={subject.grade_value}
-                                onChange={(event) => updateSubject(index, 'grade_value', event.target.value)}
-                                placeholder="Grade"
-                              />
-                            ) : (
-                              <select
-                                className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 transition-all duration-200"
-                                value={subject.grade_value}
-                                onChange={(event) => updateSubject(index, 'grade_value', event.target.value)}
-                              >
-                                <option value="">Select</option>
-                                {A_LEVEL_GRADES.map((grade) => (
-                                  <option key={grade} value={grade}>
-                                    {grade}
-                                  </option>
-                                ))}
-                              </select>
-                            )}
-                            {errors[`academic_input.subject_list.${index}.grade_value`] ? (
-                              <em className="text-destructive mt-1 block">{errors[`academic_input.subject_list.${index}.grade_value`]}</em>
-                            ) : null}
+                            <label className="md:hidden text-xs font-medium text-muted-foreground mb-1 block">Grade</label>
+                            {programmeType === 'IB'
+                              ? <input type="number" min={1} max={7} className={cn(inputCls, errors[`academic_input.subject_list.${i}.grade_value`] && 'border-destructive')}
+                                  value={subj.grade_value} onChange={(e) => updateSubject(i, 'grade_value', e.target.value)} placeholder="1–7" />
+                              : <select className={cn(selectCls, errors[`academic_input.subject_list.${i}.grade_value`] && 'border-destructive')}
+                                  value={subj.grade_value} onChange={(e) => updateSubject(i, 'grade_value', e.target.value)}>
+                                  <option value="">Grade…</option>
+                                  {A_LEVEL_GRADES.map((g) => <option key={g} value={g}>{g}</option>)}
+                                </select>
+                            }
+                            <FieldError msg={errors[`academic_input.subject_list.${i}.grade_value`]} />
                           </div>
-                          <div className="md:col-span-1 flex items-end justify-center pb-2">
-                            <button
-                              type="button"
-                              className="p-3 rounded-xl text-foreground/40 hover:text-destructive hover:bg-destructive/10 transition-all duration-200 border-none bg-transparent cursor-pointer"
-                              onClick={() => removeSubject(index)}
-                              title="Remove subject"
-                            >
-                              <Trash2 className="w-5 h-5" />
+                          <div className="md:col-span-1 flex items-end justify-end md:justify-center pb-0.5">
+                            <button type="button" onClick={() => removeSubject(i)}
+                              className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-all">
+                              <Trash2 className="w-4 h-4" />
                             </button>
                           </div>
                         </div>
                       ))}
                     </div>
-                    {errors['academic_input.subject_list'] ? <em>{errors['academic_input.subject_list']}</em> : null}
-                    {errors['academic_input.subject_list.hl'] ? <em>{errors['academic_input.subject_list.hl']}</em> : null}
-                  </div>
+                    <FieldError msg={errors['academic_input.subject_list']} />
+                    <FieldError msg={errors['academic_input.subject_list.hl']} />
 
+                    {/* IB auto-calculated total */}
+                    {programmeType === 'IB' && ibSubjectSum !== null ? (
+                      <div className="mt-1 flex items-center gap-2 rounded-xl bg-primary/5 border border-primary/15 px-4 py-3">
+                        <span className="text-xs text-muted-foreground font-medium">Predicted from subjects:</span>
+                        <span className={cn(
+                          'text-sm font-bold',
+                          ibSubjectSum >= 35 ? 'text-emerald-600' : ibSubjectSum >= 28 ? 'text-amber-600' : 'text-foreground'
+                        )}>
+                          {ibSubjectSum}/42
+                        </span>
+                        {academicInput.ib_core_points ? (
+                          <span className="text-xs text-muted-foreground">
+                            + {academicInput.ib_core_points} core = <strong>{ibSubjectSum + (Number(academicInput.ib_core_points) || 0)}</strong>/45
+                          </span>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">points (add core points below for total)</span>
+                        )}
+                      </div>
+                    ) : null}
+                  </SectionCard>
+
+                  {/* IB extras */}
                   {programmeType === 'IB' ? (
                     <>
-                      <div className="space-y-2 flex flex-col">
-                        <span>Maths pathway</span>
-                        <div className="flex flex-wrap gap-3">
-                          {[
-                            { value: 'AA_HL', label: 'AA HL' },
-                            { value: 'AA_SL', label: 'AA SL' },
-                            { value: 'AI_HL', label: 'AI HL' },
-                            { value: 'AI_SL', label: 'AI SL' }
-                          ].map((option) => (
-                            <label
-                              key={option.value}
-                              className={cn(
-                                "relative flex items-center gap-3 p-4 rounded-xl border transition-all duration-200 cursor-pointer",
-                                academicInput.ib_math_pathway === option.value
-                                  ? "bg-primary/5 border-primary ring-1 ring-primary/20"
-                                  : "bg-card border-border hover:border-primary/50 hover:bg-muted/50"
-                              )}
-                            >
-                              <input
-                                type="radio"
-                                name="ib_math_pathway"
-                                className="accent-primary h-4 w-4"
-                                value={option.value}
-                                checked={academicInput.ib_math_pathway === option.value}
-                                onChange={(event) => updateAcademicInput('ib_math_pathway', event.target.value)}
-                              />
-                              <span className="text-sm font-medium">{option.label}</span>
-                            </label>
+                      <div className="space-y-2">
+                        <p className="text-sm font-medium">Maths pathway</p>
+                        <div className="flex flex-wrap gap-2">
+                          {[{ value: 'AA_HL', label: 'AA HL' }, { value: 'AA_SL', label: 'AA SL' },
+                            { value: 'AI_HL', label: 'AI HL' }, { value: 'AI_SL', label: 'AI SL' }].map((opt) => (
+                            <Chip key={opt.value} label={opt.label}
+                              selected={academicInput.ib_math_pathway === opt.value}
+                              onClick={() => updateAcademicInput('ib_math_pathway', academicInput.ib_math_pathway === opt.value ? '' : opt.value)} />
                           ))}
                         </div>
-                        {errors['academic_input.ib_math_pathway'] ? <em>{errors['academic_input.ib_math_pathway']}</em> : null}
+                        <FieldError msg={errors['academic_input.ib_math_pathway']} />
                       </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <label className="space-y-2 flex flex-col">
-                          <span>Predicted total IB points</span>
-                          <input
-                            type="number"
-                            min={24}
-                            max={45}
-                            className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
-                            value={academicInput.ib_total_points}
-                            onChange={(event) => updateAcademicInput('ib_total_points', event.target.value)}
-                          />
-                          {errors['academic_input.ib_total_points'] ? <em>{errors['academic_input.ib_total_points']}</em> : null}
-                        </label>
-                        <label className="space-y-2 flex flex-col">
-                          <span>Core points (optional)</span>
-                          <input
-                            type="number"
-                            min={0}
-                            max={3}
-                            className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <label className="space-y-1.5">
+                          <span className="text-sm font-medium text-muted-foreground">Core points <span className="text-xs">(optional)</span></span>
+                          <input type="number" min={0} max={3} className={inputCls}
                             value={academicInput.ib_core_points}
-                            onChange={(event) => updateAcademicInput('ib_core_points', event.target.value)}
-                          />
-                          {errors['academic_input.ib_core_points'] ? <em>{errors['academic_input.ib_core_points']}</em> : null}
+                            onChange={(e) => updateAcademicInput('ib_core_points', e.target.value)}
+                            placeholder="0–3" />
                         </label>
-                        <label className="space-y-2 flex flex-col">
-                          <span>TOK grade (optional)</span>
-                          <select
-                            className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
-                            value={academicInput.ib_tok_grade}
-                            onChange={(event) => updateAcademicInput('ib_tok_grade', event.target.value)}
-                          >
-                            <option value="">Select</option>
-                            {IB_GRADES.map((grade) => (
-                              <option key={grade} value={grade}>
-                                {grade}
-                              </option>
-                            ))}
+                        <label className="space-y-1.5">
+                          <span className="text-sm font-medium text-muted-foreground">TOK grade <span className="text-xs">(optional)</span></span>
+                          <select className={selectCls} value={academicInput.ib_tok_grade}
+                            onChange={(e) => updateAcademicInput('ib_tok_grade', e.target.value)}>
+                            <option value="">Select…</option>
+                            {IB_GRADES.map((g) => <option key={g} value={g}>{g}</option>)}
                           </select>
                         </label>
-                        <label className="space-y-2 flex flex-col">
-                          <span>EE grade (optional)</span>
-                          <select
-                            className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
-                            value={academicInput.ib_ee_grade}
-                            onChange={(event) => updateAcademicInput('ib_ee_grade', event.target.value)}
-                          >
-                            <option value="">Select</option>
-                            {IB_GRADES.map((grade) => (
-                              <option key={grade} value={grade}>
-                                {grade}
-                              </option>
-                            ))}
+                        <label className="space-y-1.5">
+                          <span className="text-sm font-medium text-muted-foreground">EE grade <span className="text-xs">(optional)</span></span>
+                          <select className={selectCls} value={academicInput.ib_ee_grade}
+                            onChange={(e) => updateAcademicInput('ib_ee_grade', e.target.value)}>
+                            <option value="">Select…</option>
+                            {IB_GRADES.map((g) => <option key={g} value={g}>{g}</option>)}
                           </select>
                         </label>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <label className="space-y-2 flex flex-col">
-                          <span>Extended Essay subject (optional)</span>
-                          <input
-                            type="text"
-                            className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
-                            value={academicInput.ee_subject}
-                            onChange={(event) => updateAcademicInput('ee_subject', event.target.value)}
-                          />
+                        <label className="space-y-1.5">
+                          <span className="text-sm font-medium text-muted-foreground">EE subject <span className="text-xs">(optional)</span></span>
+                          <input type="text" className={inputCls} value={academicInput.ee_subject}
+                            onChange={(e) => updateAcademicInput('ee_subject', e.target.value)} />
                         </label>
-                        <label className="space-y-2 flex flex-col">
-                          <span>Extended Essay title (optional)</span>
-                          <input
-                            type="text"
-                            className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
-                            value={academicInput.ee_title}
-                            onChange={(event) => updateAcademicInput('ee_title', event.target.value)}
-                          />
+                        <label className="space-y-1.5">
+                          <span className="text-sm font-medium text-muted-foreground">EE title <span className="text-xs">(optional)</span></span>
+                          <input type="text" className={inputCls} value={academicInput.ee_title}
+                            onChange={(e) => updateAcademicInput('ee_title', e.target.value)} />
                         </label>
                       </div>
-                      <label className="space-y-2 flex flex-col">
-                        <span>Extended Essay summary (optional)</span>
-                        <textarea
-                          rows={3}
-                          maxLength={350}
-                          className="flex min-h-[80px] w-full rounded-xl border border-input bg-background px-4 py-3 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200 resize-y"
+                      <label className="space-y-1.5 block">
+                        <span className="text-sm font-medium text-muted-foreground">EE summary <span className="text-xs">(optional, max 350 chars)</span></span>
+                        <textarea rows={3} maxLength={350} className={cn(inputCls, 'h-auto py-3 resize-y')}
                           value={academicInput.ee_summary}
-                          onChange={(event) => updateAcademicInput('ee_summary', event.target.value)}
-                          placeholder="1–3 sentences max"
-                        />
-                        {errors['academic_input.ee_summary'] ? <em>{errors['academic_input.ee_summary']}</em> : null}
+                          onChange={(e) => updateAcademicInput('ee_summary', e.target.value)}
+                          placeholder="1–3 sentences" />
+                        <FieldError msg={errors['academic_input.ee_summary']} />
                       </label>
                     </>
                   ) : null}
 
-                  <div className="p-6 rounded-2xl border border-border/50 bg-muted/30 backdrop-blur-sm space-y-6">
-                    <div className="flex justify-between items-start gap-3">
-                      <div>
-                        <span className="text-base font-semibold text-foreground">English proficiency</span>
-                        <p className="text-xs text-muted-foreground mt-1">Some universities require a formal test score.</p>
-                      </div>
-                      <span className="text-xs underline cursor-help text-foreground/60" title="We use this to flag whether a language test is still needed.">
-                        Why we ask this
-                      </span>
-                    </div>
-                    <div className="space-y-2 flex flex-col">
-                      <span>Will you need to prove English proficiency?</span>
-                      <div className="flex flex-wrap gap-3">
-                        {[
-                          { value: 'yes', label: 'Yes' },
-                          { value: 'no', label: 'No' },
-                          { value: 'not_sure', label: 'Not sure' }
-                        ].map((option) => (
-                          <label
-                            key={option.value}
-                            className={cn(
-                              "relative flex items-center gap-3 p-4 rounded-xl border transition-all duration-200 cursor-pointer",
-                              englishRequired === option.value
-                                ? "bg-primary/5 border-primary ring-1 ring-primary/20"
-                                : "bg-card border-border hover:border-primary/50 hover:bg-muted/50"
-                            )}
-                          >
-                            <input
-                              type="radio"
-                              name="english_required"
-                              className="accent-primary h-4 w-4"
-                              value={option.value}
-                              checked={englishRequired === option.value}
-                              onChange={(event) => setEnglishRequired(event.target.value as EnglishRequiredState)}
-                            />
-                            <span className="text-sm font-medium">{option.label}</span>
-                          </label>
+                  {/* English proficiency */}
+                  <SectionCard>
+                    <SectionTitle
+                      label="English proficiency"
+                      hint="Some universities require a formal test score."
+                      why="We flag whether a language test is still needed and which threshold applies for each programme."
+                    />
+                    <div className="space-y-1.5">
+                      <p className="text-sm font-medium">Will you need to prove English proficiency?</p>
+                      <div className="flex flex-wrap gap-2">
+                        {[{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }, { value: 'not_sure', label: 'Not sure' }].map((opt) => (
+                          <Chip key={opt.value} label={opt.label}
+                            selected={englishRequired === opt.value}
+                            onClick={() => setEnglishRequired(opt.value as EnglishRequiredState)} />
                         ))}
                       </div>
-                      {errors['academic_input.english_required'] ? <em>{errors['academic_input.english_required']}</em> : null}
+                      <FieldError msg={errors['academic_input.english_required']} />
                     </div>
-
                     {englishRequired !== 'no' ? (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <label className="space-y-2 flex flex-col">
-                          <span>English test type</span>
-                          <select
-                            className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
-                            value={englishTestType}
-                            onChange={(event) => setEnglishTestType(event.target.value as EnglishTestType)}
-                          >
-                            {ENGLISH_TEST_OPTIONS.map((option) => (
-                              <option key={option.value} value={option.value}>
-                                {option.label}
-                              </option>
-                            ))}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                        <label className="space-y-1.5">
+                          <span className="text-sm font-medium">Test type</span>
+                          <select className={selectCls} value={englishTestType}
+                            onChange={(e) => setEnglishTestType(e.target.value as EnglishTestType)}>
+                            {ENGLISH_TEST_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                           </select>
-                          {errors['academic_input.english_test_type'] ? <em>{errors['academic_input.english_test_type']}</em> : null}
+                          <FieldError msg={errors['academic_input.english_test_type']} />
                         </label>
-                        <div className="space-y-2 flex flex-col">
-                          <span>English test status</span>
-                          <div className="flex flex-wrap gap-3">
-                            {ENGLISH_STATUS_OPTIONS.map((option) => (
-                              <label key={option.value} className={cn(
-                                "relative flex items-center gap-3 p-4 rounded-xl border transition-all duration-200 cursor-pointer text-sm",
-                                englishStatus === option.value
-                                  ? "bg-primary/5 border-primary ring-1 ring-primary/20"
-                                  : "bg-card border-border hover:border-primary/50 hover:bg-muted/50"
-                              )}>
-                                <input
-                                  type="radio"
-                                  name="english_status"
-                                  className="accent-primary h-4 w-4"
-                                  value={option.value}
-                                  checked={englishStatus === option.value}
-                                  onChange={(event) => setEnglishStatus(event.target.value as EnglishStatus)}
-                                />
-                                {option.label}
-                              </label>
+                        <div className="space-y-1.5">
+                          <p className="text-sm font-medium">Test status</p>
+                          <div className="flex flex-wrap gap-2">
+                            {ENGLISH_STATUS_OPTIONS.map((opt) => (
+                              <Chip key={opt.value} label={opt.label}
+                                selected={englishStatus === opt.value}
+                                onClick={() => setEnglishStatus(opt.value as EnglishStatus)} />
                             ))}
                           </div>
-                          {errors['academic_input.english_status'] ? <em>{errors['academic_input.english_status']}</em> : null}
+                          <FieldError msg={errors['academic_input.english_status']} />
                         </div>
-                      </div>
-                    ) : null}
-
-                    {showEnglishScore ? (
-                      <label className="space-y-2 flex flex-col">
-                        <span>English overall score (optional)</span>
-                        <input
-                          type="number"
-                          className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
-                          value={englishScoreOverall}
-                          onChange={(event) => setEnglishScoreOverall(event.target.value)}
-                        />
-                      </label>
-                    ) : null}
-                  </div>
-
-                  {showAdmissionsTests ? (
-                    <div className="p-6 rounded-2xl border border-border/50 bg-muted/30 backdrop-blur-sm space-y-6">
-                      <div className="flex justify-between items-start gap-3">
-                        <div>
-                          <span className="text-base font-semibold text-foreground">Admissions tests</span>
-                          <p className="text-xs text-muted-foreground mt-1">Select the tests you have taken or booked.</p>
-                        </div>
-                        <span className="text-xs underline cursor-help text-foreground/60" title="Some subjects require admissions tests for eligibility.">
-                          Why we ask this
-                        </span>
-                      </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {ADMISSIONS_TEST_OPTIONS.map((option) => (
-                          <label
-                            key={option.value}
-                            className={cn(
-                              "relative flex items-center gap-3 p-4 rounded-xl border transition-all duration-200 cursor-pointer",
-                              admissionsTests.some((test) => test.test_type === option.value)
-                                ? "bg-primary/5 border-primary ring-1 ring-primary/20"
-                                : "bg-card border-border hover:border-primary/50 hover:bg-muted/50"
-                            )}
-                          >
-                            <input
-                              type="checkbox"
-                              className="accent-primary h-4 w-4"
-                              checked={admissionsTests.some((test) => test.test_type === option.value)}
-                              onChange={() => toggleAdmissionsTest(option.value)}
-                            />
-                            {option.label}
+                        {showEnglishScore ? (
+                          <label className="space-y-1.5">
+                            <span className="text-sm font-medium text-muted-foreground">Overall score <span className="text-xs">(optional)</span></span>
+                            <input type="number" className={inputCls} value={englishScoreOverall}
+                              onChange={(e) => setEnglishScoreOverall(e.target.value)} placeholder="e.g. 7.0" />
                           </label>
+                        ) : null}
+                      </div>
+                    ) : null}
+                  </SectionCard>
+
+                  {/* Admissions tests */}
+                  {showAdmissionsTests ? (
+                    <SectionCard>
+                      <SectionTitle
+                        label="Admissions tests"
+                        hint="Select the tests you've taken or booked."
+                        why="Some programmes require specific admissions tests for eligibility — we flag this in your matches."
+                      />
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        {ADMISSIONS_TEST_OPTIONS.map((opt) => (
+                          <Chip key={opt.value} label={opt.label}
+                            selected={admissionsTests.some((t) => t.test_type === opt.value)}
+                            onClick={() => toggleAdmissionsTest(opt.value)} />
                         ))}
                       </div>
-
-                      {admissionsTests.filter((test) => test.test_type !== 'NONE').map((test, index) => (
-                        <div key={`${test.test_type}-${index}`} className="p-5 rounded-2xl border border-border/50 bg-muted/30 grid grid-cols-1 md:grid-cols-12 gap-6 items-start relative overflow-hidden">
-                          <div className="md:col-span-3">
-                            <label>
-                              Test
-                              <input type="text" value={test.test_type} disabled className="opacity-70" />
-                            </label>
+                      {admissionsTests.filter((t) => t.test_type !== 'NONE').map((test, i) => (
+                        <div key={`${test.test_type}-${i}`} className="rounded-xl border border-border/60 bg-background p-4 grid grid-cols-1 md:grid-cols-12 gap-3 items-start">
+                          <div className="md:col-span-2">
+                            <p className="text-xs font-semibold text-muted-foreground mb-1">Test</p>
+                            <p className="text-sm font-bold">{test.test_type}</p>
                           </div>
                           <div className="md:col-span-5">
-                            <label>Status</label>
-                            <div className="flex flex-wrap gap-2">
-                              {[
-                                { value: 'taken', label: 'Taken' },
-                                { value: 'booked', label: 'Booked' },
-                                { value: 'missing', label: 'Missing' }
-                              ].map((option) => (
-                                <label key={`${test.test_type}-${option.value}`} className={cn(
-                                  "flex-1 min-w-[100px] relative flex items-center gap-3 p-3 rounded-xl border transition-all duration-200 text-xs cursor-pointer",
-                                  test.status === option.value
-                                    ? "bg-primary/5 border-primary ring-1 ring-primary/20"
-                                    : "bg-card border-border hover:border-primary/50 hover:bg-muted/50"
-                                )}>
-                                  <input
-                                    type="radio"
-                                    name={`admissions-status-${index}`}
-                                    className="accent-primary h-4 w-4"
-                                    value={option.value}
-                                    checked={test.status === option.value}
-                                    onChange={(event) => updateAdmissionsTest(index, 'status', event.target.value)}
-                                  />
-                                  {option.label}
-                                </label>
+                            <p className="text-xs font-semibold text-muted-foreground mb-1">Status</p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {[{ value: 'taken', label: 'Taken' }, { value: 'booked', label: 'Booked' }, { value: 'missing', label: 'Not yet' }].map((opt) => (
+                                <Chip key={opt.value} label={opt.label}
+                                  selected={test.status === opt.value}
+                                  onClick={() => updateAdmissionsTest(i, 'status', opt.value)} />
                               ))}
                             </div>
-                            {errors[`academic_input.admissions_tests.${index}.status`] ? (
-                              <em className="text-destructive mt-1 block">{errors[`academic_input.admissions_tests.${index}.status`]}</em>
-                            ) : null}
+                            <FieldError msg={errors[`academic_input.admissions_tests.${i}.status`]} />
                           </div>
                           <div className="md:col-span-2">
-                            <label>
-                              Score
-                              <input
-                                type="number"
-                                className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
-                                value={test.score_numeric}
-                                onChange={(event) => updateAdmissionsTest(index, 'score_numeric', event.target.value)}
-                                placeholder="Value"
-                              />
+                            <label className="space-y-1">
+                              <span className="text-xs font-semibold text-muted-foreground">Score</span>
+                              <input type="number" className={inputCls} value={test.score_numeric}
+                                onChange={(e) => updateAdmissionsTest(i, 'score_numeric', e.target.value)} placeholder="Value" />
                             </label>
                           </div>
-                          <div className="md:col-span-2">
-                            <label>
-                              Percentile
-                              <input
-                                type="number"
-                                min={0}
-                                max={100}
-                                className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
-                                value={test.percentile}
-                                onChange={(event) => updateAdmissionsTest(index, 'percentile', event.target.value)}
-                                placeholder="0-100"
-                              />
+                          <div className="md:col-span-3">
+                            <label className="space-y-1">
+                              <span className="text-xs font-semibold text-muted-foreground">Percentile</span>
+                              <input type="number" min={0} max={100} className={inputCls} value={test.percentile}
+                                onChange={(e) => updateAdmissionsTest(i, 'percentile', e.target.value)} placeholder="0–100" />
                             </label>
                           </div>
                         </div>
                       ))}
+                    </SectionCard>
+                  ) : null}
+
+                  {/* EPQ / Extended Project — A-level only */}
+                  {(programmeType === 'A_LEVEL' || programmeType === 'ACT') ? (
+                    <SectionCard>
+                      <SectionTitle
+                        label="Extended Project (EPQ)"
+                        hint="Optional — if you've written an EPQ or equivalent independent research project."
+                        why="Universities value self-directed research. A relevant EPQ can strengthen your application for competitive programmes."
+                      />
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <label className="space-y-1.5">
+                          <span className="text-sm font-medium text-muted-foreground">Subject area <span className="text-xs">(optional)</span></span>
+                          <input type="text" className={inputCls}
+                            value={activities.epq_subject}
+                            onChange={(e) => setActivities((prev) => ({ ...prev, epq_subject: e.target.value }))}
+                            placeholder="e.g. Biology, Economics, History" />
+                        </label>
+                        <label className="space-y-1.5">
+                          <span className="text-sm font-medium text-muted-foreground">Project title <span className="text-xs">(optional)</span></span>
+                          <input type="text" className={inputCls}
+                            value={activities.epq_title}
+                            onChange={(e) => setActivities((prev) => ({ ...prev, epq_title: e.target.value }))}
+                            placeholder="e.g. To what extent does microfinance reduce poverty?" />
+                        </label>
+                      </div>
+                    </SectionCard>
+                  ) : null}
+
+                  {/* SAT / ACT — optional, for international applications */}
+                  <SectionCard>
+                    <SectionTitle
+                      label="SAT / ACT scores"
+                      hint="Optional — only relevant if applying to US-style programmes."
+                      why="US universities use SAT/ACT scores in admissions. We use this to flag eligibility and score fit."
+                    />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <label className="space-y-1.5">
+                        <span className="text-sm font-medium text-muted-foreground">SAT score <span className="text-xs">(400–1600, optional)</span></span>
+                        <input type="number" min={400} max={1600} className={inputCls}
+                          value={activities.sat_score}
+                          onChange={(e) => setActivities((prev) => ({ ...prev, sat_score: e.target.value }))}
+                          placeholder="e.g. 1450" />
+                      </label>
+                      <label className="space-y-1.5">
+                        <span className="text-sm font-medium text-muted-foreground">ACT score <span className="text-xs">(1–36, optional)</span></span>
+                        <input type="number" min={1} max={36} className={inputCls}
+                          value={activities.act_score}
+                          onChange={(e) => setActivities((prev) => ({ ...prev, act_score: e.target.value }))}
+                          placeholder="e.g. 32" />
+                      </label>
+                    </div>
+                  </SectionCard>
+                </section>
+              ) : null}
+
+              {/* ═══ STEP 4 — Activities & ambitions ═════════════════════════ */}
+              {currentStep === 4 ? (
+                <section className="space-y-5">
+
+                  {/* ── Leadership ─────────────────────────────────────────── */}
+                  <SectionCard>
+                    <SectionTitle label="Leadership roles" hint="Select all that apply — or none." />
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {LEADERSHIP_OPTIONS.map((opt) => (
+                        <Chip key={opt} label={opt}
+                          selected={activities.leadership_roles.includes(opt)}
+                          onClick={() => setActivities((prev) => ({
+                            ...prev,
+                            leadership_roles: opt === 'None'
+                              ? (prev.leadership_roles.includes('None') ? [] : ['None'])
+                              : toggleMulti(prev.leadership_roles.filter((r) => r !== 'None'), opt)
+                          }))} />
+                      ))}
+                    </div>
+                  </SectionCard>
+
+                  {/* ── Overall involvement ───────────────────────────────── */}
+                  <SectionCard>
+                    <SectionTitle label="Overall involvement level" hint="Across everything — sport, competitions, clubs, volunteering." />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {COMMITMENT_OPTIONS.map((opt) => (
+                        <Chip key={opt.value} label={opt.label} description={opt.desc}
+                          selected={activities.commitment_level === opt.value}
+                          onClick={() => setActivities((prev) => ({
+                            ...prev, commitment_level: prev.commitment_level === opt.value ? '' : opt.value
+                          }))} />
+                      ))}
+                    </div>
+                  </SectionCard>
+
+                  {/* ── Activity entries ──────────────────────────────────── */}
+                  <SectionCard>
+                    <SectionTitle
+                      label="Your activities"
+                      hint="Add each activity separately — you can include sport, competitions, volunteering, music, anything significant."
+                      why="Universities look at depth, level, and achievement — not just a list of hobbies. The more specific you are, the better your counsellor can support you."
+                    />
+
+                    {activityRows.length === 0 && (
+                      <p className="text-sm text-muted-foreground">No activities added yet. Hit the button below to start.</p>
+                    )}
+
+                    <div className="space-y-3">
+                      {activityRows.map((row) => (
+                        <div key={row.localId} className="rounded-xl border border-border/70 bg-background p-4 space-y-3">
+                          {/* Row header: category + delete */}
+                          <div className="flex items-start gap-2">
+                            <div className="flex-1">
+                              <p className="text-xs font-semibold text-muted-foreground mb-1.5">Activity type</p>
+                              <div className="flex flex-wrap gap-1.5">
+                                {ACTIVITY_CATEGORIES.map((cat) => (
+                                  <Chip key={cat} label={cat}
+                                    selected={row.category === cat}
+                                    onClick={() => updateActivityRow(row.localId, 'category', row.category === cat ? '' : cat)} />
+                                ))}
+                              </div>
+                            </div>
+                            <button type="button"
+                              className="mt-0.5 p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors flex-shrink-0"
+                              onClick={() => removeActivityRow(row.localId)}
+                              aria-label="Remove activity">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                            </button>
+                          </div>
+
+                          {/* Level + Duration */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                              <p className="text-xs font-semibold text-muted-foreground mb-1.5">Highest level reached</p>
+                              <div className="flex flex-wrap gap-1.5">
+                                {ACTIVITY_LEVELS.map((lvl) => (
+                                  <Chip key={lvl} label={lvl}
+                                    selected={row.level === lvl}
+                                    onClick={() => updateActivityRow(row.localId, 'level', row.level === lvl ? '' : lvl)} />
+                                ))}
+                              </div>
+                            </div>
+                            <div>
+                              <p className="text-xs font-semibold text-muted-foreground mb-1.5">Duration</p>
+                              <div className="flex flex-wrap gap-1.5">
+                                {ACTIVITY_DURATIONS.map((dur) => (
+                                  <Chip key={dur} label={dur}
+                                    selected={row.duration === dur}
+                                    onClick={() => updateActivityRow(row.localId, 'duration', row.duration === dur ? '' : dur)} />
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Highlight */}
+                          <label className="block space-y-1">
+                            <span className="text-xs font-semibold text-muted-foreground">
+                              {row.category === 'Academic Competition' || row.category === 'Science Competition'
+                                ? 'Result / award'
+                                : 'Key achievement or highlight'}
+                              <span className="font-normal ml-1">(optional)</span>
+                            </span>
+                            <input type="text" maxLength={150} className={inputCls}
+                              value={row.highlight}
+                              onChange={(e) => updateActivityRow(row.localId, 'highlight', e.target.value)}
+                              placeholder={
+                                row.category === 'Academic Competition' ? 'e.g. 2nd place, Bangkok Economics Essay Competition'
+                                : row.category === 'Sport' ? 'e.g. FOBISIA Games champion 3 years, national tournament finalist'
+                                : row.category === 'Music' ? 'e.g. Grade 8 distinction, orchestra principal'
+                                : 'e.g. Best delegate award, 3 years running'
+                              } />
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+
+                    {activityRows.length < 10 && (
+                      <button type="button"
+                        className="mt-1 flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+                        onClick={addActivityRow}>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        Add activity
+                      </button>
+                    )}
+                  </SectionCard>
+
+                  {/* ── Work experience ───────────────────────────────────── */}
+                  <SectionCard>
+                    <SectionTitle label="Work experience or internships" hint="Any paid or unpaid work outside school." />
+                    <div className="flex gap-2">
+                      {[{ value: true, label: 'Yes' }, { value: false, label: 'No' }].map((opt) => (
+                        <Chip key={String(opt.value)} label={opt.label}
+                          selected={activities.work_experience === opt.value}
+                          onClick={() => setActivities((prev) => ({ ...prev, work_experience: opt.value }))} />
+                      ))}
+                    </div>
+                    {activities.work_experience ? (
+                      <label className="space-y-1.5 block">
+                        <span className="text-sm font-medium text-muted-foreground">Brief description <span className="text-xs">(optional)</span></span>
+                        <textarea rows={2} className={cn(inputCls, 'h-auto py-3 resize-none')}
+                          value={activities.work_experience_summary}
+                          onChange={(e) => setActivities((prev) => ({ ...prev, work_experience_summary: e.target.value }))}
+                          placeholder="e.g. Summer internship at a law firm, 2 months" />
+                      </label>
+                    ) : null}
+                  </SectionCard>
+
+                  {/* ── Ambition statement ────────────────────────────────── */}
+                  <SectionCard>
+                    <SectionTitle
+                      label="Where do you want to go?"
+                      hint="Optional — 2–3 sentences on your goals or what drives you."
+                      why="Your counsellor uses this to give more targeted guidance and personalise your programme shortlist."
+                    />
+                    <textarea rows={3} className={cn(inputCls, 'h-auto py-3 resize-none')}
+                      value={activities.ambition_statement}
+                      onChange={(e) => setActivities((prev) => ({ ...prev, ambition_statement: e.target.value }))}
+                      placeholder="e.g. I want to study biomedical sciences and eventually research treatments for autoimmune diseases. I'm particularly interested in universities with strong research output and lab access for undergraduates." />
+                  </SectionCard>
+
+                </section>
+              ) : null}
+
+              {/* ═══ STEP 5 — Lifestyle preferences ══════════════════════════ */}
+              {currentStep === 5 ? (
+                <section className="space-y-5">
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">Teaching style preference</p>
+                    <div className="flex flex-wrap gap-2">
+                      {[
+                        { value: 'academic', label: 'Academic', desc: 'Lectures, seminars, theory-heavy' },
+                        { value: 'practical', label: 'Practical', desc: 'Project-based, hands-on' },
+                        { value: 'mixed', label: 'Mixed', desc: 'Best of both' },
+                        { value: '', label: 'No preference' },
+                      ].map((opt) => (
+                        <Chip key={opt.value} label={opt.label} description={opt.desc}
+                          selected={lifestylePreference.teaching_style === opt.value}
+                          onClick={() => updateLifestylePreference('teaching_style', opt.value)} />
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">Preferred location type</p>
+                    <p className="text-xs text-muted-foreground">Select as many as you like. Choosing multiple is fine — it won&apos;t affect your score.</p>
+                    <div className="flex flex-wrap gap-2">
+                      {[
+                        { value: 'capital_city', label: '🏙 Capital city' },
+                        { value: 'major_city', label: '🌆 Major city' },
+                        { value: 'smaller_city', label: '🏘 Smaller city' },
+                        { value: 'suburban', label: '🌿 Suburban / campus' },
+                        { value: 'no_preference', label: 'No preference' },
+                      ].map((opt) => (
+                        <Chip key={opt.value} label={opt.label}
+                          selected={lifestylePreference.desired_location_type.includes(opt.value)}
+                          onClick={() => toggleLocationPreference(opt.value)} />
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">Campus size preference</p>
+                    <div className="flex flex-wrap gap-2">
+                      {[
+                        { value: 'small', label: 'Small', desc: '<5k students' },
+                        { value: 'medium', label: 'Medium', desc: '5–15k' },
+                        { value: 'large', label: 'Large', desc: '15k+' },
+                        { value: 'no_preference', label: 'No preference' },
+                      ].map((opt) => (
+                        <Chip key={opt.value} label={opt.label} description={(opt as any).desc}
+                          selected={lifestylePreference.campus_size === opt.value}
+                          onClick={() => updateLifestylePreference('campus_size', opt.value)} />
+                      ))}
+                    </div>
+                  </div>
+
+                  <SectionCard>
+                    <SectionTitle label="Extracurricular interests" hint="What matters to you in campus life." />
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {EXTRACURRICULAR_OPTIONS.map((opt) => (
+                        <Chip key={opt} label={opt}
+                          selected={lifestylePreference.extracurricular_interests.includes(opt)}
+                          onClick={() => updateLifestylePreference(
+                            'extracurricular_interests',
+                            toggleMulti(lifestylePreference.extracurricular_interests, opt)
+                          )} />
+                      ))}
+                    </div>
+                    <label className="space-y-1.5 block pt-1">
+                      <span className="text-xs text-muted-foreground">Anything else?</span>
+                      <input type="text" className={inputCls}
+                        value={lifestylePreference.other_extracurriculars}
+                        onChange={(e) => updateLifestylePreference('other_extracurriculars', e.target.value)}
+                        placeholder="Chess club, anime society…" />
+                    </label>
+                  </SectionCard>
+                </section>
+              ) : null}
+
+              {/* ═══ STEP 6 — Review ══════════════════════════════════════════ */}
+              {currentStep === TOTAL_STEPS ? (
+                <section className="space-y-4">
+                  {/* Personal */}
+                  <SectionCard>
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-semibold">Personal information</p>
+                      <button type="button" onClick={() => setCurrentStep(1)}
+                        className="text-xs text-primary hover:text-primary/80 transition-colors font-medium">Edit</button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm">
+                      <div><span className="text-muted-foreground">Name</span><br />{[personalInfo.first_name, personalInfo.last_name].filter(Boolean).join(' ') || '—'}</div>
+                      <div><span className="text-muted-foreground">Email</span><br />{personalInfo.email || '—'}</div>
+                      <div><span className="text-muted-foreground">Nationality</span><br />{formattedNationalities.join(', ') || '—'}</div>
+                      <div><span className="text-muted-foreground">Residence</span><br />{personalInfo.resident_country || '—'}</div>
+                    </div>
+                  </SectionCard>
+
+                  {/* Academic */}
+                  <SectionCard>
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-semibold">Studies</p>
+                      <button type="button" onClick={() => setCurrentStep(2)}
+                        className="text-xs text-primary hover:text-primary/80 transition-colors font-medium">Edit</button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm">
+                      <div><span className="text-muted-foreground">Programme</span><br />{programmeType || '—'}</div>
+                      <div><span className="text-muted-foreground">School</span><br />{academicInput.school_name || '—'}</div>
+                      <div><span className="text-muted-foreground">Focus</span><br />{academicInput.intended_clusters.map((c) => clusterLabelMap.get(c)).join(', ') || '—'}</div>
+                      <div><span className="text-muted-foreground">Graduation</span><br />{academicInput.graduation_year || '—'}</div>
+                    </div>
+                  </SectionCard>
+
+                  {/* Grades */}
+                  <SectionCard>
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-semibold">Grades & tests</p>
+                      <button type="button" onClick={() => setCurrentStep(3)}
+                        className="text-xs text-primary hover:text-primary/80 transition-colors font-medium">Edit</button>
+                    </div>
+                    <div className="text-sm space-y-1">
+                      <p><span className="text-muted-foreground">Subjects:</span> {subjects.filter((s) => s.subject_name.trim()).length}</p>
+                      {programmeType === 'IB' && academicInput.ib_total_points ?
+                        <p><span className="text-muted-foreground">IB points:</span> {academicInput.ib_total_points}</p> : null}
+                      <p><span className="text-muted-foreground">English:</span> {englishRequired ? { yes: 'Required', no: 'Not required', not_sure: 'Not sure' }[englishRequired] ?? '—' : '—'}</p>
+                    </div>
+                  </SectionCard>
+
+                  {/* Activities */}
+                  <SectionCard>
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-semibold">Activities</p>
+                      <button type="button" onClick={() => setCurrentStep(4)}
+                        className="text-xs text-primary hover:text-primary/80 transition-colors font-medium">Edit</button>
+                    </div>
+                    <div className="text-sm space-y-1">
+                      {activities.commitment_level ? <p><span className="text-muted-foreground">Commitment:</span> {COMMITMENT_OPTIONS.find((o) => o.value === activities.commitment_level)?.label}</p> : null}
+                      {activities.key_activities.length > 0 ? <p><span className="text-muted-foreground">Activities:</span> {activities.key_activities.join(', ')}</p> : null}
+                      {activities.leadership_roles.length > 0 ? <p><span className="text-muted-foreground">Leadership:</span> {activities.leadership_roles.join(', ')}</p> : null}
+                    </div>
+                  </SectionCard>
+
+                  {/* Status + CTA */}
+                  {statusMessage ? (
+                    <div className={cn(
+                      'rounded-xl px-4 py-3 text-sm font-medium',
+                      submitted ? 'bg-emerald-500/10 text-emerald-600' : 'bg-muted text-muted-foreground'
+                    )}>
+                      {statusMessage}
                     </div>
                   ) : null}
-                </section>
-              ) : null}
-
-              {currentStep === 4 ? (
-                <section className="space-y-6 lg:space-y-8">
-                  <h3>Lifestyle preferences</h3>
-                  <div className="space-y-2 flex flex-col">
-                    <span>Teaching style preference</span>
-                    <div className="flex flex-wrap gap-3">
-                      {[
-                        { value: 'academic', label: 'Academic' },
-                        { value: 'practical', label: 'Practical' },
-                        { value: 'mixed', label: 'Mixed' },
-                        { value: '', label: 'No preference' }
-                      ].map((option) => (
-                        <label key={option.value} className={cn(
-                          "relative flex items-center gap-3 p-4 rounded-xl border transition-all duration-200 cursor-pointer text-sm",
-                          lifestylePreference.teaching_style === option.value
-                            ? "bg-primary/5 border-primary ring-1 ring-primary/20"
-                            : "bg-card border-border hover:border-primary/50 hover:bg-muted/50"
-                        )}>
-                          <input
-                            type="radio"
-                            name="teaching_style"
-                            className="accent-primary h-4 w-4"
-                            value={option.value}
-                            checked={lifestylePreference.teaching_style === option.value}
-                            onChange={(event) => updateLifestylePreference('teaching_style', event.target.value)}
-                          />
-                          {option.label}
-                        </label>
-                      ))}
+                  {submitted ? (
+                    <div className="flex justify-center pt-2">
+                      <a
+                        href="/matches"
+                        className="inline-flex items-center gap-2 rounded-xl bg-primary px-8 py-3 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 transition-all"
+                      >
+                        Get me to my matches →
+                      </a>
                     </div>
-                  </div>
-                  <div className="space-y-2 flex flex-col">
-                    <span>Preferred location type</span>
-                    <div className="flex flex-wrap gap-3">
-                      {[
-                        { value: 'london', label: 'London' },
-                        { value: 'major_city', label: 'Major city' },
-                        { value: 'smaller_city', label: 'Smaller city' },
-                        { value: 'suburban', label: 'Suburban' },
-                        { value: 'no_preference', label: 'No preference' }
-                      ].map((option) => (
-                        <label key={option.value} className={cn(
-                          "relative flex items-center gap-3 p-4 rounded-xl border transition-all duration-200 cursor-pointer text-sm",
-                          lifestylePreference.desired_location_type === option.value
-                            ? "bg-primary/5 border-primary ring-1 ring-primary/20"
-                            : "bg-card border-border hover:border-primary/50 hover:bg-muted/50"
-                        )}>
-                          <input
-                            type="radio"
-                            name="desired_location_type"
-                            className="accent-primary h-4 w-4"
-                            value={option.value}
-                            checked={lifestylePreference.desired_location_type === option.value}
-                            onChange={(event) => updateLifestylePreference('desired_location_type', event.target.value)}
-                          />
-                          {option.label}
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="space-y-2 flex flex-col">
-                    <span>Campus size preference</span>
-                    <div className="flex flex-wrap gap-3">
-                      {[
-                        { value: 'small', label: 'Small' },
-                        { value: 'medium', label: 'Medium' },
-                        { value: 'large', label: 'Large' },
-                        { value: 'no_preference', label: 'No preference' }
-                      ].map((option) => (
-                        <label key={option.value} className={cn(
-                          "relative flex items-center gap-3 p-4 rounded-xl border transition-all duration-200 cursor-pointer text-sm",
-                          lifestylePreference.campus_size === option.value
-                            ? "bg-primary/5 border-primary ring-1 ring-primary/20"
-                            : "bg-card border-border hover:border-primary/50 hover:bg-muted/50"
-                        )}>
-                          <input
-                            type="radio"
-                            name="campus_size"
-                            className="accent-primary h-4 w-4"
-                            value={option.value}
-                            checked={lifestylePreference.campus_size === option.value}
-                            onChange={(event) => updateLifestylePreference('campus_size', event.target.value)}
-                          />
-                          {option.label}
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="p-6 rounded-2xl border border-border/50 bg-muted/30 backdrop-blur-sm space-y-6">
-                    <div className="flex justify-between items-start gap-3">
-                      <div>
-                        <span className="text-base font-semibold text-foreground">Extracurricular interests</span>
-                        <p className="text-xs text-muted-foreground mt-1">Select any that matter to your university experience.</p>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {EXTRACURRICULAR_OPTIONS.map((option) => (
-                        <label key={option} className={cn(
-                          "relative flex items-center gap-3 p-4 rounded-xl border transition-all duration-200 cursor-pointer text-sm",
-                          lifestylePreference.extracurricular_interests.includes(option)
-                            ? "bg-primary/5 border-primary ring-1 ring-primary/20"
-                            : "bg-card border-border hover:border-primary/50 hover:bg-muted/50"
-                        )}>
-                          <input
-                            type="checkbox"
-                            className="accent-primary h-4 w-4"
-                            checked={lifestylePreference.extracurricular_interests.includes(option)}
-                            onChange={() => toggleExtracurricular(option)}
-                          />
-                          {option}
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                  <label className="space-y-2 flex flex-col">
-                    <span>Other extracurriculars (optional)</span>
-                    <input
-                      type="text"
-                      className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-0 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
-                      value={lifestylePreference.other_extracurriculars}
-                      onChange={(event) => updateLifestylePreference('other_extracurriculars', event.target.value)}
-                    />
-                  </label>
-                </section>
-              ) : null}
-
-              {currentStep === 5 ? (
-                <section className="space-y-6 lg:space-y-8 items-center text-center">
-                  <h3>Review & submit</h3>
-                  <p className="mt-1 text-foreground/60">Check everything below before submitting your profile.</p>
-                  <div className="w-full max-w-[920px] mx-auto text-left rounded-2xl p-4 border border-border/50 bg-muted/30">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {[
-                        { label: 'Name', value: `${personalInfo.first_name || '—'} ${personalInfo.last_name || ''}`, step: 1 },
-                        { label: 'Email', value: personalInfo.email, step: 1 },
-                        { label: 'Nationality', value: formattedNationalities.join(', '), step: 1 },
-                        { label: 'Age', value: personalInfo.age, step: 1 },
-                        { label: 'Gender', value: personalInfo.gender, step: 1 },
-                        { label: 'Residence', value: personalInfo.resident_country, step: 1 },
-                        { label: 'Current city', value: personalInfo.current_location_city, step: 1 },
-                        { label: 'Programme', value: programmeType, step: 2 },
-                        { label: 'School', value: academicInput.school_name, step: 2 },
-                        { label: 'School country', value: academicInput.school_country, step: 2 },
-                        { label: 'School city', value: academicInput.school_city, step: 2 },
-                        { label: 'School type', value: academicInput.school_type, step: 2 },
-                        { label: 'Graduation year', value: academicInput.graduation_year, step: 2 },
-                        { label: 'Start date', value: academicInput.desired_start_date, step: 2 },
-                        { label: 'Primary subject', value: academicInput.intended_clusters.length ? academicInput.intended_clusters.map((cluster) => clusterLabelMap.get(cluster)).join(', ') : '', step: 2 },
-                        { label: 'Secondary interests', value: academicInput.secondary_clusters.length ? academicInput.secondary_clusters.map((cluster) => clusterLabelMap.get(cluster)).join(', ') : '', step: 2 },
-                        { label: 'Career aspiration', value: academicInput.career_aspiration, step: 2 },
-                        { label: 'Subjects', value: subjects.filter((s) => s.subject_name.trim()).map((s) => `${s.subject_name} (${s.level}) ${s.grade_value || ''}`.trim()).join(', '), step: 3 }
-                      ].map((item, idx) => (
-                        <div key={idx} className="group p-4 rounded-2xl bg-muted/30 border border-border/50 flex flex-col gap-1 hover:bg-muted/40 transition-all duration-200 relative">
-                          <button
-                            type="button"
-                            onClick={() => goToStep(item.step)}
-                            className="absolute top-3 right-3 p-2 rounded-lg bg-primary/10 text-primary opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                            title="Edit this section"
-                          >
-                            <Pencil className="w-3 h-3" />
-                          </button>
-                          <span className="text-[10px] uppercase tracking-widest text-foreground/50 font-bold">{item.label}</span>
-                          <p className="text-sm font-semibold text-foreground pr-8">{item.value || '—'}</p>
-                        </div>
-                      ))}
-
-                      {programmeType === 'IB' ? (
-                        <>
-                          {[
-                            { label: 'IB total points', value: academicInput.ib_total_points },
-                            { label: 'IB core points', value: academicInput.ib_core_points },
-                            { label: 'TOK grade', value: academicInput.ib_tok_grade },
-                            { label: 'EE grade', value: academicInput.ib_ee_grade },
-                            { label: 'Maths pathway', value: academicInput.ib_math_pathway },
-                            { label: 'EE subject', value: academicInput.ee_subject },
-                            { label: 'EE title', value: academicInput.ee_title },
-                            { label: 'EE summary', value: academicInput.ee_summary }
-                          ].map((item, idx) => (
-                            <div key={`ib-${idx}`} className="p-4 rounded-2xl bg-muted/30 border border-border/50 flex flex-col gap-1 hover:bg-muted/40 transition-colors duration-200">
-                              <span className="text-[10px] uppercase tracking-widest text-foreground/60 font-semibold">{item.label}</span>
-                              <p className="text-sm font-semibold text-foreground">{item.value || '—'}</p>
-                            </div>
-                          ))}
-                        </>
-                      ) : (
-                        <div className="p-4 rounded-2xl bg-muted/30 border border-border/50 flex flex-col gap-1 hover:bg-muted/40 transition-colors duration-200">
-                          <span className="text-[10px] uppercase tracking-widest text-foreground/60 font-semibold">A-level predicted grades</span>
-                          <p className="text-sm font-semibold text-foreground">
-                            {subjects
-                              .filter(s => programmeType === 'A_LEVEL' && s.grade_value)
-                              .map(s => `${s.subject_name}: ${s.grade_value}`)
-                              .join(', ') || '—'}
-                          </p>
-                        </div>
-                      )}
-
-                      <div className="p-4 rounded-2xl bg-muted/30 border border-border/50 flex flex-col gap-1 hover:bg-muted/40 transition-colors duration-200">
-                        <span className="text-[10px] uppercase tracking-widest text-foreground/60 font-semibold">English requirement</span>
-                        <p className="text-sm font-semibold text-foreground">{englishRequiredLabel || '—'}</p>
-                      </div>
-                      <div className="p-4 rounded-2xl bg-muted/30 border border-border/50 flex flex-col gap-1 hover:bg-muted/40 transition-colors duration-200">
-                        <span className="text-[10px] uppercase tracking-widest text-foreground/60 font-semibold">English test</span>
-                        <p className="text-sm font-semibold text-foreground">{englishTestType || '—'} • {englishStatus || '—'}</p>
-                      </div>
-                      <div className="p-4 rounded-2xl bg-muted/30 border border-border/50 flex flex-col gap-1 hover:bg-muted/40 transition-colors duration-200">
-                        <span className="text-[10px] uppercase tracking-widest text-foreground/60 font-semibold">Admissions tests</span>
-                        <p className="text-sm font-semibold text-foreground">
-                          {admissionsTests.filter((test) => test.test_type !== 'NONE').length
-                            ? admissionsTests
-                              .filter((test) => test.test_type !== 'NONE')
-                              .map((test) => `${test.test_type} (${test.status || 'missing'})`)
-                              .join(', ')
-                            : '—'}
-                        </p>
-                      </div>
-                      <div className="p-4 rounded-2xl bg-muted/30 border border-border/50 flex flex-col gap-1 hover:bg-muted/40 transition-colors duration-200">
-                        <span className="text-[10px] uppercase tracking-widest text-foreground/60 font-semibold">Lifestyle</span>
-                        <p className="text-sm font-semibold text-foreground">
-                          {[
-                            lifestylePreference.teaching_style,
-                            lifestylePreference.desired_location_type,
-                            lifestylePreference.campus_size
-                          ]
-                            .filter(Boolean)
-                            .join(' • ') || '—'}
-                        </p>
-                      </div>
-                      <div className="p-4 rounded-2xl bg-muted/30 border border-border/50 flex flex-col gap-1 hover:bg-muted/40 transition-colors duration-200">
-                        <span className="text-[10px] uppercase tracking-widest text-foreground/60 font-semibold">Extracurriculars</span>
-                        <p className="text-sm font-semibold text-foreground">{lifestylePreference.extracurricular_interests.join(', ') || '—'}</p>
-                      </div>
-                    </div>
-                  </div>
+                  ) : null}
                 </section>
               ) : null}
 
             </motion.div>
           </AnimatePresence>
 
-          <div className="mt-12 flex items-center justify-between gap-4 p-6 surface-card bg-background/40 backdrop-blur-md rounded-2xl border-border/50 shadow-xl">
+          {/* ── Navigation buttons ── */}
+          <div className="mt-8 flex items-center justify-between gap-3 pt-4 border-t border-border/50">
             <Button
-              type="button"
-              variant="outline"
-              onClick={goBack}
-              disabled={currentStep === 1}
-              className="h-12 px-6 rounded-xl border-border/50 hover:bg-muted/30 disabled:opacity-30"
+              type="button" variant="outline" size="sm"
+              onClick={goBack} disabled={currentStep === 1}
+              className="gap-1.5"
             >
-              <ChevronLeft className="w-4 h-4 mr-2" />
-              Back
+              <ChevronLeft className="w-4 h-4" /> Back
             </Button>
 
-            <div className="flex gap-3">
-              {currentStep < 5 ? (
-                <Button
-                  type="button"
-                  onClick={goNext}
-                  className="h-12 px-8 rounded-xl bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20"
-                >
-                  Next Step
-                  <ChevronRight className="w-4 h-4 ml-2" />
-                </Button>
-              ) : (
-                <Button
-                  type="submit"
-                  disabled={isSaving || isRedirecting}
-                  className="h-12 px-8 rounded-xl bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20"
-                >
-                  {isSaving || isRedirecting ? (
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      {isRedirecting ? 'Redirecting...' : 'Saving...'}
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      <Send className="w-4 h-4" />
-                      Complete Profile
-                    </div>
-                  )}
-                </Button>
-              )}
-            </div>
+            {currentStep < TOTAL_STEPS ? (
+              <Button type="button" size="sm" onClick={goNext} className="gap-1.5">
+                Next <ChevronRight className="w-4 h-4" />
+              </Button>
+            ) : (
+              <Button
+                type="submit" size="sm"
+                disabled={isSaving || submitted}
+                className="gap-1.5 px-6"
+              >
+                {submitted ? 'Profile saved ✓' : isSaving ? 'Saving…' : 'Submit & see matches'}
+              </Button>
+            )}
           </div>
-
-          {statusMessage && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mt-4 p-4 rounded-xl bg-primary/10 border border-primary/20 text-primary text-sm text-center"
-            >
-              {statusMessage}
-            </motion.div>
-          )}
         </div>
       </div>
 
-      <datalist id="country-options">
-        {COUNTRY_OPTIONS.map((country) => (
-          <option key={country} value={country} />
-        ))}
-      </datalist>
-      <datalist id="subject-options">
-        {SUBJECT_OPTIONS.map((subject) => (
-          <option key={subject} value={subject} />
-        ))}
-      </datalist>
-
-
-      <style jsx>{`
-        /* Global Reset & Typography */
-        :global(form) {
-          font-family: var(--font-outfit), sans-serif;
-        }
-
-        /* Premium Input Styles */
-        :global(input), :global(select), :global(textarea) {
-          @apply w-full h-12 px-4 rounded-xl bg-slate-50 border border-slate-200 focus:border-primary focus:bg-white focus:ring-4 focus:ring-primary/5 transition-all duration-300 outline-none placeholder:text-slate-400 text-slate-900 shadow-inner font-medium;
-        }
-
-        :global(.dark input), :global(.dark select), :global(.dark textarea) {
-          @apply bg-slate-950/50 border-white/5 text-slate-100 placeholder:text-slate-600 focus:bg-slate-900 focus:border-primary/40 focus:ring-primary/10;
-        }
-
-        /* Field Groups (The main sections) */
-        :global(.field-group) {
-          @apply p-8 rounded-[28px] border border-slate-200/60 bg-white/70 backdrop-blur-sm shadow-[0_8px_30px_rgb(0,0,0,0.04)] space-y-8 transition-all duration-500;
-        }
-
-        :global(.dark .field-group) {
-          @apply border-white/5 bg-slate-900/40 shadow-none backdrop-blur-xl;
-        }
-
-        :global(label) {
-          @apply text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2 block px-1;
-        }
-
-        :global(.dark label) {
-          @apply text-foreground/40;
-        }
-
-        :global(.helper) {
-          @apply text-[11px] text-slate-500 mt-2 px-1 font-medium italic;
-        }
-
-        :global(.dark .helper) {
-          @apply text-slate-500;
-        }
-
-        /* Interactive Cards (Radio/Checkbox) */
-        :global(.radio), :global(.checkbox) {
-          @apply relative flex items-center gap-3 p-5 rounded-2xl border border-slate-200/60 bg-slate-50/50 hover:border-primary/40 hover:bg-primary/[0.03] hover:scale-[1.01] hover:shadow-md cursor-pointer transition-all duration-300;
-        }
-
-        :global(.dark .radio), :global(.dark .checkbox) {
-          @apply border-white/10 bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/20 hover:shadow-none;
-        }
-
-        :global(.radio input), :global(.checkbox input) {
-          @apply w-5 h-5 rounded-full border border-slate-300 bg-white text-primary transition-all duration-300 focus:ring-offset-0 focus:ring-4 focus:ring-primary/10;
-        }
-
-        :global(.dark .radio input), :global(.dark .checkbox input) {
-          @apply border-white/20 bg-transparent;
-        }
-
-        /* Subject Rows */
-        :global(.subject-row) {
-          @apply p-6 rounded-[28px] border border-slate-200/60 bg-white grid grid-cols-1 md:grid-cols-12 gap-6 items-start shadow-sm hover:shadow-md transition-all duration-300;
-        }
-
-        :global(.dark .subject-row) {
-          @apply border-white/10 bg-white/[0.02] shadow-none;
-        }
-
-        /* Review Summary Items */
-        :global(.review-item) {
-          @apply p-5 rounded-3xl bg-slate-50/50 border border-slate-200/60 shadow-sm flex flex-col gap-2 hover:border-primary/30 hover:bg-primary/[0.02] hover:scale-[1.01] transition-all duration-300;
-        }
-
-        :global(.dark .review-item) {
-          @apply bg-white/[0.02] border-white/10 hover:bg-white/[0.05] hover:border-white/20;
-        }
-
-        /* Sidebar Glassmorphism Fixes */
-        :global(.surface-card) {
-          @apply border border-slate-200/50 shadow-2xl bg-white/80 backdrop-blur-xl;
-        }
-
-        :global(.dark .surface-card) {
-          @apply border-white/10 bg-slate-900/60 shadow-none;
-        }
-      `}</style>
     </form>
   );
 };

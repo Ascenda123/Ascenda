@@ -6,6 +6,7 @@ import type {
   StudentProfilePayload,
   StudentSubject
 } from '@/lib/profile/intake-types';
+import { calculateActivitiesScore, type ActivitiesBreakdown } from './activities_scoring';
 
 type SubjectRule = {
   subject: string;
@@ -25,8 +26,10 @@ export type ScoreBreakdown = {
   key_subject_grades: number;
   academic_performance: number;
   ib_hl_strength: number;
-  ee_relevance_bonus: number;
+  ee_relevance_bonus: number;      // IB only — Extended Essay relevance
+  a_level_project_bonus: number;   // A-level only — work/project summary relevance (max 5)
   tests_and_english: number;
+  activities: ActivitiesBreakdown;
   total_score: number;
   student_band: StudentBand;
 };
@@ -198,6 +201,25 @@ export const KeySubjectsRules: Record<IntendedCluster, string[]> = {
 };
 
 export const RigourTable: Record<ProgrammeType, Record<string, 'HIGH' | 'MEDIUM' | 'LOW'>> = {
+  // ACT students use AP-level subjects graded with letter grades —
+  // same rigour mapping as A-level since subject difficulty is comparable.
+  ACT: {
+    mathematics: 'HIGH',
+    'further mathematics': 'HIGH',
+    'calculus': 'HIGH',
+    'statistics': 'HIGH',
+    physics: 'HIGH',
+    chemistry: 'HIGH',
+    biology: 'MEDIUM',
+    'computer science': 'MEDIUM',
+    economics: 'MEDIUM',
+    history: 'MEDIUM',
+    'english literature': 'MEDIUM',
+    'english language': 'MEDIUM',
+    geography: 'MEDIUM',
+    business: 'LOW',
+    'art and design': 'LOW'
+  },
   IB: {
     mathematics: 'HIGH',
     'further mathematics': 'HIGH',
@@ -360,10 +382,12 @@ const calculatePreferredAlignment = (subjects: StudentSubject[], clusters: Inten
 };
 
 const calculateRigourScore = (programmeType: ProgrammeType, subjects: StudentSubject[]) => {
-  const rigourMap = RigourTable[programmeType];
+  const rigourMap = RigourTable[programmeType] ?? RigourTable['A_LEVEL'];
   const relevantSubjects =
     programmeType === 'IB'
       ? subjects.filter((subject) => subject.level === 'HL')
+      : programmeType === 'ACT'
+      ? subjects.filter((subject) => subject.level === 'AP')
       : subjects.filter((subject) => subject.level === 'A_LEVEL');
   if (relevantSubjects.length === 0) return 0;
 
@@ -396,6 +420,7 @@ const calculateKeySubjectGrades = (
           const numeric = typeof grade === 'number' ? grade : Number(grade);
           return GRADE_POINTS_IB[numeric] ?? 0;
         }
+        // A_LEVEL and ACT both use letter-grade strings
         const stringGrade = String(grade).toUpperCase();
         return GRADE_POINTS_ALEVEL[stringGrade] ?? 0;
       })
@@ -420,6 +445,36 @@ const calculateIbTotalScore = (totalPoints: number | null) => {
   if (totalPoints <= 41) return 74;
   if (totalPoints <= 43) return 78;
   return 80;
+};
+
+/**
+ * ACT Composite → academic_performance score (0–80 scale).
+ *
+ * Calibrated to align with the IB and A-level tables:
+ *   ACT 36      ≈ IB 43+ / A*A*A*   → 80
+ *   ACT 34-35   ≈ IB 41-42 / A*AA   → 75
+ *   ACT 32-33   ≈ IB 38-40 / A*AA   → 68
+ *   ACT 30-31   ≈ IB 35-37 / AAB    → 58
+ *   ACT 27-29   ≈ IB 32-34 / ABB    → 48
+ *   ACT 24-26   ≈ IB 30-31 / BBB    → 38
+ *   ACT 21-23   ≈ IB 27-29 / BBC    → 28
+ *   ACT 18-20   ≈ IB 24-26 / BCC    → 18
+ *   ACT < 18                        →  8
+ *
+ * Sources: MIT (mid-50% ACT 34-36), NYU Stern (~35), UMich (~32),
+ *          McGill (~32), published middle-50% admit data 2024.
+ */
+export const calculateActScore = (actScore: number | null): number => {
+  if (!actScore) return 0;
+  if (actScore >= 36) return 80;
+  if (actScore >= 34) return 75;
+  if (actScore >= 32) return 68;
+  if (actScore >= 30) return 58;
+  if (actScore >= 27) return 48;
+  if (actScore >= 24) return 38;
+  if (actScore >= 21) return 28;
+  if (actScore >= 18) return 18;
+  return 8;
 };
 
 const calculateALevelProfileScore = (academic_input: StudentProfilePayload['academic_input']) => {
@@ -457,20 +512,31 @@ const calculateALevelProfileScore = (academic_input: StudentProfilePayload['acad
   const signature = sorted.join('');
 
   if (signature === 'A*A*A*' || signature === 'A*A*A') return 80;
+  if (signature === 'A*A*B') return 78;
   if (signature === 'A*AA') return 76;
+  if (signature === 'A*A*C') return 74;
+  if (signature === 'A*AB') return 68;
   if (signature === 'AAA') return 70;
+  if (signature === 'A*AC') return 64;
   if (signature === 'AAB') return 60;
+  if (signature === 'A*BB') return 60;
   if (signature === 'ABB') return 52;
+  if (signature === 'A*BC') return 52;
+  if (signature === 'AAC') return 50;
   if (signature === 'ABC') return 46;
+  if (signature === 'A*CC') return 44;
   if (signature === 'BBB') return 44;
+  if (signature === 'ABD') return 40;
   if (signature === 'BBC') return 36;
   if (signature === 'BCC') return 30;
+  if (signature === 'A*CD') return 28;
   if (signature === 'CCC') return 24;
+  if (signature === 'BCD') return 20;
   if (signature === 'CCD') return 16;
   if (signature === 'DDD') return 10;
   if (signature === 'EEE' || signature.includes('DEE')) return 5;
 
-  return 8; // Below CCC
+  return 8; // catch-all for unexpected combinations
 };
 
 const calculateIbHlStrength = (subjects: StudentSubject[]) => {
@@ -489,7 +555,10 @@ const calculateIbHlStrength = (subjects: StudentSubject[]) => {
     .slice(0, 3);
   if (!hlScores.length) return 0;
   const sum = hlScores.reduce<number>((total, value) => total + value, 0);
-  return (sum / 60) * 40;
+  // Max 16 pts — differentiates within IB without systematically outscoring
+  // equivalent A-level grades (calibrated so IB 44 stays Exceptional but
+  // IB 36 doesn't beat A*A*A A-level).
+  return (sum / 60) * 16;
 };
 
 const calculateEeRelevance = (cluster: IntendedCluster | null, payload: StudentProfilePayload) => {
@@ -505,6 +574,42 @@ const calculateEeRelevance = (cluster: IntendedCluster | null, payload: StudentP
   if (hasDirect) return 10;
   const hasRelated = rule.related.some((keyword) => content.includes(keyword));
   return hasRelated ? 5 : 0;
+};
+
+/**
+ * A-level equivalent of the EE relevance bonus.
+ * Checks the student's work_experience_summary for cluster-relevant keywords.
+ * Capped at 5 pts (vs IB EE's 10) — A-level projects are self-directed but
+ * less formally structured than a supervised 4,000-word EE.
+ */
+const calculateALevelProjectBonus = (
+  cluster: IntendedCluster | null,
+  payload: StudentProfilePayload
+): number => {
+  if (!cluster) return 0;
+  const rule = EE_RELEVANCE_RULES[cluster];
+  if (!rule) return 0;
+
+  // Check EPQ first (more academically rigorous than work experience summary)
+  const epqContent = [payload.lifestyle_preference.epq_subject, payload.lifestyle_preference.epq_title]
+    .filter(Boolean).join(' ').toLowerCase();
+  if (epqContent) {
+    if (rule.direct.some((kw) => epqContent.includes(kw))) return 5;
+    if (rule.related.some((kw) => epqContent.includes(kw))) return 3;
+  }
+
+  // Fall back to work experience / activity highlight summary
+  const highlights = (payload.activities_list ?? [])
+    .map((a) => a.highlight ?? '')
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase();
+  const summary = payload.lifestyle_preference.work_experience_summary ?? '';
+  const content = (highlights + ' ' + summary).trim().toLowerCase();
+  if (!content) return 0;
+  if (rule.direct.some((kw) => content.includes(kw))) return 5;
+  if (rule.related.some((kw) => content.includes(kw))) return 3;
+  return 0;
 };
 
 const calculateTestsAndEnglish = (
@@ -533,17 +638,22 @@ const calculateTestsAndEnglish = (
   });
 
   const testScores: number[] = [];
+
+  // LNAT — scored on raw score (0-42 scale).
+  // Thresholds calibrated against published offer-holder averages:
+  //   Oxford avg ~31, UCL avg ~29, King's ~27-29, Bristol/Nottingham ~25.
   const lnat = admissionsTests.find((test) => test.test_type === 'LNAT');
   if (lnat?.score_numeric !== null && lnat?.score_numeric !== undefined) {
     const score = lnat.score_numeric;
-    if (score <= 19) testScores.push(0);
-    else if (score <= 22) testScores.push(4);
-    else if (score <= 25) testScores.push(8);
-    else if (score <= 28) testScores.push(12);
-    else if (score <= 31) testScores.push(16);
-    else testScores.push(20);
+    if (score <= 19) testScores.push(0);       // below average
+    else if (score <= 23) testScores.push(5);  // average (~50th pct)
+    else if (score <= 26) testScores.push(9);  // above average (Bristol tier)
+    else if (score <= 29) testScores.push(13); // good (King's/UCL tier)
+    else if (score <= 31) testScores.push(17); // very good (UCL/Oxford borderline)
+    else testScores.push(20);                  // exceptional (Oxford tier)
   }
 
+  // UCAT — scored on percentile rank (consistent with LNAT tier spacing).
   const ucat = admissionsTests.find((test) => test.test_type === 'UCAT');
   if (ucat?.percentile !== null && ucat?.percentile !== undefined) {
     const percentile = ucat.percentile;
@@ -554,7 +664,12 @@ const calculateTestsAndEnglish = (
     else testScores.push(20);
   }
 
-  if (englishRequired !== false) {
+  // English proficiency.
+  // Native speakers (english_required = false) are implicitly proficient —
+  // award equivalent to 'exceptional' so they aren't penalised vs. IELTS takers.
+  if (englishRequired === false) {
+    testScores.push(18);
+  } else {
     if (englishStatus === 'met') {
       testScores.push(12);
     } else if (englishStatus === 'exceeds') {
@@ -574,7 +689,7 @@ const calculateTestsAndEnglish = (
 };
 
 const mapBand = (score: number): StudentBand => {
-  if (score >= 170) return 'Exceptional';
+  if (score >= 168) return 'Exceptional'; // lowered from 170 — buffer for edge cases
   if (score >= 150) return 'Very strong';
   if (score >= 130) return 'Strong';
   if (score >= 110) return 'Solid';
@@ -592,13 +707,42 @@ export const scoreStudentProfile = (payload: StudentProfilePayload): StudentScor
   const preferredAlignment = calculatePreferredAlignment(subjects, clusters);
   const rigourScore = calculateRigourScore(programmeType, subjects);
   const keySubjectGrades = calculateKeySubjectGrades(programmeType, subjects, clusters);
-  const academicPerformance =
-    programmeType === 'IB'
-      ? calculateIbTotalScore(academic_input.ib_total_points)
+
+  // ── Academic performance: primary credential + optional "best of" ACT ──
+  //
+  // Strategy:
+  //   • ACT students     → ACT score is the primary credential
+  //   • IB / A-level     → use IB or A-level score as primary
+  //   • Any pathway      → if an ACT score is also present in lifestyle_preference,
+  //                        take the MAX so students applying to both UK & US aren't
+  //                        penalised for having a strong ACT alongside their IB/A-level.
+  const actScoreInLifestyle = payload.lifestyle_preference.act_score;
+  const actEquivalent = calculateActScore(actScoreInLifestyle);
+
+  const primaryAcademicScore =
+    programmeType === 'ACT'
+      ? actEquivalent
+      : programmeType === 'IB'
+      // Include core points (EE + TOK, max 3) in total — wizard stores subject sum only
+      ? calculateIbTotalScore(
+          (academic_input.ib_total_points ?? 0) + (academic_input.ib_core_points ?? 0)
+        )
       : calculateALevelProfileScore(academic_input);
+
+  // For IB / A-level profiles that also have an ACT score, take the better result.
+  const academicPerformance =
+    programmeType !== 'ACT' && actScoreInLifestyle
+      ? Math.max(primaryAcademicScore, actEquivalent)
+      : primaryAcademicScore;
+
   const ibHlStrength = programmeType === 'IB' ? calculateIbHlStrength(subjects) : 0;
   const eeRelevanceBonus =
     programmeType === 'IB' && clusters.length > 0 ? calculateEeRelevance(clusters[0], payload) : 0;
+  // Project bonus applies to A-level and ACT students (both can have EPQ / AP research)
+  const aLevelProjectBonus =
+    (programmeType === 'A_LEVEL' || programmeType === 'ACT') && clusters.length > 0
+      ? calculateALevelProjectBonus(clusters[0], payload)
+      : 0;
 
   const testsAndEnglish = calculateTestsAndEnglish(
     clusters,
@@ -609,6 +753,8 @@ export const scoreStudentProfile = (payload: StudentProfilePayload): StudentScor
     academic_input.english_score_overall
   );
 
+  const activitiesBreakdown = calculateActivitiesScore(payload.lifestyle_preference, payload.activities_list);
+
   const totalRaw =
     preferredAlignment +
     rigourScore +
@@ -616,7 +762,9 @@ export const scoreStudentProfile = (payload: StudentProfilePayload): StudentScor
     academicPerformance +
     ibHlStrength +
     eeRelevanceBonus +
-    testsAndEnglish.score;
+    aLevelProjectBonus +
+    testsAndEnglish.score +
+    activitiesBreakdown.total;
   const totalScore = Math.min(200, Math.round(totalRaw));
   const band = mapBand(totalScore);
 
@@ -630,7 +778,9 @@ export const scoreStudentProfile = (payload: StudentProfilePayload): StudentScor
     academic_performance: Math.round(academicPerformance),
     ib_hl_strength: Math.round(ibHlStrength),
     ee_relevance_bonus: Math.round(eeRelevanceBonus),
+    a_level_project_bonus: Math.round(aLevelProjectBonus),
     tests_and_english: Math.round(testsAndEnglish.score),
+    activities: activitiesBreakdown,
     total_score: totalScore,
     student_band: band
   };
