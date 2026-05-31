@@ -9,9 +9,9 @@ export const metadata: Metadata = {
 export default function LoginPage() {
   return (
     <div className="space-y-6">
-      <div className="space-y-2 text-center">
-        <h1 className="text-3xl font-semibold">Welcome back</h1>
-        <p className="text-sm text-muted-foreground">Sign in to access your dashboard.</p>
+      <div className="space-y-1">
+        <h1 className="font-heading text-2xl font-semibold">Sign in</h1>
+        <p className="text-sm text-muted-foreground">Welcome back. Use your email or Google account to continue.</p>
       </div>
       <AuthForm mode="login" />
       <p className="text-center text-sm text-muted-foreground">

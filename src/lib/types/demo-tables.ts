@@ -3,6 +3,7 @@
 // these can be folded back into the main Database type.
 
 export type HelpRequestStatus = 'open' | 'accepted' | 'resolved';
+export type HelpRequestInitiator = 'student' | 'counsellor';
 
 export interface HelpRequest {
   id: string;
@@ -13,6 +14,7 @@ export interface HelpRequest {
   subject: string;
   body: string;
   status: HelpRequestStatus;
+  initiated_by: HelpRequestInitiator;
   created_at: string;
   accepted_at: string | null;
   resolved_at: string | null;
@@ -22,11 +24,14 @@ export type HelpRequestInsert = Pick<
   HelpRequest,
   'student_profile_id' | 'subject' | 'body'
 > &
-  Partial<Pick<HelpRequest, 'application_id' | 'university' | 'program' | 'status'>>;
+  Partial<Pick<HelpRequest, 'application_id' | 'university' | 'program' | 'status' | 'initiated_by'>>;
+
+export type NotificationAudience = 'student' | 'counsellor';
 
 export interface Notification {
   id: string;
   profile_id: string;
+  audience: NotificationAudience;
   kind: string;
   title: string;
   body: string | null;
@@ -39,7 +44,7 @@ export type NotificationInsert = Pick<
   Notification,
   'profile_id' | 'kind' | 'title'
 > &
-  Partial<Pick<Notification, 'body' | 'href'>>;
+  Partial<Pick<Notification, 'audience' | 'body' | 'href'>>;
 
 export type HelpMessageAuthorRole = 'student' | 'counsellor';
 

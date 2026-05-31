@@ -249,7 +249,7 @@ export const StudentRoster = ({ students, externalFilter, onClearExternalFilter,
       {filtered.length > 0 ? (
         <motion.div
           layout
-          className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+          className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
         >
           <AnimatePresence mode="popLayout">
             {filtered.map((student) => (

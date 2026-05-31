@@ -9,9 +9,9 @@ export const metadata: Metadata = {
 export default function SignupPage() {
   return (
     <div className="space-y-6">
-      <div className="space-y-2 text-center">
-        <h1 className="text-3xl font-semibold">Create your free account</h1>
-        <p className="text-sm text-muted-foreground">Join Ascenda to discover your perfect-fit universities.</p>
+      <div className="space-y-1">
+        <h1 className="font-heading text-2xl font-semibold">Create your account</h1>
+        <p className="text-sm text-muted-foreground">Pick a password and we&apos;ll have you set up in 30 seconds.</p>
       </div>
       <AuthForm mode="signup" />
       <p className="text-center text-sm text-muted-foreground">

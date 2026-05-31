@@ -56,8 +56,11 @@ const basePayload: StudentProfilePayload = {
     intl_experience: [],
     work_experience: null,
     work_experience_summary: null,
-    ambition_statement: null
-  }
+    ambition_statement: null,
+    epq_subject: null,
+    epq_title: null
+  },
+  activities_list: []
 };
 
 describe('student scoring', () => {

@@ -1,9 +1,10 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { AlertTriangle, CheckCircle2, Clock, BookOpen, FileText, Mail, ChevronRight } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Clock, BookOpen, FileText, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { DUMMY_STUDENTS } from '@/lib/data/counsellor-dummy-data';
 import { StudentDetailTabs } from '../../_components/student-detail-tabs';
+import { MessageStudentButton } from '../../_components/message-student-button';
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -121,15 +122,16 @@ export default async function StudentDetailPage({ params }: Props) {
 
           {/* Actions + Quick stats */}
           <div className="flex flex-col gap-3">
-            {/* Message button */}
-            <a
-              href={`mailto:${student.personal.email}`}
-              aria-label={`Email ${student.personal.firstName} ${student.personal.lastName}`}
-              className="flex items-center justify-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-2 text-sm font-semibold text-primary transition hover:-translate-y-0.5 hover:bg-primary/20"
-            >
-              <Mail className="h-4 w-4" />
-              Message
-            </a>
+            {/* Message button — opens in-app send modal, fires student notification */}
+            <MessageStudentButton
+              student={{
+                id: student.id,
+                firstName: student.personal.firstName,
+                lastName: student.personal.lastName
+              }}
+              variant="header"
+            />
+
 
             {/* Quick stats */}
             <div className="grid grid-cols-2 gap-2">

@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import { CheckCircle2, XCircle, Clock as ClockIcon, BookOpen, MapPin, GraduationCap, Target, FileText, Sparkles, Loader2 } from 'lucide-react';
 import type { CounsellorStudent, CounsellorMatch } from '@/lib/data/counsellor-dummy-data';
 import { NotesPanel } from './notes-panel';
+import { PortfolioBalance } from './portfolio-balance';
 import { EvolutionTimeline } from '@/components/profile/evolution-timeline';
 import { DEMO_EVOLUTION } from '@/lib/data/student-demo-data';
 
@@ -419,31 +420,34 @@ export const StudentDetailTabs = ({ student }: StudentDetailTabsProps) => {
 
       {/* Applications tab */}
       {active === 'applications' && (
-        <div className="space-y-3">
+        <div className="space-y-4">
+          <PortfolioBalance student={student} />
           {student.applications.length > 0 ? (
-            student.applications.map((app, i) => {
-              const statusCfg = APP_STATUS[app.status];
-              return (
-                <div
-                  key={i}
-                  className="flex flex-col gap-3 rounded-2xl border border-border/60 bg-background/60 px-5 py-4 sm:flex-row sm:items-center sm:gap-4"
-                >
-                  <div className="flex-1 space-y-0.5">
-                    <p className="font-semibold text-foreground">{app.university}</p>
-                    <p className="text-sm text-muted-foreground">{app.program}</p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                      <ClockIcon className="h-3.5 w-3.5" />
-                      {formatDate(app.deadline)}
+            <div className="space-y-3">
+              {student.applications.map((app, i) => {
+                const statusCfg = APP_STATUS[app.status];
+                return (
+                  <div
+                    key={i}
+                    className="flex flex-col gap-3 rounded-2xl border border-border/60 bg-background/60 px-5 py-4 sm:flex-row sm:items-center sm:gap-4"
+                  >
+                    <div className="flex-1 space-y-0.5">
+                      <p className="font-semibold text-foreground">{app.university}</p>
+                      <p className="text-sm text-muted-foreground">{app.program}</p>
                     </div>
-                    <span className={cn('rounded-full border px-3 py-1 text-xs font-semibold', statusCfg.color)}>
-                      {statusCfg.label}
-                    </span>
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <ClockIcon className="h-3.5 w-3.5" />
+                        {formatDate(app.deadline)}
+                      </div>
+                      <span className={cn('rounded-full border px-3 py-1 text-xs font-semibold', statusCfg.color)}>
+                        {statusCfg.label}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              );
-            })
+                );
+              })}
+            </div>
           ) : (
             <div className="rounded-[28px] border border-dashed border-border bg-muted/40 p-12 text-center">
               <FileText className="mx-auto mb-3 h-8 w-8 text-muted-foreground/40" />

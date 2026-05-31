@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { AuthError } from '@supabase/supabase-js';
-import { authSchema, type AuthFormValues } from '@/lib/validation/auth';
+import { loginSchema, signupSchema, type LoginFormValues, type SignupFormValues } from '@/lib/validation/auth';
 import { RETURNING_USER_STORAGE_KEY } from '@/lib/constants';
 import { useSupabase } from '@/hooks/useSupabase';
 import { Button } from '@/components/ui/button';
@@ -33,9 +33,12 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
   const [authServiceReady, setAuthServiceReady] = useState(true);
   const [isPending, startTransition] = useTransition();
 
-  const form = useForm<AuthFormValues>({
-    resolver: zodResolver(authSchema),
-    defaultValues: { email: '', password: '' }
+  type FormValues = LoginFormValues & Partial<Pick<SignupFormValues, 'confirmPassword'>>;
+  const form = useForm<FormValues>({
+    resolver: zodResolver(mode === 'signup' ? signupSchema : loginSchema),
+    defaultValues: mode === 'signup'
+      ? { email: '', password: '', confirmPassword: '' }
+      : { email: '', password: '' }
   });
 
   useEffect(() => {
@@ -76,7 +79,7 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
   };
 
   const onboardingRedirectUrl = buildAuthCallbackUrl('/profile/wizard');
-  const authCallbackUrl = buildAuthCallbackUrl();
+  const authCallbackUrl = buildAuthCallbackUrl('/dashboard');
 
   const determineRedirectTarget = async (userId?: string | null) => {
     if (!userId) {
@@ -132,7 +135,7 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
     return message;
   };
 
-  const onSubmit = (values: AuthFormValues) => {
+  const onSubmit = (values: FormValues) => {
     setError(null);
     setSuccess(null);
     if (!authServiceReady) {
@@ -197,11 +200,12 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
       return;
     }
 
-    // We don't use startTransition here because we're initiating a top-level redirect to Google
+    // We don't use startTransition here because we're initiating a top-level redirect to Google.
+    // Always target the dashboard — middleware's onboarding check (getOnboardingStatus) will
+    // bounce new users to /profile/wizard automatically. Hard-coding the wizard for signup-mode
+    // breaks existing Google users who happen to click "Sign in with Google" on /signup.
     const redirectTo =
-      mode === 'signup'
-        ? onboardingRedirectUrl
-        : authCallbackUrl ?? (typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : undefined);
+      authCallbackUrl ?? (typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : undefined);
 
     const initiation = async () => {
       const { error: signInError } = await supabase.auth.signInWithOAuth({
@@ -256,6 +260,25 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
           </p>
         ) : null}
       </div>
+      {mode === 'signup' ? (
+        <div className="form-field">
+          <Label className="form-label" htmlFor="confirmPassword">
+            Confirm password
+          </Label>
+          <Input
+            id="confirmPassword"
+            type="password"
+            autoComplete="new-password"
+            className="form-input"
+            {...form.register('confirmPassword')}
+          />
+          {form.formState.errors.confirmPassword ? (
+            <p className="form-feedback form-feedback--error" role="alert">
+              {form.formState.errors.confirmPassword.message}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
       {error ? (
         <p className="form-feedback form-feedback--error" role="alert">
           {error}

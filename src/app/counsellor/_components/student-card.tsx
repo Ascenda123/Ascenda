@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { AlertTriangle, Clock, CheckCircle2, BookOpen, Eye, Mail } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { CounsellorStudent } from '@/lib/data/counsellor-dummy-data';
+import { MessageStudentButton } from './message-student-button';
 
 interface StudentCardProps {
   student: CounsellorStudent;
@@ -153,12 +154,17 @@ export const StudentCard = ({ student, highlight = '' }: StudentCardProps) => {
           >
             <Eye className="h-3.5 w-3.5" />
           </Link>
-          <a
-            href={`mailto:${student.personal.email}`}
+          <MessageStudentButton
+            student={{
+              id: student.id,
+              firstName: student.personal.firstName,
+              lastName: student.personal.lastName
+            }}
+            variant={null}
             className="flex h-7 w-7 items-center justify-center rounded-full border border-border/60 bg-background/80 text-muted-foreground backdrop-blur-sm transition hover:border-primary/40 hover:text-primary"
           >
             <Mail className="h-3.5 w-3.5" />
-          </a>
+          </MessageStudentButton>
         </div>
       </div>
 

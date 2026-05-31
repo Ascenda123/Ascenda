@@ -38,7 +38,9 @@ export interface UseHelpThreadResult {
   setStatus: (status: HelpRequestStatus) => Promise<void>;
 }
 
-const POLL_MS = 4000;
+// See use-notifications.ts for the rationale on the two-speed poll.
+const POLL_MS_FAST = 1500;
+const POLL_MS_SLOW = 10000;
 
 export const useHelpThread = (requestId: string | null): UseHelpThreadResult => {
   const supabase = useSupabase();
@@ -95,9 +97,18 @@ export const useHelpThread = (requestId: string | null): UseHelpThreadResult => 
     };
   }, [requestId, refresh]);
 
-  // Realtime + poll fallback while drawer is open.
+  // Realtime + adaptive poll fallback while drawer is open. Same
+  // two-speed scheme as the other live hooks.
   useEffect(() => {
     if (!requestId) return;
+
+    let pollHandle: number | null = null;
+    const startPoll = (intervalMs: number) => {
+      if (pollHandle !== null) window.clearInterval(pollHandle);
+      pollHandle = window.setInterval(() => refresh(), intervalMs);
+    };
+    startPoll(POLL_MS_FAST);
+
     const channel = (supabase as any)
       .channel(`help_thread:${requestId}`)
       .on(
@@ -120,10 +131,15 @@ export const useHelpThread = (requestId: string | null): UseHelpThreadResult => 
         { event: '*', schema: 'public', table: 'help_requests', filter: `id=eq.${requestId}` },
         () => refresh()
       )
-      .subscribe();
-    const handle = window.setInterval(() => refresh(), POLL_MS);
+      .subscribe((status: string) => {
+        if (status === 'SUBSCRIBED') startPoll(POLL_MS_SLOW);
+        else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+          startPoll(POLL_MS_FAST);
+        }
+      });
+
     return () => {
-      window.clearInterval(handle);
+      if (pollHandle !== null) window.clearInterval(pollHandle);
       try {
         (supabase as any).removeChannel(channel);
       } catch {
@@ -143,18 +159,24 @@ export const useHelpThread = (requestId: string | null): UseHelpThreadResult => 
         author_role: authorRole,
         body: trimmed
       });
-      // Notify the other side. In demo, student and counsellor are the same
-      // auth user; the notification still surfaces in the bell post-flip.
+      // Notify the OTHER side. Counsellor reply → student inbox.
+      // Student reply → counsellor inbox. In the single-user demo, the
+      // profile_id is the same for both — the audience tag is what keeps
+      // the two inboxes separate.
       try {
+        const targetAudience = authorRole === 'counsellor' ? 'student' : 'counsellor';
+        const targetHref =
+          targetAudience === 'counsellor' ? `/counsellor?help=${requestId}` : `/applications?help=${requestId}`;
         await insertNotification(supabase, {
           profile_id: request.student_profile_id,
+          audience: targetAudience,
           kind: authorRole === 'counsellor' ? 'help_reply_from_counsellor' : 'help_reply_from_student',
           title:
             authorRole === 'counsellor'
               ? 'Sarah replied to your help request'
               : 'Greg replied to a help request',
           body: trimmed.slice(0, 120),
-          href: `/counsellor?help=${requestId}`
+          href: targetHref
         });
       } catch (err) {
         console.warn('reply notify failed', err);
@@ -205,6 +227,7 @@ export const useHelpThread = (requestId: string | null): UseHelpThreadResult => 
       try {
         await insertNotification(supabase, {
           profile_id: request.student_profile_id,
+          audience: 'student',
           kind: 'help_meeting_proposed',
           title: 'Sarah proposed a meeting',
           body: `${title} · ${new Date(scheduledFor).toLocaleString('en-GB', {
@@ -214,7 +237,7 @@ export const useHelpThread = (requestId: string | null): UseHelpThreadResult => 
             hour: '2-digit',
             minute: '2-digit'
           })}`,
-          href: `/counsellor?help=${requestId}`
+          href: `/applications?help=${requestId}`
         });
       } catch (err) {
         console.warn('meeting notify failed', err);

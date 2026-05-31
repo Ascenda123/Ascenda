@@ -3,6 +3,7 @@ import type { CohortStats } from './types';
 
 interface ApplicationFunnelProps {
   funnel: CohortStats['appFunnel'];
+  totalStudents?: number;
   activeStage?: 'planning' | 'inProgress' | 'submitted' | 'decision' | null;
   onSelectStage?: (stage: 'planning' | 'inProgress' | 'submitted' | 'decision') => void;
   onNavigateStage?: (stage: 'planning' | 'inProgress' | 'submitted' | 'decision') => void;
@@ -15,15 +16,15 @@ const STAGES = [
   { key: 'decision' as const, label: 'Decision', color: 'bg-emerald-500/15', text: 'text-emerald-700 dark:text-emerald-400', border: 'border-emerald-200/60 dark:border-emerald-500/30', active: 'ring-2 ring-emerald-500 ring-offset-2' }
 ];
 
-export const ApplicationFunnel = ({ funnel, activeStage, onSelectStage, onNavigateStage }: ApplicationFunnelProps) => {
-  const total = Object.values(funnel).reduce((a, b) => a + b, 0) || 1;
+export const ApplicationFunnel = ({ funnel, totalStudents, activeStage, onSelectStage, onNavigateStage }: ApplicationFunnelProps) => {
+  const denominator = totalStudents ?? (Object.values(funnel).reduce((a, b) => a + b, 0) || 1);
   const maxVal = Math.max(...Object.values(funnel), 1);
 
   return (
     <div className="space-y-3">
       {STAGES.map(({ key, label, color, text, border, active }) => {
         const count = funnel[key];
-        const pct = Math.round((count / total) * 100);
+        const pct = Math.round((count / denominator) * 100);
         const barWidth = Math.round((count / maxVal) * 100);
         const isSelected = activeStage === key;
 

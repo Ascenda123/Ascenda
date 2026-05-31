@@ -38,8 +38,8 @@ const WIDGET_ICON_MAP: Record<WidgetId, typeof AlertTriangle> = {
 
 const WIDGET_META: Record<WidgetId, { title: string; description: string }> = {
   alerts: { title: 'Student Alerts', description: `${stats.flagged} students need attention` },
-  funnel: { title: 'Applications by stage', description: 'Where each student is in the application process' },
-  matchDist: { title: 'Match Distribution', description: 'Reach / Match / Safe across cohort' },
+  funnel: { title: 'Students by stage', description: 'How many students are at each application stage' },
+  matchDist: { title: 'Match Distribution', description: 'Students with Reach / Match / Safe matches' },
   deadlines: { title: 'Upcoming Deadlines', description: 'Next 7 days' },
   activity: { title: 'Recent Activity', description: 'Latest notes and updates' },
   cohortBreakdown: { title: 'Programme & interests breakdown', description: 'IB vs A-Level and fields students are pursuing' },
@@ -81,6 +81,7 @@ export default function CounsellorOverviewPage() {
         {id === 'funnel' && (
           <ApplicationFunnel
             funnel={stats.appFunnel}
+            totalStudents={stats.total}
             activeStage={filter.type === 'stage' ? (filter.value as any) : null}
             onSelectStage={(stage) =>
               setFilter(filter.value === stage ? { type: null, value: null } : { type: 'stage', value: stage })
