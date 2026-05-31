@@ -102,7 +102,7 @@ export default async function SimulationPage() {
           <h1 className="text-2xl font-bold text-gray-900">Algorithm Simulation</h1>
           <p className="mt-1 text-sm text-gray-500">
             Validates scoring + matching against real-world admission outcomes. A PASS means the algorithm
-            classified the student's actual school as Safety, Target, or Reach.
+            classified the student&apos;s actual school as Safety, Target, or Reach.
           </p>
         </div>
 
